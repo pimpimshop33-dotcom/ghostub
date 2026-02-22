@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>👻 Fantôme</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -55,41 +53,55 @@ function timeAgo(ts) {
   return 'il y a ' + Math.floor(s/86400) + ' jours';
 }
 
-// ── INIT MAP ──
-window.initMap = () => {
-  if (map) return;
+// ── RENDER MAP ──
+window.renderStaticMap = () => {
   const centerLat = userLat || 48.8566;
   const centerLng = userLng || 2.3522;
+  const container = document.getElementById('mapContainer');
 
-  map = L.map('mapContainer', { zoomControl: true, attributionControl: false }).setView([centerLat, centerLng], 15);
-
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    subdomains: 'abcd'
-  }).addTo(map);
-
-  // User marker
-  const userIcon = L.divIcon({
-    html: '<div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 12px #a8b4ff;"></div>',
-    iconSize: [14, 14], iconAnchor: [7, 7], className: ''
-  });
-  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
-
-  // Ghost markers
+  // Build markers list
+  let markersHtml = '';
   nearbyGhosts.forEach(g => {
     if (!g.lat || !g.lng) return;
-    const ghostIcon = L.divIcon({
-      html: `<div style="font-size:22px;filter:drop-shadow(0 0 6px rgba(168,180,255,0.8));cursor:pointer;">${g.emoji || '👻'}</div>`,
-      iconSize: [28, 28], iconAnchor: [14, 14], className: ''
-    });
-    L.marker([g.lat, g.lng], { icon: ghostIcon })
-      .addTo(map)
-      .bindPopup(`<b>${g.location || 'Fantôme'}</b><br><i>"${(g.message||'').substring(0,60)}…"</i><br><small>${formatDistance(g.distance)} de vous</small>`)
-      .on('click', () => openGhost(g.id));
+    const dist = formatDistance(g.distance);
+    markersHtml += `
+      <div class="map-ghost-marker" onclick="openGhost('${g.id}')"
+        style="position:absolute;
+          left:calc(50% + ${((g.lng - centerLng) * 80000)}px);
+          top:calc(50% - ${((g.lat - centerLat) * 80000)}px);
+          transform:translate(-50%,-50%);
+          cursor:pointer;z-index:10;">
+        <div style="font-size:24px;filter:drop-shadow(0 0 8px rgba(168,180,255,0.9));animation:floatG 3s ease-in-out infinite;">
+          ${g.emoji || '👻'}
+        </div>
+        <div style="background:#1a1a24;border:1px solid rgba(168,180,255,0.3);border-radius:8px;padding:3px 7px;font-size:10px;color:#c8d4ff;white-space:nowrap;margin-top:2px;text-align:center;">
+          ${g.location ? g.location.substring(0,20) : 'Fantôme'}<br>
+          <span style="color:rgba(168,180,255,0.5);">${dist}</span>
+        </div>
+      </div>`;
   });
 
-  setTimeout(() => map.invalidateSize(), 300);
+  container.innerHTML = `
+    <div style="position:relative;width:100%;height:100%;overflow:hidden;background:#0d0d12;">
+      <!-- OSM iframe -->
+      <iframe
+        src="https://www.openstreetmap.org/export/embed.html?bbox=${centerLng-0.01},${centerLat-0.007},${centerLng+0.01},${centerLat+0.007}&layer=mapnik&marker=${centerLat},${centerLng}"
+        style="width:100%;height:100%;border:none;opacity:0.7;"
+        loading="lazy"
+      ></iframe>
+      <!-- Ghost overlay -->
+      <div style="position:absolute;inset:0;pointer-events:none;">
+        ${markersHtml}
+      </div>
+      <!-- You are here -->
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
+        <div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 16px #a8b4ff;"></div>
+      </div>
+      <!-- Legend -->
+      <div style="position:absolute;bottom:10px;left:10px;background:rgba(13,13,18,0.85);border:1px solid rgba(168,180,255,0.2);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(168,180,255,0.6);">
+        📍 Vous · 👻 Fantômes (${nearbyGhosts.length})
+      </div>
+    </div>`;
 };
 
 
@@ -360,13 +372,7 @@ window.showScreen = (id) => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if (id === 'screenMap') {
-    setTimeout(() => {
-      if (!map) {
-        initMap();
-      } else {
-        map.invalidateSize();
-      }
-    }, 200);
+    renderStaticMap();
   }
 };
 window.setNav = (id) => {
