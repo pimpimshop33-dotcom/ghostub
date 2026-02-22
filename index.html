@@ -181,19 +181,38 @@ window.login = async () => {
   }
 };
 
-// ── NOTIFICATIONS ──
+// ── NOTIFICATIONS & SERVICE WORKER ──
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  try {
+    const reg = await navigator.serviceWorker.register('/fantome/sw.js');
+    return reg;
+  } catch(e) {
+    console.warn('SW:', e);
+    return null;
+  }
+}
+
 async function requestNotifPermission() {
   if (!('Notification' in window)) return false;
   const perm = await Notification.requestPermission();
   return perm === 'granted';
 }
 
-function showNotif(title, body, icon = '👻') {
-  if (Notification.permission !== 'granted') return;
-  new Notification(title, { body, icon: 'data:text/plain,👻', tag: 'fantome-' + Date.now(), silent: false });
+function showNotif(title, body) {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.ready.then(reg => {
+    reg.showNotification(title, {
+      body,
+      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon.png',
+      tag: 'fantome-' + Date.now(),
+      vibrate: [200, 100, 200],
+      data: { url: '/fantome/' }
+    });
+  });
 }
 
-// Background ghost check — runs every 5 min when tab is open
+// Vérification des fantômes proches
 let notifCheckedGhosts = new Set();
 async function checkNewGhosts() {
   if (!currentUser || !userLat) return;
@@ -206,7 +225,6 @@ async function checkNewGhosts() {
     const dist = distanceMeters(userLat, userLng, g.lat, g.lng);
     if (dist <= 5000) {
       notifCheckedGhosts.add(g.id);
-      // Only notify for ghosts created in last 10 min
       if (g.createdAt && (Date.now() - g.createdAt.seconds * 1000) < 600000) {
         showNotif('👻 Nouveau fantôme proche !', `À ${formatDistance(dist)} de vous — ${g.location || 'Lieu inconnu'}`);
       }
@@ -219,33 +237,48 @@ async function checkResonances() {
   const myGhosts = await getDocs(query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid)));
   myGhosts.forEach(d => {
     const g = d.data();
-    const key = 'reso_' + d.id + '_' + (g.resonances || 0);
-    if (!sessionStorage.getItem(key) && (g.resonances || 0) > 0) {
-      // Check if resonances increased since last check
-      const prev = parseInt(sessionStorage.getItem('prev_reso_' + d.id) || '0');
-      if ((g.resonances || 0) > prev) {
-        showNotif('✦ Résonance reçue !', `Votre fantôme "${(g.location || 'Lieu inconnu')}" a résonné`);
-        sessionStorage.setItem('prev_reso_' + d.id, g.resonances);
-      }
+    const prev = parseInt(localStorage.getItem('prev_reso_' + d.id) || '0');
+    if ((g.resonances || 0) > prev) {
+      showNotif('✦ Résonance reçue !', `Votre fantôme "${g.location || 'Lieu inconnu'}" a résonné`);
+      localStorage.setItem('prev_reso_' + d.id, g.resonances);
     }
   });
 }
 
 window.enableNotifications = async () => {
-  const granted = await requestNotifPermission();
   const btn = document.getElementById('notifBtn');
+  const granted = await requestNotifPermission();
   if (granted) {
     btn.textContent = '🔔 Notifications activées';
     btn.style.borderColor = 'rgba(100,220,160,.4)';
     btn.style.color = 'rgba(100,220,160,.9)';
-    // Start polling
+    localStorage.setItem('notif_enabled', '1');
+    // Test immédiat
+    showNotif('👻 Fantôme', 'Notifications activées — vous serez alerté des fantômes proches !');
+    // Polling toutes les 5 minutes
     setInterval(checkNewGhosts, 5 * 60 * 1000);
     setInterval(checkResonances, 10 * 60 * 1000);
-    showNotif('👻 Fantôme', 'Notifications activées — nous vous prévenons des fantômes proches.');
   } else {
     btn.textContent = '🔕 Notifications refusées';
+    btn.style.borderColor = 'rgba(255,100,100,.3)';
+    btn.style.color = 'rgba(255,100,100,.7)';
   }
 };
+
+// Enregistre le SW au démarrage
+registerServiceWorker().then(reg => {
+  if (reg && localStorage.getItem('notif_enabled') === '1' && Notification.permission === 'granted') {
+    setInterval(checkNewGhosts, 5 * 60 * 1000);
+    setInterval(checkResonances, 10 * 60 * 1000);
+    // Mettre à jour le bouton
+    const btn = document.getElementById('notifBtn');
+    if (btn) {
+      btn.textContent = '🔔 Notifications activées';
+      btn.style.borderColor = 'rgba(100,220,160,.4)';
+      btn.style.color = 'rgba(100,220,160,.9)';
+    }
+  }
+});
 
 // ── AUDIO RECORDING ──
 window.toggleRecording = async () => {
