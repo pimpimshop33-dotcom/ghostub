@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="fr"><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<html lang="fr">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>👻 Fantôme</title>
-<link href="%F0%9F%91%BB%20Fant%C3%B4me_fichiers/css2.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -58,50 +58,62 @@ window.renderStaticMap = () => {
   const centerLat = userLat || 48.8566;
   const centerLng = userLng || 2.3522;
   const container = document.getElementById('mapContainer');
+  const h = Math.max(window.innerHeight - 160, 500);
+  container.style.height = h + 'px';
 
-  // Build markers list
-  let markersHtml = '';
+  if (!document.getElementById('leafletCSS')) {
+    const css = document.createElement('link');
+    css.id = 'leafletCSS';
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+  }
+
+  if (window.L) {
+    buildLeafletMap(centerLat, centerLng, h);
+  } else {
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.onload = () => buildLeafletMap(centerLat, centerLng, h);
+    document.head.appendChild(script);
+  }
+};
+
+function buildLeafletMap(centerLat, centerLng, h) {
+  const container = document.getElementById('mapContainer');
+  container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
+
+  if (map) { try { map.remove(); } catch(e){} map = null; }
+
+  map = L.map('leafletMap', { zoomControl: true, attributionControl: false })
+          .setView([centerLat, centerLng], 16);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+    maxZoom: 20, subdomains: 'abc'
+  }).addTo(map);
+
+  // User position
+  const userIcon = L.divIcon({
+    html: '<div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 16px #a8b4ff;"></div>',
+    iconSize: [14,14], iconAnchor: [7,7], className: ''
+  });
+  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
+
+  // Ghost markers
   nearbyGhosts.forEach(g => {
     if (!g.lat || !g.lng) return;
-    const dist = formatDistance(g.distance);
-    markersHtml += `
-      <div class="map-ghost-marker" onclick="openGhost('${g.id}')"
-        style="position:absolute;
-          left:calc(50% + ${((g.lng - centerLng) * 80000)}px);
-          top:calc(50% - ${((g.lat - centerLat) * 80000)}px);
-          transform:translate(-50%,-50%);
-          cursor:pointer;z-index:10;">
-        <div style="font-size:24px;filter:drop-shadow(0 0 8px rgba(168,180,255,0.9));animation:floatG 3s ease-in-out infinite;">
-          ${g.emoji || '👻'}
-        </div>
-        <div style="background:#1a1a24;border:1px solid rgba(168,180,255,0.3);border-radius:8px;padding:3px 7px;font-size:10px;color:#c8d4ff;white-space:nowrap;margin-top:2px;text-align:center;">
-          ${g.location ? g.location.substring(0,20) : 'Fantôme'}<br>
-          <span style="color:rgba(168,180,255,0.5);">${dist}</span>
-        </div>
-      </div>`;
+    const ghostIcon = L.divIcon({
+      html: `<div style="font-size:22px;filter:drop-shadow(0 0 6px rgba(168,180,255,0.9));cursor:pointer;">${g.emoji||'👻'}</div>`,
+      iconSize: [28,28], iconAnchor: [14,14], className: ''
+    });
+    L.marker([g.lat, g.lng], { icon: ghostIcon })
+      .addTo(map)
+      .bindPopup(`<b>${g.location||'Fantôme'}</b><br><i>"${(g.message||'').substring(0,50)}…"</i><br><small>${formatDistance(g.distance)} de vous</small>`)
+      .on('click', () => openGhost(g.id));
   });
 
-  container.innerHTML = `
-    <div style="position:relative;width:100%;height:100%;overflow:hidden;background:#0d0d12;">
-      <!-- OSM iframe -->
-      <iframe
-        src="https://www.openstreetmap.org/export/embed.html?bbox=${centerLng-0.01},${centerLat-0.007},${centerLng+0.01},${centerLat+0.007}&layer=mapnik&marker=${centerLat},${centerLng}"
-        style="width:100%;height:100%;border:none;opacity:0.7;"
-        loading="lazy"
-      ></iframe>
-      <!-- Ghost overlay -->
-      <div style="position:absolute;inset:0;pointer-events:none;">
-        ${markersHtml}
-      </div>
-      <!-- You are here -->
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
-        <div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 16px #a8b4ff;"></div>
-      </div>
-      <!-- Legend -->
-      <div style="position:absolute;bottom:10px;left:10px;background:rgba(13,13,18,0.85);border:1px solid rgba(168,180,255,0.2);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(168,180,255,0.6);">
-        📍 Vous · 👻 Fantômes (${nearbyGhosts.length})
-      </div>
-    </div>`;
+  setTimeout(() => map.invalidateSize(), 300);
+}
 };
 
 
@@ -636,15 +648,24 @@ body {
   display:flex !important;
 }
 #mapContainer {
-  width:100%;
-  height: 600px;
-  min-height: 500px;
-  flex:1;
+  width: 100%;
+  flex: 1;
+  min-height: 550px;
   background: var(--deep);
-  display:block;
+  display: block;
+}
+#mapContainer iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 550px;
+  border: none;
+  display: block;
 }
 .map-screen-wrap {
-  flex:1; display:flex; flex-direction:column;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 .map-header {
   padding: 12px 20px 10px;
@@ -682,7 +703,7 @@ body {
 </style>
 </head>
 <body>
-<div class="particles" id="particles"><div class="particle" style="left: 83.7977%; animation-duration: 11.84s; animation-delay: 2.25523s;"></div><div class="particle" style="left: 5.99047%; animation-duration: 9.78743s; animation-delay: 4.86148s;"></div><div class="particle" style="left: 48.4638%; animation-duration: 13.9207s; animation-delay: 6.5194s;"></div><div class="particle" style="left: 96.5624%; animation-duration: 18.8078s; animation-delay: 7.29816s;"></div><div class="particle" style="left: 53.0319%; animation-duration: 19.3517s; animation-delay: 0.120783s;"></div><div class="particle" style="left: 66.8246%; animation-duration: 10.6838s; animation-delay: 0.530989s;"></div><div class="particle" style="left: 18.7249%; animation-duration: 19.726s; animation-delay: 4.1519s;"></div><div class="particle" style="left: 72.2037%; animation-duration: 8.17362s; animation-delay: 1.46998s;"></div><div class="particle" style="left: 83.2033%; animation-duration: 11.6254s; animation-delay: 0.894148s;"></div><div class="particle" style="left: 85.4269%; animation-duration: 9.7321s; animation-delay: 5.72825s;"></div><div class="particle" style="left: 99.6486%; animation-duration: 14.3586s; animation-delay: 4.1136s;"></div><div class="particle" style="left: 51.4837%; animation-duration: 15.1673s; animation-delay: 6.16413s;"></div><div class="particle" style="left: 2.00993%; animation-duration: 13.0622s; animation-delay: 9.0924s;"></div><div class="particle" style="left: 75.733%; animation-duration: 19.9667s; animation-delay: 4.51222s;"></div><div class="particle" style="left: 44.6187%; animation-duration: 14.5025s; animation-delay: 7.93649s;"></div><div class="particle" style="left: 31.234%; animation-duration: 8.49962s; animation-delay: 0.591063s;"></div><div class="particle" style="left: 36.2491%; animation-duration: 19.3785s; animation-delay: 4.74195s;"></div><div class="particle" style="left: 68.7393%; animation-duration: 11.7368s; animation-delay: 6.4927s;"></div><div class="particle" style="left: 53.609%; animation-duration: 12.4765s; animation-delay: 4.16729s;"></div><div class="particle" style="left: 35.3075%; animation-duration: 19.4373s; animation-delay: 6.91854s;"></div><div class="particle" style="left: 87.4098%; animation-duration: 8.28746s; animation-delay: 1.6136s;"></div><div class="particle" style="left: 2.07731%; animation-duration: 18.5838s; animation-delay: 5.45326s;"></div><div class="particle" style="left: 20.7228%; animation-duration: 18.8992s; animation-delay: 2.78529s;"></div><div class="particle" style="left: 7.19561%; animation-duration: 16.5059s; animation-delay: 4.13864s;"></div><div class="particle" style="left: 12.3822%; animation-duration: 16.0138s; animation-delay: 2.8917s;"></div></div>
+<div class="particles" id="particles"></div>
 
 <div class="phone">
 
@@ -696,7 +717,7 @@ body {
   <div class="notch"></div>
 
   <!-- ── ONBOARD ── -->
-  <div class="screen" id="screenOnboard">
+  <div class="screen active" id="screenOnboard">
     <div class="ghost-logo">👻</div>
     <div class="onboard-title">Fantôme</div>
     <div class="onboard-sub">Laissez des messages ancrés dans les lieux.<br>Découvrez-les en passant.</div>
@@ -753,48 +774,16 @@ body {
         <div class="radar-ring"></div>
         <div class="radar-sweep"></div>
         <div class="radar-center"></div>
-        <div id="radarDots"><div class="ghost-dot" style="left: 50%; top: 50%; animation-delay: 0s;"></div><div class="ghost-dot" style="left: 50%; top: 50%; animation-delay: 0.3s;"></div></div>
+        <div id="radarDots"></div>
       </div>
     </div>
-    <div class="radar-status" id="radarStatus">2 fantômes dans les alentours</div>
-    <div class="ghost-count-line"><span id="ghostCount">2</span> fantôme(s) dans les alentours</div>
+    <div class="radar-status" id="radarStatus">Localisation en cours…</div>
+    <div class="ghost-count-line"><span id="ghostCount">0</span> fantôme(s) dans les alentours</div>
     <div class="scroll">
       <div class="section-label">Fantômes proches</div>
       <div class="ghost-list" id="ghostList">
-    <div class="ghost-item" onclick="openGhost('2oQ9Ra3GVDeryEMwqYO0')">
-      <div class="ghost-item-header">
-        <div class="ghost-emoji">👻</div>
-        <div class="ghost-meta">
-          <div class="ghost-location">📍 bureau 2</div>
-          <div class="ghost-distance">0m de vous</div>
-        </div>
-        <div class="ghost-time">il y a 10 min</div>
+        <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;">Chargement…</div>
       </div>
-      <div class="ghost-preview">"salut…"</div>
-      <div class="ghost-footer">
-        <div class="ghost-tag">👻 anonyme</div>
-        <div class="ghost-tag">⏳ expire dans 23h</div>
-        <div class="ghost-resonance">✦ 0</div>
-      </div>
-    </div>
-  
-    <div class="ghost-item" onclick="openGhost('fWjvCGM36PqiAL4uwaup')">
-      <div class="ghost-item-header">
-        <div class="ghost-emoji">👻</div>
-        <div class="ghost-meta">
-          <div class="ghost-location">📍 bureau</div>
-          <div class="ghost-distance">0m de vous</div>
-        </div>
-        <div class="ghost-time">il y a 1h</div>
-      </div>
-      <div class="ghost-preview">"salut tout le monde…"</div>
-      <div class="ghost-footer">
-        <div class="ghost-tag">👻 anonyme</div>
-        <div class="ghost-tag">⏳ expire dans 6j</div>
-        <div class="ghost-resonance">✦ 0</div>
-      </div>
-    </div>
-  </div>
     </div>
   </div>
 
@@ -847,7 +836,7 @@ body {
         <div class="map-grid"></div>
         <div class="map-pulse"></div>
         <div class="map-pin">📍</div>
-        <div class="map-loc" id="userCoords">44.6267° N, -1.1534° E</div>
+        <div class="map-loc" id="userCoords">Localisation en cours…</div>
       </div>
       <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Emoji du fantôme</label><input class="form-input" id="depositEmoji" type="text" placeholder="👻" maxlength="2" style="font-size:20px;text-align:center;"></div>
       <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Nom du lieu</label><input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…"></div>
@@ -882,55 +871,13 @@ body {
   </div>
 
   <!-- ── MAP ── -->
-  <div class="screen active" id="screenMap">
+  <div class="screen" id="screenMap">
     <div class="map-screen-wrap">
       <div class="map-header">
         <div class="map-title">Carte des fantômes</div>
-        <div class="map-count" id="mapCount">2 fantôme(s)</div>
+        <div class="map-count" id="mapCount">0 fantôme(s)</div>
       </div>
-      <div id="mapContainer">
-    <div style="position:relative;width:100%;height:100%;overflow:hidden;background:#0d0d12;">
-      <!-- OSM iframe -->
-      <iframe src="%F0%9F%91%BB%20Fant%C3%B4me_fichiers/embed.htm" style="width:100%;height:100%;border:none;opacity:0.7;" loading="lazy"></iframe>
-      <!-- Ghost overlay -->
-      <div style="position:absolute;inset:0;pointer-events:none;">
-        
-      <div class="map-ghost-marker" onclick="openGhost('2oQ9Ra3GVDeryEMwqYO0')" style="position:absolute;
-          left:calc(50% + 0px);
-          top:calc(50% - 0px);
-          transform:translate(-50%,-50%);
-          cursor:pointer;z-index:10;">
-        <div style="font-size:24px;filter:drop-shadow(0 0 8px rgba(168,180,255,0.9));animation:floatG 3s ease-in-out infinite;">
-          👻
-        </div>
-        <div style="background:#1a1a24;border:1px solid rgba(168,180,255,0.3);border-radius:8px;padding:3px 7px;font-size:10px;color:#c8d4ff;white-space:nowrap;margin-top:2px;text-align:center;">
-          bureau 2<br>
-          <span style="color:rgba(168,180,255,0.5);">0m</span>
-        </div>
-      </div>
-      <div class="map-ghost-marker" onclick="openGhost('fWjvCGM36PqiAL4uwaup')" style="position:absolute;
-          left:calc(50% + 0px);
-          top:calc(50% - 0px);
-          transform:translate(-50%,-50%);
-          cursor:pointer;z-index:10;">
-        <div style="font-size:24px;filter:drop-shadow(0 0 8px rgba(168,180,255,0.9));animation:floatG 3s ease-in-out infinite;">
-          👻
-        </div>
-        <div style="background:#1a1a24;border:1px solid rgba(168,180,255,0.3);border-radius:8px;padding:3px 7px;font-size:10px;color:#c8d4ff;white-space:nowrap;margin-top:2px;text-align:center;">
-          bureau<br>
-          <span style="color:rgba(168,180,255,0.5);">0m</span>
-        </div>
-      </div>
-      </div>
-      <!-- You are here -->
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;">
-        <div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 16px #a8b4ff;"></div>
-      </div>
-      <!-- Legend -->
-      <div style="position:absolute;bottom:10px;left:10px;background:rgba(13,13,18,0.85);border:1px solid rgba(168,180,255,0.2);border-radius:10px;padding:8px 12px;font-size:11px;color:rgba(168,180,255,0.6);">
-        📍 Vous · 👻 Fantômes (2)
-      </div>
-    </div></div>
+      <div id="mapContainer"></div>
     </div>
   </div>
 
@@ -938,8 +885,8 @@ body {
   <div class="screen" id="screenProfile">
     <div class="scroll">
       <div class="profile-hdr">
-        <div class="profile-avatar-big" id="profileAvatar">P</div>
-        <div class="profile-name-big" id="profileName">pipo33</div>
+        <div class="profile-avatar-big" id="profileAvatar">?</div>
+        <div class="profile-name-big" id="profileName">…</div>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-num">👻</div><div class="stat-label">Fantôme</div></div>
@@ -957,11 +904,11 @@ body {
   </div>
 
   <!-- ── BOTTOM NAV ── -->
-  <div class="bottom-nav" id="bottomNav" style="display: flex;">
-    <div class="nav-item" id="nav-radar" onclick="showScreen('screenRadar');setNav('nav-radar')">
+  <div class="bottom-nav" id="bottomNav" style="display:none;">
+    <div class="nav-item active" id="nav-radar" onclick="showScreen('screenRadar');setNav('nav-radar')">
       <div class="nav-icon">🌫️</div><span>Radar</span>
     </div>
-    <div class="nav-item active" id="nav-map" onclick="showScreen('screenMap');setNav('nav-map')">
+    <div class="nav-item" id="nav-map" onclick="showScreen('screenMap');setNav('nav-map')">
       <div class="nav-icon">🗺️</div><span>Carte</span>
     </div>
     <div class="nav-item" id="nav-deposit" onclick="showScreen('screenDeposit');setNav('nav-deposit')">
@@ -972,6 +919,5 @@ body {
     </div>
   </div>
 </div>
-
-
-</body></html>
+</body>
+</html>
