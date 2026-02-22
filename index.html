@@ -107,9 +107,9 @@ function buildLeafletMap(centerLat, centerLng, h) {
   });
   L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
 
-  // Ghost markers
+  // Ghost markers (pas les secrets)
   nearbyGhosts.forEach(g => {
-    if (!g.lat || !g.lng) return;
+    if (!g.lat || !g.lng || g.secret) return;
     const ghostIcon = L.divIcon({
       html: `<div style="font-size:22px;filter:drop-shadow(0 0 6px rgba(168,180,255,0.9));cursor:pointer;">${g.emoji||'👻'}</div>`,
       iconSize: [28,28], iconAnchor: [14,14], className: ''
@@ -463,10 +463,26 @@ window.loadNearbyGhosts = async () => {
     }
     if (g.lat && g.lng) {
       g.distance = distanceMeters(userLat, userLng, g.lat, g.lng);
-      if (g.distance <= 5000) nearbyGhosts.push(g);
+      if (g.distance <= 5000) {
+        // Fantômes secrets : seulement si à moins de 3m
+        if (g.secret && g.distance > 3) return;
+        nearbyGhosts.push(g);
+      }
     }
   });
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
+
+  // Vibration + notif pour les fantômes secrets révélés
+  nearbyGhosts.forEach(g => {
+    if (g.secret) {
+      const key = 'secret_revealed_' + g.id;
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1');
+        if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+        showNotif('🔮 Fantôme secret révélé !', `Vous êtes à ${formatDistance(g.distance)} — ${g.location || 'Lieu mystérieux'}`);
+      }
+    }
+  });
 
   const count = nearbyGhosts.length;
   document.getElementById('radarStatus').textContent = count === 0
@@ -490,11 +506,11 @@ function renderGhostList() {
     return;
   }
   list.innerHTML = nearbyGhosts.map(g => `
-    <div class="ghost-item" onclick="openGhost('${g.id}')">
+    <div class="ghost-item${g.secret ? ' ghost-item-secret' : ''}" onclick="openGhost('${g.id}')">
       <div class="ghost-item-header">
-        <div class="ghost-emoji">${g.emoji || '👻'}</div>
+        <div class="ghost-emoji">${g.secret ? '🔮' : (g.emoji || '👻')}</div>
         <div class="ghost-meta">
-          <div class="ghost-location">📍 ${g.location || 'Lieu inconnu'}</div>
+          <div class="ghost-location">📍 ${g.location || 'Lieu inconnu'} ${g.secret ? '<span style="font-size:9px;background:rgba(168,100,255,.2);border:1px solid rgba(168,100,255,.4);border-radius:8px;padding:2px 6px;color:rgba(200,150,255,.9);margin-left:4px;">SECRET</span>' : ''}</div>
           <div class="ghost-distance">${formatDistance(g.distance)} de vous</div>
         </div>
         <div class="ghost-time">${timeAgo(g.createdAt)}</div>
@@ -616,7 +632,9 @@ window.depositGhost = async () => {
   const emoji    = document.getElementById('depositEmoji').value || '👻';
   const duration = document.querySelector('.dur-btn.active')?.textContent || '7 jours';
   const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
-  const anon     = document.querySelector('.type-btn.active')?.dataset.val === 'anon';
+  const typeBtns = document.querySelectorAll('#screenDeposit .type-selector');
+  const anon     = typeBtns[1]?.querySelector('.type-btn.active')?.dataset.val === 'anon';
+  const secret   = typeBtns[0]?.querySelector('.type-btn.active')?.dataset.val === 'secret';
   const err      = document.getElementById('depositError');
 
   if (!message) { err.textContent = 'Écrivez un message.'; return; }
@@ -633,10 +651,11 @@ window.depositGhost = async () => {
     await addDoc(collection(db, 'ghosts'), {
       message,
       location: location || 'Lieu sans nom',
-      emoji,
+      emoji: secret ? '🔮' : emoji,
       duration,
-      radius,
+      radius: secret ? '3m' : radius,
       anonymous: anon,
+      secret: secret || false,
       author: currentUser.displayName || currentUser.email,
       authorUid: currentUser.uid,
       lat: userLat,
@@ -908,6 +927,7 @@ body {
 .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:14px; text-align:center; }
 .stat-num { font-family:'Cormorant Garamond',serif; font-size:28px; color:var(--ether); }
 .stat-label { font-size:10px; color:var(--spirit-dim); letter-spacing:.5px; margin-top:2px; }
+.ghost-item-secret { border-color: rgba(168,100,255,.35) !important; background: linear-gradient(135deg, rgba(168,100,255,.07) 0%, var(--surface) 100%) !important; }
 .logout-btn { width:100%; padding:12px; background:transparent; border:1px solid rgba(255,100,100,.3); border-radius:13px; color:rgba(255,100,100,.7); font-family:'Instrument Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .2s; margin-top:8px; }
 .logout-btn:hover { background:rgba(255,100,100,.08); }
 
@@ -1130,6 +1150,14 @@ body {
         <button class="btn-secondary" onclick="triggerPhoto()" type="button" style="font-size:13px;padding:11px;">📷 Ajouter une photo</button>
         <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
         <div id="photoPreview"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">Mode secret</label>
+        <div class="type-selector">
+          <div class="type-btn active" data-val="normal" onclick="selectType(this)">👻 Normal</div>
+          <div class="type-btn" data-val="secret" onclick="selectType(this)">🔮 Secret (3m)</div>
+        </div>
+        <div style="font-size:11px;color:var(--spirit-dim);margin-top:5px;">Un fantôme secret est invisible — il apparaît seulement quand on est à moins de 3 mètres.</div>
       </div>
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">Anonymat</label>
