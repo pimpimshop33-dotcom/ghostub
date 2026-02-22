@@ -63,9 +63,10 @@ window.initMap = () => {
 
   map = L.map('mapContainer', { zoomControl: true, attributionControl: false }).setView([centerLat, centerLng], 15);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-    maxZoom: 20,
-    attribution: '&copy; OpenStreetMap France'
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    subdomains: 'abcd'
   }).addTo(map);
 
   // User marker
