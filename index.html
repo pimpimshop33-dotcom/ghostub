@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>👻 Fantôme</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -29,6 +31,7 @@ let userLat = null;
 let userLng = null;
 let nearbyGhosts = [];
 let selectedGhost = null;
+let map = null;
 
 // ── DISTANCE ──
 function distanceMeters(lat1, lng1, lat2, lng2) {
@@ -52,7 +55,42 @@ function timeAgo(ts) {
   return 'il y a ' + Math.floor(s/86400) + ' jours';
 }
 
-// ── GEOLOCATION ──
+// ── INIT MAP ──
+window.initMap = () => {
+  if (map) return;
+  const centerLat = userLat || 48.8566;
+  const centerLng = userLng || 2.3522;
+
+  map = L.map('mapContainer', { zoomControl: true, attributionControl: false }).setView([centerLat, centerLng], 15);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19
+  }).addTo(map);
+
+  // User marker
+  const userIcon = L.divIcon({
+    html: '<div style="width:14px;height:14px;border-radius:50%;background:#a8b4ff;border:2px solid white;box-shadow:0 0 12px #a8b4ff;"></div>',
+    iconSize: [14, 14], iconAnchor: [7, 7], className: ''
+  });
+  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
+
+  // Ghost markers
+  nearbyGhosts.forEach(g => {
+    if (!g.lat || !g.lng) return;
+    const ghostIcon = L.divIcon({
+      html: `<div style="font-size:22px;filter:drop-shadow(0 0 6px rgba(168,180,255,0.8));cursor:pointer;">${g.emoji || '👻'}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14], className: ''
+    });
+    L.marker([g.lat, g.lng], { icon: ghostIcon })
+      .addTo(map)
+      .bindPopup(`<b>${g.location || 'Fantôme'}</b><br><i>"${(g.message||'').substring(0,60)}…"</i><br><small>${formatDistance(g.distance)} de vous</small>`)
+      .on('click', () => openGhost(g.id));
+  });
+
+  setTimeout(() => map.invalidateSize(), 300);
+};
+
+
 function getLocation() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject('Géolocalisation non supportée'); return; }
@@ -142,6 +180,10 @@ window.loadNearbyGhosts = async () => {
     ? 'Aucun fantôme dans les 5km — soyez le premier !'
     : count + ' fantôme' + (count > 1 ? 's' : '') + ' dans les alentours';
   document.getElementById('ghostCount').textContent = count;
+  const mc = document.getElementById('mapCount');
+  if (mc) mc.textContent = count + ' fantôme(s)';
+  // Reset map so it redraws with new ghosts
+  if (map) { map.remove(); map = null; }
 
   renderGhostList();
   renderRadarDots();
@@ -315,6 +357,12 @@ window.sendReply = async () => {
 window.showScreen = (id) => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
+  if (id === 'screenMap') {
+    setTimeout(() => {
+      if (!map) initMap();
+      else map.invalidateSize();
+    }, 100);
+  }
 };
 window.setNav = (id) => {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -533,7 +581,37 @@ body {
 .logout-btn { width:100%; padding:12px; background:transparent; border:1px solid rgba(255,100,100,.3); border-radius:13px; color:rgba(255,100,100,.7); font-family:'Instrument Sans',sans-serif; font-size:13px; cursor:pointer; transition:all .2s; margin-top:8px; }
 .logout-btn:hover { background:rgba(255,100,100,.08); }
 
-/* ── DEPOSIT SUCCESS ── */
+/* ── MAP ── */
+#mapContainer {
+  width:100%; height:100%;
+  background: var(--deep);
+  border-radius: 0;
+}
+.map-screen-wrap {
+  flex:1; display:flex; flex-direction:column; overflow:hidden;
+}
+.map-header {
+  padding: 12px 20px 10px;
+  display:flex; justify-content:space-between; align-items:center;
+  flex-shrink:0;
+}
+.map-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-style:italic; color:var(--ether); }
+.map-count { font-size:11px; color:var(--spirit-dim); }
+.leaflet-popup-content-wrapper {
+  background: #1a1a24 !important;
+  border: 1px solid rgba(168,180,255,0.3) !important;
+  border-radius: 12px !important;
+  color: #f0e8d8 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+}
+.leaflet-popup-tip { background: #1a1a24 !important; }
+.leaflet-popup-content { font-family: 'Instrument Sans', sans-serif; font-size:13px; line-height:1.5; }
+.leaflet-popup-content b { color: #c8d4ff; }
+.leaflet-popup-content i { color: rgba(240,232,216,0.7); }
+.leaflet-popup-content small { color: rgba(168,180,255,0.5); }
+.leaflet-container { font-family: 'Instrument Sans', sans-serif; }
+
+
 .deposit-success { position:absolute; inset:0; background:var(--void); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px; z-index:100; opacity:0; pointer-events:none; transition:opacity .4s; }
 .deposit-success.show { opacity:1; pointer-events:all; }
 .success-ghost { font-size:60px; margin-bottom:18px; animation:floatG 3s ease-in-out infinite; filter:drop-shadow(0 0 28px rgba(168,180,255,.5)); }
@@ -715,6 +793,19 @@ body {
     </div>
   </div>
 
+  <!-- ── MAP ── -->
+  <div class="screen" id="screenMap">
+    <div class="map-screen-wrap">
+      <div class="map-header">
+        <div class="map-title">Carte des fantômes</div>
+        <div class="map-count" id="mapCount">0 fantôme(s)</div>
+      </div>
+      <div style="flex:1;position:relative;">
+        <div id="mapContainer"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ── PROFILE ── -->
   <div class="screen" id="screenProfile">
     <div class="scroll">
@@ -741,6 +832,9 @@ body {
   <div class="bottom-nav" id="bottomNav" style="display:none;">
     <div class="nav-item active" id="nav-radar" onclick="showScreen('screenRadar');setNav('nav-radar')">
       <div class="nav-icon">🌫️</div><span>Radar</span>
+    </div>
+    <div class="nav-item" id="nav-map" onclick="showScreen('screenMap');setNav('nav-map')">
+      <div class="nav-icon">🗺️</div><span>Carte</span>
     </div>
     <div class="nav-item" id="nav-deposit" onclick="showScreen('screenDeposit');setNav('nav-deposit')">
       <div class="nav-icon">👻</div><span>Déposer</span>
