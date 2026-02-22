@@ -583,9 +583,10 @@ body {
 
 /* ── MAP ── */
 #mapContainer {
-  width:100%; height:100%;
+  width:100%;
+  height: calc(100dvh - 180px);
+  min-height: 400px;
   background: var(--deep);
-  border-radius: 0;
 }
 .map-screen-wrap {
   flex:1; display:flex; flex-direction:column; overflow:hidden;
@@ -800,9 +801,7 @@ body {
         <div class="map-title">Carte des fantômes</div>
         <div class="map-count" id="mapCount">0 fantôme(s)</div>
       </div>
-      <div style="flex:1;position:relative;">
-        <div id="mapContainer"></div>
-      </div>
+      <div id="mapContainer"></div>
     </div>
   </div>
 
