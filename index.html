@@ -165,6 +165,34 @@ window.login = async () => {
 // ── LOGOUT ──
 window.logout = async () => { await signOut(auth); };
 
+// ── AUTO-DESTRUCTION ──
+function isExpired(g) {
+  if (!g.createdAt) return false;
+  if (!g.duration || g.duration === '♾ Éternel') return false;
+  const durations = {
+    '24h':     24 * 60 * 60 * 1000,
+    '7 jours':  7 * 24 * 60 * 60 * 1000,
+    '1 mois':  30 * 24 * 60 * 60 * 1000
+  };
+  const maxAge = durations[g.duration];
+  if (!maxAge) return false;
+  const age = Date.now() - g.createdAt.seconds * 1000;
+  return age > maxAge;
+}
+
+function timeRemaining(g) {
+  if (!g.createdAt || !g.duration || g.duration === '♾ Éternel') return '♾ Éternel';
+  const durations = { '24h': 86400000, '7 jours': 604800000, '1 mois': 2592000000 };
+  const maxAge = durations[g.duration];
+  if (!maxAge) return '♾ Éternel';
+  const remaining = maxAge - (Date.now() - g.createdAt.seconds * 1000);
+  if (remaining <= 0) return 'Expiré';
+  const h = Math.floor(remaining / 3600000);
+  const d = Math.floor(h / 24);
+  if (d > 0) return 'expire dans ' + d + 'j';
+  return 'expire dans ' + h + 'h';
+}
+
 // ── LOAD NEARBY GHOSTS ──
 window.loadNearbyGhosts = async () => {
   document.getElementById('radarStatus').textContent = 'Localisation en cours…';
@@ -182,6 +210,12 @@ window.loadNearbyGhosts = async () => {
   nearbyGhosts = [];
   snap.forEach(d => {
     const g = { id: d.id, ...d.data() };
+    if (g.expired) return; // already marked expired
+    if (isExpired(g)) {
+      // Mark as expired in Firestore
+      updateDoc(doc(db, 'ghosts', g.id), { expired: true }).catch(()=>{});
+      return;
+    }
     if (g.lat && g.lng) {
       g.distance = distanceMeters(userLat, userLng, g.lat, g.lng);
       if (g.distance <= 5000) nearbyGhosts.push(g);
@@ -223,7 +257,7 @@ function renderGhostList() {
       <div class="ghost-preview">"${(g.message||'').substring(0,55)}…"</div>
       <div class="ghost-footer">
         <div class="ghost-tag">${g.anonymous ? '👻 anonyme' : g.author || ''}</div>
-        <div class="ghost-tag">${g.duration || '7 jours'}</div>
+        <div class="ghost-tag">⏳ ${timeRemaining(g)}</div>
         <div class="ghost-resonance">✦ ${g.resonances || 0}</div>
       </div>
     </div>
@@ -259,7 +293,7 @@ window.openGhost = async (id) => {
   document.getElementById('detailMessage').textContent = '"' + selectedGhost.message + '"';
   document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? '👻 Anonyme' : '🌫️ ' + (selectedGhost.author || '');
   document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
-  document.getElementById('detailDuration').textContent = '⏳ ' + (selectedGhost.duration || '7 jours');
+  document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
   document.getElementById('detailRadius').textContent = '📡 ' + (selectedGhost.radius || '10m');
   document.getElementById('resonanceCount').textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
   document.getElementById('resonanceBtn').classList.remove('resonated');
