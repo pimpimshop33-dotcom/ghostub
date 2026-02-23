@@ -113,8 +113,11 @@ function buildLeafletMap(centerLat, centerLng, h) {
     });
     L.marker([g.lat, g.lng], { icon: ghostIcon })
       .addTo(map)
-      .bindPopup(`<b>${g.location||'Fantôme'}</b><br><i>"${(g.message||'').substring(0,50)}…"</i><br><small>${formatDistance(g.distance)} de vous</small>`)
-      .on('click', () => openGhost(g.id));
+      .on('click', () => {
+        openGhost(g.id);
+        showScreen('screenDetail');
+        setNav('nav-radar');
+      });
   });
 
   setTimeout(() => map.invalidateSize(), 300);
