@@ -326,10 +326,8 @@ async function startRecording() {
     isRecording = true;
 
     const btn = document.getElementById('recordBtn');
-    btn.textContent = '⏹ Arrêter';
-    btn.style.background = 'rgba(255,100,100,0.15)';
-    btn.style.borderColor = 'rgba(255,100,100,0.4)';
-    btn.style.color = 'rgba(255,150,150,0.9)';
+    btn.classList.add('recording');
+    btn.querySelector('span:nth-child(2)').textContent = "⏹ Arrêter l'enregistrement";
 
     // Timer
     let secs = 0;
@@ -351,10 +349,8 @@ function stopRecording() {
   isRecording = false;
   clearInterval(recordingInterval);
   const btn = document.getElementById('recordBtn');
-  btn.textContent = '🎙 Enregistrer un message vocal';
-  btn.style.background = '';
-  btn.style.borderColor = '';
-  btn.style.color = '';
+  btn.classList.remove('recording');
+  btn.querySelector('span:nth-child(2)').textContent = 'Enregistrer un message vocal';
 }
 
 function showAudioPreview(blob) {
@@ -963,20 +959,83 @@ body {
 /* ── GHOST ITEMS ── */
 .section-label { font-size:10px; text-transform:uppercase; letter-spacing:2px; color:var(--spirit-dim); margin-bottom:10px; }
 .ghost-list { display:flex; flex-direction:column; gap:8px; }
-.ghost-item { background:var(--surface); border:1px solid var(--border); border-radius:15px; padding:13px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden; }
-.ghost-item::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg, var(--spirit-glow) 0%, transparent 60%); opacity:0; transition:opacity .2s; }
-.ghost-item:hover::before { opacity:1; }
-.ghost-item:hover { border-color:var(--border-bright); transform:translateY(-1px); }
-.ghost-item-header { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
-.ghost-emoji { font-size:20px; }
-.ghost-meta { flex:1; }
-.ghost-location { font-size:13px; font-weight:500; color:var(--ether); }
-.ghost-distance { font-size:11px; color:var(--spirit-dim); margin-top:1px; }
-.ghost-time { font-size:10px; color:var(--warm-dim); opacity:.6; font-style:italic; }
-.ghost-preview { font-family:'Cormorant Garamond',serif; font-size:13px; font-style:italic; color:var(--warm-dim); line-height:1.5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ghost-footer { display:flex; align-items:center; gap:6px; margin-top:8px; }
-.ghost-tag { font-size:10px; background:var(--ghost); border:1px solid var(--border); border-radius:20px; padding:3px 8px; color:var(--spirit-dim); }
-.ghost-resonance { margin-left:auto; font-size:11px; color:var(--spirit-dim); }
+.ghost-item {
+  background: linear-gradient(145deg, rgba(25,25,36,0.95) 0%, rgba(18,18,28,0.98) 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.25,.8,.25,1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.ghost-item::before {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 20% 50%, rgba(168,180,255,.09) 0%, transparent 65%);
+  opacity:0; transition:opacity .35s;
+}
+.ghost-item::after {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, rgba(168,180,255,.3), transparent);
+  opacity:0; transition:opacity .35s;
+}
+.ghost-item:hover::before, .ghost-item:hover::after { opacity:1; }
+.ghost-item:hover { border-color:rgba(168,180,255,.28); transform:translateY(-2px); box-shadow:0 8px 28px rgba(0,0,0,.5), 0 0 0 1px rgba(168,180,255,.06); }
+.ghost-item:active { transform:translateY(0px); }
+.ghost-item-header { display:flex; align-items:center; gap:11px; margin-bottom:9px; }
+.ghost-emoji {
+  font-size:22px;
+  width:42px; height:42px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(168,180,255,.07);
+  border: 1px solid rgba(168,180,255,.15);
+  border-radius:13px;
+  flex-shrink:0;
+  filter: drop-shadow(0 0 8px rgba(168,180,255,.3));
+}
+.ghost-meta { flex:1; min-width:0; }
+.ghost-location { font-size:13px; font-weight:500; color:var(--ether); letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ghost-distance {
+  font-size:10px; color:var(--spirit-dim); margin-top:3px;
+  display:inline-flex; align-items:center; gap:3px;
+  background:rgba(168,180,255,.07); border-radius:20px;
+  padding:2px 7px; border:1px solid rgba(168,180,255,.1);
+}
+.ghost-time { font-size:10px; color:rgba(240,232,216,.3); font-style:italic; flex-shrink:0; }
+.ghost-preview {
+  font-family:'Cormorant Garamond',serif;
+  font-size:14px; font-style:italic;
+  color:rgba(240,232,216,.65);
+  line-height:1.55;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  padding:8px 10px;
+  background:rgba(168,180,255,.04);
+  border-left:2px solid rgba(168,180,255,.2);
+  border-radius:0 8px 8px 0;
+  margin-bottom:9px;
+}
+.ghost-footer { display:flex; align-items:center; gap:5px; }
+.ghost-tag {
+  font-size:9px; letter-spacing:.4px;
+  background:rgba(168,180,255,.06);
+  border:1px solid rgba(168,180,255,.12);
+  border-radius:20px; padding:3px 9px;
+  color:rgba(168,180,255,.5);
+}
+.ghost-resonance {
+  margin-left:auto; font-size:11px;
+  color:rgba(168,180,255,.5);
+  display:flex; align-items:center; gap:3px;
+  background:rgba(168,180,255,.06);
+  border:1px solid rgba(168,180,255,.12);
+  border-radius:20px; padding:3px 9px;
+  transition:color .2s, background .2s;
+}
+.ghost-item:hover .ghost-resonance { color:var(--spirit); background:rgba(168,180,255,.1); }
 
 /* ── DETAIL ── */
 .back-btn { display:flex; align-items:center; gap:5px; font-size:13px; color:var(--spirit-dim); cursor:pointer; padding:12px 20px 0; transition:color .2s; background:none; border:none; font-family:'Instrument Sans',sans-serif; }
@@ -994,12 +1053,95 @@ body {
 .reply-meta { font-size:10px; color:var(--spirit-dim); margin-top:5px; letter-spacing:.5px; }
 
 /* ── DEPOSIT ── */
-.deposit-map { width:100%; height:140px; border-radius:15px; background:var(--surface); border:1px solid var(--border); margin-bottom:14px; position:relative; overflow:hidden; }
-.map-grid { position:absolute; inset:0; background-image:linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size:28px 28px; opacity:.4; }
-.map-pin { position:absolute; top:50%; left:50%; transform:translate(-50%,-100%); font-size:26px; filter:drop-shadow(0 0 8px var(--spirit)); animation:floatG 2s ease-in-out infinite; }
-.map-pulse { position:absolute; top:50%; left:50%; border-radius:50%; border:1px solid var(--spirit-dim); transform:translate(-50%,-50%); animation:mp 2s ease-out infinite; }
-@keyframes mp { 0%{width:16px;height:16px;opacity:.8} 100%{width:70px;height:70px;opacity:0} }
-.map-loc { position:absolute; bottom:8px; left:8px; font-size:9px; color:var(--spirit-dim); background:var(--deep); padding:3px 7px; border-radius:5px; }
+.deposit-map {
+  width:100%; height:160px; border-radius:18px;
+  background: linear-gradient(145deg, #0d0d14 0%, #111118 100%);
+  border:1px solid rgba(168,180,255,.15);
+  margin-bottom:14px; position:relative; overflow:hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.map-grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(168,180,255,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168,180,255,.06) 1px, transparent 1px);
+  background-size:32px 32px;
+}
+.map-grid::after {
+  content:'';
+  position:absolute; inset:0;
+  background: radial-gradient(ellipse at 50% 50%, rgba(168,180,255,.08) 0%, transparent 70%);
+}
+.map-pin {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-100%);
+  font-size:30px;
+  filter:drop-shadow(0 0 12px rgba(168,180,255,.7)) drop-shadow(0 0 4px rgba(168,180,255,.9));
+  animation:floatG 2s ease-in-out infinite;
+  z-index:2;
+}
+.map-pulse {
+  position:absolute; top:50%; left:50%;
+  border-radius:50%;
+  border:1px solid rgba(168,180,255,.4);
+  transform:translate(-50%,-50%);
+  animation:mp 2s ease-out infinite;
+  z-index:1;
+}
+.map-pulse2 {
+  position:absolute; top:50%; left:50%;
+  border-radius:50%;
+  border:1px solid rgba(168,180,255,.2);
+  transform:translate(-50%,-50%);
+  animation:mp 2s ease-out infinite .7s;
+  z-index:1;
+}
+@keyframes mp { 0%{width:12px;height:12px;opacity:.9} 100%{width:90px;height:90px;opacity:0} }
+.map-loc {
+  position:absolute; bottom:10px; left:10px;
+  font-size:9px; letter-spacing:.5px;
+  color:rgba(168,180,255,.6);
+  background:rgba(10,10,18,.8);
+  backdrop-filter:blur(8px);
+  padding:4px 10px; border-radius:8px;
+  border:1px solid rgba(168,180,255,.12);
+}
+/* Media buttons */
+.media-btn {
+  width:100%; padding:13px 16px;
+  background: linear-gradient(145deg, rgba(168,180,255,.07) 0%, rgba(168,180,255,.03) 100%);
+  border:1px solid rgba(168,180,255,.15);
+  border-radius:14px;
+  color:rgba(168,180,255,.7);
+  font-family:'Instrument Sans',sans-serif;
+  font-size:13px; font-weight:400;
+  cursor:pointer;
+  transition:all .25s;
+  display:flex; align-items:center; gap:10px;
+  text-align:left;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+.media-btn:hover {
+  background:rgba(168,180,255,.12);
+  border-color:rgba(168,180,255,.3);
+  color:var(--ether);
+  box-shadow:0 4px 16px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.06);
+  transform:translateY(-1px);
+}
+.media-btn .media-icon {
+  width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(168,180,255,.1);
+  border-radius:9px;
+  font-size:15px;
+  flex-shrink:0;
+}
+.media-btn.recording {
+  background:rgba(255,80,80,.08);
+  border-color:rgba(255,80,80,.3);
+  color:rgba(255,150,150,.9);
+}
+.media-btn.recording .media-icon { background:rgba(255,80,80,.15); }
 .type-selector { display:flex; gap:6px; margin-bottom:12px; }
 .type-btn { flex:1; padding:8px; text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:11px; cursor:pointer; color:var(--warm-dim); transition:all .2s; }
 .type-btn.active { border-color:var(--border-bright); color:var(--ether); background:var(--spirit-glow); }
@@ -1223,8 +1365,9 @@ body {
       <div class="deposit-map">
         <div class="map-grid"></div>
         <div class="map-pulse"></div>
+        <div class="map-pulse2"></div>
         <div class="map-pin">📍</div>
-        <div class="map-loc" id="userCoords">Localisation en cours…</div>
+        <div class="map-loc" id="userCoords">📡 Localisation en cours…</div>
       </div>
       <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Emoji du fantôme</label><input class="form-input" id="depositEmoji" type="text" placeholder="👻" maxlength="2" style="font-size:20px;text-align:center;"></div>
       <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Nom du lieu</label><input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…"></div>
@@ -1233,14 +1376,20 @@ body {
       <!-- MEDIA -->
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">Message vocal (optionnel)</label>
-        <button class="btn-secondary" id="recordBtn" onclick="toggleRecording()" type="button" style="font-size:13px;padding:11px;">🎙 Enregistrer un message vocal</button>
-        <div style="font-size:11px;color:var(--spirit-dim);text-align:right;margin-top:4px;" id="recordTimer">00:00</div>
+        <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button">
+          <span class="media-icon">🎙</span>
+          <span>Enregistrer un message vocal</span>
+          <span id="recordTimer" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
+        </button>
         <div id="audioPreview"></div>
       </div>
 
       <div class="form-group" style="margin-bottom:12px;">
         <label class="form-label">Photo (optionnel)</label>
-        <button class="btn-secondary" onclick="triggerPhoto()" type="button" style="font-size:13px;padding:11px;">📷 Ajouter une photo</button>
+        <button class="media-btn" onclick="triggerPhoto()" type="button">
+          <span class="media-icon">📷</span>
+          <span>Ajouter une photo</span>
+        </button>
         <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
         <div id="photoPreview"></div>
       </div>
