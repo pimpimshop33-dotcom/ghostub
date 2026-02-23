@@ -662,6 +662,20 @@ window.openGhost = async (id) => {
     document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
     document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
     document.getElementById('detailRadius').textContent = '📡 ' + (selectedGhost.radius || '10m');
+
+    // Chaîne de fantômes
+    const chainDiv = document.getElementById('detailChain');
+    if (selectedGhost.chainHint || selectedGhost.chainLat) {
+      chainDiv.style.display = 'block';
+      chainDiv.innerHTML = `
+        <div style="background:linear-gradient(135deg,rgba(168,180,255,.08),rgba(168,180,255,.03));border:1px solid rgba(168,180,255,.2);border-radius:16px;padding:14px 16px;margin-bottom:14px;">
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(168,180,255,.5);margin-bottom:8px;">🔗 La piste continue…</div>
+          ${selectedGhost.chainHint ? `<div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--ether);margin-bottom:10px;">"${selectedGhost.chainHint}"</div>` : ''}
+          ${selectedGhost.chainLat ? `<button onclick="followChain()" style="width:100%;padding:10px;background:rgba(168,180,255,.1);border:1px solid rgba(168,180,255,.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">🗺 Suivre la piste →</button>` : ''}
+        </div>`;
+    } else {
+      chainDiv.style.display = 'none';
+    }
     const alreadyToday = hasResonatedToday();
     const resoBtn = document.getElementById('resonanceBtn');
     if (alreadyToday) {
@@ -784,6 +798,67 @@ window.resonate = async () => {
   await updateDoc(doc(db, 'ghosts', selectedGhost.id), { resonances: increment(1) });
 };
 
+window.setChainMarker = () => {
+  if (!userLat) {
+    alert('Géolocalisation requise.');
+    return;
+  }
+  // Load leaflet mini-map for picking next point
+  const preview = document.getElementById('chainMapPreview');
+  preview.style.display = 'block';
+  preview.innerHTML = '<div id="chainMiniMap" style="width:100%;height:120px;"></div>';
+
+  const initChainMap = () => {
+    const cmap = L.map('chainMiniMap', { zoomControl: false, attributionControl: false })
+      .setView([userLat, userLng], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(cmap);
+
+    // Current position marker
+    L.marker([userLat, userLng], {
+      icon: L.divIcon({ html: '<div style="font-size:16px;">📍</div>', iconSize:[20,20], iconAnchor:[10,10], className:'' })
+    }).addTo(cmap);
+
+    let nextMarker = null;
+    cmap.on('click', e => {
+      if (nextMarker) cmap.removeLayer(nextMarker);
+      nextMarker = L.marker([e.latlng.lat, e.latlng.lng], {
+        icon: L.divIcon({ html: '<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(168,180,255,.9));">🔗</div>', iconSize:[24,24], iconAnchor:[12,12], className:'' })
+      }).addTo(cmap);
+      window._chainNextCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
+      document.getElementById('chainMapLabel').textContent = '✓ Point placé — retap pour déplacer';
+    });
+    setTimeout(() => cmap.invalidateSize(), 100);
+  };
+
+  if (window.L) {
+    initChainMap();
+  } else {
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = initChainMap;
+    document.head.appendChild(s);
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+  }
+};
+
+window.followChain = () => {
+  if (!selectedGhost || !selectedGhost.chainLat) return;
+  showScreen('screenMap');
+  setNav('nav-map');
+  // Wait for map to render then fly to chain point
+  setTimeout(() => {
+    if (window.map) {
+      window.map.setView([selectedGhost.chainLat, selectedGhost.chainLng], 18);
+      L.marker([selectedGhost.chainLat, selectedGhost.chainLng], {
+        icon: L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 0 12px rgba(168,180,255,.9));animation:floatG 2s ease-in-out infinite;">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' })
+      }).addTo(window.map);
+    }
+  }, 800);
+};
+
 window.toggleSecret = async () => {
   if (!selectedGhost || !currentUser) return;
   if (selectedGhost.authorUid !== currentUser.uid) return;
@@ -824,10 +899,13 @@ window.depositGhost = async () => {
     const ghostTempId = currentUser.uid + '_' + Date.now();
     const { audioUrl, photoUrl } = await uploadMedia(ghostTempId);
 
+    const chainHint = document.getElementById('chainHint').value.trim();
+    const chainNext = window._chainNextCoords || null;
+
     await addDoc(collection(db, 'ghosts'), {
       message,
       location: location || 'Lieu sans nom',
-      emoji: secret ? '🔮' : emoji,
+      emoji: secret ? '🔮' : (chainHint || chainNext ? '🔗' : emoji),
       duration,
       radius: secret ? '3m' : radius,
       anonymous: anon,
@@ -839,11 +917,18 @@ window.depositGhost = async () => {
       resonances: 0,
       audioUrl: audioUrl || null,
       photoUrl: photoUrl || null,
+      chainHint: chainHint || null,
+      chainLat: chainNext ? chainNext.lat : null,
+      chainLng: chainNext ? chainNext.lng : null,
       createdAt: serverTimestamp()
     });
 
     document.getElementById('depositMsg').value = '';
     document.getElementById('depositLocation').value = '';
+    document.getElementById('chainHint').value = '';
+    document.getElementById('chainMapLabel').textContent = 'Placer le prochain point sur la carte';
+    document.getElementById('chainMapPreview').style.display = 'none';
+    window._chainNextCoords = null;
     document.getElementById('depositBtn').textContent = '👻 Déposer le fantôme';
     clearAudio();
     clearPhoto();
@@ -1284,6 +1369,7 @@ createParticles();
         <div class="detail-message" id="detailMessage"></div>
         <div id="detailAudio"></div>
         <div id="detailPhoto"></div>
+        <div id="detailChain" style="display:none;"></div>
         <div class="detail-info">
           <div class="detail-badge" id="detailAuthor"></div>
           <div class="detail-badge" id="detailTime"></div>
@@ -1385,6 +1471,21 @@ createParticles();
           <div class="dur-btn active" onclick="selectDur(this)">7 jours</div>
           <div class="dur-btn" onclick="selectDur(this)">1 mois</div>
           <div class="dur-btn" onclick="selectDur(this)">♾ Éternel</div>
+        </div>
+      </div>
+      <!-- CHAÎNE DE FANTÔMES -->
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>🔗 Chaîne de fantômes (optionnel)</span>
+          <span style="font-size:9px;color:var(--spirit-dim);font-style:italic;">Créez une piste</span>
+        </label>
+        <div style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" style="font-size:13px;">
+          <button type="button" onclick="setChainMarker()" id="chainMapBtn" class="media-btn" style="width:100%;">
+            <span class="media-icon">🗺</span>
+            <span id="chainMapLabel">Placer le prochain point sur la carte</span>
+          </button>
+          <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
         </div>
       </div>
       <div class="deposit-error" id="depositError"></div>
