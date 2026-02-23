@@ -540,6 +540,19 @@ window.loadNearbyGhosts = async () => {
 
   renderGhostList();
   renderRadarDots();
+  // Mettre à jour l'indicateur de résonance
+  const resoEl = document.getElementById('resoStatus');
+  if (resoEl) {
+    if (hasResonatedToday()) {
+      resoEl.textContent = '✦ 0';
+      resoEl.style.color = 'rgba(168,180,255,.25)';
+      resoEl.style.borderColor = 'rgba(168,180,255,.08)';
+    } else {
+      resoEl.textContent = '✦ 1';
+      resoEl.style.color = 'rgba(168,180,255,.7)';
+      resoEl.style.borderColor = 'rgba(168,180,255,.3)';
+    }
+  }
 };
 
 function renderGhostList() {
@@ -646,8 +659,21 @@ window.openGhost = async (id) => {
     document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
     document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
     document.getElementById('detailRadius').textContent = '📡 ' + (selectedGhost.radius || '10m');
-    document.getElementById('resonanceCount').textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
-    document.getElementById('resonanceBtn').classList.remove('resonated');
+    const alreadyToday = hasResonatedToday();
+    const resoBtn = document.getElementById('resonanceBtn');
+    if (alreadyToday) {
+      resoBtn.classList.add('resonated');
+      resoBtn.textContent = '✦ Résonance utilisée aujourd'hui';
+      resoBtn.style.borderColor = 'rgba(168,180,255,.2)';
+      resoBtn.style.color = 'rgba(168,180,255,.4)';
+      resoBtn.style.cursor = 'default';
+    } else {
+      resoBtn.classList.remove('resonated');
+      resoBtn.style.borderColor = '';
+      resoBtn.style.color = '';
+      resoBtn.style.cursor = '';
+      document.getElementById('resonanceCount').textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
+    }
 
     // Bouton secret — visible uniquement par le créateur
     const secretBtn = document.getElementById('secretBtn');
@@ -716,11 +742,42 @@ window.openGhost = async (id) => {
   setNav('');
 };
 
+function getDailyResoKey() {
+  const d = new Date();
+  const uid = currentUser ? currentUser.uid : 'anon';
+  return `daily_reso_${uid}_${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function hasResonatedToday() {
+  return !!localStorage.getItem(getDailyResoKey());
+}
+
+function markResonatedToday(ghostId) {
+  localStorage.setItem(getDailyResoKey(), ghostId);
+}
+
 window.resonate = async () => {
   const btn = document.getElementById('resonanceBtn');
   if (btn.classList.contains('resonated') || !selectedGhost) return;
+  if (hasResonatedToday()) {
+    // Montrer un message d'attente
+    btn.style.borderColor = 'rgba(255,180,50,.4)';
+    btn.style.color = 'rgba(255,200,80,.8)';
+    const now = new Date();
+    const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
+    const h = Math.floor(msUntilMidnight / 3600000);
+    const m = Math.floor((msUntilMidnight % 3600000) / 60000);
+    btn.textContent = `⏳ Prochaine résonance dans ${h}h${m < 10 ? '0' + m : m}`;
+    setTimeout(() => {
+      btn.style.borderColor = '';
+      btn.style.color = '';
+      btn.textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
+    }, 3000);
+    return;
+  }
   btn.classList.add('resonated');
-  btn.textContent = '✦ Résonance envoyée — merci';
+  btn.textContent = '✦ Résonance envoyée — merci ✨';
+  markResonatedToday(selectedGhost.id);
   await updateDoc(doc(db, 'ghosts', selectedGhost.id), { resonances: increment(1) });
 };
 
@@ -1172,6 +1229,7 @@ createParticles();
     <div class="vibe-bar">
       <div style="font-size:15px;">📳</div>
       <div style="font-size:12px;color:var(--warm-dim);flex:1;">Détection active · géolocalisation activée</div>
+      <div id="resoStatus" title="Résonance quotidienne" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(168,180,255,.15);color:rgba(168,180,255,.5);cursor:default;">✦ 1</div>
       <div class="vibe-dot"></div>
     </div>
     <div class="radar-wrap">
