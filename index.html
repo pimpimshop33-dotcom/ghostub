@@ -725,14 +725,14 @@ function timeRemaining(g) {
 }
 
 window.loadNearbyGhosts = async () => {
-  document.getElementById('radarStatus').textContent = 'Localisation en cours…';
+  document.getElementById('ghostCount').textContent = ''; document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Localisation en cours…</span>';
   try {
     await getLocation();
-    document.getElementById('radarStatus').textContent = 'Recherche de fantômes…';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Recherche de fantômes…</span>';
     document.getElementById('userCoords').textContent =
       userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
   } catch(e) {
-    document.getElementById('radarStatus').textContent = 'Géolocalisation refusée — activez-la pour découvrir des fantômes.';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Géolocalisation refusée — activez-la.</span>';
     userLat = 48.8566; userLng = 2.3522; // Paris par défaut
   }
 
@@ -786,10 +786,11 @@ window.loadNearbyGhosts = async () => {
   }
 
   const count = nearbyGhosts.length;
-  document.getElementById('radarStatus').textContent = count === 0
-    ? 'Aucun fantôme dans les 5km — soyez le premier !'
-    : count + ' fantôme' + (count > 1 ? 's' : '') + ' dans les alentours';
-  document.getElementById('ghostCount').textContent = count;
+  if (count === 0) {
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme proche — soyez le premier !</span>';
+  } else {
+    document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> fantôme' + (count > 1 ? 's' : '') + ' dans les alentours';
+  }
   const mc = document.getElementById('mapCount');
   if (mc) mc.textContent = count + ' fantôme(s)';
   // Reset map so it redraws with new ghosts
@@ -2261,8 +2262,8 @@ createParticles();
         <div id="radarDots"></div>
       </div>
     </div>
-    <div class="radar-status" id="radarStatus">Localisation en cours…</div>
-    <span id="ghostCount" style="display:none;">0</span>
+    <div class="radar-status" id="radarStatus" style="display:none;"></div>
+    <div class="ghost-count-line"><span id="ghostCount">0</span> fantôme(s) dans les alentours</div>
     <div class="scroll">
       <div class="section-label">Fantômes proches</div>
       <div class="ghost-list" id="ghostList">
