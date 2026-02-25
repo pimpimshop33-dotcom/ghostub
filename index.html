@@ -424,6 +424,90 @@ async function uploadMedia(uid) {
   return { audioUrl, photoUrl };
 }
 
+// ── MILESTONES ──────────────────────────────────────────
+const MILESTONES = [1,5,10,25,50,100];
+const RANKS = [
+  {min:0,   label:'Novice',    icon:'🌫️'},
+  {min:5,   label:'Vagabond',  icon:'🚶'},
+  {min:15,  label:'Spectre',   icon:'👻'},
+  {min:40,  label:'Chasseur',  icon:'🔍'},
+  {min:80,  label:'Légende',   icon:'⭐'},
+];
+
+function getDiscoveryKey() {
+  return currentUser ? 'discoveries_' + currentUser.uid : 'discoveries_anon';
+}
+function getDiscoveredIds() {
+  try { return JSON.parse(localStorage.getItem(getDiscoveryKey()) || '[]'); } catch(e) { return []; }
+}
+function addDiscovery(ghostId) {
+  const ids = getDiscoveredIds();
+  if (ids.includes(ghostId)) return false; // already seen
+  ids.push(ghostId);
+  localStorage.setItem(getDiscoveryKey(), JSON.stringify(ids));
+  return true; // new discovery
+}
+function getDiscoveryCount() {
+  return getDiscoveredIds().length;
+}
+function getRank(n) {
+  let rank = RANKS[0];
+  for (const r of RANKS) { if (n >= r.min) rank = r; }
+  return rank;
+}
+
+function showDiscoveryToast(count, isNew) {
+  const toast = document.getElementById('discoveryToast');
+  const icon  = document.getElementById('toastIcon');
+  const text  = document.getElementById('toastText');
+  if (!toast) return;
+
+  const rank = getRank(count);
+  const isMilestone = MILESTONES.includes(count) && isNew;
+
+  if (isMilestone) {
+    icon.textContent = rank.icon;
+    text.innerHTML = '<b>' + count + ' fantômes</b> découverts ! <span class="milestone-badge">' + rank.label + '</span>';
+  } else if (isNew) {
+    icon.textContent = '👻';
+    text.innerHTML = 'Fantôme découvert · <b>' + count + '</b> au total';
+  } else {
+    return; // already seen, no toast
+  }
+
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function animateStatNumber(id, newVal) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const old = parseInt(el.textContent) || 0;
+  if (old === newVal) return;
+  el.textContent = newVal;
+  el.classList.remove('bump');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('bump')));
+  setTimeout(() => el.classList.remove('bump'), 400);
+}
+
+async function refreshProfileStats() {
+  if (!currentUser) return;
+  const count = getDiscoveryCount();
+  const rank  = getRank(count);
+  animateStatNumber('statDiscovered', count);
+  document.getElementById('statRank').textContent = rank.icon + ' ' + rank.label;
+
+  // Count deposited ghosts
+  try {
+    const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid)));
+    animateStatNumber('statDeposited', snap.size);
+    // Sum resonances on own ghosts
+    let totalReso = 0;
+    snap.forEach(d => { totalReso += d.data().resonances || 0; });
+    animateStatNumber('statResonances', totalReso);
+  } catch(e) {}
+}
+
 function updatePremiumUI() {
   const planEl = document.getElementById('planInfo');
   const codeSection = document.getElementById('codeSection');
@@ -748,6 +832,10 @@ window.openGhost = async (id) => {
   const idx = nearbyGhosts.findIndex(g => g.id === id);
   if (idx !== -1) currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
+  // Track discovery
+  const isNewDisc = addDiscovery(id);
+  const discCount = getDiscoveryCount();
+  showDiscoveryToast(discCount, isNewDisc);
   
   // Si pas dans la liste locale, on charge depuis Firestore
   if (!selectedGhost) {
@@ -1164,6 +1252,9 @@ window.showScreen = (id) => {
   document.getElementById(id).classList.add('active');
   if (id === 'screenMap') {
     renderStaticMap();
+  }
+  if (id === 'screenProfile') {
+    refreshProfileStats();
   }
   if (id === 'screenDeposit') {
     setWizardStep(1);
@@ -1585,6 +1676,28 @@ createParticles();
 .resonance-btn.firing{
   animation:resoBtnPulse .5s ease-out;
 }
+
+@keyframes countUp{0%{transform:scale(1.4);color:var(--ether);}100%{transform:scale(1);}}
+.stat-num.bump{animation:countUp .4s cubic-bezier(.25,.46,.45,.94);}
+.discovery-toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(14,14,22,.95);backdrop-filter:blur(12px);
+  border:1px solid rgba(168,180,255,.25);border-radius:20px;
+  padding:10px 18px;display:flex;align-items:center;gap:10px;
+  font-size:13px;color:var(--ether);white-space:nowrap;
+  opacity:0;transition:all .35s cubic-bezier(.25,.46,.45,.94);
+  pointer-events:none;z-index:9999;
+  box-shadow:0 8px 32px rgba(0,0,0,.6);
+}
+.discovery-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.discovery-toast-icon{font-size:18px;filter:drop-shadow(0 0 6px rgba(168,180,255,.5));}
+.milestone-badge{
+  display:inline-block;font-size:10px;
+  background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);
+  border-radius:8px;padding:2px 7px;color:rgba(255,200,80,.9);
+  margin-left:6px;vertical-align:middle;
+}
+.stats-grid{grid-template-columns:1fr 1fr;}
 </style>
 </head>
 <body>
@@ -1930,9 +2043,23 @@ createParticles();
         <div class="profile-avatar-big" id="profileAvatar">?</div>
         <div class="profile-name-big" id="profileName">…</div>
       </div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-num">👻</div><div class="stat-label">Fantôme</div></div>
-        <div class="stat-card"><div class="stat-num">Paris</div><div class="stat-label">Ville</div></div>
+      <div class="stats-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="stat-card">
+          <div class="stat-num" id="statDiscovered">0</div>
+          <div class="stat-label">Découverts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statDeposited">0</div>
+          <div class="stat-label">Déposés</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statResonances">0</div>
+          <div class="stat-label">Résonances reçues</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="statRank">—</div>
+          <div class="stat-label">Rang</div>
+        </div>
       </div>
       <div class="section-label" style="margin-bottom:8px;">Mon compte</div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
@@ -1970,6 +2097,10 @@ createParticles();
       <div class="nav-icon">🌑</div><span>Profil</span>
     </div>
   </div>
+</div>
+<div class="discovery-toast" id="discoveryToast">
+  <span class="discovery-toast-icon" id="toastIcon">👻</span>
+  <span id="toastText">Fantôme découvert</span>
 </div>
 </body>
 </html>
