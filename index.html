@@ -1368,6 +1368,71 @@ window.selectDur = (el) => {
   el.parentElement.querySelectorAll('.dur-btn').forEach(b => b.classList.remove('active'));
   el.classList.add('active');
 };
+// ── ONBOARDING CAROUSEL ─────────────────
+let obCurrentScene = 0;
+const OB_TOTAL = 4;
+
+function goObScene(n) {
+  const scenes = document.querySelectorAll('.ob-scene');
+  const dots   = document.querySelectorAll('.ob-dot');
+  // Exit current
+  scenes[obCurrentScene].classList.remove('active');
+  scenes[obCurrentScene].classList.add('exit');
+  setTimeout(() => scenes[obCurrentScene].classList.remove('exit'), 450);
+  obCurrentScene = n;
+  // Enter new
+  scenes[n].classList.add('active');
+  dots.forEach((d,i) => d.classList.toggle('active', i === n));
+  // Show CTA on last scene
+  const cta = document.getElementById('obCta');
+  const hint = document.getElementById('obSwipeHint');
+  if (n === OB_TOTAL - 1) {
+    cta.classList.add('visible');
+    if (hint) hint.style.display = 'none';
+  } else {
+    cta.classList.remove('visible');
+    if (hint) hint.style.display = '';
+  }
+  // Trigger scene-specific animation
+  if (n === 3) spawnObParticles();
+}
+window.goObScene = goObScene;
+
+function spawnObParticles() {
+  const wrap = document.getElementById('obResoParticles');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const syms = ['✦','✧','·','👻','✦','✦'];
+  for (let i = 0; i < 10; i++) {
+    const p = document.createElement('div');
+    p.className = 'ob-reso-p';
+    const angle = (i / 10) * 2 * Math.PI;
+    const dist = 50 + Math.random() * 40;
+    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle) * dist - 20 + 'px');
+    p.style.setProperty('--d', (1 + Math.random()).toFixed(1) + 's');
+    p.style.setProperty('--delay', (i * 0.15).toFixed(2) + 's');
+    p.style.color = 'rgba(168,180,255,' + (0.4 + Math.random() * 0.6).toFixed(2) + ')';
+    p.textContent = syms[i % syms.length];
+    wrap.appendChild(p);
+  }
+}
+
+// Touch swipe for onboarding
+(function() {
+  let ox = 0;
+  const el = document.getElementById('screenOnboard');
+  if (!el) return;
+  el.addEventListener('touchstart', e => { ox = e.touches[0].clientX; }, {passive:true});
+  el.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - ox;
+    if (Math.abs(dx) > 40) {
+      const next = obCurrentScene + (dx < 0 ? 1 : -1);
+      if (next >= 0 && next < OB_TOTAL) goObScene(next);
+    }
+  }, {passive:true});
+})();
+
 window.goAuth = () => { showScreen('screenAuth'); };
 
 // particles
@@ -1698,6 +1763,166 @@ createParticles();
   margin-left:6px;vertical-align:middle;
 }
 .stats-grid{grid-template-columns:1fr 1fr;}
+
+/* ── ONBOARDING ───────────────────────── */
+#screenOnboard{padding:0;justify-content:space-between;overflow:hidden;}
+.ob-carousel{flex:1;position:relative;overflow:hidden;}
+.ob-scene{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:28px 28px 0;
+  opacity:0;transform:translateX(40px);
+  transition:opacity .45s cubic-bezier(.25,.46,.45,.94),transform .45s cubic-bezier(.25,.46,.45,.94);
+  pointer-events:none;
+}
+.ob-scene.active{opacity:1;transform:translateX(0);pointer-events:all;}
+.ob-scene.exit{opacity:0;transform:translateX(-40px);}
+.ob-scene-visual{
+  width:200px;height:200px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;margin-bottom:28px;flex-shrink:0;
+}
+.ob-scene-text{text-align:center;}
+.ob-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:42px;font-weight:300;font-style:italic;
+  color:var(--ether);margin-bottom:10px;
+  text-shadow:0 0 40px rgba(168,180,255,.4);
+}
+.ob-sub{font-size:13px;color:var(--warm-dim);line-height:1.8;}
+
+/* Scène 0 – Ghost */
+.ob-ghost-big{
+  font-size:80px;position:relative;z-index:2;
+  animation:floatG 4s ease-in-out infinite;
+  filter:drop-shadow(0 0 28px rgba(168,180,255,.6));
+}
+.ob-glow-ring{
+  position:absolute;top:50%;left:50%;
+  width:120px;height:120px;border-radius:50%;
+  border:1px solid rgba(168,180,255,.15);
+  transform:translate(-50%,-50%);
+  animation:mp 3s ease-out infinite;
+}
+.ob-ring2{animation-delay:1.5s;}
+
+/* Scène 1 – Radar */
+.ob-radar{
+  width:190px;height:190px;border-radius:50%;
+  border:1px solid rgba(168,180,255,.15);
+  position:relative;
+  background:radial-gradient(circle,rgba(168,180,255,.05) 0%,transparent 70%);
+}
+.ob-radar-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(168,180,255,.1);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+}
+.ob-radar-ring{width:40%;height:40%;}
+.ob-rring2{width:70%;height:70%;border-style:dashed;opacity:.4;}
+.ob-rring3{width:100%;height:100%;}
+.ob-radar-sweep{
+  position:absolute;inset:0;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0%,rgba(168,180,255,.2) 18%,transparent 20%);
+  animation:sweep 3s linear infinite;
+}
+.ob-radar-center{
+  position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;
+  background:var(--spirit);transform:translate(-50%,-50%);
+  box-shadow:0 0 10px var(--spirit);
+}
+.ob-ghost-dot{
+  position:absolute;font-size:18px;
+  opacity:0;animation:ghostReveal 3s linear infinite;
+  filter:drop-shadow(0 0 6px rgba(168,180,255,.6));
+}
+.ob-dot2{animation-delay:-1s;}
+.ob-dot3{animation-delay:-2s;}
+
+/* Scène 2 – Enveloppe */
+.ob-envelope{
+  width:160px;position:relative;
+  animation:obEnvAnim 3s ease-in-out infinite;
+}
+@keyframes obEnvAnim{
+  0%,40%{transform:translateY(0);}
+  50%{transform:translateY(-6px);}
+  60%,100%{transform:translateY(0);}
+}
+.ob-env-flap{
+  width:100%;height:55px;
+  background:linear-gradient(180deg,rgba(168,180,255,.18) 0%,rgba(168,180,255,.06) 100%);
+  border-radius:12px 12px 0 0;
+  border:1px solid rgba(168,180,255,.25);border-bottom:none;
+  transform-origin:top center;
+  animation:obFlapAnim 3s ease-in-out infinite;
+}
+@keyframes obFlapAnim{
+  0%,30%{transform:rotateX(0deg);}
+  45%{transform:rotateX(-160deg);}
+  55%,100%{transform:rotateX(-160deg);}
+}
+.ob-env-body{
+  background:linear-gradient(160deg,rgba(22,22,38,.99) 0%,rgba(14,14,24,1) 100%);
+  border:1px solid rgba(168,180,255,.2);border-top:none;
+  border-radius:0 0 12px 12px;padding:16px 14px;
+  display:flex;gap:12px;align-items:center;
+}
+.ob-env-emoji{font-size:28px;filter:drop-shadow(0 0 8px rgba(168,180,255,.4));}
+.ob-env-lines{flex:1;display:flex;flex-direction:column;gap:6px;}
+.ob-env-line{
+  height:6px;border-radius:3px;
+  background:rgba(168,180,255,.15);
+  animation:obLineReveal 3s ease-in-out infinite;
+}
+.ob-line2{width:70%;animation-delay:.1s;}
+.ob-line3{width:50%;animation-delay:.2s;}
+@keyframes obLineReveal{
+  0%,40%{width:0;opacity:0;}
+  60%,100%{opacity:1;}
+}
+.ob-env-line{width:90%;}
+.ob-line2{width:70%;}
+.ob-line3{width:50%;}
+
+/* Scène 3 – Résonance */
+.ob-reso-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
+.ob-reso-btn{
+  padding:14px 28px;
+  background:rgba(168,180,255,.1);
+  border:1px solid rgba(168,180,255,.35);
+  border-radius:14px;font-size:15px;color:var(--ether);
+  animation:obResoPulse 2s ease-in-out infinite;
+  position:relative;z-index:2;cursor:pointer;
+}
+@keyframes obResoPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(168,180,255,.3);}
+  50%{box-shadow:0 0 0 16px rgba(168,180,255,0);}
+}
+.ob-reso-p{
+  position:absolute;font-size:14px;
+  animation:obPartFloat var(--d) ease-out infinite;
+  animation-delay:var(--delay);
+  opacity:0;
+}
+@keyframes obPartFloat{
+  0%{opacity:0;transform:translate(0,0) scale(.5);}
+  20%{opacity:1;}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0);}
+}
+
+/* Pagination + CTA */
+.ob-dots{display:flex;gap:8px;justify-content:center;padding:16px 0 10px;}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(168,180,255,.2);cursor:pointer;transition:all .3s;}
+.ob-dot.active{width:20px;border-radius:3px;background:var(--spirit);}
+.ob-cta{padding:0 28px 28px;width:100%;transition:opacity .5s;}
+.ob-cta.visible{opacity:1 !important;pointer-events:all !important;}
+.ob-swipe-hint{
+  font-size:11px;color:rgba(168,180,255,.25);text-align:center;
+  padding-bottom:8px;letter-spacing:.5px;
+  animation:obHintFade 2s ease-in-out infinite;
+}
+@keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
 </style>
 </head>
 <body>
@@ -1716,15 +1941,97 @@ createParticles();
 
   
   <div class="screen active" id="screenOnboard">
-    <div class="ghost-logo">👻</div>
-    <div class="onboard-title">Fantôme</div>
-    <div class="onboard-sub">Laissez des messages ancrés dans les lieux.<br>Découvrez-les en passant.</div>
-    <div class="pill"><div class="pill-icon">📍</div><div class="pill-text"><strong>Déposez</strong> un message à l'endroit exact où vous vous trouvez</div></div>
-    <div class="pill"><div class="pill-icon">🌫️</div><div class="pill-text"><strong>Découvrez</strong> les fantômes en passant près d'eux</div></div>
-    <div class="pill"><div class="pill-icon">✨</div><div class="pill-text"><strong>Résonnez</strong> pour prolonger leur vie</div></div>
-    <div style="margin-top:28px;width:100%;">
-      <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;">Entrer dans les lieux ›</button>
+
+    <!-- CAROUSEL SCÈNES -->
+    <div class="ob-carousel" id="obCarousel">
+
+      <!-- SCÈNE 0 : TITRE -->
+      <div class="ob-scene active" id="obScene0">
+        <div class="ob-scene-visual">
+          <div class="ob-ghost-big">👻</div>
+          <div class="ob-glow-ring"></div>
+          <div class="ob-glow-ring ob-ring2"></div>
+        </div>
+        <div class="ob-scene-text">
+          <div class="ob-title">Fantôme</div>
+          <div class="ob-sub">Des messages invisibles<br>ancrés dans les lieux réels.</div>
+        </div>
+      </div>
+
+      <!-- SCÈNE 1 : RADAR -->
+      <div class="ob-scene" id="obScene1">
+        <div class="ob-scene-visual">
+          <div class="ob-radar">
+            <div class="ob-radar-ring"></div>
+            <div class="ob-radar-ring ob-rring2"></div>
+            <div class="ob-radar-ring ob-rring3"></div>
+            <div class="ob-radar-sweep"></div>
+            <div class="ob-radar-center"></div>
+            <div class="ob-ghost-dot" style="left:62%;top:28%;">👻</div>
+            <div class="ob-ghost-dot ob-dot2" style="left:35%;top:55%;">🔮</div>
+            <div class="ob-ghost-dot ob-dot3" style="left:70%;top:65%;">💬</div>
+          </div>
+        </div>
+        <div class="ob-scene-text">
+          <div class="ob-title">Découvrez</div>
+          <div class="ob-sub">Passez près d'un lieu et les<br>fantômes autour de vous apparaissent.</div>
+        </div>
+      </div>
+
+      <!-- SCÈNE 2 : ENVELOPPE -->
+      <div class="ob-scene" id="obScene2">
+        <div class="ob-scene-visual">
+          <div class="ob-envelope" id="obEnvelope">
+            <div class="ob-env-flap" id="obEnvFlap"></div>
+            <div class="ob-env-body">
+              <div class="ob-env-emoji">👻</div>
+              <div class="ob-env-lines">
+                <div class="ob-env-line"></div>
+                <div class="ob-env-line ob-line2"></div>
+                <div class="ob-env-line ob-line3"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ob-scene-text">
+          <div class="ob-title">Ouvrez</div>
+          <div class="ob-sub">Chaque message est une<br>enveloppe scellée à dévoiler.</div>
+        </div>
+      </div>
+
+      <!-- SCÈNE 3 : RÉSONANCE -->
+      <div class="ob-scene" id="obScene3">
+        <div class="ob-scene-visual">
+          <div class="ob-reso-wrap">
+            <div class="ob-reso-btn" id="obResoBtn">✦ Résonner</div>
+            <div class="ob-reso-particles" id="obResoParticles"></div>
+          </div>
+        </div>
+        <div class="ob-scene-text">
+          <div class="ob-title">Résonnez</div>
+          <div class="ob-sub">Une résonance par jour —<br>choisissez le message qui vous touche.</div>
+        </div>
+      </div>
+
     </div>
+
+    <!-- PAGINATION DOTS -->
+    <div class="ob-dots">
+      <div class="ob-dot active" onclick="goObScene(0)"></div>
+      <div class="ob-dot" onclick="goObScene(1)"></div>
+      <div class="ob-dot" onclick="goObScene(2)"></div>
+      <div class="ob-dot" onclick="goObScene(3)"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="ob-cta" id="obCta" style="opacity:0;pointer-events:none;">
+      <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;">Entrer dans les lieux ›</button>
+      <div style="font-size:11px;color:rgba(168,180,255,.3);text-align:center;margin-top:6px;">Gratuit · Sans pub</div>
+    </div>
+
+    <!-- SWIPE HINT -->
+    <div class="ob-swipe-hint" id="obSwipeHint">Glissez pour découvrir →</div>
+
   </div>
 
   
