@@ -896,6 +896,59 @@ function markResonatedToday(ghostId) {
   localStorage.setItem(getDailyResoKey(), ghostId);
 }
 
+function fireResonanceParticles(btn) {
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+
+  // Shockwave ring
+  const wave = document.createElement('div');
+  wave.className = 'reso-shockwave';
+  wave.style.left = cx + 'px';
+  wave.style.top = cy + 'px';
+  document.body.appendChild(wave);
+  setTimeout(() => wave.remove(), 700);
+
+  // Particles — mix of ✦ sparkles and ghost emojis
+  const symbols = ['✦','✦','✦','✦','✧','·','👻','✦'];
+  const count = 14;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'reso-particle';
+    const angle = (i / count) * 2 * Math.PI + (Math.random() - .5) * .4;
+    const dist = 40 + Math.random() * 70;
+    const px = Math.cos(angle) * dist;
+    const py = Math.sin(angle) * dist - 20;
+    const size = 8 + Math.random() * 10;
+    const dur = (0.5 + Math.random() * 0.5).toFixed(2) + 's';
+    const delay = (Math.random() * 0.15).toFixed(2) + 's';
+    const sym = symbols[Math.floor(Math.random() * symbols.length)];
+    const alpha = 0.5 + Math.random() * 0.5;
+    p.style.cssText = [
+      'left:' + cx + 'px',
+      'top:' + cy + 'px',
+      '--px:' + px.toFixed(0) + 'px',
+      '--py:' + py.toFixed(0) + 'px',
+      '--dur:' + dur,
+      'animation-delay:' + delay,
+      'font-size:' + size + 'px',
+      'color:rgba(168,180,255,' + alpha + ')',
+      'filter:drop-shadow(0 0 4px rgba(168,180,255,.6))',
+      'line-height:1',
+    ].join(';');
+    p.textContent = sym;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 800);
+  }
+
+  // Vibration
+  if (navigator.vibrate) navigator.vibrate([15, 10, 30]);
+
+  // Button pulse
+  btn.classList.add('firing');
+  setTimeout(() => btn.classList.remove('firing'), 500);
+}
+
 window.resonate = async () => {
   const btn = document.getElementById('resonanceBtn');
   if (btn.classList.contains('resonated') || !selectedGhost) return;
@@ -915,6 +968,7 @@ window.resonate = async () => {
     }, 3000);
     return;
   }
+  fireResonanceParticles(btn);
   btn.classList.add('resonated');
   btn.textContent = '✦ Résonance envoyée — merci ✨';
   markResonatedToday(selectedGhost.id);
@@ -1497,6 +1551,40 @@ createParticles();
 #screenDetail .scroll{transition:transform .25s cubic-bezier(.25,.46,.45,.94),opacity .2s;}
 #screenDetail .scroll.swipe-left{transform:translateX(-60px);opacity:0;}
 #screenDetail .scroll.swipe-right{transform:translateX(60px);opacity:0;}
+
+.resonance-btn{position:relative;overflow:visible;}
+@keyframes particleRise{
+  0%{transform:translate(-50%,-50%) scale(1);opacity:1;}
+  100%{transform:translate(calc(-50% + var(--px)),calc(-50% + var(--py))) scale(0);opacity:0;}
+}
+@keyframes resoShockwave{
+  0%{width:0;height:0;opacity:.6;border-width:2px;}
+  100%{width:200px;height:200px;opacity:0;border-width:1px;}
+}
+@keyframes resoBtnPulse{
+  0%{box-shadow:0 0 0 0 rgba(168,180,255,.5);}
+  50%{box-shadow:0 0 0 12px rgba(168,180,255,0);}
+  100%{box-shadow:0 0 0 0 rgba(168,180,255,0);}
+}
+.reso-shockwave{
+  position:fixed;
+  border-radius:50%;
+  border:2px solid rgba(168,180,255,.6);
+  pointer-events:none;
+  z-index:9999;
+  transform:translate(-50%,-50%);
+  animation:resoShockwave .6s cubic-bezier(.25,.46,.45,.94) forwards;
+}
+.reso-particle{
+  position:fixed;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:9999;
+  animation:particleRise var(--dur) cubic-bezier(.25,.46,.45,.94) forwards;
+}
+.resonance-btn.firing{
+  animation:resoBtnPulse .5s ease-out;
+}
 </style>
 </head>
 <body>
