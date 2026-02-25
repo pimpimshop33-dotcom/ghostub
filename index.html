@@ -1256,6 +1256,12 @@ window.showScreen = (id) => {
   if (id === 'screenProfile') {
     refreshProfileStats();
   }
+  if (id === 'screenOnboard') {
+    // Show back button only if user is logged in
+    const btn = document.getElementById('obBackBtn');
+    if (btn) btn.style.display = currentUser ? 'flex' : 'none';
+    goObScene(0);
+  }
   if (id === 'screenDeposit') {
     setWizardStep(1);
     // Show/hide chain lock based on premium
@@ -1941,6 +1947,8 @@ createParticles();
 
   
   <div class="screen active" id="screenOnboard">
+    <!-- RETOUR (visible si connecté) -->
+    <button class="back-btn" id="obBackBtn" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')">← retour</button>
 
     <!-- CAROUSEL SCÈNES -->
     <div class="ob-carousel" id="obCarousel">
@@ -2383,6 +2391,7 @@ createParticles();
           <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;"></div>
         </div>
       </div>
+      <button class="btn-secondary" onclick="showScreen('screenOnboard')" style="margin-bottom:8px;font-size:13px;padding:11px;">👻 Revoir l'intro</button>
       <button class="logout-btn" onclick="logout()">🚪 Se déconnecter</button>
       <button id="deleteBtn" onclick="deleteMyGhosts()" style="width:100%;padding:12px;background:transparent;border:1px solid rgba(255,100,100,.2);border-radius:13px;color:rgba(255,100,100,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-top:8px;">🗑 Vider mes fantômes & réponses</button>
       <button class="btn-secondary" id="notifBtn" onclick="enableNotifications()" style="margin-top:8px;font-size:13px;padding:11px;">🔔 Activer les notifications</button>
