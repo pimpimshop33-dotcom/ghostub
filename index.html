@@ -297,6 +297,7 @@ window.register = async () => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Email invalide.'; return; }
   if (pseudo.length < 2 || pseudo.length > 30) { err.textContent = 'Pseudo entre 2 et 30 caractères.'; return; }
   err.textContent = '';
+  setLoading(btn, true);
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: pseudo });
@@ -314,11 +315,14 @@ window.login = async () => {
   const err   = document.getElementById('loginAuthError');
   err.textContent = '';
   if (!email || !pass) { err.textContent = 'Remplissez tous les champs.'; return; }
+  const btn = document.querySelector('#tabLogin .btn-primary');
+  if (btn) { btn.textContent = 'Connexion…'; btn.disabled = true; }
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     Analytics.track('login');
   } catch(e) {
     err.textContent = 'Email ou mot de passe incorrect.';
+    if (btn) { btn.textContent = 'Se connecter'; btn.disabled = false; }
   }
 };
 
@@ -756,6 +760,7 @@ window.submitReport = async (reason) => {
       createdAt: serverTimestamp()
     });
     localStorage.setItem(key, '1');
+    showToast('success', '✓ Signalement envoyé — merci');
     await updateDoc(doc(db, 'ghosts', ghostId), { reportCount: increment(1) });
     const ghostDoc = await getDocs(query(collection(db, 'reports'), where('ghostId', '==', ghostId)));
     if (ghostDoc.size >= REPORT_THRESHOLD) {
@@ -775,15 +780,31 @@ window.submitReport = async (reason) => {
   }
 };
 
-function showReportFeedback(msg) {
+// ── TOAST SYSTEM ────────────────────────────────────────
+let _toastTimer = null;
+function showToast(type, msg) {
   const toast = document.getElementById('discoveryToast');
   const icon  = document.getElementById('toastIcon');
   const text  = document.getElementById('toastText');
   if (!toast) return;
-  icon.textContent = '⚑';
-  text.textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 3000);
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: '👻', report: '⚑', link: '🔗' };
+  const types = { success: 'rgba(100,220,160,.9)', error: 'rgba(255,100,100,.9)', warning: 'rgba(255,180,50,.9)', info: 'var(--ether)', report: 'var(--spirit-dim)', link: 'var(--ether)' };
+  icon.textContent = icons[type] || '👻';
+  text.innerHTML = msg;
+  toast.style.borderColor = 'rgba(168,180,255,.25)';
+  if (type === 'success') toast.style.borderColor = 'rgba(100,220,160,.3)';
+  if (type === 'error') toast.style.borderColor = 'rgba(255,100,100,.3)';
+  if (type === 'warning') toast.style.borderColor = 'rgba(255,180,50,.3)';
+  clearTimeout(_toastTimer);
+  toast.classList.remove('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    toast.classList.add('show');
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+  }));
+}
+
+function showReportFeedback(msg) {
+  showToast('report', msg);
 }
 
 function updateReportBtn(ghostId) {
@@ -833,12 +854,14 @@ window.closeShareModal = (e) => {
 
 window.copyShareLink = () => {
   const link = document.getElementById('shareLinkBox').textContent;
+  const btn = document.querySelector('.share-copy-btn');
   navigator.clipboard.writeText(link).then(() => {
-    showReportFeedback('🔗 Lien copié !');
+    if (btn) { btn.textContent = '✓ Copié !'; btn.style.borderColor = 'rgba(100,220,160,.4)'; setTimeout(() => { btn.textContent = '📋 Copier le lien'; btn.style.borderColor = ''; }, 2000); }
+    showToast('link', '🔗 Lien copié dans le presse-papier');
     closeModal('shareModal');
     Analytics.track('share_copied');
   }).catch(() => {
-    showReportFeedback('Impossible de copier — copiez manuellement.');
+    showToast('warning', 'Copiez manuellement le lien ci-dessus');
   });
 };
 
@@ -937,6 +960,31 @@ function watchMyGhostResonances() {
   });
 }
 
+// ── MODALE CONFIRMATION ─────────────────────────────────
+function showConfirm(title, subtitle) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('confirmModal');
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmSubtitle').textContent = subtitle;
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    const btnOk = document.getElementById('confirmOk');
+    const btnCancel = document.getElementById('confirmCancel');
+    const cleanup = (result) => {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+      btnOk.removeEventListener('click', onOk);
+      btnCancel.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    btnOk.addEventListener('click', onOk);
+    btnCancel.addEventListener('click', onCancel);
+    setTimeout(() => btnCancel.focus(), 50);
+  });
+}
+
 window.logout = async () => {
   Analytics.track('logout');
   await signOut(auth);
@@ -944,8 +992,9 @@ window.logout = async () => {
 
 window.deleteMyGhosts = async () => {
   if (!currentUser) return;
-  // Confirmation simple
-  if (!confirm('Supprimer tous vos fantômes et réponses ? Cette action est irréversible.')) return;
+  // Confirmation modale custom
+  const confirmed = await showConfirm('Supprimer tous mes fantômes ?', 'Cette action est irréversible — tous vos messages et réponses seront effacés.');
+  if (!confirmed) return;
   const btn = document.getElementById('deleteBtn');
   btn.textContent = 'Suppression…';
   btn.disabled = true;
@@ -992,13 +1041,14 @@ function timeRemaining(g) {
 window.loadNearbyGhosts = async () => {
   // Vérification offline
   if (!navigator.onLine) {
-    showReportFeedback('Hors ligne — données peut-être incomplètes.');
+    showToast('warning', '📵 Hors ligne — données peut-être incomplètes.');
   }
   document.getElementById('ghostCount').textContent = '';
   document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Localisation en cours…</span>';
+  skeletonGhostList();
   try {
     await getLocation();
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Recherche de fantômes…</span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">🔍 Recherche de fantômes…</span>';
     document.getElementById('userCoords').textContent =
       userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
   } catch(e) {
@@ -1071,12 +1121,35 @@ window.loadNearbyGhosts = async () => {
     }
   }
   Analytics.track('ghosts_loaded', { count });
+  checkForNewGhosts(count);
 };
+
+function skeletonGhostList() {
+  const list = document.getElementById('ghostList');
+  list.innerHTML = [1,2,3].map(() => `
+    <div class="ghost-skel">
+      <div class="skel-flap"></div>
+      <div class="skel-body">
+        <div class="skel-emoji"></div>
+        <div class="skel-lines">
+          <div class="skel-line skel-l1"></div>
+          <div class="skel-line skel-l2"></div>
+        </div>
+        <div class="skel-dist"></div>
+      </div>
+    </div>`).join('');
+}
 
 function renderGhostList() {
   const list = document.getElementById('ghostList');
   if (nearbyGhosts.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:var(--spirit-dim);padding:30px 0;font-size:13px;">Aucun fantôme proche.<br>Déposez le premier ! 👻</div>';
+    list.innerHTML = `
+      <div style="text-align:center;padding:40px 0 20px;">
+        <div style="font-size:48px;margin-bottom:12px;opacity:.4;filter:blur(1px);">👻</div>
+        <div style="font-size:14px;color:var(--ether);font-family:'Cormorant Garamond',serif;font-style:italic;margin-bottom:6px;">Aucun fantôme dans ce lieu</div>
+        <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:20px;">Soyez le premier à hanter cet endroit.</div>
+        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:10px 20px;background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;">👻 Déposer un fantôme</button>
+      </div>`;
     return;
   }
   list.innerHTML = nearbyGhosts.map(g => {
@@ -1482,11 +1555,13 @@ window.depositGhost = async () => {
 
   err.textContent = '';
   const depositBtn = document.getElementById('depositBtn');
-  depositBtn.textContent = 'Dépôt en cours…';
-  depositBtn.disabled = true;
+  const hasMedia = !!(window._pendingAudioBlob || window._pendingPhotoFile);
+  setLoading(depositBtn, true);
+  depositBtn.textContent = hasMedia ? '⬆ Upload…' : '';
 
   try {
     const { audioUrl, photoUrl } = await uploadMedia(currentUser.uid + '_' + Date.now());
+    if (hasMedia) depositBtn.textContent = '✓ Upload · Sauvegarde…';
     const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
     const chainNext = isPremium ? (window._chainNextCoords || null) : null;
     await addDoc(collection(db, 'ghosts'), {
@@ -1519,6 +1594,7 @@ window.depositGhost = async () => {
     depositBtn.disabled = false;
     clearAudio(); clearPhoto();
     document.getElementById('depositSuccess').classList.add('show');
+    showToast('success', '👻 Fantôme déposé avec succès !');
     Analytics.track('ghost_deposited', { anonymous: anon, secret, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
     setTimeout(async () => {
       document.getElementById('depositSuccess').classList.remove('show');
@@ -1547,6 +1623,8 @@ window.sendReply = async () => {
     createdAt: serverTimestamp()
   });
   document.getElementById('replyMsg').value = '';
+  updateReplyCount(document.getElementById('replyMsg'));
+  showToast('success', '↩ Réponse déposée');
   openGhost(selectedGhost.id);
   Analytics.track('reply_sent');
 };
@@ -1569,12 +1647,30 @@ window.openEnvelope = () => {
   Analytics.track('envelope_opened');
 };
 
-window.showScreen = (id) => {
+// ── HISTORIQUE NAVIGATION ──────────────────────────────
+let _navHistory = [];
+let _navInProgress = false;
+
+window.addEventListener('popstate', (e) => {
+  if (_navInProgress) return;
+  const screenId = e.state?.screen;
+  if (screenId) {
+    _navInProgress = true;
+    showScreen(screenId, true); // true = depuis popstate, ne pas push
+    _navInProgress = false;
+  }
+});
+
+window.showScreen = (id, fromPopstate = false) => {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   // Reset scroll
   const scroll = document.querySelector('#' + id + ' .scroll');
   if (scroll) scroll.scrollTop = 0;
+  // Push dans l'historique navigateur sauf si on revient en arrière
+  if (!fromPopstate) {
+    history.pushState({ screen: id }, '', window.location.href.split('?')[0] + window.location.search);
+  }
   if (id === 'screenMap') renderStaticMap();
   if (id === 'screenProfile') refreshProfileStats();
   if (id === 'screenOnboard') {
@@ -1582,6 +1678,17 @@ window.showScreen = (id) => {
     if (btn) btn.style.display = currentUser ? 'flex' : 'none';
     goObScene(0);
   }
+  // Autofocus sur le premier input
+  setTimeout(() => {
+    if (id === 'screenAuth') {
+      const firstInput = document.querySelector('#tabLogin:not([style*="none"]) .form-input, #tabRegister:not([style*="none"]) .form-input');
+      if (firstInput) firstInput.focus();
+    }
+    if (id === 'screenReply') {
+      document.getElementById('replyMsg')?.focus();
+    }
+  }, 350);
+
   if (id === 'screenDeposit') {
     setWizardStep(1);
     const chainContent = document.getElementById('chainContent');
@@ -1618,6 +1725,239 @@ window.showScreen = (id) => {
   document.title = screenTitles[id] || 'Fantôme';
 };
 
+// ── ANIMATION TRANSITIONS ÉCRANS ────────────────────────
+let _prevScreen = null;
+const _mainScreens = ['screenRadar','screenMap','screenDeposit','screenProfile'];
+const _screenOrder = { screenRadar:0, screenMap:1, screenDeposit:2, screenProfile:3 };
+
+function animateScreenTransition(newId) {
+  const el = document.getElementById(newId);
+  if (!el) return;
+  el.classList.remove('slide-in', 'slide-back');
+  const prevOrder = _screenOrder[_prevScreen] ?? -1;
+  const newOrder  = _screenOrder[newId] ?? -1;
+  if (prevOrder !== -1 && newOrder !== -1 && prevOrder !== newOrder) {
+    el.classList.add(newOrder > prevOrder ? 'slide-in' : 'slide-back');
+    el.addEventListener('animationend', () => el.classList.remove('slide-in','slide-back'), { once: true });
+  } else if (_prevScreen && !_mainScreens.includes(_prevScreen)) {
+    // Retour depuis écran secondaire → slide-back
+    el.classList.add('slide-back');
+    el.addEventListener('animationend', () => el.classList.remove('slide-back'), { once: true });
+  } else if (!_mainScreens.includes(newId)) {
+    // Aller vers écran secondaire → slide-in
+    el.classList.add('slide-in');
+    el.addEventListener('animationend', () => el.classList.remove('slide-in'), { once: true });
+  }
+  _prevScreen = newId;
+}
+
+// Patch showScreen pour ajouter les animations
+const _showScreenOrig = window.showScreen;
+window.showScreen = (id, fromPopstate = false) => {
+  animateScreenTransition(id);
+  _showScreenOrig(id, fromPopstate);
+};
+
+// ── REPLY CHAR COUNTER ───────────────────────────────────
+window.updateReplyCount = (el) => {
+  const n = el.value.length;
+  const counter = document.getElementById('replyCharCount');
+  if (!counter) return;
+  counter.textContent = n + ' / 280';
+  counter.className = 'reply-char-count' + (n >= 280 ? ' full' : n >= 240 ? ' near' : '');
+};
+
+// ── BADGE NAV DÉPOSER ────────────────────────────────────
+window.showDepositBadge = () => {
+  const b = document.getElementById('depositBadge');
+  if (b) b.classList.add('show');
+};
+window.hideDepositBadge = () => {
+  const b = document.getElementById('depositBadge');
+  if (b) b.classList.remove('show');
+};
+
+// ── PULL TO REFRESH ──────────────────────────────────────
+(function initPullToRefresh() {
+  let startY = 0, pulling = false, triggered = false;
+  const MIN_PULL = 72;
+
+  const getContainer = () => document.querySelector('#screenRadar .scroll');
+
+  document.addEventListener('touchstart', (e) => {
+    const container = getContainer();
+    if (!container || !document.getElementById('screenRadar').classList.contains('active')) return;
+    if (container.scrollTop > 0) return;
+    startY = e.touches[0].clientY;
+    pulling = true;
+    triggered = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { pulling = false; return; }
+    const ind = document.getElementById('ptrIndicator');
+    const spinner = document.getElementById('ptrSpinner');
+    const txt = document.getElementById('ptrText');
+    if (!ind) return;
+    if (dy > 20) ind.classList.add('visible');
+    if (dy > MIN_PULL && !triggered) {
+      triggered = true;
+      spinner.classList.add('spin');
+      if (txt) txt.textContent = 'Actualisation…';
+    } else if (!triggered && txt) {
+      txt.textContent = 'Tirer pour actualiser';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    const ind = document.getElementById('ptrIndicator');
+    const spinner = document.getElementById('ptrSpinner');
+    const txt = document.getElementById('ptrText');
+    if (triggered) {
+      loadNearbyGhosts().finally(() => {
+        if (ind) ind.classList.remove('visible');
+        if (spinner) spinner.classList.remove('spin');
+        if (txt) txt.textContent = 'Relâcher pour actualiser';
+      });
+    } else {
+      if (ind) ind.classList.remove('visible');
+    }
+  });
+})();
+
+// ── SWIPE TO CLOSE BOTTOM SHEETS ────────────────────────
+(function initSwipeClose() {
+  ['reportModal','shareModal'].forEach(modalId => {
+    let startY = 0, isDragging = false;
+    const getSheet = () => document.querySelector(`#${modalId} .report-sheet, #${modalId} .share-sheet`);
+
+    document.addEventListener('touchstart', (e) => {
+      const modal = document.getElementById(modalId);
+      if (!modal?.classList.contains('show')) return;
+      const handle = e.target.closest('.sheet-handle');
+      if (!handle) return;
+      startY = e.touches[0].clientY;
+      isDragging = true;
+      const sheet = getSheet();
+      if (sheet) sheet.style.transition = 'none';
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      const dy = e.touches[0].clientY - startY;
+      if (dy < 0) return;
+      const sheet = getSheet();
+      if (sheet) sheet.style.transform = `translateY(${dy}px)`;
+    }, { passive: true });
+
+    document.addEventListener('touchend', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      const dy = e.changedTouches[0].clientY - startY;
+      const sheet = getSheet();
+      if (sheet) sheet.style.transition = '';
+      if (dy > 100) {
+        if (modalId === 'reportModal') closeReportModal();
+        else closeModal('shareModal');
+      } else {
+        if (sheet) sheet.style.transform = '';
+      }
+    });
+  });
+})();
+
+// ── HAPTIC FEEDBACK ──────────────────────────────────────
+function haptic(pattern = [10]) {
+  if (navigator.vibrate) navigator.vibrate(pattern);
+}
+
+// Ajout haptic sur les éléments clés
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.nav-item')) haptic([8]);
+  if (e.target.closest('.btn-primary, .wizard-next-btn')) haptic([12]);
+  if (e.target.closest('.ghost-envelope')) haptic([15]);
+});
+
+// ── GESTE RETOUR (glisser depuis le bord gauche) ─────────
+(function initEdgeSwipeBack() {
+  let startX = 0, startY = 0, tracking = false;
+  const BACK_SCREENS = ['screenDetail','screenReply'];
+
+  document.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tracking = startX < 30; // zone bord gauche
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = Math.abs(e.changedTouches[0].clientY - startY);
+    const activeScreen = document.querySelector('.screen.active');
+    if (!activeScreen) return;
+    if (dx > 80 && dy < 60 && BACK_SCREENS.includes(activeScreen.id)) {
+      haptic([10]);
+      history.back();
+    }
+  });
+})();
+
+// ── BADGE : afficher si de nouveaux fantômes détectés ───
+let _lastGhostCount = 0;
+function checkForNewGhosts(newCount) {
+  if (_lastGhostCount > 0 && newCount > _lastGhostCount) {
+    const diff = newCount - _lastGhostCount;
+    const b = document.getElementById('depositBadge');
+    // On montre plutôt sur le radar, mais on peut signaler
+    showToast('info', `👻 ${diff} nouveau${diff>1?'x':''} fantôme${diff>1?'s':''} à proximité`);
+  }
+  _lastGhostCount = newCount;
+}
+
+// ── INPUT : effacer erreur à la frappe ───────────────────
+document.addEventListener('input', (e) => {
+  if (e.target.closest('#tabLogin')) {
+    document.getElementById('loginAuthError').textContent = '';
+  }
+  if (e.target.closest('#tabRegister')) {
+    document.getElementById('regAuthError').textContent = '';
+  }
+  // Border reset
+  if (e.target.classList.contains('form-input') || e.target.classList.contains('form-textarea')) {
+    e.target.style.borderColor = '';
+  }
+});
+
+// ── AUTO-RESIZE TEXTAREA ─────────────────────────────────
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (el.tagName === 'TEXTAREA' && el.id === 'depositMsg') {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+  }
+});
+
+// ── INDICATEUR DE CHARGEMENT GLOBAL ─────────────────────
+function setLoading(btn, loading, defaultText) {
+  if (!btn) return;
+  if (loading) {
+    btn.disabled = true;
+    btn.dataset.origText = btn.textContent;
+    btn.textContent = '';
+    btn.classList.add('btn-loading');
+  } else {
+    btn.disabled = false;
+    btn.textContent = defaultText || btn.dataset.origText || btn.textContent;
+    btn.classList.remove('btn-loading');
+  }
+}
+window.setLoading = setLoading;
+
 window.setNav = (id) => {
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.remove('active');
@@ -1630,6 +1970,14 @@ window.setNav = (id) => {
 };
 
 window.showTab = (tab) => {
+  ['tabLogin','tabRegister'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.opacity = '0';
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(tab === 'login' ? 'tabLogin' : 'tabRegister');
+  target.style.display = 'flex';
+  requestAnimationFrame(() => requestAnimationFrame(() => { target.style.opacity = '1'; }));
   document.getElementById('tabLogin').style.display    = tab === 'login'    ? 'flex' : 'none';
   document.getElementById('tabRegister').style.display = tab === 'register' ? 'flex' : 'none';
   document.querySelectorAll('.auth-tab').forEach(t => {
@@ -1641,6 +1989,22 @@ window.showTab = (tab) => {
   document.getElementById('loginAuthError').textContent = '';
   document.getElementById('regAuthError').textContent = '';
 };
+
+// ── REVERSE GEOCODING ───────────────────────────────────
+async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`, {
+      headers: { 'User-Agent': 'FantomeApp/1.0' }
+    });
+    const data = await res.json();
+    const addr = data.address || {};
+    // Priorité : café/bar/restaurant > rue > quartier > ville
+    return addr.amenity || addr.shop || addr.tourism || addr.leisure ||
+           (addr.road ? (addr.house_number ? addr.road + ' ' + addr.house_number : addr.road) : null) ||
+           addr.neighbourhood || addr.suburb || addr.city_district ||
+           addr.town || addr.city || null;
+  } catch(e) { return null; }
+}
 
 window.wizardNext = (step) => {
   if (step === 1) {
@@ -1656,8 +2020,34 @@ window.wizardNext = (step) => {
       return;
     }
     setWizardStep(2);
+    // Auto-remplir le nom du lieu si vide
+    const locInput = document.getElementById('depositLocation');
+    if (userLat && !locInput.value) {
+      locInput.placeholder = 'Recherche du lieu…';
+      reverseGeocode(userLat, userLng).then(name => {
+        if (name && !locInput.value) {
+          locInput.value = name;
+          locInput.style.borderColor = 'rgba(100,220,160,.4)';
+          setTimeout(() => locInput.style.borderColor = '', 1500);
+        }
+        locInput.placeholder = 'ex: Banc du parc, Café du coin…';
+      });
+    }
   } else if (step === 2) {
+    const loc = document.getElementById('depositLocation').value.trim();
+    if (!loc) {
+      document.getElementById('depositLocation').style.borderColor = 'rgba(255,180,50,.5)';
+      document.getElementById('depositLocation').focus();
+      setTimeout(() => document.getElementById('depositLocation').style.borderColor = '', 1500);
+      showToast('warning', '📍 Donnez un nom à ce lieu');
+      return;
+    }
     setWizardStep(3);
+    // Auto-remplir pseudo si connecté et champ vide
+    const pseudoInput = document.getElementById('depositAuthor');
+    if (pseudoInput && !pseudoInput.value && currentUser?.displayName) {
+      pseudoInput.value = currentUser.displayName;
+    }
   }
 };
 
@@ -2520,6 +2910,7 @@ body.light-theme .ob-reso-btn{
   color:var(--ether);
 }
 
+.auth-tab-content{transition:opacity .18s ease;}
 /* ── ACCESSIBILITÉ ─────────────────────────────────────── */
 /* Skip link */
 .skip-link{position:absolute;top:-100px;left:16px;background:var(--spirit);color:var(--void);padding:8px 16px;border-radius:8px;font-size:13px;font-weight:bold;z-index:99999;transition:top 0.2s;text-decoration:none;}
@@ -2551,6 +2942,86 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
   .ghost-envelope{border-width:2px;}
   .detail-message{border-left-width:4px;}
 }
+
+/* ── SKELETON LOADER ───────────────────────────────────── */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.ghost-skel{border-radius:16px;overflow:hidden;border:1px solid var(--border);background:var(--surface);margin-bottom:10px;}
+.skel-flap{height:22px;background:var(--ghost);}
+.skel-body{display:flex;align-items:center;gap:12px;padding:12px 14px 10px;}
+.skel-emoji{width:44px;height:44px;border-radius:12px;flex-shrink:0;background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:400px 100%;animation:shimmer 1.4s ease-in-out infinite;}
+.skel-lines{flex:1;display:flex;flex-direction:column;gap:8px;}
+.skel-line{height:10px;border-radius:6px;background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:400px 100%;animation:shimmer 1.4s ease-in-out infinite;}
+.skel-l1{width:75%;}
+.skel-l2{width:45%;animation-delay:.15s;}
+.skel-dist{width:38px;height:22px;border-radius:20px;background:linear-gradient(90deg,var(--surface) 25%,var(--surface2) 50%,var(--surface) 75%);background-size:400px 100%;animation:shimmer 1.4s ease-in-out infinite;animation-delay:.3s;}
+
+/* ── TRANSITIONS ÉCRANS ────────────────────────────────── */
+.screen{transition:opacity .22s ease;}
+.screen.slide-in{animation:slideInUp .28s cubic-bezier(.25,.46,.45,.94);}
+.screen.slide-back{animation:slideInDown .28s cubic-bezier(.25,.46,.45,.94);}
+@keyframes slideInUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideInDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── MODALE CONFIRMATION ───────────────────────────────── */
+.confirm-modal{position:fixed;inset:0;z-index:10100;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s;}
+.confirm-modal.show{opacity:1;pointer-events:all;}
+.confirm-box{width:100%;max-width:320px;background:var(--surface2);border:1px solid var(--border-bright);border-radius:20px;padding:24px;text-align:center;transform:scale(.92);transition:transform .25s cubic-bezier(.25,.46,.45,.94);box-shadow:0 20px 60px rgba(0,0,0,.7);}
+.confirm-modal.show .confirm-box{transform:scale(1);}
+.confirm-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:6px;}
+.confirm-subtitle{font-size:12px;color:var(--spirit-dim);line-height:1.6;margin-bottom:20px;}
+.confirm-actions{display:flex;gap:10px;}
+.confirm-cancel-btn{flex:1;padding:12px;background:transparent;border:1px solid var(--border);border-radius:12px;color:var(--warm-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.confirm-cancel-btn:hover{border-color:var(--border-bright);color:var(--warm);}
+.confirm-ok-btn{flex:1;padding:12px;background:rgba(255,100,100,.12);border:1px solid rgba(255,100,100,.3);border-radius:12px;color:rgba(255,130,130,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.confirm-ok-btn:hover{background:rgba(255,100,100,.2);border-color:rgba(255,100,100,.5);}
+
+/* ── SWIPE DOWN POUR FERMER LES MODALS ─────────────────── */
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border-bright);margin:0 auto 14px;cursor:grab;flex-shrink:0;}
+
+/* ── COMPTEUR DE CARACTÈRES REPLY ──────────────────────── */
+.reply-char-count{font-size:10px;color:rgba(168,180,255,.3);text-align:right;margin-top:4px;margin-bottom:12px;}
+.reply-char-count.near{color:rgba(255,180,50,.6);}
+.reply-char-count.full{color:rgba(255,100,100,.7);}
+
+/* ── BOUTON PRIMAIRE : ÉTAT CHARGEMENT ─────────────────── */
+.btn-primary:disabled,.wizard-next-btn:disabled{opacity:.55;cursor:not-allowed;}
+@keyframes btnSpinner{to{transform:rotate(360deg)}}
+.btn-loading::after{content:'';display:inline-block;width:12px;height:12px;border:2px solid rgba(168,180,255,.3);border-top-color:var(--ether);border-radius:50%;animation:btnSpinner .7s linear infinite;margin-left:8px;vertical-align:middle;}
+
+/* ── PULL TO REFRESH ────────────────────────────────────── */
+.ptr-indicator{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--spirit-dim);transition:height .2s;gap:6px;}
+.ptr-indicator.visible{height:36px;}
+.ptr-spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--spirit);border-radius:50%;}
+.ptr-spinner.spin{animation:btnSpinner .7s linear infinite;}
+
+/* ── INPUT FOCUS GLOW ───────────────────────────────────── */
+.form-input:focus,.form-textarea:focus{
+  border-color:var(--border-bright);
+  box-shadow:0 0 0 3px var(--spirit-glow);
+}
+
+/* ── FEEDBACK VISUEL SUR TAP ────────────────────────────── */
+.ghost-envelope:active{transform:scale(.98);}
+.btn-primary:active,.wizard-next-btn:active{transform:scale(.97);}
+.nav-item:active{transform:scale(.9);}
+
+/* ── BADGE NOUVEAUX FANTÔMES ────────────────────────────── */
+.nav-badge{position:absolute;top:-2px;right:-2px;min-width:16px;height:16px;background:var(--spirit);border-radius:8px;font-size:9px;color:var(--void);display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:700;opacity:0;transform:scale(0);transition:all .25s cubic-bezier(.25,.46,.45,.94);}
+.nav-badge.show{opacity:1;transform:scale(1);}
+#nav-deposit{position:relative;}
+
+/* ── EMPTY STATE AMÉLIORÉ ────────────────────────────────── */
+.empty-cta-btn{padding:10px 20px;background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:all .2s;}
+.empty-cta-btn:hover{background:rgba(168,180,255,.26);}
+
+/* ── TOOLTIP DISCRET ─────────────────────────────────────── */
+[data-tip]{position:relative;}
+[data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(14,14,22,.95);color:var(--ether);font-size:10px;white-space:nowrap;padding:4px 8px;border-radius:8px;border:1px solid var(--border);pointer-events:none;opacity:0;transition:opacity .2s;z-index:9000;}
+[data-tip]:hover::after,[data-tip]:focus::after{opacity:1;}
+
+/* ── INDICATEUR SCROLL ───────────────────────────────────── */
+.scroll-hint{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(168,180,255,.25);pointer-events:none;animation:obHintFade 2s ease-in-out infinite;letter-spacing:.5px;}
+
 </style>
 </head>
 <body>
@@ -2670,7 +3141,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
         </div>
         <div class="form-group">
           <label class="form-label" for="loginPass">Mot de passe</label>
-          <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true">
+          <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true" onkeydown="if(event.key==='Enter')login()">
         </div>
         <div class="auth-error" id="loginAuthError" role="alert" aria-live="polite"></div>
         <button class="btn-primary" onclick="login()">Se connecter</button>
@@ -2687,7 +3158,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
         </div>
         <div class="form-group">
           <label class="form-label" for="regPass">Mot de passe</label>
-          <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint">
+          <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint" onkeydown="if(event.key==='Enter')register()">
           <div id="passHint" style="font-size:10px;color:var(--spirit-dim);margin-top:3px;">6 caractères minimum</div>
         </div>
         <div class="auth-error" id="regAuthError" role="alert" aria-live="polite"></div>
@@ -2699,9 +3170,13 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
   <!-- RADAR -->
   <div class="screen" id="screenRadar" role="main" aria-label="Radar des fantômes proches">
     <span id="main-content" tabindex="-1" style="position:absolute;top:0;"></span>
+    <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
+      <div class="ptr-spinner" id="ptrSpinner"></div>
+      <span id="ptrText">Relâcher pour actualiser</span>
+    </div>
     <div class="radar-header">
       <div class="radar-title">Aux alentours</div>
-      <button class="refresh-btn" onclick="loadNearbyGhosts()" aria-label="Actualiser les fantômes proches">↻ Actualiser</button>
+      <button class="refresh-btn" onclick="loadNearbyGhosts()" aria-label="Actualiser les fantômes proches" data-tip="Actualiser">↻ Actualiser</button>
     </div>
     <div class="vibe-bar" aria-live="polite" aria-atomic="false">
       <div style="font-size:15px;" aria-hidden="true">📳</div>
@@ -2785,10 +3260,11 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
     <div class="scroll">
       <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:4px;">Répondre ici</div>
       <div style="font-size:12px;color:var(--warm-dim);margin-bottom:18px;">Votre réponse restera ancrée au même endroit.</div>
-      <div class="form-group" style="margin-bottom:12px;">
+      <div class="form-group" style="margin-bottom:4px;">
         <label class="form-label" for="replyMsg">Votre message</label>
-        <textarea class="form-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" style="height:110px;" maxlength="280" aria-required="true"></textarea>
+        <textarea class="form-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" style="height:110px;" maxlength="280" aria-required="true" oninput="updateReplyCount(this)"></textarea>
       </div>
+      <div class="reply-char-count" id="replyCharCount">0 / 280</div>
       <div class="form-group" style="margin-bottom:16px;">
         <label class="form-label">Identité</label>
         <div class="type-selector">
@@ -2796,7 +3272,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
           <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
         </div>
       </div>
-      <button class="btn-primary" onclick="sendReply()">Déposer la réponse</button>
+      <button class="btn-primary" id="sendReplyBtn" onclick="sendReply()">Déposer la réponse</button>
     </div>
   </div>
 
@@ -3013,8 +3489,12 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
     <div class="nav-item" id="nav-map" onclick="showScreen('screenMap');setNav('nav-map')" role="button" tabindex="0" aria-label="Carte" onkeydown="if(event.key==='Enter')this.click()">
       <div class="nav-icon" aria-hidden="true">🗺️</div><span>Carte</span>
     </div>
-    <div class="nav-item" id="nav-deposit" onclick="showScreen('screenDeposit');setNav('nav-deposit')" role="button" tabindex="0" aria-label="Déposer un fantôme" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="nav-icon" aria-hidden="true">👻</div><span>Déposer</span>
+    <div class="nav-item" id="nav-deposit" onclick="showScreen('screenDeposit');setNav('nav-deposit');hideDepositBadge()" role="button" tabindex="0" aria-label="Déposer un fantôme" onkeydown="if(event.key==='Enter')this.click()">
+      <div style="position:relative;display:inline-block;">
+        <div class="nav-icon" aria-hidden="true">👻</div>
+        <div class="nav-badge" id="depositBadge" aria-label="Nouveau">!</div>
+      </div>
+      <span>Déposer</span>
     </div>
     <div class="nav-item" id="nav-profile" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Mon profil" onkeydown="if(event.key==='Enter')this.click()">
       <div class="nav-icon" aria-hidden="true">🌑</div><span>Profil</span>
@@ -3025,6 +3505,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
 <!-- MODAL PARTAGE -->
 <div class="share-modal" id="shareModal" onclick="closeShareModal(event)" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
   <div class="share-sheet">
+    <div class="sheet-handle" aria-hidden="true"></div>
     <div class="share-sheet-title" id="shareModalTitle">Partager ce fantôme</div>
     <div class="share-sheet-sub">Seule la position est partagée.<br>Le contenu reste invisible jusqu'à ce qu'on soit sur place.</div>
     <div class="share-link-box" id="shareLinkBox" aria-label="Lien de partage">…</div>
@@ -3039,6 +3520,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
 <!-- MODAL SIGNALEMENT -->
 <div class="report-modal" id="reportModal" onclick="closeReportModal(event)" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
   <div class="report-sheet">
+    <div class="sheet-handle" aria-hidden="true"></div>
     <div class="report-sheet-title" id="reportModalTitle">Signaler ce fantôme</div>
     <div class="report-sheet-sub">Après 3 signalements, le message sera supprimé automatiquement.</div>
     <div class="report-reasons" role="list">
@@ -3049,6 +3531,18 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
       <div class="report-reason" onclick="submitReport('autre')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('autre')">💬 <span>Autre raison</span></div>
     </div>
     <button class="report-cancel" onclick="closeModal('reportModal')">Annuler</button>
+  </div>
+</div>
+
+<!-- MODALE CONFIRMATION -->
+<div class="confirm-modal" id="confirmModal" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirmTitle">Confirmer</div>
+    <div class="confirm-subtitle" id="confirmSubtitle"></div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel-btn" id="confirmCancel">Annuler</button>
+      <button class="confirm-ok-btn" id="confirmOk">Supprimer</button>
+    </div>
   </div>
 </div>
 
