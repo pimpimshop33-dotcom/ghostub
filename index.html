@@ -891,7 +891,7 @@ function applyTheme(theme) {
   // Active le bon
   document.querySelector('meta[name="theme-color"]:not([media])')?.remove();
   const btn = document.getElementById('themeToggleBtn');
-  if (btn) btn.textContent = isLight ? '🌙 Passer en mode nuit' : '☀️ Passer en mode jour';
+  if (btn) btn.textContent = isLight ? '🌙 Mode nuit' : '☀️ Mode jour';
   localStorage.setItem('fantome_theme', theme);
 }
 
@@ -2269,19 +2269,19 @@ input, textarea, select {
 /* ── SHARE & THEME BUTTONS ─────────────────────────────── */
 .share-btn{width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:13px;color:var(--spirit-dim);font-family:"Instrument Sans",sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;}
 .share-btn:hover{border-color:var(--border-bright);color:var(--spirit);}
-.theme-toggle{width:100%;padding:11px;background:transparent;border:1px solid var(--border);border-radius:13px;color:var(--warm-dim);font-family:"Instrument Sans",sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px;touch-action:manipulation;}
-.theme-toggle:hover{border-color:var(--border-bright);color:var(--warm);}
+.theme-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--spirit-dim);font-family:"Instrument Sans",sans-serif;font-size:11px;letter-spacing:.3px;cursor:pointer;transition:all .2s;margin-bottom:8px;touch-action:manipulation;}
+.theme-toggle:hover{border-color:var(--border-bright);color:var(--spirit);}
 
 /* ── THÈME CLAIR ─────────────────────────────────────────── */
 body.light-theme{
-  --void:#f0eff5;--deep:#e8e7f0;--surface:#dddceb;--surface2:#d4d3e4;
-  --ghost:rgba(100,90,180,0.07);--spirit:#6558c8;--spirit-dim:rgba(101,88,200,0.45);
-  --spirit-glow:rgba(101,88,200,0.12);--ether:#3d2fa0;
-  --warm:#1a1830;--warm-dim:rgba(26,24,48,0.65);
-  --border:rgba(101,88,200,0.15);--border-bright:rgba(101,88,200,0.35);
-  --red:rgba(200,50,50,0.85);
+  --void:#cccae0;--deep:#bfbcd6;--surface:#b3b0cc;--surface2:#a8a4c4;
+  --ghost:rgba(60,45,150,0.12);--spirit:#4a3bb5;--spirit-dim:rgba(74,59,181,0.6);
+  --spirit-glow:rgba(74,59,181,0.18);--ether:#1e1468;
+  --warm:#0a0820;--warm-dim:rgba(10,8,32,0.82);
+  --border:rgba(74,59,181,0.28);--border-bright:rgba(74,59,181,0.58);
+  --red:rgba(170,25,25,0.9);
 }
-body.light-theme .phone{box-shadow:0 20px 60px rgba(100,90,180,.2),inset 0 1px 0 rgba(255,255,255,.8);border-color:rgba(101,88,200,.2);}
+body.light-theme .phone{box-shadow:0 20px 60px rgba(60,45,150,.3),inset 0 1px 0 rgba(255,255,255,.2);border-color:rgba(74,59,181,.3);}
 body.light-theme .bottom-nav{background:var(--deep);border-top-color:var(--border);}
 body.light-theme .particles .particle{background:var(--spirit);}
 
@@ -2997,7 +2997,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
           <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
         </div>
       </div>
-      <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">🌙 Passer en mode jour</button>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">🌙 Mode jour</button></div>
       <button class="btn-secondary" onclick="showScreen('screenOnboard')" style="margin-bottom:8px;font-size:13px;padding:11px;" aria-label="Revoir l'introduction à l'application">👻 Revoir l'intro</button>
       <button class="logout-btn" onclick="logout()">🚪 Se déconnecter</button>
       <button id="deleteBtn" onclick="deleteMyGhosts()" style="width:100%;padding:12px;background:transparent;border:1px solid rgba(255,100,100,.2);border-radius:13px;color:rgba(255,100,100,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-top:8px;">🗑 Vider mes fantômes &amp; réponses</button>
