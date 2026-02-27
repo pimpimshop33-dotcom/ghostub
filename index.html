@@ -1070,7 +1070,16 @@ window.loadNearbyGhosts = async () => {
     userLat = 48.8566; userLng = 2.3522;
   }
 
-  const snap = await getDocs(collection(db, 'ghosts'));
+  let snap;
+  try {
+    snap = await getDocs(collection(db, 'ghosts'));
+  } catch(firestoreErr) {
+    console.error('Firestore error:', firestoreErr);
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
+    renderGhostList();
+    renderRadarDots();
+    return;
+  }
   nearbyGhosts = [];
   snap.forEach(d => {
     const g = { id: d.id, ...d.data() };
@@ -1112,8 +1121,23 @@ window.loadNearbyGhosts = async () => {
   }
 
   const count = nearbyGhosts.length;
+  // Si 0 résultat et qu'il y a des fantômes en base, élargir à 50km
+  let widened = false;
+  if (count === 0 && snap.size > 0) {
+    snap.forEach(d => {
+      const g = { id: d.id, ...d.data() };
+      if (g.expired || !g.lat || !g.lng) return;
+      g.distance = distanceMeters(userLat, userLng, g.lat, g.lng);
+      if (g.distance <= 50000) { nearbyGhosts.push(g); widened = true; }
+    });
+    nearbyGhosts.sort((a,b) => a.distance - b.distance);
+  }
   if (count === 0) {
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme proche — soyez le premier !</span>';
+    if (widened && nearbyGhosts.length > 0) {
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme à 5km — affichage élargi 50km</span>';
+    } else {
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme proche — soyez le premier !</span>';
+    }
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> fantôme' + (count > 1 ? 's' : '') + ' dans les alentours';
   }
@@ -1564,7 +1588,11 @@ window.depositGhost = async () => {
 
   if (!message) { err.textContent = 'Écrivez un message.'; document.getElementById('depositMsg').focus(); return; }
   if (message.length > 280) { err.textContent = 'Message trop long (280 caractères max).'; return; }
-  if (!userLat) { err.textContent = 'Géolocalisation requise.'; return; }
+  if (!userLat) {
+    // Tenter une dernière fois
+    try { await getLocation(); } catch(e) { userLat = 48.8566; userLng = 2.3522; }
+    if (!userLat) { err.textContent = 'Géolocalisation requise — activez-la dans votre navigateur.'; return; }
+  }
   if (!navigator.onLine) { err.textContent = 'Vous êtes hors ligne — reconnectez-vous pour déposer.'; return; }
 
   err.textContent = '';
@@ -2048,13 +2076,10 @@ window.wizardNext = (step) => {
       });
     }
   } else if (step === 2) {
-    const loc = document.getElementById('depositLocation').value.trim();
-    if (!loc) {
-      document.getElementById('depositLocation').style.borderColor = 'rgba(255,180,50,.5)';
-      document.getElementById('depositLocation').focus();
-      setTimeout(() => document.getElementById('depositLocation').style.borderColor = '', 1500);
-      showToast('warning', '📍 Donnez un nom à ce lieu');
-      return;
+    // On suggère un nom de lieu mais ce n'est plus bloquant
+    const loc = document.getElementById('depositLocation');
+    if (!loc.value.trim()) {
+      loc.value = 'Lieu sans nom';
     }
     setWizardStep(3);
     // Auto-remplir pseudo si connecté et champ vide
