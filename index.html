@@ -1187,7 +1187,7 @@ function renderGhostList() {
         <div class="envelope-emoji" aria-hidden="true">${emoji}</div>
         <div class="envelope-content">
           <div class="envelope-location">📍 ${escapeHTML(g.location || 'Lieu inconnu')}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}</div>
-          <div class="envelope-hint">✦ Ouvrir pour révéler…</div>
+          <div class="envelope-hint">${g.openCondition === 'night' ? '🌙 Nuit uniquement' : g.openCondition === 'hour' ? '⏰ ' + (g.openHour || '') : g.openCondition === 'after' ? '🔗 Prérequis requis' : '✦ Ouvrir pour révéler…'}</div>
         </div>
         <div class="envelope-meta">
           <div class="envelope-dist">${formatDistance(g.distance)}</div>
@@ -1323,6 +1323,19 @@ window.openGhost = async (id) => {
 
   const isOwner = currentUser && selectedGhost.authorUid === currentUser.uid;
   const isLocked = selectedGhost.secret && selectedGhost.distance > 3 && !isOwner;
+
+  // ── Vérifier la condition d'ouverture (sauf pour le propriétaire) ──
+  resetBlockedOverlay();
+  if (!isOwner) {
+    const condCheck = isConditionMet(selectedGhost);
+    if (!condCheck.ok) {
+      showScreen('screenDetail');
+      setNav('nav-radar');
+      document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || 'Lieu inconnu');
+      showBlockedOverlay(condCheck);
+      return;
+    }
+  }
 
   if (isLocked) {
     document.getElementById('detailMessage').textContent = '🔮 Ce fantôme est secret — approchez-vous à moins de 3m pour le révéler.';
@@ -1624,6 +1637,9 @@ window.depositGhost = async () => {
     if (hasMedia) depositBtn.textContent = '✓ Upload · Sauvegarde…';
     const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
     const chainNext = isPremium ? (window._chainNextCoords || null) : null;
+    const openCondition = getSelectedCond();
+    const openHour = openCondition === 'hour' ? document.getElementById('condHourInput').value : null;
+    const openAfterGhostId = (openCondition === 'after' && isPremium) ? document.getElementById('condAfterInput').value.trim() : null;
     await addDoc(collection(db, 'ghosts'), {
       message,
       location: location || 'Lieu sans nom',
@@ -1642,6 +1658,9 @@ window.depositGhost = async () => {
       chainHint: chainHint || null,
       chainLat: chainNext ? chainNext.lat : null,
       chainLng: chainNext ? chainNext.lng : null,
+      openCondition: openCondition || 'always',
+      openHour: openHour || null,
+      openAfterGhostId: openAfterGhostId || null,
       createdAt: serverTimestamp()
     });
     document.getElementById('depositMsg').value = '';
@@ -1879,6 +1898,12 @@ window.showScreen = (id, fromPopstate = false) => {
 
   if (id === 'screenDeposit') {
     setWizardStep(1);
+    // Reset condition d'ouverture
+    document.querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
+    const alwaysBtn = document.querySelector('.cond-btn[data-cond="always"]');
+    if (alwaysBtn) alwaysBtn.classList.add('active');
+    document.getElementById('condExtraHour').classList.remove('show');
+    document.getElementById('condExtraAfter').classList.remove('show');
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('chainSection');
@@ -1912,6 +1937,138 @@ window.showScreen = (id, fromPopstate = false) => {
   };
   document.title = screenTitles[id] || 'Fantôme';
 };
+
+
+// ── CONDITIONS D'OUVERTURE ────────────────────────────────
+window.selectCond = (btn) => {
+  btn.closest('.cond-selector').querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
+  // Vérif Premium pour "après un autre"
+  if (btn.dataset.cond === 'after' && !isPremium) {
+    showToast('warning', '✦ Fonctionnalité Premium — activez un code dans votre profil');
+    return;
+  }
+  btn.classList.add('active');
+  const cond = btn.dataset.cond;
+  document.getElementById('condExtraHour').classList.toggle('show', cond === 'hour');
+  document.getElementById('condExtraAfter').classList.toggle('show', cond === 'after');
+};
+
+function getSelectedCond() {
+  const btn = document.querySelector('.cond-btn.active[data-cond]');
+  return btn ? btn.dataset.cond : 'always';
+}
+
+function isConditionMet(ghost) {
+  const cond = ghost.openCondition || 'always';
+
+  if (cond === 'always') return { ok: true };
+
+  if (cond === 'night') {
+    const h = new Date().getHours();
+    const isNight = h >= 22 || h < 6;
+    if (isNight) return { ok: true };
+    // Calculer combien de temps avant la nuit
+    const now = new Date();
+    let nextNight = new Date(now);
+    if (h >= 6 && h < 22) {
+      nextNight.setHours(22, 0, 0, 0);
+    }
+    const diff = nextNight - now;
+    const hh = Math.floor(diff / 3600000);
+    const mm = Math.floor((diff % 3600000) / 60000);
+    return {
+      ok: false,
+      icon: '🌙',
+      title: 'Ce fantôme s’éveille la nuit',
+      sub: 'Il n’est accessible qu’entre 22h et 6h du matin.',
+      timer: `${hh}h${mm < 10 ? '0' + mm : mm}`,
+      timerLabel: 'avant la nuit'
+    };
+  }
+
+  if (cond === 'hour') {
+    const targetTime = ghost.openHour || '20:00';
+    const [th, tm] = targetTime.split(':').map(Number);
+    const now = new Date();
+    const nowMin = now.getHours() * 60 + now.getMinutes();
+    const targetMin = th * 60 + tm;
+    const diff = Math.abs(nowMin - targetMin);
+    const diffAlt = 1440 - diff; // wrap autour de minuit
+    const closest = Math.min(diff, diffAlt);
+    if (closest <= 15) return { ok: true };
+    // Calculer le temps restant
+    let waitMin;
+    if (nowMin < targetMin) {
+      waitMin = targetMin - nowMin;
+    } else {
+      waitMin = 1440 - nowMin + targetMin;
+    }
+    const hh = Math.floor(waitMin / 60);
+    const mm = waitMin % 60;
+    const fmt12 = th > 12 ? `${th-12}h${tm < 10 ? '0'+tm : tm}` : `${th}h${tm < 10 ? '0'+tm : tm}`;
+    return {
+      ok: false,
+      icon: '⏰',
+      title: `Rendez-vous à ${fmt12}`,
+      sub: `Ce fantôme n’est accessible que 15 min autour de ${fmt12}.`,
+      timer: hh > 0 ? `${hh}h${mm < 10 ? '0'+mm : mm}` : `${mm} min`,
+      timerLabel: 'avant l’ouverture'
+    };
+  }
+
+  if (cond === 'after') {
+    const reqId = ghost.openAfterGhostId;
+    if (!reqId) return { ok: true };
+    const already = getDiscoveredIds().includes(reqId);
+    if (already) return { ok: true };
+    return {
+      ok: false,
+      icon: '🔗',
+      title: 'Un prérequis manque',
+      sub: 'Tu dois d’abord trouver et ouvrir un autre fantôme pour débloquer celui-ci.',
+      timer: null,
+      timerLabel: null
+    };
+  }
+
+  return { ok: true };
+}
+
+function showBlockedOverlay(result) {
+  const overlay  = document.getElementById('ghostBlockedOverlay');
+  const sealed   = document.getElementById('envelopeSealed');
+  const icon     = document.getElementById('blockedIcon');
+  const title    = document.getElementById('blockedTitle');
+  const sub      = document.getElementById('blockedSub');
+  const timer    = document.getElementById('blockedTimer');
+  const timerLbl = document.getElementById('blockedTimerLabel');
+
+  icon.textContent  = result.icon  || '🌙';
+  title.textContent = result.title || 'Pas encore accessible';
+  sub.textContent   = result.sub   || '';
+
+  if (result.timer) {
+    timer.textContent    = result.timer;
+    timerLbl.textContent = result.timerLabel || '';
+    timer.style.display    = 'block';
+    timerLbl.style.display = 'block';
+  } else {
+    timer.style.display    = 'none';
+    timerLbl.style.display = 'none';
+  }
+
+  overlay.classList.add('show');
+  sealed.style.display = 'none';
+  if (navigator.vibrate) navigator.vibrate([30, 20, 30]);
+}
+
+// Reset overlay quand on change de fantôme
+function resetBlockedOverlay() {
+  const overlay = document.getElementById('ghostBlockedOverlay');
+  const sealed  = document.getElementById('envelopeSealed');
+  overlay.classList.remove('show');
+  sealed.style.display = '';
+}
 
 // ── ANIMATION TRANSITIONS ÉCRANS ────────────────────────
 let _prevScreen = null;
@@ -3371,6 +3528,37 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
 .open-limit-cancel{padding:12px;background:transparent;border:1px solid var(--border);border-radius:14px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:all .2s;}
 .open-limit-cancel:hover{border-color:var(--border-bright);color:var(--warm);}
 
+
+/* ── CONDITIONS D'OUVERTURE ─────────────────────────────── */
+.cond-selector{display:flex;flex-direction:column;gap:7px;margin-bottom:0;}
+.cond-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:13px;cursor:pointer;transition:all .2s;text-align:left;width:100%;font-family:'Instrument Sans',sans-serif;touch-action:manipulation;}
+.cond-btn:hover{border-color:var(--border-bright);}
+.cond-btn.active{border-color:var(--spirit-dim);background:rgba(168,180,255,.07);}
+.cond-btn.premium-locked{opacity:.55;position:relative;}
+.cond-btn-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0;}
+.cond-btn-text{flex:1;}
+.cond-btn-label{font-size:13px;color:var(--warm-dim);}
+.cond-btn-sub{font-size:10px;color:var(--spirit-dim);margin-top:1px;}
+.cond-btn.active .cond-btn-label{color:var(--ether);}
+.cond-premium-tag{font-size:9px;padding:2px 6px;background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:8px;color:rgba(255,210,100,.8);flex-shrink:0;}
+.cond-extra{margin-top:10px;padding:12px;background:var(--ghost);border:1px solid var(--border);border-radius:12px;display:none;}
+.cond-extra.show{display:block;}
+.cond-time-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:16px;cursor:pointer;}
+.cond-time-input:focus{border-color:var(--border-bright);outline:none;}
+
+/* ── ÉCRAN DE BLOCAGE (fantôme pas encore accessible) ───── */
+.ghost-blocked-overlay{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 24px;}
+.ghost-blocked-overlay.show{display:flex;}
+.blocked-icon{font-size:52px;margin-bottom:14px;filter:drop-shadow(0 0 20px rgba(168,180,255,.4));}
+.blocked-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--ether);margin-bottom:8px;}
+.blocked-sub{font-size:13px;color:var(--spirit-dim);line-height:1.65;margin-bottom:20px;}
+.blocked-timer{font-size:28px;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--spirit);letter-spacing:1px;margin-bottom:6px;}
+.blocked-timer-label{font-size:10px;color:var(--spirit-dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;}
+
+/* Light theme */
+body.light-theme .cond-btn{background:var(--surface);border-color:var(--border);}
+body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba(74,59,181,.08);}
+
 </style>
 </head>
 <body>
@@ -3566,6 +3754,16 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
     <div class="scroll">
       <div class="detail-location" id="detailLocation">📍 …</div>
       <div class="detail-distance" id="detailDistance"></div>
+      <!-- Overlay fantôme bloqué par condition -->
+      <div class="ghost-blocked-overlay" id="ghostBlockedOverlay">
+        <div class="blocked-icon" id="blockedIcon">🌙</div>
+        <div class="blocked-title" id="blockedTitle">Ce fantôme dort encore</div>
+        <div class="blocked-sub" id="blockedSub">Il se réveillera bientôt.</div>
+        <div class="blocked-timer" id="blockedTimer" style="display:none;"></div>
+        <div class="blocked-timer-label" id="blockedTimerLabel" style="display:none;"></div>
+        <button class="btn-secondary" onclick="history.back()" style="margin-top:4px;">← Revenir</button>
+      </div>
+
       <div id="envelopeSealed" class="envelope-sealed">
         <div class="envelope-sealed-flap" aria-hidden="true"><div class="envelope-sealed-triangle"></div></div>
         <div class="envelope-sealed-body">
@@ -3698,6 +3896,61 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
             <button class="radius-btn" onclick="selectType(this)" aria-pressed="false">50m</button>
           </div>
         </div>
+        <!-- Condition d'ouverture -->
+        <div class="form-group" style="margin-top:14px;margin-bottom:0;">
+          <label class="form-label">Condition d'ouverture</label>
+          <div class="cond-selector" role="group" aria-label="Condition d'ouverture du fantôme">
+
+            <button class="cond-btn active" data-cond="always" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">✉</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label">Toujours accessible</div>
+                <div class="cond-btn-sub">N'importe quand</div>
+              </span>
+            </button>
+
+            <button class="cond-btn" data-cond="night" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">🌙</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label">La nuit uniquement</div>
+                <div class="cond-btn-sub">Accessible entre 22h et 6h</div>
+              </span>
+            </button>
+
+            <button class="cond-btn" data-cond="hour" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">⏰</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label">À une heure précise</div>
+                <div class="cond-btn-sub">Fenêtre de ±15 min</div>
+              </span>
+            </button>
+
+            <button class="cond-btn" data-cond="after" onclick="selectCond(this)" type="button" id="condAfterBtn">
+              <span class="cond-btn-icon">🔗</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label">Après un autre fantôme</div>
+                <div class="cond-btn-sub">Chasse au trésor urbaine</div>
+              </span>
+              <span class="cond-premium-tag">PREMIUM</span>
+            </button>
+
+          </div>
+
+          <!-- Extra : heure précise -->
+          <div class="cond-extra" id="condExtraHour">
+            <label class="form-label" style="margin-bottom:6px;" for="condHourInput">Heure d'ouverture</label>
+            <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera accessible 15 min avant et après cette heure</div>
+          </div>
+
+          <!-- Extra : après un fantôme (Premium) -->
+          <div class="cond-extra" id="condExtraAfter">
+            <label class="form-label" style="margin-bottom:6px;" for="condAfterInput">ID du fantôme prérequis</label>
+            <input class="form-input" type="text" id="condAfterInput" placeholder="Colle l'ID d'un fantôme existant…" style="font-size:13px !important;" aria-label="ID du fantôme à lire avant">
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">L'utilisateur doit d'abord ouvrir ce fantôme pour débloquer le tien</div>
+          </div>
+        </div>
+
         <div style="display:flex;gap:10px;margin-top:20px;">
           <button class="wizard-back-btn" onclick="wizardBack(2)">← Retour</button>
           <button class="wizard-next-btn" style="flex:2;" onclick="wizardNext(2)">Continuer →</button>
