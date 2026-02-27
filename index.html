@@ -1439,6 +1439,36 @@ function getDailyResoKey() {
 }
 
 function hasResonatedToday() { return !!localStorage.getItem(getDailyResoKey()); }
+// ── LIMITE OUVERTURES JOURNALIÈRES ──────────────────────
+const DAILY_OPEN_LIMIT = 3;
+
+function getDailyOpenKey() {
+  const d = new Date();
+  const uid = currentUser ? currentUser.uid : 'anon';
+  return `daily_opens_${uid}_${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+function getDailyOpenCount() {
+  return parseInt(localStorage.getItem(getDailyOpenKey()) || '0');
+}
+
+function incrementDailyOpenCount() {
+  const key = getDailyOpenKey();
+  const n = getDailyOpenCount() + 1;
+  localStorage.setItem(key, n);
+  return n;
+}
+
+function canOpenToday() {
+  if (isPremium) return true;
+  return getDailyOpenCount() < DAILY_OPEN_LIMIT;
+}
+
+function remainingOpensToday() {
+  if (isPremium) return Infinity;
+  return Math.max(0, DAILY_OPEN_LIMIT - getDailyOpenCount());
+}
+
 function markResonatedToday(ghostId) { localStorage.setItem(getDailyResoKey(), ghostId); }
 
 function fireResonanceParticles(btn) {
@@ -1660,6 +1690,8 @@ window.sendReply = async () => {
 };
 
 function _doOpenEnvelope() {
+  // Incrémenter le compteur journalier
+  if (!isPremium) incrementDailyOpenCount();
   const sealed = document.getElementById('envelopeSealed');
   const revealed = document.getElementById('envelopeContent');
   sealed.classList.add('opening');
@@ -1694,12 +1726,74 @@ function showDistanceError(dist) {
   }, 4000);
 }
 
+function showOpenLimitWarning(remaining, onConfirm) {
+  const modal = document.getElementById('openLimitModal');
+  const dots  = document.getElementById('openLimitDots');
+  const sub   = document.getElementById('openLimitSub');
+  const icon  = document.getElementById('openLimitIcon');
+  const premium = document.getElementById('openLimitPremiumInfo');
+  const okBtn = document.getElementById('openLimitOkBtn');
+  const cancelBtn = document.getElementById('openLimitCancelBtn');
+
+  // Dots visuels
+  dots.innerHTML = Array.from({length: DAILY_OPEN_LIMIT}, (_,i) =>
+    `<div class="open-limit-dot${i >= remaining ? ' used' : ''}"></div>`
+  ).join('');
+
+  if (remaining === 0) {
+    icon.textContent = '🚫';
+    document.getElementById('openLimitTitle').textContent = 'Limite atteinte pour aujourd'hui';
+    sub.innerHTML = `Tu as déjà ouvert <strong>${DAILY_OPEN_LIMIT} fantômes</strong> aujourd'hui.<br>Reviens demain ou passe en Premium.`;
+    okBtn.style.display = 'none';
+    premium.style.display = 'block';
+  } else {
+    icon.textContent = remaining === 1 ? '⚠️' : '👻';
+    document.getElementById('openLimitTitle').textContent = remaining === 1 ? 'Dernier fantôme du jour !' : `Il te reste ${remaining} ouverture${remaining > 1 ? 's' : ''} aujourd'hui`;
+    sub.innerHTML = remaining === 1
+      ? `C'est ta <strong>dernière ouverture</strong> gratuite d'aujourd'hui.<br>Demain le compteur se remet à zéro.`
+      : `Tu peux encore ouvrir <strong>${remaining} fantôme${remaining > 1 ? 's' : ''}</strong> gratuitement aujourd'hui.`;
+    okBtn.style.display = '';
+    okBtn.textContent = remaining === 1 ? '✉ Utiliser ma dernière ouverture' : '✉ Ouvrir ce fantôme';
+    premium.style.display = remaining <= 1 ? 'block' : 'none';
+  }
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  const cleanup = () => {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+    okBtn.removeEventListener('click', onOk);
+    cancelBtn.removeEventListener('click', onCancel);
+  };
+  const onOk = () => { cleanup(); onConfirm(true); };
+  const onCancel = () => { cleanup(); onConfirm(false); };
+  okBtn.addEventListener('click', onOk);
+  cancelBtn.addEventListener('click', onCancel);
+  setTimeout(() => (remaining > 0 ? okBtn : cancelBtn).focus(), 80);
+}
+
 window.openEnvelope = () => {
   if (!selectedGhost) return;
   // Vérifier si déjà ouvert (pas de vérif distance pour relecture)
   const revealed = document.getElementById('envelopeContent');
   if (revealed && revealed.style.display !== 'none') { _doOpenEnvelope(); return; }
 
+  // ── Vérifier limite journalière AVANT la distance ───────
+  const remaining = remainingOpensToday();
+  if (!isPremium && (remaining <= 1)) {
+    // Afficher l'avertissement, puis vérifier la distance si confirmé
+    showOpenLimitWarning(remaining, (confirmed) => {
+      if (!confirmed) return;
+      if (remaining === 0) return; // bloqué
+      _checkDistanceThenOpen();
+    });
+    return;
+  }
+  _checkDistanceThenOpen();
+};
+
+function _checkDistanceThenOpen() {
   const btn = document.getElementById('envelopeOpenBtn');
   const hint = document.getElementById('sealedHint');
   const origHint = hint.textContent;
@@ -2296,6 +2390,16 @@ function createParticles() {
   }
 }
 createParticles();
+
+// Fermer openLimitModal au clic fond
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('openLimitModal');
+  if (modal?.classList.contains('show') && e.target === modal) {
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+});
+
 </script>
 
 <style>
@@ -3248,6 +3352,25 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
 }
 #sealedHint { transition: color .2s; min-height: 36px; display: flex; align-items: center; justify-content: center; flex-direction: column; }
 
+
+/* ── MODALE LIMITE OUVERTURES ───────────────────────────── */
+.open-limit-modal{position:fixed;inset:0;z-index:10200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .22s;}
+.open-limit-modal.show{opacity:1;pointer-events:all;}
+.open-limit-sheet{width:100%;max-width:390px;background:var(--surface2);border:1px solid var(--border-bright);border-radius:24px 24px 0 0;border-bottom:none;padding:24px 24px;padding-bottom:calc(32px + var(--sab));transform:translateY(100%);transition:transform .3s cubic-bezier(.25,.46,.45,.94);}
+.open-limit-modal.show .open-limit-sheet{transform:translateY(0);}
+.open-limit-icon{font-size:44px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 16px rgba(168,180,255,.5));}
+.open-limit-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);text-align:center;margin-bottom:6px;}
+.open-limit-sub{font-size:13px;color:var(--warm-dim);text-align:center;line-height:1.6;margin-bottom:6px;}
+.open-limit-counter{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0;}
+.open-limit-dot{width:10px;height:10px;border-radius:50%;background:var(--spirit);box-shadow:0 0 8px var(--spirit);}
+.open-limit-dot.used{background:rgba(168,180,255,.15);box-shadow:none;}
+.open-limit-premium{margin:10px 0 14px;padding:14px;background:linear-gradient(135deg,rgba(255,200,80,.1),rgba(255,200,80,.04));border:1px solid rgba(255,200,80,.3);border-radius:14px;font-size:12px;color:rgba(255,210,100,.85);text-align:center;line-height:1.6;}
+.open-limit-actions{display:flex;flex-direction:column;gap:8px;}
+.open-limit-ok{padding:14px;background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));border:1px solid var(--border-bright);border-radius:14px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;transition:all .2s;}
+.open-limit-ok:hover{background:rgba(168,180,255,.25);}
+.open-limit-cancel{padding:12px;background:transparent;border:1px solid var(--border);border-radius:14px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:all .2s;}
+.open-limit-cancel:hover{border-color:var(--border-bright);color:var(--warm);}
+
 </style>
 </head>
 <body>
@@ -3770,6 +3893,24 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
     <div class="confirm-actions">
       <button class="confirm-cancel-btn" id="confirmCancel">Annuler</button>
       <button class="confirm-ok-btn" id="confirmOk">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALE LIMITE OUVERTURES -->
+<div class="open-limit-modal" id="openLimitModal" role="dialog" aria-modal="true" aria-labelledby="openLimitTitle">
+  <div class="open-limit-sheet">
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="open-limit-icon" id="openLimitIcon">👻</div>
+    <div class="open-limit-title" id="openLimitTitle">Encore un fantôme ?</div>
+    <div class="open-limit-sub" id="openLimitSub"></div>
+    <div class="open-limit-counter" id="openLimitDots" aria-hidden="true"></div>
+    <div class="open-limit-premium" id="openLimitPremiumInfo" style="display:none;">
+      ✦ Avec le <strong>Plan Premium</strong>, ouvrez un nombre illimité de fantômes par jour<br>+ chaînes de fantômes, contenu secret, et plus
+    </div>
+    <div class="open-limit-actions">
+      <button class="open-limit-ok" id="openLimitOkBtn">✉ Ouvrir quand même</button>
+      <button class="open-limit-cancel" id="openLimitCancelBtn">← Revenir</button>
     </div>
   </div>
 </div>
