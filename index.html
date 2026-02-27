@@ -3473,11 +3473,11 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
           <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
         </div>
       </div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:8px;"><button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">🌙 Mode jour</button></div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:4px;">
-        <button class="theme-toggle" onclick="showScreen('screenOnboard')" aria-label="Revoir l'introduction à l'application">👻 Revoir l'intro</button>
-        <button class="theme-toggle" onclick="logout()" style="color:rgba(255,100,100,.6);border-color:rgba(255,100,100,.25);" id="logoutBtn">🚪 Déconnexion</button>
-        <button class="theme-toggle" id="deleteBtn" onclick="deleteMyGhosts()" style="color:rgba(255,100,100,.5);border-color:rgba(255,100,100,.18);">🗑 Vider mes fantômes</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" style="justify-content:center;">🌙 Mode jour</button>
+        <button class="theme-toggle" onclick="showScreen('screenOnboard')" style="justify-content:center;" aria-label="Revoir l'introduction">👻 Revoir l'intro</button>
+        <button class="theme-toggle" onclick="logout()" id="logoutBtn" style="justify-content:center;color:rgba(255,100,100,.6);border-color:rgba(255,100,100,.25);">🚪 Déconnexion</button>
+        <button class="theme-toggle" id="deleteBtn" onclick="deleteMyGhosts()" style="justify-content:center;color:rgba(255,100,100,.5);border-color:rgba(255,100,100,.18);">🗑 Vider</button>
       </div>
       <button class="btn-secondary" id="notifBtn" onclick="enableNotifications()" style="margin-top:8px;font-size:13px;padding:11px;">🔔 Activer les notifications</button>
     </div>
