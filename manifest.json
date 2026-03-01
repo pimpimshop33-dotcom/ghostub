@@ -1,0 +1,23 @@
+{
+  "name": "Fantôme",
+  "short_name": "Fantôme",
+  "description": "Des messages invisibles ancrés dans les lieux réels.",
+  "start_url": "/fantome/",
+  "scope": "/fantome/",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#060608",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
