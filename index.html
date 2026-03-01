@@ -307,6 +307,7 @@ window.register = async () => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Email invalide.'; return; }
   if (pseudo.length < 2 || pseudo.length > 30) { err.textContent = 'Pseudo entre 2 et 30 caractères.'; return; }
   err.textContent = '';
+  const btn = document.getElementById('registerBtn') || document.querySelector('#screenRegister button[type=submit], #screenRegister .btn-primary');
   setLoading(btn, true);
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
