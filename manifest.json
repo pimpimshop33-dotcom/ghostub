@@ -1,29 +1,29 @@
 {
-    "name": "Fantome",
-    "short_name": "Fantome",
-    "description": "Des messages invisibles ancres dans les lieux reels.",
-    "start_url": "/fantome/",
-    "scope": "/fantome/",
-    "display": "standalone",
-    "background_color": "#060608",
-    "theme_color": "#060608",
-    "orientation": "portrait",
-    "icons": [
-          {
-                  "src": "icons/icon-192.png",
-                  "sizes": "192x192",
-                  "type": "image/png"
-          },
-          {
-                  "src": "icons/icon-512.png",
-                  "sizes": "512x512",
-                  "type": "image/png"
-          },
-          {
-                  "src": "icons/icon-maskable-512.png",
-                  "sizes": "512x512",
-                  "type": "image/png",
-                  "purpose": "maskable"
-          }
-    ]
+  "name": "Fantome",
+  "short_name": "Fantome",
+  "description": "Des messages invisibles ancres dans les lieux reels.",
+  "start_url": "/fantome/",
+  "scope": "/fantome/",
+  "display": "standalone",
+  "background_color": "#060608",
+  "theme_color": "#060608",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }
