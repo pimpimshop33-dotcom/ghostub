@@ -54,11 +54,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// ── INIT WORLD SERVICE (étape 1) ─────────────────────────────────────
-WorldService.init(db, {
-  collection, addDoc, getDocs, query, where, orderBy, limit,
-  doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp
-}, Analytics);
 
 const CLOUDINARY_CLOUD = 'dcarogsye';
 const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
@@ -78,6 +73,12 @@ let recordingInterval = null;
 // ── ANALYTICS LÉGER ─────────────────────────────────────
 // Stocke les événements localement + log console (extensible vers Firebase Analytics)
 const Analytics = {
+
+  // ── INIT WORLD SERVICE (après Analytics) ────────────────────────────
+WorldService.init(db, {
+  collection, addDoc, getDocs, query, where, orderBy, limit,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp
+}, Analytics);
   events: JSON.parse(localStorage.getItem('fantome_analytics') || '[]'),
   track(event, params = {}) {
     const entry = { event, params, ts: Date.now() };
@@ -4237,4 +4238,5 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 </div>
 </body>
 </html>
+
 
