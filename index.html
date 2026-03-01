@@ -1827,7 +1827,10 @@ function _checkDistanceThenOpen() {
         pos.coords.latitude, pos.coords.longitude,
         selectedGhost.lat, selectedGhost.lng
       );
-      if (dist <= 2) {
+      // Extraire le rayon numérique du ghost (ex: "10m" → 10, "3m" → 3)
+      const ghostRadiusStr = selectedGhost.radius || '50m';
+      const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
+      if (dist <= ghostRadius) {
         // ✅ Assez proche
         hint.textContent = origHint;
         _doOpenEnvelope();
