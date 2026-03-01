@@ -38,7 +38,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDtxsiaZgs2iycJRBK3SCvNuOarW7wEWaI",
@@ -84,6 +84,96 @@ const Analytics = {
   getSessionSummary() {
     const today = new Date().toDateString();
     return this.events.filter(e => new Date(e.ts).toDateString() === today);
+  }
+};
+
+
+// ── GEOHASH UTILS (P3) ───────────────────────────────────────────────
+const GH_CHARS = '0123456789bcdefghjkmnpqrstuvwxyz';
+function encodeGeohash(lat, lng, p = 5) {
+  let minLat=-90,maxLat=90,minLng=-180,maxLng=180,hash='',bits=0,hv=0,isLng=true;
+  while(hash.length < p){
+    if(isLng){ const m=(minLng+maxLng)/2; if(lng>m){hv=(hv<<1)|1;minLng=m;}else{hv<<=1;maxLng=m;} }
+    else      { const m=(minLat+maxLat)/2; if(lat>m){hv=(hv<<1)|1;minLat=m;}else{hv<<=1;maxLat=m;} }
+    isLng=!isLng;
+    if(++bits===5){hash+=GH_CHARS[hv];hv=0;bits=0;}
+  }
+  return hash;
+}
+
+// ── WORLD SERVICE ─────────────────────────────────────────────────────
+// Equivalent de /services/world.service.js — logique centralisee
+const WorldService = {
+
+  // P3 — Charger uniquement les fantomes utiles via geohash prefix
+  async getVisibleGhosts(lat, lng) {
+    if (!lat) return getDocs(collection(db, 'ghosts'));
+    const prefix = encodeGeohash(lat, lng, 4); // precision 4 ~ 39x20km
+    try {
+      const snap = await getDocs(query(
+        collection(db, 'ghosts'),
+        where('geohash4', '>=', prefix),
+        where('geohash4', '<=', prefix + '\uf8ff'),
+        limit(50)
+      ));
+      if (snap.size > 0) {
+        Analytics.track('ghosts_geohash_query', { prefix, count: snap.size });
+        return snap;
+      }
+    } catch(e) { console.warn('[WorldService] geohash query:', e.code); }
+    // Fallback — fantomes legacy sans geohash4 (periode de migration)
+    return getDocs(collection(db, 'ghosts'));
+  },
+
+  // P2 — Enregistrer une presence / decouverte sur un fantome
+  async registerPresence(ghostId, isNewDiscovery = false) {
+    try {
+      const updates = { activityScore: increment(1), lastPresenceAt: serverTimestamp() };
+      if (isNewDiscovery) updates.discoveriesCount = increment(1);
+      await updateDoc(doc(db, 'ghosts', ghostId), updates);
+    } catch(e) { console.warn('[WorldService] registerPresence:', e); }
+  },
+
+  // P5 — Calculer l'etat du cycle de vie : fresh / stable / weak
+  computeLifetime(ghost) {
+    if (!ghost.createdAt) return { state: 'fresh', ratio: 0 };
+    const age = Date.now() - ghost.createdAt.seconds * 1000;
+    const durations = { '24h': 86400000, '7 jours': 604800000, '1 mois': 2592000000 };
+    const maxAge = durations[ghost.duration];
+    if (!maxAge) return { state: age < 7200000 ? 'fresh' : 'stable', ratio: null };
+    const r = age / maxAge;
+    return { state: r < 0.1 ? 'fresh' : r > 0.8 ? 'weak' : 'stable', ratio: r };
+  },
+
+  // P2 — Niveau d'activite : calme / agite / tres actif
+  getActivityLevel(ghost) {
+    const s = ghost.activityScore || 0;
+    const lp = ghost.lastPresenceAt;
+    const recent = lp && (Date.now() - lp.seconds * 1000) < 3600000;
+    if (s >= 10 || (s >= 5 && recent)) return { label: 'tres actif', color: 'rgba(255,140,60,.85)' };
+    if (s >=  3 || recent)             return { label: 'agite',      color: 'rgba(168,180,255,.75)' };
+    return                                    { label: 'calme',      color: 'rgba(168,180,255,.3)' };
+  },
+
+  // P4 — Cooldown depot : 1 fantome / 15 min, max 5 actifs
+  async checkDepositCooldown(uid) {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      const data = userDoc.exists() ? userDoc.data() : {};
+      if (data.lastGhostCreatedAt) {
+        const elapsed  = Date.now() - data.lastGhostCreatedAt.seconds * 1000;
+        const cooldown = 15 * 60 * 1000;
+        if (elapsed < cooldown) {
+          const rem = Math.ceil((cooldown - elapsed) / 60000);
+          return { ok: false, reason: 'Patientez encore ' + rem + ' min avant votre prochain depot.' };
+        }
+      }
+      const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid', '==', uid)));
+      let active = 0;
+      snap.forEach(d => { if (!isExpired(d.data()) && !d.data().expired) active++; });
+      if (active >= 5) return { ok: false, reason: "Vous avez deja 5 fantomes actifs — attendez qu'un expire." };
+      return { ok: true };
+    } catch(e) { return { ok: true }; }
   }
 };
 
@@ -270,6 +360,7 @@ onAuthStateChanged(auth, async user => {
     currentUser = user;
     watchMyGhostResonances();
     Analytics.track('session_start', { uid_hash: btoa(user.uid).slice(0,8) });
+    Analytics.track('app_open');
     const pending = sessionStorage.getItem('pendingGhost');
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
     document.getElementById('profileName').textContent = escapeHTML(user.displayName || user.email);
@@ -1060,7 +1151,7 @@ window.loadNearbyGhosts = async () => {
 
   let snap;
   try {
-    snap = await getDocs(collection(db, 'ghosts'));
+    snap = await WorldService.getVisibleGhosts(userLat, userLng);
   } catch(firestoreErr) {
     console.error('Firestore error:', firestoreErr);
     document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
@@ -1198,6 +1289,8 @@ function renderGhostList() {
         <div class="envelope-tag">${g.anonymous ? '👻 anonyme' : escapeHTML(g.author || '')}</div>
         <div class="envelope-tag">⏳ ${escapeHTML(timeRemaining(g))}</div>
         <div class="envelope-tag">${timeAgo(g.createdAt)}</div>
+        ${(()=>{ const a=WorldService.getActivityLevel(g); return a.label!=='calme' ? '<div class=\"envelope-tag ghost-activity\" style=\"color:'+a.color+';\">⚡ '+escapeHTML(a.label)+'</div>' : ''; })()}
+        ${(()=>{ const l=WorldService.computeLifetime(g); if(l.state==='fresh') return '<div class=\"envelope-tag ghost-state-fresh\">✦ nouveau</div>'; if(l.state==='weak') return '<div class=\"envelope-tag ghost-state-weak\">· s\'evanouit</div>'; return ''; })()}
       </div>
     </div>`;
   }).join('');
@@ -1303,6 +1396,7 @@ window.openGhost = async (id) => {
   if (idx !== -1) currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
   const isNewDisc = addDiscovery(id);
+  WorldService.registerPresence(id, isNewDisc).catch(() => {});
   const discCount = getDiscoveryCount();
   showDiscoveryToast(discCount, isNewDisc);
 
@@ -1627,6 +1721,10 @@ window.depositGhost = async () => {
   if (!navigator.onLine) { err.textContent = 'Vous êtes hors ligne — reconnectez-vous pour déposer.'; return; }
 
   err.textContent = '';
+  // P4 — Verifier cooldown et limite active
+  const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid);
+  if (!cooldownCheck.ok) { err.textContent = cooldownCheck.reason; return; }
+
   const depositBtn = document.getElementById('depositBtn');
   const hasMedia = !!(window._pendingAudioBlob || window._pendingPhotoFile);
   setLoading(depositBtn, true);
@@ -1661,8 +1759,19 @@ window.depositGhost = async () => {
       openCondition: openCondition || 'always',
       openHour: openHour || null,
       openAfterGhostId: openAfterGhostId || null,
+      // P2 — Activite initiale
+      activityScore: 0,
+      discoveriesCount: 0,
+      lastPresenceAt: serverTimestamp(),
+      // P3 — Geohash pour requetes locales
+      geohash: encodeGeohash(userLat, userLng, 5),
+      geohash4: encodeGeohash(userLat, userLng, 4),
+      // P5 — Etat initial du cycle de vie
+      state: 'fresh',
       createdAt: serverTimestamp()
     });
+    // P4 — Enregistrer la date du dernier depot
+    await setDoc(doc(db, 'users', currentUser.uid), { lastGhostCreatedAt: serverTimestamp() }, { merge: true });
     document.getElementById('depositMsg').value = '';
     document.getElementById('depositLocation').value = '';
     document.getElementById('chainHint').value = '';
@@ -1673,8 +1782,8 @@ window.depositGhost = async () => {
     depositBtn.disabled = false;
     clearAudio(); clearPhoto();
     document.getElementById('depositSuccess').classList.add('show');
-    showToast('success', '👻 Fantôme déposé avec succès !');
-    Analytics.track('ghost_deposited', { anonymous: anon, secret, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
+    Analytics.track('ghost_created', { secret, anonymous: anon, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
+    showToast('success', '✶ Quelque chose reste ici maintenant.');
     setTimeout(async () => {
       document.getElementById('depositSuccess').classList.remove('show');
       showScreen('screenRadar');
@@ -3559,6 +3668,42 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--spiri
 body.light-theme .cond-btn{background:var(--surface);border-color:var(--border);}
 body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba(74,59,181,.08);}
 
+/* ─────────────────────────────────────────────────────────────────────
+   P2 — ACTIVITE DES FANTOMES
+   P5 — CYCLE DE VIE : fresh / stable / weak
+   ───────────────────────────────────────────────────────────────────── */
+.ghost-state-fresh {
+  color: rgba(100,220,160,.9) !important;
+  border-color: rgba(100,220,160,.25) !important;
+  background: rgba(100,220,160,.06) !important;
+}
+.ghost-state-weak {
+  color: rgba(200,150,255,.65) !important;
+  border-color: rgba(200,150,255,.18) !important;
+  background: rgba(200,150,255,.04) !important;
+  animation: weakPulse 3s ease-in-out infinite;
+}
+@keyframes weakPulse { 0%,100%{opacity:.75} 50%{opacity:.4} }
+.ghost-activity {
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 20px;
+  padding: 2px 8px;
+  font-size: 9px;
+  letter-spacing: .4px;
+}
+/* P6 — Feedback depot plus solennel */
+.deposit-success { transition: opacity 1s cubic-bezier(.4,0,.2,1); }
+.deposit-success .success-ghost {
+  filter: drop-shadow(0 0 40px rgba(168,180,255,.7));
+  animation: floatG 6s ease-in-out infinite;
+}
+.deposit-success .success-title {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: .5px;
+}
+
 </style>
 </head>
 <body>
@@ -3582,8 +3727,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
   <div class="deposit-success" id="depositSuccess" role="status" aria-live="polite">
     <div class="success-ghost" aria-hidden="true">👻</div>
-    <div class="success-title">Fantôme déposé</div>
-    <div class="success-sub">Votre message attend dans ce lieu.<br>Quelqu'un le trouvera… peut-être.</div>
+    <div class="success-title">Quelque chose reste ici maintenant.</div>
+    <div class="success-sub">Votre message est ancré dans ce lieu.<br>Il attend, invisible, que quelqu'un passe.</div>
   </div>
 
   <div class="notch" aria-hidden="true"></div>
