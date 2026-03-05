@@ -592,6 +592,35 @@ async function checkDiscoveries() {
   } catch(e) {}
 }
 
+// ── NOTIFICATION RÉTENTION — FANTÔME JAMAIS OUVERT ───────
+let _lastVirginNotif = 0;
+function checkVirginGhostNearby() {
+  if (!currentUser || nearbyGhosts.length === 0) return;
+  // Max 1 fois par heure
+  if (Date.now() - _lastVirginNotif < 3600000) return;
+  // Chercher le fantôme jamais ouvert le plus vieux à moins de 500m
+  const candidates = nearbyGhosts.filter(g =>
+    (!g.openCount || g.openCount === 0) && g.distance <= 500 && g.createdAt
+  );
+  if (candidates.length === 0) return;
+  // Le plus vieux en premier
+  candidates.sort((a, b) => (a.createdAt.seconds || 0) - (b.createdAt.seconds || 0));
+  const ghost = candidates[0];
+  const ageDays = Math.floor((Date.now() - ghost.createdAt.seconds * 1000) / 86400000);
+  const dist = formatDistance(ghost.distance);
+  let msg;
+  if (ageDays > 365) {
+    msg = `📜 À ${dist} d'ici — une trace vieille de ${Math.floor(ageDays/365)} an${ageDays > 730 ? 's' : ''} que personne n'a jamais lue.`;
+  } else if (ageDays > 30) {
+    msg = `🕯 À ${dist} — un message laissé il y a ${ageDays} jours, jamais ouvert.`;
+  } else {
+    msg = `✦ À ${dist} d'ici — un fantôme qui n'a jamais été lu. Serez-vous le premier ?`;
+  }
+  showToast('info', msg, 6000);
+  showNotif('👻 Une trace vous attend', msg);
+  _lastVirginNotif = Date.now();
+}
+
 async function checkReplyNotifications() {
   if (!currentUser) return;
   try {
@@ -635,7 +664,8 @@ function _startNotifIntervals() {
           checkNewGhosts();
           checkDiscoveries();
           checkReplyNotifications();
-        }, 1000);
+          checkVirginGhostNearby();
+        }, 1500);
       }
     });
   }
@@ -1114,13 +1144,12 @@ window.submitReport = async (reason) => {
 
 // ── TOAST SYSTEM ────────────────────────────────────────
 let _toastTimer = null;
-function showToast(type, msg) {
+function showToast(type, msg, duration = 3200) {
   const toast = document.getElementById('discoveryToast');
   const icon  = document.getElementById('toastIcon');
   const text  = document.getElementById('toastText');
   if (!toast) return;
   const icons = { success: '✓', error: '✕', warning: '⚠', info: '👻', report: '⚑', link: '🔗' };
-  const types = { success: 'rgba(100,220,160,.9)', error: 'rgba(255,100,100,.9)', warning: 'rgba(255,180,50,.9)', info: 'var(--ether)', report: 'var(--spirit-dim)', link: 'var(--ether)' };
   icon.textContent = icons[type] || '👻';
   text.innerHTML = msg;
   toast.style.borderColor = 'rgba(168,180,255,.25)';
@@ -1131,7 +1160,7 @@ function showToast(type, msg) {
   toast.classList.remove('show');
   requestAnimationFrame(() => requestAnimationFrame(() => {
     toast.classList.add('show');
-    _toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    _toastTimer = setTimeout(() => toast.classList.remove('show'), duration);
   }));
 }
 
@@ -1525,6 +1554,8 @@ window.loadNearbyGhosts = async () => {
   }
   Analytics.track('ghosts_loaded', { count });
   checkForNewGhosts(count);
+  // Notification fantôme jamais ouvert (3s après le chargement)
+  setTimeout(() => checkVirginGhostNearby(), 3000);
 };
 
 function skeletonGhostList() {
@@ -1791,6 +1822,20 @@ function renderGhostList() {
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
     const resoStyle = resoCount >= 5 ? 'color:rgba(255,200,80,.9);text-shadow:0 0 8px rgba(255,200,80,.4);' : resoCount >= 2 ? 'color:rgba(168,180,255,.8);' : '';
+    // Badge "jamais ouvert"
+    const neverOpened = !g.openCount || g.openCount === 0;
+    const virginBadge = neverOpened
+      ? `<span style="font-size:9px;background:rgba(100,220,160,.1);border:1px solid rgba(100,220,160,.35);border-radius:20px;padding:1px 7px;color:rgba(100,220,160,.85);margin-left:4px;animation:weakPulse 2.5s ease-in-out infinite;">✦ jamais ouvert</span>`
+      : '';
+    // Hint dynamique selon état
+    const hintText = neverOpened && ageDays > 30
+      ? `🕯 Attend depuis ${Math.floor(ageDays)} jours — jamais lu`
+      : neverOpened
+      ? `✦ Aucun regard ne l'a encore lu…`
+      : g.openCondition === 'night' ? "🌙 S'éveille la nuit"
+      : g.openCondition === 'hour' ? '⏰ ' + (g.openHour || '')
+      : g.openCondition === 'after' ? '🔗 Prérequis requis'
+      : '✦ Un secret vous attend…';
     // Surnom poétique
     const authorDisplay = g.anonymous ? getPoeticName(g.id) : escapeHTML(g.author || '');
     return `
@@ -1799,8 +1844,8 @@ function renderGhostList() {
       <div class="envelope-body">
         <div class="envelope-emoji" aria-hidden="true">${emoji}</div>
         <div class="envelope-content">
-          <div class="envelope-location">📍 ${escapeHTML(g.location || 'Lieu inconnu')}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${ageBadge}</div>
-          <div class="envelope-hint">${g.openCondition === 'night' ? '🌙 S\'éveille la nuit' : g.openCondition === 'hour' ? '⏰ ' + (g.openHour || '') : g.openCondition === 'after' ? '🔗 Prérequis requis' : '✦ Un secret vous attend…'}</div>
+          <div class="envelope-location">📍 ${escapeHTML(g.location || 'Lieu inconnu')}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${ageBadge}${virginBadge}</div>
+          <div class="envelope-hint">${hintText}</div>
         </div>
         <div class="envelope-meta">
           <div class="envelope-dist">${formatDistance(g.distance)}</div>
