@@ -843,7 +843,11 @@ window.clearPhoto = () => {
 
 // ── VIDÉO (Premium) ──────────────────────────────────────
 window.triggerVideo = () => {
-  if (!isPremium) { showToast('info', '👑 La vidéo est réservée aux membres Premium.'); return; }
+  if (!isPremium) {
+    showToast('info', '👑 La vidéo est réservée aux membres Premium.');
+    return;
+  }
+  console.log('[Fantôme] triggerVideo — isPremium:', isPremium, '_pendingVideoFile:', window._pendingVideoFile);
   document.getElementById('videoInput').click();
 };
 
@@ -874,6 +878,7 @@ window.clearVideo = () => {
 async function uploadMedia(uid) {
   let audioUrl = null;
   let photoUrl = null;
+  let videoUrl = null;
 
   // FIX: Helper avec retry x2 sur erreur réseau
   async function uploadToCloudinary(fd, resourceType) {
@@ -885,8 +890,8 @@ async function uploadMedia(uid) {
         if (data.error) throw new Error(data.error.message);
         return data.secure_url || null;
       } catch(e) {
-        if (attempt === 1) throw e; // dernier essai échoué
-        await new Promise(r => setTimeout(r, 1000)); // attendre 1s avant retry
+        if (attempt === 1) throw e;
+        await new Promise(r => setTimeout(r, 1000));
       }
     }
   }
@@ -910,10 +915,10 @@ async function uploadMedia(uid) {
     fd.append('file', window._pendingVideoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'fantome/videos');
-    const videoUrl = await uploadToCloudinary(fd, 'video');
-    return { audioUrl, photoUrl, videoUrl };
+    videoUrl = await uploadToCloudinary(fd, 'video');
+    console.log('[Fantôme] videoUrl uploadé:', videoUrl);
   }
-  return { audioUrl, photoUrl, videoUrl: null };
+  return { audioUrl, photoUrl, videoUrl };
 }
 
 // ── MILESTONES ──────────────────────────────────────────
