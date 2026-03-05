@@ -189,6 +189,7 @@ const WorldService = {
       radius          : data.secret ? '3m' : (data.radius || '10m'),
       audioUrl        : data.audioUrl  || null,
       photoUrl        : data.photoUrl  || null,
+      videoUrl        : data.videoUrl  || null,
 
       // ── Conditions ─────────────────────────────────────
       openCondition   : data.openCondition   || 'always',
