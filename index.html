@@ -1572,11 +1572,16 @@ window.openGhost = async (id) => {
     document.getElementById('resonanceBtn').style.display = 'none';
     document.getElementById('secretBtn').style.display = 'none';
     document.querySelector('#screenDetail .btn-secondary').style.display = 'none';
+    const msgRBtnLocked = document.getElementById('msgReportBtn');
+    if (msgRBtnLocked) msgRBtnLocked.style.display = 'none';
   } else {
     document.getElementById('detailMessage').style.color = '';
     document.getElementById('resonanceBtn').style.display = '';
     document.querySelector('#screenDetail .btn-secondary').style.display = '';
     document.getElementById('detailMessage').textContent = '"' + escapeHTML(selectedGhost.message) + '"';
+    // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
+    const msgReportBtn = document.getElementById('msgReportBtn');
+    if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
     document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? '👻 Anonyme' : '🌫️ ' + escapeHTML(selectedGhost.author || '');
     document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
     document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
@@ -1639,9 +1644,12 @@ window.openGhost = async (id) => {
     const photoEl = document.getElementById('detailPhoto');
     if (selectedGhost.photoUrl) {
       photoEl.innerHTML = `
-        <div style="margin-bottom:12px;">
+        <div style="margin-bottom:12px;position:relative;">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;">📷 Photo</div>
-          <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" style="width:100%;border-radius:12px;border:1px solid var(--border);max-height:240px;object-fit:cover;" loading="lazy">
+          <div style="position:relative;display:inline-block;width:100%;">
+            <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" style="width:100%;border-radius:12px;border:1px solid var(--border);max-height:240px;object-fit:cover;display:block;" loading="lazy">
+            <button onclick="openReportModal()" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" style="position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:12px;padding:5px 9px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:5px;touch-action:manipulation;transition:all .2s;" onmouseover="this.style.background='rgba(255,60,60,.18)'" onmouseout="this.style.background='rgba(10,8,20,.75)'">⚑ Signaler</button>
+          </div>
         </div>`;
     } else { photoEl.innerHTML = ''; }
   }
@@ -3240,9 +3248,9 @@ input, textarea, select {
 @keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
 
 /* ── REPORT ────────────────────────────────────────────── */
-.report-btn{width:100%;padding:10px;background:transparent;border:1px solid rgba(255,100,100,.15);border-radius:13px;color:rgba(255,100,100,.4);font-family:"Instrument Sans",sans-serif;font-size:12px;cursor:pointer;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
-.report-btn:hover{border-color:rgba(255,100,100,.35);color:rgba(255,100,100,.7);background:rgba(255,100,100,.04);}
-.report-btn.reported{color:rgba(255,100,100,.3);pointer-events:none;border-color:rgba(255,100,100,.08);}
+.report-btn{width:100%;padding:11px;background:rgba(255,80,80,.05);border:1px solid rgba(255,100,100,.28);border-radius:13px;color:rgba(255,110,100,.65);font-family:"Instrument Sans",sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
+.report-btn:hover{border-color:rgba(255,100,100,.5);color:rgba(255,100,100,.9);background:rgba(255,100,100,.08);}
+.report-btn.reported{color:rgba(255,100,100,.3);pointer-events:none;border-color:rgba(255,100,100,.08);background:transparent;}
 
 /* ── MODALS (Report + Share) ───────────────────────────── */
 .report-modal,.share-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -4039,7 +4047,10 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         </button>
       </div>
       <div id="envelopeContent" style="display:none;">
-        <div class="detail-message" id="detailMessage" tabindex="-1"></div>
+        <div style="position:relative;">
+          <div class="detail-message" id="detailMessage" tabindex="-1"></div>
+          <button id="msgReportBtn" onclick="openReportModal()" aria-label="Signaler ce message comme inapproprié" title="Signaler ce message" style="display:none;position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:11px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:4px;touch-action:manipulation;transition:all .2s;" onmouseover="this.style.background='rgba(255,60,60,.18)'" onmouseout="this.style.background='rgba(10,8,20,.75)'">⚑</button>
+        </div>
         <div id="detailAudio"></div>
         <div id="detailPhoto"></div>
         <div id="detailChain" style="display:none;"></div>
@@ -4399,7 +4410,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
     <div class="report-reasons" role="list">
       <div class="report-reason" onclick="submitReport('spam')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('spam')">🚫 <span>Spam ou contenu répétitif</span></div>
       <div class="report-reason" onclick="submitReport('harcèlement')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('harcèlement')">😠 <span>Harcèlement ou attaque personnelle</span></div>
-      <div class="report-reason" onclick="submitReport('contenu_inapproprié')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('contenu_inapproprié')">⚠️ <span>Contenu inapproprié ou offensant</span></div>
+      <div class="report-reason" onclick="submitReport('photo_inappropriée')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('photo_inappropriée')">📷 <span>Photo inappropriée ou choquante</span></div>
+      <div class="report-reason" onclick="submitReport('contenu_inapproprié')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('contenu_inapproprié')">⚠️ <span>Message inapproprié ou offensant</span></div>
       <div class="report-reason" onclick="submitReport('fausses_informations')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('fausses_informations')">❌ <span>Fausses informations dangereuses</span></div>
       <div class="report-reason" onclick="submitReport('autre')" role="listitem" tabindex="0" onkeydown="if(event.key==='Enter')submitReport('autre')">💬 <span>Autre raison</span></div>
     </div>
