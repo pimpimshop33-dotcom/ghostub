@@ -842,6 +842,8 @@ window.toggleDiscoveryHistory = async () => {
   const panel = document.getElementById('discoveryHistory');
   const list = document.getElementById('discoveryHistoryList');
   if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  // Fermer l'autre panel si ouvert
+  document.getElementById('depositedList').style.display = 'none';
   panel.style.display = 'block';
   const ids = getDiscoveredIds();
   if (ids.length === 0) { list.innerHTML = '<div style="opacity:.5;font-style:italic;">Aucune découverte encore…</div>'; return; }
@@ -865,6 +867,83 @@ window.toggleDiscoveryHistory = async () => {
     }
     list.innerHTML = results.length ? results.join('') : '<div style="opacity:.5;font-style:italic;">Données indisponibles</div>';
   } catch(e) { list.innerHTML = '<div style="opacity:.5;">Erreur de chargement</div>'; }
+};
+
+// ── MES FANTÔMES DÉPOSÉS ────────────────────────────────
+window.toggleDepositedList = async () => {
+  const panel = document.getElementById('depositedList');
+  const content = document.getElementById('depositedListContent');
+  if (panel.style.display !== 'none') { panel.style.display = 'none'; return; }
+  // Fermer l'autre panel si ouvert
+  document.getElementById('discoveryHistory').style.display = 'none';
+  panel.style.display = 'block';
+  if (!currentUser) return;
+  content.innerHTML = '<div style="opacity:.5;">Chargement…</div>';
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'ghosts'),
+      where('authorUid', '==', currentUser.uid),
+      orderBy('createdAt', 'desc'),
+      limit(30)
+    ));
+    if (snap.empty) {
+      content.innerHTML = '<div style="opacity:.5;font-style:italic;">Aucun fantôme déposé encore…</div>';
+      return;
+    }
+    let html = '';
+    snap.forEach(d => {
+      const g = d.data();
+      const id = d.id;
+      const date = g.createdAt ? new Date(g.createdAt.seconds * 1000).toLocaleDateString('fr-FR') : '—';
+      const resonances = g.resonances || 0;
+      const expired = isExpired(g);
+      html += `
+        <div id="deposited-item-${escapeHTML(id)}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:22px;flex-shrink:0;">${escapeHTML(g.emoji||'👻')}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||'Lieu inconnu')}</div>
+            <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span>${date}</span>
+              <span>✦ ${resonances} résonance${resonances > 1 ? 's' : ''}</span>
+              ${expired ? '<span style="color:rgba(255,100,100,.6);">⏳ Expiré</span>' : ''}
+              ${g.secret ? '<span style="color:rgba(168,100,255,.7);">🔮 Secret</span>' : ''}
+            </div>
+          </div>
+          <button onclick="deleteOneGhost('${escapeHTML(id)}')" aria-label="Supprimer ce fantôme" style="background:rgba(255,80,80,.07);border:1px solid rgba(255,100,100,.25);border-radius:10px;color:rgba(255,100,100,.6);font-size:13px;padding:6px 10px;cursor:pointer;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,80,80,.15)'" onmouseout="this.style.background='rgba(255,80,80,.07)'">🗑</button>
+        </div>`;
+    });
+    content.innerHTML = html;
+  } catch(e) {
+    content.innerHTML = '<div style="opacity:.5;">Erreur de chargement</div>';
+  }
+};
+
+window.deleteOneGhost = async (ghostId) => {
+  const confirmed = await showConfirm('Supprimer ce fantôme ?', 'Ce message et ses réponses seront définitivement effacés.');
+  if (!confirmed) return;
+  try {
+    // Supprimer les réponses associées
+    const replies = await getDocs(query(collection(db, 'replies'), where('ghostId', '==', ghostId)));
+    const dels = replies.docs.map(d => deleteDoc(doc(db, 'replies', d.id)));
+    await Promise.all([...dels, deleteDoc(doc(db, 'ghosts', ghostId))]);
+    // Retirer l'élément de la liste sans recharger
+    const item = document.getElementById('deposited-item-' + ghostId);
+    if (item) {
+      item.style.transition = 'opacity .3s, max-height .3s';
+      item.style.opacity = '0';
+      setTimeout(() => item.remove(), 300);
+    }
+    // Mettre à jour le compteur
+    const statEl = document.getElementById('statDeposited');
+    if (statEl) statEl.textContent = Math.max(0, parseInt(statEl.textContent || '0') - 1);
+    // Retirer du radar si présent
+    nearbyGhosts = nearbyGhosts.filter(g => g.id !== ghostId);
+    renderGhostList();
+    showToast('success', '🗑 Fantôme supprimé');
+    Analytics.track('delete_one_ghost');
+  } catch(e) {
+    showToast('error', 'Erreur — réessayez.');
+  }
 };
 
 function updatePremiumUI() {
@@ -4322,9 +4401,9 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <div class="stat-num" id="statDiscovered" aria-label="Fantômes découverts">0</div>
           <div class="stat-label">Découverts 👁</div>
         </div>
-        <div class="stat-card" role="listitem">
+        <div class="stat-card" role="listitem" onclick="toggleDepositedList()" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
           <div class="stat-num" id="statDeposited" aria-label="Fantômes déposés">0</div>
-          <div class="stat-label">Déposés</div>
+          <div class="stat-label">Déposés 👁</div>
         </div>
         <div class="stat-card" role="listitem">
           <div class="stat-num" id="statResonances" aria-label="Résonances reçues">0</div>
@@ -4339,6 +4418,11 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div id="discoveryHistory" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">Mes découvertes</div>
         <div id="discoveryHistoryList" style="font-size:13px;color:var(--warm-dim);"></div>
+      </div>
+      <!-- Liste des fantômes déposés -->
+      <div id="depositedList" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">Mes fantômes déposés</div>
+        <div id="depositedListContent" style="font-size:13px;color:var(--warm-dim);"></div>
       </div>
       <div class="section-label" style="margin-bottom:8px;">Mon compte</div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
@@ -4359,7 +4443,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <button class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()" style="justify-content:center;">🌙 Mode jour</button>
         <button class="theme-toggle" onclick="showScreen('screenOnboard')" style="justify-content:center;" aria-label="Revoir l'introduction">👻 Revoir l'intro</button>
         <button class="theme-toggle" onclick="logout()" id="logoutBtn" style="justify-content:center;color:rgba(255,100,100,.6);border-color:rgba(255,100,100,.25);">🚪 Déconnexion</button>
-        <button class="theme-toggle" id="deleteBtn" onclick="deleteMyGhosts()" style="justify-content:center;color:rgba(255,100,100,.5);border-color:rgba(255,100,100,.18);">🗑 Vider</button>
+        <button class="theme-toggle" id="deleteBtn" onclick="deleteMyGhosts()" style="justify-content:center;color:rgba(255,100,100,.5);border-color:rgba(255,100,100,.18);">🗑 Tout supprimer</button>
       </div>
       <button class="btn-secondary" id="notifBtn" onclick="enableNotifications()" style="margin-top:8px;font-size:13px;padding:11px;">🔔 Activer les notifications</button>
     </div>
