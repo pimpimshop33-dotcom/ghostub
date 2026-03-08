@@ -703,16 +703,10 @@ function _startNotifIntervals() {
 
 window.enableNotifications = async () => {
   const btn = document.getElementById('notifBtn');
+  const isEnabled = localStorage.getItem('notif_enabled') === '1';
 
-  // Cas : permission bloquée par le navigateur
-  if (Notification.permission === 'denied') {
-    showToast('warning', '🔕 Notifications bloquées — autorisez-les dans les réglages de votre navigateur.', 5000);
-    return;
-  }
-
-  const alreadyEnabled = localStorage.getItem('notif_enabled') === '1' && Notification.permission === 'granted';
-  if (alreadyEnabled) {
-    // Toggle OFF
+  if (isEnabled) {
+    // Toggle OFF — on utilise uniquement localStorage comme source de vérité
     localStorage.removeItem('notif_enabled');
     btn.textContent = '🔔 Activer les notifications';
     btn.style.borderColor = '';
@@ -721,7 +715,13 @@ window.enableNotifications = async () => {
     return;
   }
 
-  // Permission déjà accordée (ré-activation après désactivation)
+  // Permission bloquée par le navigateur
+  if (Notification.permission === 'denied') {
+    showToast('warning', '🔕 Notifications bloquées — autorisez-les dans les réglages de votre navigateur.', 5000);
+    return;
+  }
+
+  // Activer
   const alreadyGranted = Notification.permission === 'granted';
   const granted = alreadyGranted ? true : await requestNotifPermission();
   if (granted) {
@@ -729,7 +729,7 @@ window.enableNotifications = async () => {
     btn.style.borderColor = 'rgba(100,220,160,.4)';
     btn.style.color = 'rgba(100,220,160,.9)';
     localStorage.setItem('notif_enabled', '1');
-    showToast('success', '🔔 Notifications réactivées !');
+    showToast('success', '🔔 Notifications activées !');
     _startNotifIntervals();
     checkDiscoveries();
   } else {
