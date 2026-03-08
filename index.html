@@ -2196,17 +2196,11 @@ window.shareEmpreinte = async () => {
 
 let _leaderboardLoaded = false;
 window.toggleLeaderboard = async () => {
-  const content = document.getElementById('leaderboardContent');
-  const btn     = document.getElementById('leaderboardToggleBtn');
-  if (!content) return;
-  const isOpen = content.style.display !== 'none';
-  if (isOpen) {
-    content.style.display = 'none';
-    btn.textContent = '↓ Voir';
-    return;
-  }
-  content.style.display = 'block';
-  btn.textContent = '↑ Réduire';
+  const panel = document.getElementById('leaderboardPanel');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) { panel.style.display = 'none'; return; }
+  panel.style.display = 'block';
   if (!_leaderboardLoaded) { await loadLeaderboard(); _leaderboardLoaded = true; }
 };
 
@@ -3299,7 +3293,7 @@ window.showScreen = (id, fromPopstate = false) => {
     history.pushState({ screen: id }, '', window.location.href.split('?')[0] + window.location.search);
   }
   if (id === 'screenMap') renderStaticMap();
-  if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false; document.getElementById('leaderboardContent').style.display = 'none'; document.getElementById('leaderboardToggleBtn').textContent = '↓ Voir'; loadEmpreinteMap(); loadBizDashboard(); }
+  if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false; const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
   if (id === 'screenOnboard') {
     const btn = document.getElementById('obBackBtn');
     if (btn) btn.style.display = currentUser ? 'flex' : 'none';
@@ -5799,7 +5793,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
       <!-- ── MES STATS ─────────────────────────────────── -->
       <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:8px;">Mes stats</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
         <div class="stat-card" role="listitem" onclick="toggleDiscoveryHistory()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir les fantômes découverts">
           <div class="stat-num" id="statDiscovered" style="font-size:22px;">0</div>
           <div class="stat-label" style="font-size:10px;">Découverts</div>
@@ -5816,15 +5810,19 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <div class="stat-num" id="statResonances" style="font-size:22px;">0</div>
           <div class="stat-label" style="font-size:10px;">Résonances ✨</div>
         </div>
-        <div class="stat-card" role="listitem" style="padding:12px 8px;grid-column:1/-1;background:linear-gradient(135deg,rgba(100,220,160,.06),rgba(100,220,160,.02));border-color:rgba(100,220,160,.2);">
-          <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
-            <span style="font-size:22px;">🥇</span>
-            <div>
-              <div class="stat-num" id="statFirstReader" style="font-size:22px;color:rgba(100,220,160,.9);">0</div>
-              <div class="stat-label" style="font-size:10px;color:rgba(100,220,160,.6);">Premier à lire</div>
-            </div>
-          </div>
+        <div class="stat-card" role="listitem" style="padding:12px 8px;background:linear-gradient(135deg,rgba(100,220,160,.06),rgba(100,220,160,.02));border-color:rgba(100,220,160,.2);">
+          <div class="stat-num" id="statFirstReader" style="font-size:22px;color:rgba(100,220,160,.9);">0</div>
+          <div class="stat-label" style="font-size:10px;color:rgba(100,220,160,.6);">🥇 Premier à lire</div>
         </div>
+        <div class="stat-card" role="listitem" onclick="toggleLeaderboard()" style="cursor:pointer;padding:12px 8px;background:linear-gradient(135deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border-color:rgba(255,200,80,.15);" aria-label="Voir le classement">
+          <div class="stat-num" style="font-size:22px;">🏆</div>
+          <div class="stat-label" style="font-size:10px;color:rgba(255,200,80,.6);">Classement</div>
+        </div>
+      </div>
+      <!-- Panel classement inline -->
+      <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(255,200,80,.2);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.6);margin-bottom:10px;">🏆 Top chasseurs</div>
+        <div id="leaderboardContent"><div style="font-size:12px;color:var(--spirit-dim);opacity:.6;">Chargement…</div></div>
       </div>
 
       <!-- ── CARTE EMPREINTE ─────────────────────────── -->
@@ -5862,16 +5860,6 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div id="favoritesList" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">★ Mes favoris</div>
         <div id="favoritesListContent" style="font-size:13px;color:var(--warm-dim);"></div>
-      </div>
-      <!-- Classement public -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;" onclick="toggleLeaderboard()" style="cursor:pointer;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);cursor:pointer;" onclick="toggleLeaderboard()">🏆 Classement des chasseurs</div>
-          <button id="leaderboardToggleBtn" onclick="toggleLeaderboard()" style="font-size:11px;color:rgba(168,180,255,.6);background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;padding:0;">↓ Voir</button>
-        </div>
-        <div id="leaderboardContent" style="display:none;">
-          <div style="font-size:12px;color:var(--spirit-dim);font-style:italic;opacity:.6;">Chargement…</div>
-        </div>
       </div>
       <div class="section-label" style="margin-bottom:8px;">Mon compte</div>
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
