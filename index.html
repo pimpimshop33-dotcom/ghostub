@@ -1071,7 +1071,7 @@ window.clearPhoto = () => {
 // ── VIDÉO (Premium) ──────────────────────────────────────
 window.triggerVideo = () => {
   if (!isPremium) {
-    showToast('info', '👑 La vidéo est réservée aux membres Premium.');
+    showToast('info', '🔒 La vidéo est réservée aux membres Premium.', 3000);
     return;
   }
   console.log('[Fantôme] triggerVideo — isPremium:', isPremium, '_pendingVideoFile:', window._pendingVideoFile);
@@ -1423,7 +1423,17 @@ window.deleteOneGhost = async (ghostId) => {
 function updatePremiumUI() {
   const planEl = document.getElementById('planInfo');
   const codeSection = document.getElementById('codeSection');
+  const bizBadge = document.getElementById('bizPremiumBadge');
   if (!planEl) return;
+  // Mettre à jour le badge du bouton Commerce
+  if (bizBadge) {
+    if (isPremium || isCommerce) {
+      bizBadge.style.display = 'none'; // déjà débloqué, pas besoin du badge
+    } else {
+      bizBadge.textContent = '🔒 Premium';
+      bizBadge.style.display = '';
+    }
+  }
   if (isPremium) {
     planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 Spectre Premium</div><div style="font-size:13px;color:var(--warm-dim);">Toutes les fonctionnalités débloquées</div>';
     if (codeSection) codeSection.style.display = 'none';
@@ -3591,8 +3601,7 @@ window.showScreen = (id, fromPopstate = false) => {
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
 window.toggleBusinessMode = () => {
   if (!isPremium && !isCommerce) {
-    showToast('warning', '✦ Le mode Commerce est réservé aux membres Premium ou Commerce.');
-    showScreen('screenProfile'); setNav('nav-profile');
+    showToast('info', '🔒 Entrez un code dans votre profil pour débloquer le Mode Commerce.', 3500);
     return;
   }
   const normalForm = document.getElementById('normalDepositForm');
@@ -3682,14 +3691,13 @@ window.toggleBusinessMode = () => {
 
 window.selectCond = (btn) => {
   if (btn.dataset.cond === 'future' && !isPremium) {
-    showToast('warning', '✦ Le message du futur est réservé aux membres Premium.');
-    showScreen('screenProfile'); setNav('nav-profile');
+    showToast('info', '🔒 Fonctionnalité réservée au Premium — entrez un code dans votre profil.', 3500);
     return;
   }
   btn.closest('.cond-selector').querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
   // Vérif Premium pour "après un autre"
   if (btn.dataset.cond === 'after' && !isPremium) {
-    showToast('warning', '✦ Fonctionnalité Premium — activez un code dans votre profil');
+    showToast('info', '🔒 Fonctionnalité réservée au Premium.', 3000);
     return;
   }
   btn.classList.add('active');
@@ -5752,7 +5760,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.35);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
             <span style="font-size:18px;">🏪</span>
             <span style="flex:1;">
-              <div style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;">Mode Commerce <span style="font-size:10px;background:rgba(255,200,80,.25);color:rgba(255,220,100,1);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:700;">✦ Premium</span></div>
+              <div style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;">Mode Commerce <span id="bizPremiumBadge" style="font-size:10px;background:rgba(255,200,80,.25);color:rgba(255,220,100,1);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:700;">✦ Premium</span></div>
               <div style="font-size:11px;color:rgba(255,235,180,1);" id="bizToggleSubLabel">Attirer des clients avec une offre géolocalisée</div>
             </span>
             <span id="businessToggleIcon" style="font-size:16px;color:rgba(255,200,80,.6);">○</span>
