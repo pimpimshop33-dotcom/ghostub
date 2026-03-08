@@ -435,7 +435,7 @@ function getLocation() {
     navigator.geolocation.getCurrentPosition(
       pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
       err => reject(err),
-      { enableHighAccuracy: true, timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   });
 }
@@ -469,6 +469,7 @@ onAuthStateChanged(auth, async user => {
     if (!window._locationWatchStarted) {
       window._locationWatchStarted = true;
     LocationService.startWatch();
+    let _firstAccuratePosition = false;
     LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
       // Ignorer les positions trop imprécises (IP-based = Paris, accuracy > 5000m)
       if (accuracy && accuracy > 5000) return;
@@ -477,6 +478,14 @@ onAuthStateChanged(auth, async user => {
         window.map.setView([lat, lng], 16);
       }
       userLat = lat; userLng = lng;
+      // Recharger les fantômes à la première position GPS précise
+      // pour corriger les distances calculées depuis le fallback
+      if (!_firstAccuratePosition) {
+        _firstAccuratePosition = true;
+        loadNearbyGhosts();
+        // Recentrer la carte si elle est déjà ouverte
+        if (window.map) window.map.setView([lat, lng], 16);
+      }
       const toUpdate = LocationService.detectNearbyPresence(lat, lng, nearbyGhosts);
       toUpdate.forEach(ghostId => {
         LocationService.markPresenceRecorded(ghostId);
@@ -1890,6 +1899,10 @@ window.loadNearbyGhosts = async () => {
   if (map) { map.remove(); map = null; }
   renderGhostList();
   renderRadarDots();
+  // Reconstruire la carte si l'écran carte est actif
+  if (document.getElementById('screenMap')?.classList.contains('active')) {
+    renderStaticMap();
+  }
   const resoEl = document.getElementById('resoStatus');
   if (resoEl) {
     if (hasResonatedToday()) {
