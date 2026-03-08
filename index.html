@@ -1645,46 +1645,14 @@ window.loadNearbyGhosts = async () => {
     userLat = 48.8566; userLng = 2.3522;
   }
 
-  // ── QUERY GEOHASH — filtre côté serveur dans un rayon ~5km ──────────
-  // Le geohash de précision 5 couvre ~4.9km x 4.9km
-  // On interroge les 9 cellules voisines pour couvrir les bords
+  // ── QUERY FIRESTORE ─────────────────────────────────────────────────
   let snap;
   try {
-    const gh5 = encodeGeohash(userLat, userLng, 5);
-    const neighbors = getGeohashNeighbors(gh5);
-    const cells = [gh5, ...neighbors];
-    // Firestore ne supporte pas "in" sur plus de 10 valeurs — on fait 9 requêtes parallèles
-    const snaps = await Promise.all(
-      cells.map(cell =>
-        getDocs(query(
-          collection(db, 'ghosts'),
-          where('geohash5', '>=', cell),
-          where('geohash5', '<=', cell + ''),
-          where('expired', '!=', true),
-          limit(50)
-        )).catch(() => null)
-      )
-    );
-    // Fusionner et dédupliquer
-    const seen = new Set();
-    const docs = [];
-    snaps.forEach(s => {
-      if (!s) return;
-      s.forEach(d => { if (!seen.has(d.id)) { seen.add(d.id); docs.push(d); } });
-    });
-    snap = { forEach: cb => docs.forEach(cb), size: docs.length };
+    snap = await getDocs(query(collection(db, 'ghosts'), limit(200)));
   } catch(firestoreErr) {
-    // Fallback si geohash5 pas encore indexé
-    console.warn('Geohash query failed, fallback:', firestoreErr.message);
-    try {
-      snap = await getDocs(query(collection(db, 'ghosts'), where('expired', '!=', true), limit(100)));
-    } catch(e2) {
-      try { snap = await getDocs(query(collection(db, 'ghosts'), limit(100))); }
-      catch(e3) {
-        document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
-        renderGhostList(); renderRadarDots(); return;
-      }
-    }
+    console.error('Firestore error:', firestoreErr);
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
+    renderGhostList(); renderRadarDots(); return;
   }
   nearbyGhosts = [];
   snap.forEach(d => {
@@ -2045,7 +2013,7 @@ window.loadEmpreinteMap = async () => {
 
   } catch(e) {
     if (loader) loader.style.display = 'none';
-    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--spirit-dim);">Impossible de charger l'empreinte</div>';
+    container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--spirit-dim);">Impossible de charger l\'empreinte</div>';
   }
 };
 
