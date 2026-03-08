@@ -425,7 +425,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
     }
   });
 
-  setTimeout(() => map.invalidateSize(), 300);
+  setTimeout(() => map && map.invalidateSize(), 500);
   Analytics.track('map_opened', { ghost_count: nearbyGhosts.length, hunt_mode: huntMode });
 }
 
@@ -3339,7 +3339,7 @@ window.showScreen = (id, fromPopstate = false) => {
   if (!fromPopstate) {
     history.pushState({ screen: id }, '', window.location.href.split('?')[0] + window.location.search);
   }
-  if (id === 'screenMap') renderStaticMap();
+  if (id === 'screenMap') setTimeout(() => renderStaticMap(), 50);
   if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false; const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
   if (id === 'screenOnboard') {
     const btn = document.getElementById('obBackBtn');
