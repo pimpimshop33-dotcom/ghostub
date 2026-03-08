@@ -1,18 +1,7 @@
 /**
  * location.service.js — Service de géolocalisation
  * Fantôme PWA
- *
- * Responsabilités :
- *  - Obtenir la position GPS (one-shot ou watch)
- *  - Throttling des mises à jour (max 1 update / 10s)
- *  - Calcul de distance (Haversine)
- *  - Présence passive : détecter passage près d'un fantôme sans ouverture
- *  - Callbacks abonnés aux mises à jour de position
- *
- * Zéro dépendance Firebase — communique via callbacks.
  */
-
-// ── ÉTAT INTERNE ──────────────────────────────────────────────────────────────
 
 let _lat = null;
 let _lng = null;
@@ -20,19 +9,10 @@ let _watchId = null;
 let _lastUpdateTs = 0;
 const _subscribers = new Set();
 
-// Throttle GPS : une mise à jour max toutes les 10 secondes
 const GPS_THROTTLE_MS = 10_000;
 
 // ── DISTANCE ──────────────────────────────────────────────────────────────────
 
-/**
- * Distance Haversine entre deux points GPS (en mètres).
- * @param {number} lat1
- * @param {number} lng1
- * @param {number} lat2
- * @param {number} lng2
- * @returns {number} distance en mètres
- */
 export function distanceMeters(lat1, lng1, lat2, lng2) {
   const R = 6_371_000;
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -47,19 +27,10 @@ export function distanceMeters(lat1, lng1, lat2, lng2) {
 
 // ── POSITION COURANTE ─────────────────────────────────────────────────────────
 
-/**
- * Retourne la dernière position connue.
- * @returns {{ lat: number|null, lng: number|null }}
- */
 export function getPosition() {
   return { lat: _lat, lng: _lng };
 }
 
-/**
- * Obtenir la position GPS une seule fois (Promise).
- * Met à jour _lat / _lng.
- * @returns {Promise<{ lat: number, lng: number }>}
- */
 export function getCurrentPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -78,32 +49,33 @@ export function getCurrentPosition() {
   });
 }
 
-// ── WATCH (PRÉSENCE PASSIVE) ──────────────────────────────────────────────────
+// ── WATCH ─────────────────────────────────────────────────────────────────────
 
-/**
- * Démarre la surveillance GPS continue.
- * Appelle les abonnés à chaque mise à jour (throttlée).
- *
- * @param {object} [options]
- * @param {number} [options.throttleMs=10000] — throttle en ms
- * @returns {void}
- */
 export function startWatch({ throttleMs = GPS_THROTTLE_MS } = {}) {
-  if (_watchId !== null) return; // déjà actif
+  if (_watchId !== null) return;
   if (!navigator.geolocation) return;
 
   _watchId = navigator.geolocation.watchPosition(
     pos => {
       const now = Date.now();
-      if (now - _lastUpdateTs < throttleMs) return; // throttle
-      _lastUpdateTs = now;
+      if (now - _lastUpdateTs < throttleMs) return;
 
+      const accuracy = pos.coords.accuracy;
+
+      // FIX : ignorer les positions imprécises (géoloc IP = Paris, accuracy > 5000m)
+      if (accuracy > 5000) {
+        console.warn('[LocationService] position ignorée — trop imprécise (' + Math.round(accuracy) + 'm)');
+        return;
+      }
+
+      _lastUpdateTs = now;
       _lat = pos.coords.latitude;
       _lng = pos.coords.longitude;
 
-      // Notifier les abonnés
+      // Notifier les abonnés — on passe aussi accuracy
       _subscribers.forEach(cb => {
-        try { cb({ lat: _lat, lng: _lng }); } catch (e) { console.warn('[LocationService] subscriber error', e); }
+        try { cb({ lat: _lat, lng: _lng, accuracy }); }
+        catch (e) { console.warn('[LocationService] subscriber error', e); }
       });
     },
     err => console.warn('[LocationService] watchPosition error', err),
@@ -111,9 +83,6 @@ export function startWatch({ throttleMs = GPS_THROTTLE_MS } = {}) {
   );
 }
 
-/**
- * Arrête la surveillance GPS.
- */
 export function stopWatch() {
   if (_watchId !== null) {
     navigator.geolocation.clearWatch(_watchId);
@@ -123,11 +92,6 @@ export function stopWatch() {
 
 // ── ABONNEMENTS ───────────────────────────────────────────────────────────────
 
-/**
- * S'abonner aux mises à jour de position.
- * @param {function({ lat, lng }): void} callback
- * @returns {function} — fonction pour se désabonner
- */
 export function onPositionUpdate(callback) {
   _subscribers.add(callback);
   return () => _subscribers.delete(callback);
@@ -135,41 +99,20 @@ export function onPositionUpdate(callback) {
 
 // ── PRÉSENCE PASSIVE ──────────────────────────────────────────────────────────
 
-// Throttle par fantôme : 1 écriture max toutes les 60s
-const _presenceThrottle = new Map(); // ghostId → timestamp dernière écriture
+const _presenceThrottle = new Map();
 const PRESENCE_THROTTLE_MS = 60_000;
 
-/**
- * Vérifie si on peut enregistrer une présence pour ce fantôme.
- * Retourne true si le throttle est passé.
- * @param {string} ghostId
- * @returns {boolean}
- */
 export function canRecordPresence(ghostId) {
   const last = _presenceThrottle.get(ghostId) || 0;
   return Date.now() - last > PRESENCE_THROTTLE_MS;
 }
 
-/**
- * Marque la présence comme enregistrée (pour le throttle).
- * @param {string} ghostId
- */
 export function markPresenceRecorded(ghostId) {
   _presenceThrottle.set(ghostId, Date.now());
 }
 
-/**
- * Pour chaque fantôme de la liste, vérifie si l'utilisateur est dans le radius
- * et si le throttle est passé — retourne la liste des ghostIds à mettre à jour.
- *
- * @param {number} userLat
- * @param {number} userLng
- * @param {Array<{ id: string, lat: number, lng: number, radius: number }>} ghosts
- * @returns {string[]} — liste de ghostIds proches
- */
 export function detectNearbyPresence(userLat, userLng, ghosts) {
   if (userLat == null || userLng == null) return [];
-
   return ghosts
     .filter(g => {
       if (!g.lat || !g.lng) return false;
@@ -180,7 +123,7 @@ export function detectNearbyPresence(userLat, userLng, ghosts) {
     .map(g => g.id);
 }
 
-// ── EXPORT DEFAULT ────────────────────────────────────────────────────────────
+// ── EXPORT ────────────────────────────────────────────────────────────────────
 
 const LocationService = {
   distanceMeters,
