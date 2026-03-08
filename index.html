@@ -3644,6 +3644,17 @@ window.wizardNext = (step) => {
       document.getElementById('depositMsg').focus();
       return;
     }
+    // Filtre anti-pub pour les non-premium
+    if (!isPremium) {
+      const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
+      const msgLower = msg.toLowerCase();
+      if (spamWords.some(w => msgLower.includes(w))) {
+        showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
+        document.getElementById('depositMsg').style.borderColor = 'rgba(255,200,80,.5)';
+        setTimeout(() => document.getElementById('depositMsg').style.borderColor = '', 2000);
+        return;
+      }
+    }
     setWizardStep(2);
     // Auto-remplir le nom du lieu si vide
     const locInput = document.getElementById('depositLocation');
