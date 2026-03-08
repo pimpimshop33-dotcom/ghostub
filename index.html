@@ -2496,6 +2496,7 @@ window.depositGhost = async () => {
     const openCondition = getSelectedCond();
     const openHour = openCondition === 'hour' ? document.getElementById('condHourInput').value : null;
     const openAfterGhostId = (openCondition === 'after' && isPremium) ? document.getElementById('condAfterInput').value.trim() : null;
+    const openDate = openCondition === 'future' ? document.getElementById('condFutureInput').value : null;
     // ── Dépôt via WorldService.createGhost() ────────────────────────────
     const ghostData = {
       message, location: location || 'Lieu sans nom', emoji, duration, radius, maxOpenCount: maxOpenCount || 0,
@@ -2507,6 +2508,7 @@ window.depositGhost = async () => {
       openCondition: openCondition || 'always',
       openHour: openHour || null,
       openAfterGhostId: openAfterGhostId || null,
+      openDate: openDate || null,
     };
     const ghostId = await WorldService.createGhost(ghostData, userLat, userLng,
       { uid: currentUser.uid, displayName: currentUser.displayName, email: currentUser.email }
@@ -2844,6 +2846,7 @@ window.showScreen = (id, fromPopstate = false) => {
     if (alwaysBtn) alwaysBtn.classList.add('active');
     document.getElementById('condExtraHour').classList.remove('show');
     document.getElementById('condExtraAfter').classList.remove('show');
+    document.getElementById('condExtraFuture').classList.remove('show');
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('chainSection');
@@ -2891,6 +2894,18 @@ window.selectCond = (btn) => {
   const cond = btn.dataset.cond;
   document.getElementById('condExtraHour').classList.toggle('show', cond === 'hour');
   document.getElementById('condExtraAfter').classList.toggle('show', cond === 'after');
+  document.getElementById('condExtraFuture').classList.toggle('show', cond === 'future');
+  // Pré-remplir la date min à demain
+  if (cond === 'future') {
+    const inp = document.getElementById('condFutureInput');
+    if (!inp.value) {
+      const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+      inp.min = tomorrow.toISOString().split('T')[0];
+      // Proposer dans 1 an par défaut
+      const nextYear = new Date(); nextYear.setFullYear(nextYear.getFullYear() + 1);
+      inp.value = nextYear.toISOString().split('T')[0];
+    }
+  }
 };
 
 function getSelectedCond() {
@@ -2968,6 +2983,31 @@ function isConditionMet(ghost) {
       sub: 'Tu dois d’abord trouver et ouvrir un autre fantôme pour débloquer celui-ci.',
       timer: null,
       timerLabel: null
+    };
+  }
+
+  if (cond === 'future') {
+    const openDate = ghost.openDate;
+    if (!openDate) return { ok: true };
+    const unlockTs = new Date(openDate).setHours(0, 0, 0, 0);
+    const now = Date.now();
+    if (now >= unlockTs) return { ok: true };
+    const diff = unlockTs - now;
+    const days = Math.ceil(diff / 86400000);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    let timer, timerLabel;
+    if (years >= 1) { timer = `${years} an${years > 1 ? 's' : ''}`; timerLabel = 'avant l’ouverture'; }
+    else if (months >= 1) { timer = `${months} mois`; timerLabel = 'avant l’ouverture'; }
+    else { timer = `${days} jour${days > 1 ? 's' : ''}`; timerLabel = 'avant l’ouverture'; }
+    const dateStr = new Date(openDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+    return {
+      ok: false,
+      icon: '📅',
+      title: 'Message du futur',
+      sub: `Ce fantôme ne peut être ouvert qu'à partir du ${dateStr}.`,
+      timer,
+      timerLabel
     };
   }
 
@@ -4913,6 +4953,14 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
               <span class="cond-premium-tag">PREMIUM</span>
             </button>
 
+            <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">📅</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label">Message du futur</div>
+                <div class="cond-btn-sub">S'ouvre à une date précise</div>
+              </span>
+            </button>
+
           </div>
 
           <!-- Extra : heure précise -->
@@ -4927,6 +4975,13 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
             <label class="form-label" style="margin-bottom:6px;" for="condAfterInput">ID du fantôme prérequis</label>
             <input class="form-input" type="text" id="condAfterInput" placeholder="Colle l'ID d'un fantôme existant…" style="font-size:13px !important;" aria-label="ID du fantôme à lire avant">
             <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">L'utilisateur doit d'abord ouvrir ce fantôme pour débloquer le tien</div>
+          </div>
+
+          <!-- Extra : message du futur -->
+          <div class="cond-extra" id="condExtraFuture">
+            <label class="form-label" style="margin-bottom:6px;" for="condFutureInput">Date d'ouverture</label>
+            <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
           </div>
         </div>
 
