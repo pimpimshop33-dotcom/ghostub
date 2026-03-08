@@ -1897,6 +1897,23 @@ window.loadEmpreinteMap = async () => {
   if (_empreinteMap) { try { _empreinteMap.remove(); } catch(e){} _empreinteMap = null; }
   if (loader) loader.style.display = 'flex';
 
+  // Charger Leaflet si pas encore disponible
+  await new Promise((resolve) => {
+    if (window.L) return resolve();
+    const s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.onload = resolve;
+    s.onerror = resolve; // on continue même si ça échoue
+    document.head.appendChild(s);
+    if (!document.getElementById('leafletCSS')) {
+      const css = document.createElement('link');
+      css.id = 'leafletCSS';
+      css.rel = 'stylesheet';
+      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(css);
+    }
+  });
+
   try {
     // 1. Charger les fantômes déposés par l'utilisateur
     const depositSnap = await getDocs(query(
@@ -2012,6 +2029,7 @@ window.loadEmpreinteMap = async () => {
     if (shareBtn && navigator.share) shareBtn.style.display = 'block';
 
   } catch(e) {
+    console.error('Empreinte error:', e);
     if (loader) loader.style.display = 'none';
     container.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--spirit-dim);">Impossible de charger l\'empreinte</div>';
   }
