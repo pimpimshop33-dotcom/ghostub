@@ -1109,23 +1109,23 @@ async function loadBizDashboard() {
   const content  = document.getElementById('bizDashboardContent');
   if (!section || !content) return;
 
-  // Chercher les fantômes commerce de l'utilisateur
   let snap;
   try {
     snap = await getDocs(query(
       collection(db, 'ghosts'),
       where('authorUid', '==', currentUser.uid),
-      where('businessMode', '==', true),
       orderBy('createdAt', 'desc'),
-      limit(20)
+      limit(50)
     ));
   } catch(e) { return; }
 
-  if (snap.empty) { section.style.display = 'none'; return; }
+  // Filtrer côté client les fantômes commerce
+  const bizDocs = snap.docs.filter(d => d.data().businessMode === true);
+  if (bizDocs.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
   let html = '';
-  snap.forEach(d => {
+  bizDocs.forEach(d => {
     const g   = d.data();
     const id  = d.id;
     const opens   = g.openCount || 0;
@@ -2908,12 +2908,17 @@ window.depositGhost = async () => {
     showToast('success', '👻 Votre trace est ancrée dans ce lieu…');
     playDepositSound();
     Analytics.track('ghost_deposited', { anonymous: anon, secret, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
-    setTimeout(async () => {
-      document.getElementById('depositSuccess').classList.remove('show');
+    // Clic pour fermer manuellement si le timer bloque
+    const successEl = document.getElementById('depositSuccess');
+    const dismissSuccess = () => {
+      successEl.classList.remove('show');
+      successEl.removeEventListener('click', dismissSuccess);
       showScreen('screenRadar');
       setNav('nav-radar');
-      await loadNearbyGhosts();
-    }, 2500);
+      loadNearbyGhosts().catch(() => {});
+    };
+    successEl.addEventListener('click', dismissSuccess);
+    setTimeout(() => dismissSuccess(), 2500);
   } catch(e) {
     err.textContent = 'Erreur : ' + e.message;
     depositBtn.textContent = '👻 Déposer le fantôme';
