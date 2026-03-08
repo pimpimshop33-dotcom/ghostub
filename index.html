@@ -2366,11 +2366,9 @@ function renderGhostList() {
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
     const resoStyle = resoCount >= 5 ? 'color:rgba(255,200,80,.9);text-shadow:0 0 8px rgba(255,200,80,.4);' : resoCount >= 2 ? 'color:rgba(168,180,255,.8);' : '';
-    // Badge "jamais ouvert"
+    // Badge "jamais ouvert" — uniquement si déjà lu (pour ne pas doubler avec le hintText)
     const neverOpened = !g.openCount || g.openCount === 0;
-    const virginBadge = neverOpened
-      ? `<span style="font-size:9px;background:rgba(100,220,160,.1);border:1px solid rgba(100,220,160,.35);border-radius:20px;padding:1px 7px;color:rgba(100,220,160,.85);margin-left:4px;animation:weakPulse 2.5s ease-in-out infinite;">✦ jamais ouvert</span>`
-      : '';
+    const virginBadge = ''; // supprimé — info déjà dans hintText
     // Hint dynamique selon état
     const hintText = neverOpened && ageDays > 30
       ? `🕯 Attend depuis ${Math.floor(ageDays)} jours — jamais lu`
