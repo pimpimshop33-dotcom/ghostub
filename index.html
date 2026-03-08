@@ -3037,8 +3037,8 @@ function _checkDistanceThenOpen() {
   // FIX: Timeout de sécurité si géoloc bloque trop longtemps
   const fallbackTimer = setTimeout(() => {
     btn.disabled = false;
-    hint.textContent = '⚠️ GPS trop long — déplacez-vous en extérieur et réessayez.';
-    setTimeout(() => { hint.textContent = origHint; }, 4000);
+    hint.textContent = origHint;
+    _doOpenEnvelope(); // On laisse ouvrir après 8s de blocage
   }, 8000);
 
   if (!navigator.geolocation) {
@@ -3069,10 +3069,10 @@ function _checkDistanceThenOpen() {
     () => {
       clearTimeout(fallbackTimer);
       btn.disabled = false;
-      hint.textContent = '⚠️ GPS indisponible — activez-le et réessayez en extérieur.';
-      setTimeout(() => { hint.textContent = origHint; }, 4000);
+      hint.textContent = origHint;
+      _doOpenEnvelope();
     },
-    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
+    { enableHighAccuracy: true, timeout: 7000, maximumAge: 5000 }
   );
 };
 
@@ -3169,13 +3169,59 @@ window.toggleBusinessMode = () => {
     showScreen('screenProfile'); setNav('nav-profile');
     return;
   }
-  const extra = document.getElementById('businessExtra');
-  const icon  = document.getElementById('businessToggleIcon');
-  const btn   = document.getElementById('businessToggleBtn');
-  const active = extra.style.display === 'none';
-  extra.style.display = active ? 'block' : 'none';
-  icon.textContent = active ? '●' : '○';
-  btn.style.borderColor = active ? 'rgba(255,200,80,.6)' : 'rgba(255,200,80,.2)';
+  const normalForm = document.getElementById('normalDepositForm');
+  const bizForm    = document.getElementById('businessDepositForm');
+  const extra      = document.getElementById('businessExtra');
+  const icon       = document.getElementById('businessToggleIcon');
+  const btn        = document.getElementById('businessToggleBtn');
+  const subLabel   = document.getElementById('bizToggleSubLabel');
+
+  const activating = bizForm.style.display === 'none';
+
+  if (activating) {
+    // Basculer vers le formulaire Commerce
+    normalForm.style.display = 'none';
+    bizForm.style.display    = 'block';
+    extra.style.display      = 'block'; // pour compatibilité depositGhost
+    icon.textContent         = '●';
+    btn.style.borderColor    = 'rgba(255,200,80,.6)';
+    btn.style.background     = 'rgba(255,200,80,.1)';
+    subLabel.textContent     = 'Mode activé — formulaire commerce';
+    subLabel.style.color     = 'rgba(255,200,80,.7)';
+    document.getElementById('depositEmoji').value = '🏪';
+    // Forcer le rayon à 50m dans l'étape 2
+    setTimeout(() => {
+      document.querySelectorAll('.radius-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed', 'false');
+        // Désactiver 3m et 10m pour le mode commerce
+        if (b.textContent.trim() === '3m' || b.textContent.trim() === '10m') {
+          b.style.opacity = '.35';
+          b.style.pointerEvents = 'none';
+        }
+        if (b.textContent.trim() === '50m') {
+          b.classList.add('active');
+          b.setAttribute('aria-pressed', 'true');
+        }
+      });
+    }, 100);
+    showToast('success', '🏪 Mode Commerce activé — visible à 50m de votre établissement');
+  } else {
+    // Retour au formulaire normal
+    normalForm.style.display = 'block';
+    bizForm.style.display    = 'none';
+    extra.style.display      = 'none';
+    icon.textContent         = '○';
+    btn.style.borderColor    = 'rgba(255,200,80,.2)';
+    btn.style.background     = 'rgba(255,200,80,.06)';
+    subLabel.textContent     = 'Attirer des clients avec une offre géolocalisée';
+    subLabel.style.color     = '';
+    // Réactiver tous les rayons
+    document.querySelectorAll('.radius-btn').forEach(b => {
+      b.style.opacity = '';
+      b.style.pointerEvents = '';
+    });
+  }
 };
 
 window.selectCond = (btn) => {
@@ -5174,35 +5220,64 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div class="wizard-pane" id="wizardStep1">
         <div class="wizard-pane-title">Que laissez-vous ici ?</div>
         <div class="wizard-pane-sub">Cette trace sera ancrée à votre position.</div>
-        <div class="emoji-picker" role="group" aria-label="Choisir un emoji">
-          <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Emoji fantôme" aria-pressed="true">👻</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Emoji message" aria-pressed="false">💬</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Emoji cœur" aria-pressed="false">❤️</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Emoji lune" aria-pressed="false">🌙</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false">✨</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false">🔥</button>
-          <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false">🌸</button>
-          <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="…" maxlength="2" oninput="pickEmojiCustom(this)">
+        <!-- Formulaire normal (message personnel) -->
+        <div id="normalDepositForm">
+          <div class="emoji-picker" role="group" aria-label="Choisir un emoji">
+            <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Emoji fantôme" aria-pressed="true">👻</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Emoji message" aria-pressed="false">💬</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Emoji cœur" aria-pressed="false">❤️</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Emoji lune" aria-pressed="false">🌙</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false">✨</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false">🔥</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false">🌸</button>
+            <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="…" maxlength="2" oninput="pickEmojiCustom(this)">
+          </div>
+          <textarea class="form-textarea wizard-textarea" id="depositMsg" placeholder="Une pensée, un souvenir, un secret… quelque chose que vous laissez derrière vous." style="height:130px;margin-bottom:0;" maxlength="280" aria-required="true" aria-describedby="msgCharCount"></textarea>
+          <div class="wizard-char-count"><span id="msgCharCount">0</span>/280</div>
         </div>
-        <textarea class="form-textarea wizard-textarea" id="depositMsg" placeholder="Une pensée, un souvenir, un secret… quelque chose que vous laissez derrière vous." style="height:130px;margin-bottom:0;" maxlength="280" aria-required="true" aria-describedby="msgCharCount"></textarea>
-        <div class="wizard-char-count"><span id="msgCharCount">0</span>/280</div>
 
-        <!-- Mode Commerce -->
+        <!-- Formulaire Commerce (formulaire dédié) -->
+        <div id="businessDepositForm" style="display:none;">
+          <div style="background:rgba(255,200,80,.07);border:1px solid rgba(255,200,80,.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:10px;">🏪 Type d'offre</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
+              <button class="type-btn active" data-val="Promo" onclick="selectType(this)" aria-pressed="true" style="flex:1;min-width:70px;">🏷 Promo</button>
+              <button class="type-btn" data-val="Événement" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🎉 Événement</button>
+              <button class="type-btn" data-val="Nouveauté" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">✨ Nouveauté</button>
+              <button class="type-btn" data-val="Service" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🛎 Service</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label" for="bizTitle">Titre de l'offre <span style="color:rgba(255,100,100,.7);">*</span></label>
+            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" maxlength="80" aria-required="true">
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label" for="bizDesc">Description <span style="color:var(--spirit-dim);font-weight:400;">(optionnel)</span></label>
+            <textarea class="form-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" style="height:80px;" maxlength="200"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:6px;">
+            <label class="form-label" for="promoCode">Code promo <span style="color:var(--spirit-dim);font-weight:400;">(optionnel)</span></label>
+            <input class="form-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40" style="font-size:13px !important;letter-spacing:.5px;">
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.15);border-radius:10px;padding:10px 12px;margin-top:6px;">
+            <span style="font-size:16px;">📡</span>
+            <span style="font-size:11px;color:rgba(255,200,80,.7);line-height:1.5;">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+          </div>
+        </div>
+
+        <!-- Bouton toggle Mode Commerce -->
         <div id="businessToggleWrap" style="margin:14px 0 0;">
           <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.2);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
             <span style="font-size:18px;">🏪</span>
             <span style="flex:1;">
               <div style="font-size:13px;color:var(--text);font-weight:600;">Mode Commerce <span style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;">✦ Premium</span></div>
-              <div style="font-size:11px;color:var(--spirit-dim);">Offre exclusive pour attirer des clients</div>
+              <div style="font-size:11px;color:var(--spirit-dim);" id="bizToggleSubLabel">Attirer des clients avec une offre géolocalisée</div>
             </span>
             <span id="businessToggleIcon" style="font-size:16px;color:var(--spirit-dim);">○</span>
           </button>
-          <div id="businessExtra" style="display:none;margin-top:10px;">
-            <label class="form-label" style="margin-bottom:6px;">Code promo ou offre</label>
-            <input class="form-input" id="promoCode" type="text" placeholder="ex: CAFE-OFFERT, -15% sur présentation…" maxlength="80" style="font-size:13px !important;">
-            <div style="font-size:10px;color:var(--spirit-dim);margin-top:5px;">Ce code sera affiché en évidence quand le client découvre votre fantôme.</div>
-          </div>
         </div>
+        <!-- Champ caché businessExtra pour compatibilité depositGhost -->
+        <div id="businessExtra" style="display:none;"></div>
 
         <button class="wizard-next-btn" onclick="wizardNext(1)" style="margin-top:14px;">Continuer →</button>
       </div>
@@ -5593,7 +5668,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Mentions légales & RGPD</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;">
           <strong>Éditeur :</strong> Fantôme — application indépendante<br>
-          <strong>Contact :</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="6d1d04001d04001e05021d5e5e2d0a000c0401430e0200">[email&#160;protected]</a><br><br>
+          <strong>Contact :</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="24544d49544d49574c4b541717644349454d480a474b49">[email&#160;protected]</a><br><br>
           <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
           <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
           <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
