@@ -3679,26 +3679,49 @@ async function reverseGeocode(lat, lng) {
 
 window.wizardNext = (step) => {
   if (step === 1) {
-    const msg = document.getElementById('depositMsg').value.trim();
-    if (!msg) {
-      document.getElementById('depositMsg').style.borderColor = 'rgba(255,100,100,.5)';
-      document.getElementById('depositMsg').setAttribute('aria-invalid', 'true');
-      setTimeout(() => {
-        document.getElementById('depositMsg').style.borderColor = '';
-        document.getElementById('depositMsg').removeAttribute('aria-invalid');
-      }, 1500);
-      document.getElementById('depositMsg').focus();
-      return;
-    }
-    // Filtre anti-pub pour les non-premium
-    if (!isPremium) {
-      const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
-      const msgLower = msg.toLowerCase();
-      if (spamWords.some(w => msgLower.includes(w))) {
-        showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
-        document.getElementById('depositMsg').style.borderColor = 'rgba(255,200,80,.5)';
-        setTimeout(() => document.getElementById('depositMsg').style.borderColor = '', 2000);
+    const isBizMode = document.getElementById('businessDepositForm').style.display !== 'none';
+
+    if (isBizMode) {
+      // Validation mode Commerce : titre obligatoire
+      const bizTitle = document.getElementById('bizTitle').value.trim();
+      if (!bizTitle) {
+        const el = document.getElementById('bizTitle');
+        el.style.borderColor = 'rgba(255,100,100,.5)';
+        setTimeout(() => el.style.borderColor = '', 1500);
+        el.focus();
+        showToast('warning', '⚠️ Ajoutez un titre à votre offre.');
         return;
+      }
+      // Construire le message auto depuis les champs commerce
+      const bizType = document.querySelector('#bizTypeSelector .type-btn.active')?.dataset.val || 'Offre';
+      const bizDesc = document.getElementById('bizDesc').value.trim();
+      const promoCode = document.getElementById('promoCode').value.trim();
+      let autoMsg = `🏪 ${bizType} : ${bizTitle}`;
+      if (bizDesc) autoMsg += `\n${bizDesc}`;
+      if (promoCode) autoMsg += `\nCode : ${promoCode}`;
+      document.getElementById('depositMsg').value = autoMsg;
+    } else {
+      const msg = document.getElementById('depositMsg').value.trim();
+      if (!msg) {
+        document.getElementById('depositMsg').style.borderColor = 'rgba(255,100,100,.5)';
+        document.getElementById('depositMsg').setAttribute('aria-invalid', 'true');
+        setTimeout(() => {
+          document.getElementById('depositMsg').style.borderColor = '';
+          document.getElementById('depositMsg').removeAttribute('aria-invalid');
+        }, 1500);
+        document.getElementById('depositMsg').focus();
+        return;
+      }
+      // Filtre anti-pub pour les non-premium
+      if (!isPremium) {
+        const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
+        const msgLower = msg.toLowerCase();
+        if (spamWords.some(w => msgLower.includes(w))) {
+          showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
+          document.getElementById('depositMsg').style.borderColor = 'rgba(255,200,80,.5)';
+          setTimeout(() => document.getElementById('depositMsg').style.borderColor = '', 2000);
+          return;
+        }
       }
     }
     setWizardStep(2);
