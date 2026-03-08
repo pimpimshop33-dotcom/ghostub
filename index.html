@@ -1380,10 +1380,12 @@ window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e 
 });
 
 // ── NOTIF RÉSONANCE IMMÉDIATE ────────────────────────────
+let _unsubResonances = null;
 function watchMyGhostResonances() {
+  if (_unsubResonances) { _unsubResonances(); _unsubResonances = null; }
   if (!currentUser) return;
   const q = query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid));
-  onSnapshot(q, snap => {
+  _unsubResonances = onSnapshot(q, snap => {
     snap.docChanges().forEach(change => {
       if (change.type === 'modified') {
         const g = change.doc.data();
