@@ -2493,7 +2493,7 @@ window.depositGhost = async () => {
     if (videoUrl && ghostId) {
       updateDoc(doc(db, 'ghosts', ghostId), { videoUrl }).catch(() => {});
     }
-    await WorldService.recordDepositTimestamp(currentUser.uid);;
+    await WorldService.recordDepositTimestamp(currentUser.uid);
     document.getElementById('depositMsg').value = '';
     document.getElementById('depositLocation').value = '';
     document.getElementById('chainHint').value = '';
