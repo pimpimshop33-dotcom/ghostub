@@ -767,8 +767,38 @@ async function checkReplyNotifications() {
   } catch(e) {}
 }
 
-// FIX: Guard contre les setInterval doublons
-let _notifIntervalsStarted = false;
+// ── NOTIFICATION PUSH VIA SW (app en arrière-plan) ───────
+function sendSwNotifIfNeeded() {
+  if (!('serviceWorker' in navigator)) return;
+  if (Notification.permission !== 'granted') return;
+  if (localStorage.getItem('notif_enabled') !== '1') return;
+  if (!nearbyGhosts || nearbyGhosts.length === 0) return;
+  // Chercher un fantôme jamais ouvert et proche
+  const candidates = nearbyGhosts.filter(g =>
+    (!g.openCount || g.openCount === 0) && g.distance <= 300
+  );
+  if (candidates.length === 0) return;
+  // Max 1 push par heure
+  const lastPush = parseInt(localStorage.getItem('fantome_last_sw_push') || '0');
+  if (Date.now() - lastPush < 3600000) return;
+  localStorage.setItem('fantome_last_sw_push', Date.now());
+  const g = candidates[0];
+  const dist = formatDistance(g.distance);
+  navigator.serviceWorker.ready.then(reg => {
+    reg.active?.postMessage({
+      type: 'NOTIFY_NEARBY',
+      title: '👻 Un fantôme vous attend',
+      body: `À ${dist} — un message jamais lu dans votre quartier.`,
+      tag: 'fantome-nearby-bg'
+    });
+  });
+}
+
+// Envoyer la notif quand l'utilisateur quitte l'app
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') sendSwNotifIfNeeded();
+});
+
 let _visibilityListenerAdded = false;
 
 function _startNotifIntervals() {
@@ -924,28 +954,42 @@ window.triggerPhoto = () => { document.getElementById('photoInput').click(); };
 window.handlePhoto = (input) => {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) {
-    document.getElementById('depositError').textContent = 'Photo trop lourde (max 5MB).';
-    return;
-  }
-  // Vérification du type MIME
   if (!file.type.startsWith('image/')) {
     document.getElementById('depositError').textContent = 'Fichier non valide — images uniquement.';
     return;
   }
-  // FIX: Révoquer l'ancien blob URL
-  if (window._pendingPhotoBlobUrl) {
-    URL.revokeObjectURL(window._pendingPhotoBlobUrl);
-  }
-  const url = URL.createObjectURL(file);
-  window._pendingPhotoBlobUrl = url;
-  const preview = document.getElementById('photoPreview');
-  preview.innerHTML = `
-    <div style="position:relative;margin-top:8px;">
-      <img src="${url}" alt="Aperçu de la photo" style="width:100%;border-radius:14px;border:1px solid rgba(168,180,255,.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);" loading="lazy">
-      <button onclick="clearPhoto()" aria-label="Supprimer la photo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
-    </div>`;
-  window._pendingPhotoFile = file;
+  // Compression canvas avant upload
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 1200; // px max
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else       { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        if (window._pendingPhotoBlobUrl) URL.revokeObjectURL(window._pendingPhotoBlobUrl);
+        const url = URL.createObjectURL(blob);
+        window._pendingPhotoBlobUrl = url;
+        window._pendingPhotoFile = new File([blob], file.name, { type: 'image/jpeg' });
+        document.getElementById('photoPreview').innerHTML = `
+          <div style="position:relative;margin-top:8px;">
+            <img src="${url}" alt="Aperçu de la photo" style="width:100%;border-radius:14px;border:1px solid rgba(168,180,255,.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);" loading="lazy">
+            <button onclick="clearPhoto()" aria-label="Supprimer la photo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+            <div style="position:absolute;bottom:8px;left:8px;font-size:10px;background:rgba(0,0,0,.6);color:rgba(100,220,160,.8);border-radius:8px;padding:2px 7px;">${(blob.size/1024).toFixed(0)}ko</div>
+          </div>`;
+        document.getElementById('depositError').textContent = '';
+      }, 'image/jpeg', 0.82);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
 };
 
 window.clearPhoto = () => {
@@ -1093,6 +1137,8 @@ async function refreshProfileStats() {
   animateStatNumber('statDiscovered', count);
   document.getElementById('statRank').textContent = rank.icon + ' ' + rank.label;
   updateFavoritesCount();
+  const firstReaderCount = parseInt(localStorage.getItem('fantome_first_reader') || '0');
+  animateStatNumber('statFirstReader', firstReaderCount);
   try {
     const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid)));
     animateStatNumber('statDeposited', snap.size);
@@ -1752,6 +1798,14 @@ window.loadNearbyGhosts = async () => {
     if (g.expired) return;
     if (isExpired(g)) {
       updateDoc(doc(db, 'ghosts', g.id), { expired: true }).catch(()=>{});
+      // Supprimer automatiquement les fantômes expirés depuis plus de 60 jours si on est l'auteur
+      if (g.authorUid === currentUser?.uid && g.createdAt) {
+        const msSinceCreated = Date.now() - g.createdAt.seconds * 1000;
+        const durationMs = 60 * 24 * 3600 * 1000; // 60 jours
+        if (msSinceCreated > durationMs) {
+          deleteDoc(doc(db, 'ghosts', g.id)).catch(() => {});
+        }
+      }
       return;
     }
     if (g.lat && g.lng) {
@@ -2992,6 +3046,14 @@ async function _doOpenEnvelope() {
       const newOpenCount = (selectedGhost.openCount || 0) + 1;
       const maxOpen = selectedGhost.maxOpenCount || 0;
       const nowExpired = maxOpen > 0 && newOpenCount >= maxOpen;
+      // 🥇 Premier à lire : openCount était 0 avant cette ouverture
+      const wasFirst = !selectedGhost.openCount || selectedGhost.openCount === 0;
+      if (wasFirst) {
+        const firstCount = parseInt(localStorage.getItem('fantome_first_reader') || '0') + 1;
+        localStorage.setItem('fantome_first_reader', firstCount);
+        showToast('success', '🥇 Vous êtes le premier à lire ce message !', 4000);
+        animateStatNumber('statFirstReader', firstCount);
+      }
       updateDoc(doc(db, 'ghosts', selectedGhost.id), {
         openCount: increment(1),
         ...(nowExpired ? { expired: true } : {})
@@ -5737,6 +5799,15 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div class="stat-card" role="listitem" style="padding:12px 8px;">
           <div class="stat-num" id="statResonances" style="font-size:22px;">0</div>
           <div class="stat-label" style="font-size:10px;">Résonances ✨</div>
+        </div>
+        <div class="stat-card" role="listitem" style="padding:12px 8px;grid-column:1/-1;background:linear-gradient(135deg,rgba(100,220,160,.06),rgba(100,220,160,.02));border-color:rgba(100,220,160,.2);">
+          <div style="display:flex;align-items:center;justify-content:center;gap:10px;">
+            <span style="font-size:22px;">🥇</span>
+            <div>
+              <div class="stat-num" id="statFirstReader" style="font-size:22px;color:rgba(100,220,160,.9);">0</div>
+              <div class="stat-label" style="font-size:10px;color:rgba(100,220,160,.6);">Premier à lire</div>
+            </div>
+          </div>
         </div>
       </div>
 
