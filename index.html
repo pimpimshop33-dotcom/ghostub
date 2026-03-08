@@ -747,6 +747,9 @@ async function checkReplyNotifications() {
       if (n.type === 'reply') {
         title = '↩ Quelqu\'un vous a répondu';
         msg = `${escapeHTML(n.fromAuthor || 'Un inconnu')} a laissé une réponse à votre fantôme de <b>${lieu}</b>.`;
+      } else if (n.type === 'biz_open') {
+        title = '🏪 Un client a vu votre offre !';
+        msg = `Quelqu'un vient de découvrir votre offre commerce à <b>${lieu}</b>.`;
       } else if (n.type === 'open') {
         const openMsgs = [
           `Quelqu'un vient de briser le sceau de votre trace à <b>${lieu}</b>.`,
@@ -1098,6 +1101,91 @@ async function refreshProfileStats() {
     animateStatNumber('statResonances', totalReso);
   } catch(e) { console.warn('refreshProfileStats:', e); }
 }
+
+// ── TABLEAU DE BORD COMMERÇANT ──────────────────────────
+async function loadBizDashboard() {
+  if (!currentUser || !isPremium) return;
+  const section  = document.getElementById('bizDashboardSection');
+  const content  = document.getElementById('bizDashboardContent');
+  if (!section || !content) return;
+
+  // Chercher les fantômes commerce de l'utilisateur
+  let snap;
+  try {
+    snap = await getDocs(query(
+      collection(db, 'ghosts'),
+      where('authorUid', '==', currentUser.uid),
+      where('businessMode', '==', true),
+      orderBy('createdAt', 'desc'),
+      limit(20)
+    ));
+  } catch(e) { return; }
+
+  if (snap.empty) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  let html = '';
+  snap.forEach(d => {
+    const g   = d.data();
+    const id  = d.id;
+    const opens   = g.openCount || 0;
+    const expired = isExpired(g);
+    const location = escapeHTML(g.location || 'Lieu inconnu');
+    const title = g.message ? escapeHTML(g.message.split('\n')[0].replace(/^🏪 [^:]+: /, '')) : location;
+
+    // Calcul expiration
+    let expiryHtml = '';
+    if (!expired && g.createdAt) {
+      const msCreated = g.createdAt.seconds * 1000;
+      const msExpiry  = msCreated + 30 * 24 * 3600 * 1000; // 1 mois
+      const daysLeft  = Math.ceil((msExpiry - Date.now()) / 86400000);
+      if (daysLeft <= 7 && daysLeft > 0) {
+        expiryHtml = `<span style="color:rgba(255,160,60,.9);font-size:11px;">⏰ Expire dans ${daysLeft}j</span>`;
+      } else if (daysLeft <= 0) {
+        expiryHtml = `<span style="color:rgba(255,100,100,.7);font-size:11px;">⏳ Expirée</span>`;
+      } else {
+        expiryHtml = `<span style="color:var(--spirit-dim);font-size:11px;">⏳ ${daysLeft}j restants</span>`;
+      }
+    }
+
+    // Badge ouvertures
+    const opensColor = opens >= 10 ? 'rgba(100,220,160,.9)' : opens >= 3 ? 'rgba(255,200,80,.8)' : 'var(--spirit-dim)';
+
+    html += `
+      <div style="background:rgba(255,200,80,.04);border:1px solid rgba(255,200,80,.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+          <span style="font-size:22px;flex-shrink:0;">🏪</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;">${title}</div>
+            <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;">${location}</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
+              <span style="color:${opensColor};font-size:13px;font-weight:600;">👁 ${opens} ouverture${opens > 1 ? 's' : ''}</span>
+              ${expiryHtml}
+              ${expired ? '<span style="color:rgba(255,100,100,.6);font-size:11px;">Expirée</span>' : ''}
+            </div>
+          </div>
+        </div>
+        ${!expired ? `<button onclick="renewBusinessGhost('${escapeHTML(id)}')" style="width:100%;margin-top:10px;padding:8px;background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.3);border-radius:10px;color:rgba(255,200,80,.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;">↻ Renouveler pour 1 mois</button>` : ''}
+      </div>`;
+  });
+  content.innerHTML = html || '<div style="opacity:.5;font-style:italic;text-align:center;padding:12px 0;">Aucune offre commerce active</div>';
+}
+
+window.renewBusinessGhost = async (ghostId) => {
+  if (!currentUser || !isPremium) return;
+  const confirmed = await showConfirm('Renouveler l\'offre ?', 'La durée de vie de cette offre sera remise à 1 mois à partir d\'aujourd\'hui.', { confirmLabel: '↻ Renouveler' });
+  if (!confirmed) return;
+  try {
+    await updateDoc(doc(db, 'ghosts', ghostId), {
+      createdAt: serverTimestamp(),
+      expired: false
+    });
+    showToast('success', '🏪 Offre renouvelée pour 1 mois !');
+    loadBizDashboard();
+  } catch(e) {
+    showToast('warning', '⚠️ Erreur lors du renouvellement.');
+  }
+};
 
 window.toggleDiscoveryHistory = async () => {
   const panel = document.getElementById('discoveryHistory');
@@ -2903,7 +2991,7 @@ async function _doOpenEnvelope() {
       if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser?.uid) {
         const lieu = selectedGhost.location || 'ce lieu';
         addDoc(collection(db, 'notifications'), {
-          type: 'open',
+          type: selectedGhost.businessMode ? 'biz_open' : 'open',
           toUid: selectedGhost.authorUid,
           ghostId: selectedGhost.id,
           ghostLocation: lieu,
@@ -3110,7 +3198,7 @@ window.showScreen = (id, fromPopstate = false) => {
     history.pushState({ screen: id }, '', window.location.href.split('?')[0] + window.location.search);
   }
   if (id === 'screenMap') renderStaticMap();
-  if (id === 'screenProfile') { refreshProfileStats(); loadLeaderboard(); loadEmpreinteMap(); }
+  if (id === 'screenProfile') { refreshProfileStats(); loadLeaderboard(); loadEmpreinteMap(); loadBizDashboard(); }
   if (id === 'screenOnboard') {
     const btn = document.getElementById('obBackBtn');
     if (btn) btn.style.display = currentUser ? 'flex' : 'none';
@@ -5634,7 +5722,13 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <div id="empreinteStats" style="position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;gap:0;pointer-events:none;"></div>
         </div>
       </div>
-      <!-- Historique des découvertes -->
+      <!-- ── TABLEAU DE BORD COMMERÇANT (Premium) ──────── -->
+      <div id="bizDashboardSection" style="display:none;margin-bottom:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.6);margin-bottom:8px;">🏪 Mes offres Commerce</div>
+        <div id="bizDashboardContent">
+          <div style="font-size:12px;color:var(--spirit-dim);font-style:italic;opacity:.6;text-align:center;padding:12px 0;">Chargement…</div>
+        </div>
+      </div>
       <div id="discoveryHistory" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">Mes découvertes</div>
         <div id="discoveryHistoryList" style="font-size:13px;color:var(--warm-dim);"></div>
