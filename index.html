@@ -5519,9 +5519,14 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <span style="flex:1;">Activer les notifications</span>
           <span style="font-size:11px;color:var(--spirit-dim);">›</span>
         </button>
-        <button onclick="showScreen('screenOnboard')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);text-align:left;" aria-label="Revoir l'introduction">
+        <button onclick="showScreen('screenOnboard')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);text-align:left;" aria-label="Revoir l'introduction">
           <span style="font-size:16px;">👻</span>
           <span style="flex:1;">Revoir l'intro</span>
+          <span style="font-size:11px;color:var(--spirit-dim);">›</span>
+        </button>
+        <button onclick="showScreen('screenHelp')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);text-align:left;" aria-label="Aide et informations">
+          <span style="font-size:16px;">❓</span>
+          <span style="flex:1;">Aide & Mentions légales</span>
           <span style="font-size:11px;color:var(--spirit-dim);">›</span>
         </button>
       </div>
@@ -5530,6 +5535,75 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <button onclick="logout()" id="logoutBtn" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;">🚪 Déconnexion</button>
         <span style="color:var(--border);font-size:12px;line-height:28px;">·</span>
         <button id="deleteBtn" onclick="deleteMyGhosts()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.35);padding:6px 12px;border-radius:8px;">🗑 Tout supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ÉCRAN AIDE -->
+  <div class="screen" id="screenHelp" aria-label="Aide">
+    <div class="scroll" style="padding-bottom:40px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
+        <button onclick="history.back()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;">← retour</button>
+      </div>
+      <div style="text-align:center;margin-bottom:28px;">
+        <div style="font-size:36px;margin-bottom:8px;">👻</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;">Comment ça marche ?</div>
+        <div style="font-size:13px;color:var(--spirit-dim);">Tout ce que vous devez savoir sur Fantôme</div>
+      </div>
+
+      <!-- Découvrir -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">🌫️ Découvrir un fantôme</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;">Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s'ouvrent qu'à quelques mètres. Certains ont des conditions spéciales : uniquement la nuit, à une heure précise, ou après avoir trouvé un autre fantôme.</div>
+      </div>
+
+      <!-- Déposer -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📍 Déposer un fantôme</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;">Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte. Vous pouvez y joindre une photo, un audio, choisir sa durée de vie et son rayon de détection.</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);">⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.</div>
+      </div>
+
+      <!-- Premium -->
+      <div style="background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.2);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,200,80,.9);margin-bottom:10px;">✦ Spectre Premium</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;">Le Premium débloque des fonctionnalités exclusives :</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.8;">
+          🎥 Vidéos dans vos fantômes<br>
+          📅 Message du futur — s'ouvre à une date précise<br>
+          🔗 Chasse au trésor — fantômes enchaînés<br>
+          🏪 Mode Commerce — offres exclusives pour commerçants
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);">Activez votre code dans Profil → Mon compte.</div>
+      </div>
+
+      <!-- FAQ -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">❓ Questions fréquentes</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Pourquoi je ne vois pas de fantômes ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;">Les fantômes n'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Mon fantôme a disparu ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Comment signaler un message inapproprié ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;">Appuyez sur l'icône ⚑ dans le détail d'un fantôme pour le signaler. Notre équipe examine chaque signalement.</div>
+      </div>
+
+      <!-- Mentions légales -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Mentions légales & RGPD</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;">
+          <strong>Éditeur :</strong> Fantôme — application indépendante<br>
+          <strong>Contact :</strong> pimpimshop33@gmail.com<br><br>
+          <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
+          <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
+          <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
+          <strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br>
+          En utilisant Fantôme, vous acceptez que vos messages soient visibles par d'autres utilisateurs à proximité géographique.
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:12px;color:var(--spirit-dim);opacity:.5;">Fantôme v1.0 — Géocaching émotionnel</div>
       </div>
     </div>
   </div>
