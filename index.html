@@ -2919,7 +2919,8 @@ window.depositGhost = async () => {
       successEl.removeEventListener('click', dismissSuccess);
       showScreen('screenRadar');
       setNav('nav-radar');
-      loadNearbyGhosts().catch(() => {});
+      // Délai pour laisser Firestore propager le nouveau fantôme
+      setTimeout(() => loadNearbyGhosts().catch(() => {}), 1500);
     };
     successEl.addEventListener('click', dismissSuccess);
     setTimeout(() => dismissSuccess(), 2500);
