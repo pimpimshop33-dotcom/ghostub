@@ -3133,6 +3133,11 @@ window.showScreen = (id, fromPopstate = false) => {
 
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
 window.selectCond = (btn) => {
+  if (btn.dataset.cond === 'future' && !isPremium) {
+    showToast('warning', '✦ Le message du futur est réservé aux membres Premium.');
+    showScreen('screenProfile'); setNav('nav-profile');
+    return;
+  }
   btn.closest('.cond-selector').querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
   // Vérif Premium pour "après un autre"
   if (btn.dataset.cond === 'after' && !isPremium) {
@@ -5206,10 +5211,10 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
               <span class="cond-premium-tag">PREMIUM</span>
             </button>
 
-            <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button">
+            <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button" id="condFutureBtn">
               <span class="cond-btn-icon">📅</span>
               <span class="cond-btn-text">
-                <div class="cond-btn-label">Message du futur</div>
+                <div class="cond-btn-label">Message du futur <span id="futureLock" style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;">✦ Premium</span></div>
                 <div class="cond-btn-sub">S'ouvre à une date précise</div>
               </span>
             </button>
