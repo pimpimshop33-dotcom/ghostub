@@ -3590,8 +3590,8 @@ window.showScreen = (id, fromPopstate = false) => {
 
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
 window.toggleBusinessMode = () => {
-  if (!isPremium) {
-    showToast('warning', '✦ Le mode Commerce est réservé aux membres Premium.');
+  if (!isPremium && !isCommerce) {
+    showToast('warning', '✦ Le mode Commerce est réservé aux membres Premium ou Commerce.');
     showScreen('screenProfile'); setNav('nav-profile');
     return;
   }
@@ -6274,4 +6274,3 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 <!-- TOAST DÉCOUVERTE -->
 <div class="discovery-toast" id="discoveryToast" role="status" aria-live="polite" aria-atomic="true">
   <span class="discovery-toast-icon"
-
