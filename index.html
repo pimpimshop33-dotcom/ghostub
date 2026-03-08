@@ -3571,7 +3571,8 @@ window.showScreen = (id, fromPopstate = false) => {
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
 window.toggleBusinessMode = () => {
   if (!isPremium) {
-    showToast('info', '🔒 Entrez un code Premium dans votre profil pour débloquer le Mode Commerce.', 3500);
+    showToast('warning', '🔒 Mode Commerce réservé au Premium — entrez un code dans votre profil.', 4000);
+    setTimeout(() => { showScreen('screenProfile'); setNav('nav-profile'); }, 1500);
     return;
   }
   const normalForm = document.getElementById('normalDepositForm');
