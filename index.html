@@ -2011,16 +2011,16 @@ window.loadEmpreinteMap = async () => {
     // 6. Stats sous la carte
     const cities = new Set(allPoints.map(p => p.location.split(',')[0])).size;
     statsEl.innerHTML = `
-      <div style="flex:1;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.12);border-radius:12px;padding:8px 10px;text-align:center;">
-        <div style="font-size:18px;color:var(--ether);font-weight:600;">${deposits.length}</div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
+        <div style="font-size:16px;color:var(--ether);font-weight:600;">${deposits.length}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">Dépôts</div>
       </div>
-      <div style="flex:1;background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.12);border-radius:12px;padding:8px 10px;text-align:center;">
-        <div style="font-size:18px;color:rgba(255,200,80,.9);font-weight:600;">${discoveries.length}</div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
+        <div style="font-size:16px;color:rgba(255,200,80,.9);font-weight:600;">${discoveries.length}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">Découvertes</div>
       </div>
-      <div style="flex:1;background:rgba(100,220,160,.06);border:1px solid rgba(100,220,160,.12);border-radius:12px;padding:8px 10px;text-align:center;">
-        <div style="font-size:18px;color:rgba(100,220,160,.9);font-weight:600;">${cities}</div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;">
+        <div style="font-size:16px;color:rgba(100,220,160,.9);font-weight:600;">${cities}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">Lieux</div>
       </div>`;
 
@@ -5345,41 +5345,47 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true">?</div>
         <div class="profile-name-big" id="profileName">…</div>
       </div>
+      <!-- ── RANG sous le nom ─────────────────────────── -->
+      <div style="text-align:center;margin-bottom:16px;">
+        <span id="statRank" style="font-size:13px;color:var(--spirit-dim);letter-spacing:.5px;">—</span>
+        <span style="font-size:11px;color:var(--spirit-dim);opacity:.5;margin-left:4px;">· rang</span>
+      </div>
+
+      <!-- ── MES STATS ─────────────────────────────────── -->
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:8px;">Mes stats</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
+        <div class="stat-card" role="listitem" onclick="toggleDiscoveryHistory()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir les fantômes découverts">
+          <div class="stat-num" id="statDiscovered" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;">Découverts</div>
+        </div>
+        <div class="stat-card" role="listitem" onclick="toggleDepositedList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes fantômes déposés">
+          <div class="stat-num" id="statDeposited" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;">Déposés</div>
+        </div>
+        <div class="stat-card" role="listitem" onclick="toggleFavoritesList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes favoris">
+          <div class="stat-num" id="statFavorites" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;">Favoris ★</div>
+        </div>
+      </div>
+      <!-- Résonances pleine largeur -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <span style="font-size:12px;color:var(--spirit-dim);">✨ Résonances reçues</span>
+        <span class="stat-num" id="statResonances" style="font-size:18px;margin:0;">0</span>
+      </div>
+
       <!-- ── CARTE EMPREINTE ─────────────────────────── -->
-      <div id="empreinteSection" style="margin-bottom:14px;">
+      <div id="empreinteSection" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);">🗺 Mon empreinte fantôme</div>
           <button id="empreinteShareBtn" onclick="shareEmpreinte()" style="font-size:11px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:none;">↗ Partager</button>
         </div>
-        <div id="empreinteMap" style="width:100%;height:220px;border-radius:16px;overflow:hidden;border:1px solid rgba(168,180,255,.15);background:rgba(10,10,20,.8);position:relative;">
+        <div id="empreinteMap" style="width:100%;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(168,180,255,.15);background:rgba(10,10,20,.8);position:relative;">
           <div id="empreinteLoader" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2;">
             <div style="font-size:28px;animation:ghostFloat 2s ease-in-out infinite;">👻</div>
             <div style="font-size:11px;color:var(--spirit-dim);letter-spacing:.5px;">Chargement de votre empreinte…</div>
           </div>
-        </div>
-        <div id="empreinteStats" style="display:flex;gap:8px;margin-top:8px;"></div>
-      </div>
-
-      <div class="stats-grid" role="list" aria-label="Mes statistiques">
-        <div class="stat-card" role="listitem" onclick="toggleDiscoveryHistory()" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
-          <div class="stat-num" id="statDiscovered" aria-label="Fantômes découverts">0</div>
-          <div class="stat-label">Découverts 👁</div>
-        </div>
-        <div class="stat-card" role="listitem" onclick="toggleDepositedList()" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
-          <div class="stat-num" id="statDeposited" aria-label="Fantômes déposés">0</div>
-          <div class="stat-label">Déposés 👁</div>
-        </div>
-        <div class="stat-card" role="listitem">
-          <div class="stat-num" id="statResonances" aria-label="Résonances reçues">0</div>
-          <div class="stat-label">Résonances reçues</div>
-        </div>
-        <div class="stat-card" role="listitem" onclick="toggleFavoritesList()" style="cursor:pointer;" aria-label="Voir mes favoris">
-          <div class="stat-num" id="statFavorites" aria-label="Favoris">0</div>
-          <div class="stat-label">Favoris ★</div>
-        </div>
-        <div class="stat-card" role="listitem">
-          <div class="stat-num" id="statRank" aria-label="Mon rang">—</div>
-          <div class="stat-label">Rang</div>
+          <!-- Stats overlay en bas de la carte -->
+          <div id="empreinteStats" style="position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;gap:0;pointer-events:none;"></div>
         </div>
       </div>
       <!-- Historique des découvertes -->
