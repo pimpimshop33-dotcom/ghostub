@@ -2397,6 +2397,15 @@ window.openGhost = async (id) => {
     document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
     document.getElementById('detailRadius').textContent = '📡 ' + escapeHTML(selectedGhost.radius || '10m');
 
+    // ── Mode Commerce : masquer Partager et Répondre ──
+    const isBizGhost = !!selectedGhost.businessMode;
+    const shareBtn2 = document.getElementById('ghostShareBtn');
+    const replyBtn2 = document.getElementById('ghostReplyBtn');
+    const resoBtn2  = document.getElementById('resonanceBtn');
+    if (shareBtn2) shareBtn2.style.display = isBizGhost ? 'none' : '';
+    if (replyBtn2) replyBtn2.style.display = isBizGhost ? 'none' : '';
+    if (resoBtn2)  resoBtn2.style.display  = isBizGhost ? 'none' : '';
+
     const chainDiv = document.getElementById('detailChain');
     if (selectedGhost.chainHint || selectedGhost.chainLat) {
       chainDiv.style.display = 'block';
@@ -3189,17 +3198,17 @@ window.toggleBusinessMode = () => {
     subLabel.textContent     = 'Mode activé — formulaire commerce';
     subLabel.style.color     = 'rgba(255,200,80,.7)';
     document.getElementById('depositEmoji').value = '🏪';
-    // Forcer le rayon à 50m dans l'étape 2
+    // Masquer durée/disparaît/rayon/condition dans step 2
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    // Forcer durée 1 mois
     setTimeout(() => {
-      document.querySelectorAll('.radius-btn').forEach(b => {
+      document.querySelectorAll('.dur-btn:not([data-maxopen])').forEach(b => {
         b.classList.remove('active');
         b.setAttribute('aria-pressed', 'false');
-        // Désactiver 3m et 10m pour le mode commerce
-        if (b.textContent.trim() === '3m' || b.textContent.trim() === '10m') {
-          b.style.opacity = '.35';
-          b.style.pointerEvents = 'none';
-        }
-        if (b.textContent.trim() === '50m') {
+        if (b.textContent.trim() === '1 mois') {
           b.classList.add('active');
           b.setAttribute('aria-pressed', 'true');
         }
@@ -3216,10 +3225,10 @@ window.toggleBusinessMode = () => {
     btn.style.background     = 'rgba(255,200,80,.06)';
     subLabel.textContent     = 'Attirer des clients avec une offre géolocalisée';
     subLabel.style.color     = '';
-    // Réactiver tous les rayons
-    document.querySelectorAll('.radius-btn').forEach(b => {
-      b.style.opacity = '';
-      b.style.pointerEvents = '';
+    // Réafficher les sections step 2
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = '';
     });
   }
 };
@@ -5185,8 +5194,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <span id="resonanceCount">✦ Résonner</span>
         </button>
         <button class="btn-secondary" id="secretBtn" onclick="toggleSecret()" aria-label="Passer ce fantôme en mode secret" style="display:none;margin-bottom:8px;font-size:13px;padding:11px;">🔮 Passer en secret</button>
-        <button class="share-btn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));border:1px solid rgba(168,180,255,.4);color:rgba(168,180,255,.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;">↗ Partager ce fantôme</button>
-        <button class="btn-secondary" onclick="showScreen('screenReply')" style="margin-bottom:8px;">↩ Laisser une réponse ici</button>
+        <button class="share-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));border:1px solid rgba(168,180,255,.4);color:rgba(168,180,255,.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;">↗ Partager ce fantôme</button>
+        <button class="btn-secondary" id="ghostReplyBtn" onclick="showScreen('screenReply')" style="margin-bottom:8px;">↩ Laisser une réponse ici</button>
         <button id="favoriteBtn" onclick="toggleFavorite()" aria-label="Ajouter aux favoris" style="width:100%;padding:11px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.2);border-radius:13px;color:rgba(255,200,80,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;">★ Ajouter aux favoris</button>
         <button class="report-btn" id="reportBtn" onclick="openReportModal()">⚑ Signaler ce fantôme</button>
         <div class="section-label">Réponses dans ce lieu</div>
@@ -5320,7 +5329,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <label class="form-label" for="depositLocation">Nom du lieu</label>
           <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true">
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
+        <!-- Durée — masqué en mode Commerce (forcé 1 mois) -->
+        <div id="step2DurWrap" class="form-group" style="margin-bottom:12px;">
           <label class="form-label">Durée de vie</label>
           <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme">
             <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
@@ -5329,7 +5339,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
             <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">♾ Éternel</button>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
+        <!-- Disparaît après — masqué en mode Commerce -->
+        <div id="step2MaxOpenWrap" class="form-group" style="margin-bottom:12px;">
           <label class="form-label">Disparaît après</label>
           <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition">
             <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true">∞ Illimité</button>
@@ -5338,7 +5349,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
             <button class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false">10 lectures</button>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:0;">
+        <!-- Rayon — masqué en mode Commerce (forcé 50m) -->
+        <div id="step2RadiusWrap" class="form-group" style="margin-bottom:0;">
           <label class="form-label">Rayon de détection</label>
           <div class="radius-selector" role="group" aria-label="Rayon de détection">
             <button class="radius-btn" onclick="selectType(this)" aria-pressed="false">3m</button>
@@ -5346,8 +5358,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
             <button class="radius-btn" onclick="selectType(this)" aria-pressed="false">50m</button>
           </div>
         </div>
-        <!-- Condition d'ouverture -->
-        <div class="form-group" style="margin-top:14px;margin-bottom:0;">
+        <!-- Condition d'ouverture — masquée en mode Commerce -->
+        <div id="step2CondWrap" class="form-group" style="margin-top:14px;margin-bottom:0;">
           <label class="form-label">Condition d'ouverture</label>
           <div class="cond-selector" role="group" aria-label="Condition d'ouverture du fantôme">
 
