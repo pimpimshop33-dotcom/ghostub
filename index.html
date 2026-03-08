@@ -111,6 +111,83 @@ function escapeHTML(str) {
 
 const distanceMeters = (lat1, lng1, lat2, lng2) => LocationService.distanceMeters(lat1, lng1, lat2, lng2);
 
+// ── GEOHASH NEIGHBORS ────────────────────────────────────
+// Calcule les 8 cellules voisines d'un geohash — nécessaire pour couvrir
+// les bords de cellule (un fantôme à 100m peut être dans une cellule adjacente)
+function getGeohashNeighbors(hash) {
+  const BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+  const NEIGHBOR = {
+    right:  { even: 'bc01fg45telegramhijklmnopqrstuvwx', odd: 'p0r21436x8zb9 5y7kjqh13dc nuvhjkt' },
+    left:   { even: '238967debc01telegramfg45ghi', odd: '14365h7k9dcfesgujnmqp0r2twvyx' },
+    top:    { even: 'p0r21436x8zb9 5y7kjqh13dcnuvhjkt', odd: 'bc01fg45telegramhijklmnopqrstuvwx' },
+    bottom: { even: '14365h7k9dcfesgujnmqp0r2twvyx', odd: '238967debcfg45ghi' },
+  };
+  const BORDER = {
+    right:  { even: 'bcfguvyz', odd: 'prxz' },
+    left:   { even: '0145hjnp', odd: '028b' },
+    top:    { even: 'prxz', odd: 'bcfguvyz' },
+    bottom: { even: '028b', odd: '0145hjnp' },
+  };
+
+  function _neighbor(hash, dir) {
+    const last = hash.slice(-1);
+    const type = hash.length % 2 === 0 ? 'even' : 'odd';
+    let base = hash.slice(0, -1);
+    if (BORDER[dir][type].indexOf(last) !== -1 && base.length > 0) {
+      base = _neighbor(base, dir);
+    }
+    const neighborMap = {
+      right:  '238967debc01fg45telegramhijklmnopqrstuvwx',
+      left:   'bc01fg45telegramhijklmnopqrstuvwx238967de',
+      top:    'p0r21436x8zb9 5y7kjqh13dcnuvhjktbc01fg45telegramhijklmnopqrstuvwx',
+      bottom: 'bc01fg45telegramhijklmnopqrstuvwxp0r21436x8zb9 5y7kjqh13dcnuvhjkt',
+    };
+    const idx = BASE32.indexOf(last);
+    return base + BASE32[idx % BASE32.length];
+  }
+
+  // Approche directe : décaler lat/lng de ±0.045° (~5km) et encoder
+  // Plus fiable que l'algo de voisinage caractère par caractère
+  function neighborByOffset(lat, lng, dlat, dlng, precision) {
+    return encodeGeohash(
+      Math.max(-90, Math.min(90, lat + dlat)),
+      Math.max(-180, Math.min(180, lng + dlng)),
+      precision
+    );
+  }
+
+  // Décoder le geohash pour obtenir lat/lng du centre
+  function decodeGeohash(hash) {
+    let lat = [-90, 90], lng = [-180, 180];
+    let isLng = true;
+    for (const c of hash) {
+      const idx = BASE32.indexOf(c);
+      for (let bits = 4; bits >= 0; bits--) {
+        const bit = (idx >> bits) & 1;
+        if (isLng) { const mid = (lng[0] + lng[1]) / 2; lng[bit ? 0 : 1] = mid; }
+        else        { const mid = (lat[0] + lat[1]) / 2; lat[bit ? 0 : 1] = mid; }
+        isLng = !isLng;
+      }
+    }
+    return { lat: (lat[0] + lat[1]) / 2, lng: (lng[0] + lng[1]) / 2 };
+  }
+
+  const { lat, lng } = decodeGeohash(hash);
+  const p = hash.length;
+  const d = 0.045; // ~5km en degrés
+
+  return [
+    neighborByOffset(lat, lng,  d,  0, p), // N
+    neighborByOffset(lat, lng, -d,  0, p), // S
+    neighborByOffset(lat, lng,  0,  d, p), // E
+    neighborByOffset(lat, lng,  0, -d, p), // W
+    neighborByOffset(lat, lng,  d,  d, p), // NE
+    neighborByOffset(lat, lng,  d, -d, p), // NW
+    neighborByOffset(lat, lng, -d,  d, p), // SE
+    neighborByOffset(lat, lng, -d, -d, p), // SW
+  ].filter((v, i, arr) => arr.indexOf(v) === i && v !== hash); // déduplique
+}
+
 function formatDistance(m) {
   return m < 1000 ? Math.round(m) + 'm' : (m/1000).toFixed(1) + 'km';
 }
@@ -1567,20 +1644,45 @@ window.loadNearbyGhosts = async () => {
     userLat = 48.8566; userLng = 2.3522;
   }
 
+  // ── QUERY GEOHASH — filtre côté serveur dans un rayon ~5km ──────────
+  // Le geohash de précision 5 couvre ~4.9km x 4.9km
+  // On interroge les 9 cellules voisines pour couvrir les bords
   let snap;
   try {
-    // FIX: Limiter à 200 fantômes max pour la performance — filtrer côté serveur si possible
-    snap = await getDocs(query(collection(db, 'ghosts'), where('expired', '!=', true), limit(200)));
+    const gh5 = encodeGeohash(userLat, userLng, 5);
+    const neighbors = getGeohashNeighbors(gh5);
+    const cells = [gh5, ...neighbors];
+    // Firestore ne supporte pas "in" sur plus de 10 valeurs — on fait 9 requêtes parallèles
+    const snaps = await Promise.all(
+      cells.map(cell =>
+        getDocs(query(
+          collection(db, 'ghosts'),
+          where('geohash5', '>=', cell),
+          where('geohash5', '<=', cell + ''),
+          where('expired', '!=', true),
+          limit(50)
+        )).catch(() => null)
+      )
+    );
+    // Fusionner et dédupliquer
+    const seen = new Set();
+    const docs = [];
+    snaps.forEach(s => {
+      if (!s) return;
+      s.forEach(d => { if (!seen.has(d.id)) { seen.add(d.id); docs.push(d); } });
+    });
+    snap = { forEach: cb => docs.forEach(cb), size: docs.length };
   } catch(firestoreErr) {
-    // Fallback sans filtre si l'index n'existe pas encore
+    // Fallback si geohash5 pas encore indexé
+    console.warn('Geohash query failed, fallback:', firestoreErr.message);
     try {
-      snap = await getDocs(query(collection(db, 'ghosts'), limit(200)));
+      snap = await getDocs(query(collection(db, 'ghosts'), where('expired', '!=', true), limit(100)));
     } catch(e2) {
-      console.error('Firestore error:', firestoreErr);
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
-      renderGhostList();
-      renderRadarDots();
-      return;
+      try { snap = await getDocs(query(collection(db, 'ghosts'), limit(100))); }
+      catch(e3) {
+        document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
+        renderGhostList(); renderRadarDots(); return;
+      }
     }
   }
   nearbyGhosts = [];
