@@ -2436,7 +2436,7 @@ window.openGhost = async (id) => {
     }
 
     const secretBtn = document.getElementById('secretBtn');
-    if (isOwner) {
+    if (isOwner && !selectedGhost.businessMode) {
       secretBtn.style.display = 'block';
       if (selectedGhost.secret) {
         secretBtn.textContent = '🔮 Mode secret activé';
@@ -3046,15 +3046,15 @@ function _checkDistanceThenOpen() {
   // FIX: Timeout de sécurité si géoloc bloque trop longtemps
   const fallbackTimer = setTimeout(() => {
     btn.disabled = false;
-    hint.textContent = origHint;
-    _doOpenEnvelope(); // On laisse ouvrir après 8s de blocage
+    hint.textContent = '⚠️ GPS trop long — déplacez-vous en extérieur et réessayez.';
+    setTimeout(() => { hint.textContent = origHint; }, 4000);
   }, 8000);
 
   if (!navigator.geolocation) {
     clearTimeout(fallbackTimer);
     btn.disabled = false;
-    hint.textContent = origHint;
-    _doOpenEnvelope();
+    hint.textContent = '⚠️ GPS indisponible sur cet appareil.';
+    setTimeout(() => { hint.textContent = origHint; }, 4000);
     return;
   }
 
@@ -3078,10 +3078,10 @@ function _checkDistanceThenOpen() {
     () => {
       clearTimeout(fallbackTimer);
       btn.disabled = false;
-      hint.textContent = origHint;
-      _doOpenEnvelope();
+      hint.textContent = '⚠️ GPS indisponible — activez-le et réessayez en extérieur.';
+      setTimeout(() => { hint.textContent = origHint; }, 4000);
     },
-    { enableHighAccuracy: true, timeout: 7000, maximumAge: 5000 }
+    { enableHighAccuracy: true, timeout: 7000, maximumAge: 0 }
   );
 };
 
@@ -3129,6 +3129,38 @@ window.showScreen = (id, fromPopstate = false) => {
 
   if (id === 'screenDeposit') {
     setWizardStep(1);
+    // Reset business mode complet
+    const normalForm = document.getElementById('normalDepositForm');
+    const bizForm    = document.getElementById('businessDepositForm');
+    const extra      = document.getElementById('businessExtra');
+    const icon       = document.getElementById('businessToggleIcon');
+    const btn2       = document.getElementById('businessToggleBtn');
+    const subLabel   = document.getElementById('bizToggleSubLabel');
+    if (normalForm) normalForm.style.display = 'block';
+    if (bizForm)    bizForm.style.display    = 'none';
+    if (extra)      extra.style.display      = 'none';
+    if (icon)       icon.textContent         = '○';
+    if (btn2)       { btn2.style.borderColor = 'rgba(255,200,80,.2)'; btn2.style.background = 'rgba(255,200,80,.06)'; }
+    if (subLabel)   { subLabel.textContent = 'Attirer des clients avec une offre géolocalisée'; subLabel.style.color = ''; }
+    // Reset step 2 sections
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id2 => {
+      const el = document.getElementById(id2); if (el) el.style.display = '';
+    });
+    // Reset step 3 sections + titre + bouton
+    ['step3IdentityWrap','step3VocalWrap','step3ChainWrap'].forEach(id2 => {
+      const el = document.getElementById(id2); if (el) el.style.display = '';
+    });
+    const t3 = document.getElementById('step3Title');
+    const s3 = document.getElementById('step3Sub');
+    const depBtn = document.getElementById('depositBtn');
+    if (t3) t3.textContent = 'Derniers réglages';
+    if (s3) s3.textContent = 'Tout est optionnel — les valeurs par défaut sont bonnes.';
+    if (depBtn) depBtn.textContent = '👻 Ancrer ce fantôme';
+    // Reset champs bizTitle/bizDesc
+    const bizTitle = document.getElementById('bizTitle');
+    const bizDesc  = document.getElementById('bizDesc');
+    if (bizTitle) bizTitle.value = '';
+    if (bizDesc)  bizDesc.value  = '';
     // Reset condition d'ouverture
     document.querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
     const alwaysBtn = document.querySelector('.cond-btn[data-cond="always"]');
