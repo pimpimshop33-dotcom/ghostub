@@ -917,6 +917,8 @@ function _setNotifBtnState(active) {
 }
 
 window.enableNotifications = async () => {
+  // Fix mobile : relâcher le focus/active state immédiatement
+  document.activeElement?.blur();
   const btn = document.getElementById('notifBtn');
   const isEnabled = localStorage.getItem('notif_enabled') === '1';
 
@@ -4472,7 +4474,7 @@ input, textarea, select {
 .update-banner {
   display: none;
   position: fixed;
-  bottom: calc(80px + var(--sab));
+  bottom: calc(100px + var(--sab));
   left: 50%;
   transform: translateX(-50%);
   background: rgba(14,14,22,.95);
@@ -4497,6 +4499,14 @@ input, textarea, select {
   color: var(--ether);
   font-size: 11px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Fix état :active bloqué sur iOS/Android */
+button, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ── PARTICLES ─────────────────────────────────────────── */
