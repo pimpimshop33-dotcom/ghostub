@@ -1,5 +1,5 @@
 // ── FANTÔME Service Worker ──────────────────────────────
-const CACHE_NAME = 'fantome-v10';
+const CACHE_NAME = 'fantome-v11';
 const STATIC = ['/fantome/', '/fantome/index.html', '/fantome/manifest.json'];
 
 // ── INSTALL ─────────────────────────────────────────────
