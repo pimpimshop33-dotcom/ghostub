@@ -1426,7 +1426,7 @@ function updatePremiumUI() {
     planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 Spectre Premium</div><div style="font-size:13px;color:var(--warm-dim);">Toutes les fonctionnalités débloquées</div>';
     if (codeSection) codeSection.style.display = 'none';
   } else {
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;">Plan gratuit</div><div style="font-size:13px;color:var(--warm-dim);">Chaîne de fantômes 🔗 réservée au Premium</div>';
+    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;">Plan gratuit</div><div style="font-size:13px;color:var(--warm-dim);">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>';
     if (codeSection) codeSection.style.display = 'block';
   }
 }
@@ -3585,6 +3585,9 @@ window.toggleBusinessMode = () => {
   const activating = bizForm.style.display === 'none';
 
   if (activating) {
+    // Remettre à l'étape 1 et scroller en haut
+    if (typeof setWizardStep === 'function') setWizardStep(1);
+    document.getElementById('screenDeposit')?.querySelector('.scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
     // Basculer vers le formulaire Commerce
     normalForm.style.display = 'none';
     bizForm.style.display    = 'block';
@@ -6050,7 +6053,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
         <div id="planInfo">
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;">Plan gratuit</div>
-          <div style="font-size:13px;color:var(--warm-dim);">Chaîne de fantômes 🔗 réservée au Premium</div>
+          <div style="font-size:13px;color:var(--warm-dim);">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
         </div>
         <div id="codeSection" style="margin-top:12px;">
           <div style="font-size:11px;color:var(--spirit-dim);margin-bottom:6px;letter-spacing:.5px;">Vous avez un code d'activation ?</div>
