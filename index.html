@@ -416,6 +416,29 @@ const LANGS = {
     profile_rewatch_intro: 'Revoir l\'intro',
     profile_help_link: 'Aide & Mentions légales',
     profile_delete_all_btn: '🗑 Tout supprimer',
+    // Help screen
+    help_back: '← retour',
+    help_title: 'Comment ça marche ?',
+    help_sub: 'Tout ce que vous devez savoir sur Ghostub',
+    help_discover_title: '🌫️ Découvrir un fantôme',
+    help_discover_body: 'Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s\'ouvrent qu\'à quelques mètres. Certains ont des conditions spéciales : uniquement la nuit, à une heure précise, ou après avoir trouvé un autre fantôme.',
+    help_deposit_title: '📍 Déposer un fantôme',
+    help_deposit_body: 'Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte. Vous pouvez y joindre une photo, un audio, choisir sa durée de vie et son rayon de détection.',
+    help_deposit_limit: '⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.',
+    help_premium_title: '✦ Spectre Premium',
+    help_premium_sub: 'Le Premium débloque des fonctionnalités exclusives :',
+    help_premium_list: '🎥 Vidéos dans vos fantômes<br>📅 Message du futur — s\'ouvre à une date précise<br>🔗 Chasse au trésor — fantômes enchaînés<br>🏪 Mode Commerce — offres exclusives pour commerçants',
+    help_premium_hint: 'Activez votre code dans Profil → Mon compte.',
+    help_faq_title: '❓ Questions fréquentes',
+    help_faq_q1: 'Pourquoi je ne vois pas de fantômes ?',
+    help_faq_a1: 'Les fantômes n\'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.',
+    help_faq_q2: 'Mon fantôme a disparu ?',
+    help_faq_a2: 'Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.',
+    help_faq_q3: 'Comment signaler un message inapproprié ?',
+    help_faq_a3: 'Appuyez sur l\'icône ⚑ dans le détail d\'un fantôme pour le signaler. Notre équipe examine chaque signalement.',
+    help_legal_title: '📋 Mentions légales & RGPD',
+    help_legal_body: '<strong>Éditeur :</strong> Ghostub — application indépendante<br><strong>Contact :</strong> contact@ghostub.app<br><br><strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l\'utilisation), messages déposés.<br><br><strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l\'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br><strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br><strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br>En utilisant Ghostub, vous acceptez que vos messages soient visibles par d\'autres utilisateurs à proximité géographique.',
+    help_version: 'Ghostub v1.0 — Géocaching émotionnel',
   en: {
     // Onboarding
     ob_tagline: 'Strangers have left something here.<br>Come closer.',
@@ -785,6 +808,29 @@ const LANGS = {
     profile_rewatch_intro: 'Watch intro again',
     profile_help_link: 'Help & Legal',
     profile_delete_all_btn: '🗑 Delete all',
+    // Help screen
+    help_back: '← back',
+    help_title: 'How does it work?',
+    help_sub: 'Everything you need to know about Ghostub',
+    help_discover_title: '🌫️ Discover a ghost',
+    help_discover_body: 'Invisible messages are anchored to real places around you. Move physically to unlock them — they only open within a few metres. Some have special conditions: only at night, at a specific time, or after finding another ghost.',
+    help_deposit_title: '📍 Drop a ghost',
+    help_deposit_body: 'Go to a place that inspires you, tap 👻 Drop and write your message. It will be anchored to your exact GPS position. You can attach a photo, audio, choose its lifespan and detection radius.',
+    help_deposit_limit: '⏱ One drop every 15 minutes — maximum 5 active ghosts at a time.',
+    help_premium_title: '✦ Premium Spectre',
+    help_premium_sub: 'Premium unlocks exclusive features:',
+    help_premium_list: '🎥 Videos in your ghosts<br>📅 Future message — opens on a specific date<br>🔗 Treasure hunt — chained ghosts<br>🏪 Commerce Mode — exclusive offers for businesses',
+    help_premium_hint: 'Activate your code in Profile → My account.',
+    help_faq_title: '❓ Frequently asked questions',
+    help_faq_q1: 'Why don\'t I see any ghosts?',
+    help_faq_a1: 'Ghosts only appear if you are within range (usually 50–500m). Enable your GPS and move around your city.',
+    help_faq_q2: 'My ghost disappeared?',
+    help_faq_a2: 'Ghosts have a limited lifespan (24h, 7 days or 1 month). Some also disappear after a certain number of reads.',
+    help_faq_q3: 'How to report an inappropriate message?',
+    help_faq_a3: 'Tap the ⚑ icon in a ghost\'s detail to report it. Our team reviews every report.',
+    help_legal_title: '📋 Legal & GDPR',
+    help_legal_body: '<strong>Publisher:</strong> Ghostub — independent application<br><strong>Contact:</strong> contact@ghostub.app<br><br><strong>Data collected:</strong> email address, GPS position (only during use), deposited messages.<br><br><strong>Use:</strong> your data is used exclusively for the application to function. It is neither sold nor shared with third parties.<br><br><strong>Deletion:</strong> you can delete your ghosts and account at any time from your profile.<br><br><strong>Hosting:</strong> Firebase (Google) — European servers (europe-west9).<br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
+    help_version: 'Ghostub v1.0 — Emotional geocaching',
 
   }
 };
@@ -1998,11 +2044,11 @@ function showDiscoveryToast(count, isNew) {
   const isMilestone = MILESTONES.includes(count) && isNew;
   if (isMilestone) {
     icon.textContent = rank.icon;
-    text.innerHTML = '<b>' + count + ' fantômes</b> découverts ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
+    text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
     icon.textContent = '👻';
-    text.innerHTML = 'Fantôme découvert · <b>' + count + '</b> au total';
+    text.innerHTML = (_currentLang === 'fr' ? 'Fantôme découvert · <b>' + count + '</b> au total' : 'Ghost discovered · <b>' + count + '</b> total');
     Analytics.track('ghost_discovered', { total: count });
   } else { return; }
   toast.classList.add('show');
@@ -2678,7 +2724,7 @@ window.loadNearbyGhosts = async () => {
     document.getElementById('userCoords').textContent =
       userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
   } catch(e) {
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Géolocalisation refusée — activez-la dans les paramètres de votre navigateur.</span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_no_gps + '</span>';
     userLat = 44.6333; userLng = -1.1333;
   }
 
@@ -2688,7 +2734,7 @@ window.loadNearbyGhosts = async () => {
     snap = await getDocs(query(collection(db, 'ghosts'), limit(200)));
   } catch(firestoreErr) {
     console.error('Firestore error:', firestoreErr);
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">Impossible de charger les fantômes — vérifiez votre connexion.</span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_firestore_err + '</span>';
     renderGhostList(); renderRadarDots(); return;
   }
   nearbyGhosts = [];
@@ -2754,15 +2800,15 @@ window.loadNearbyGhosts = async () => {
   }
   if (count === 0) {
     if (widened && nearbyGhosts.length > 0) {
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme à 5km — affichage élargi 50km</span>';
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_no_ghosts_widened + '</span>';
     } else {
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Aucun fantôme proche — soyez le premier !</span>';
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_no_ghosts + '</span>';
     }
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> fantôme' + (count > 1 ? 's' : '') + ' dans les alentours';
   }
   const mc = document.getElementById('mapCount');
-  if (mc) mc.textContent = count + ' fantôme(s)';
+  if (mc) mc.textContent = count + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
   if (map) { map.remove(); map = null; }
   renderGhostList();
   renderRadarDots();
@@ -3280,34 +3326,34 @@ function renderGhostList() {
     list.innerHTML = isFirstTime ? `
       <div style="text-align:center;padding:32px 16px 20px;">
         <div style="font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;">👻</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">Bienvenue dans Ghostub</div>
-        <div style="font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;">Aucun message caché ici pour l'instant.<br>Vous pouvez en laisser un — quelqu'un passera peut-être.</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">${t.radar_welcome_title}</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;">${t.radar_welcome_sub}</div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;text-align:left;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">Comment ça marche</div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">${t.radar_how_title}</div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">📍</span><span>Déposez un message ancré à ce lieu</span>
+              <span style="font-size:18px;">📍</span><span>${t.radar_how1}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">🌫️</span><span>Le radar détecte les fantômes proches</span>
+              <span style="font-size:18px;">🌫️</span><span>${t.radar_how2}</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">✉</span><span>Approchez-vous pour ouvrir l'enveloppe</span>
+              <span style="font-size:18px;">✉</span><span>${t.radar_how3}</span>
             </div>
           </div>
         </div>
-        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(168,180,255,.2),rgba(168,180,255,.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">👻 Déposer mon premier fantôme</button>
+        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(168,180,255,.2),rgba(168,180,255,.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">${t.radar_first_btn}</button>
       </div>` : `
       <div style="text-align:center;padding:40px 0 20px;">
         <div style="font-size:48px;margin-bottom:12px;opacity:.4;filter:blur(1px);">👻</div>
-        <div style="font-size:14px;color:var(--ether);font-family:'Cormorant Garamond',serif;font-style:italic;margin-bottom:6px;">Aucun fantôme dans ce lieu</div>
-        <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:20px;">Soyez le premier à hanter cet endroit.</div>
-        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:10px 20px;background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;">👻 Déposer un fantôme</button>
+        <div style="font-size:14px;color:var(--ether);font-family:'Cormorant Garamond',serif;font-style:italic;margin-bottom:6px;">${t.radar_empty_title}</div>
+        <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:20px;">${t.radar_empty_sub}</div>
+        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:10px 20px;background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;">${t.radar_deposit_btn}</button>
       </div>`;
     return;
   }
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:30px 0;font-size:13px;color:var(--spirit-dim);">Aucun fantôme dans ce filtre.</div>`;
+    list.innerHTML = `<div style="text-align:center;padding:30px 0;font-size:13px;color:var(--spirit-dim);">${t.radar_filter_empty}</div>`;
     return;
   }
   list.innerHTML = filtered.map(g => {
@@ -3318,8 +3364,8 @@ function renderGhostList() {
     const isAncient = ageDays > 180;
     const isOld = ageDays > 30;
     const ageStyle = isAncient ? 'filter:sepia(.6) opacity(.85);' : isOld ? 'filter:sepia(.25) opacity(.92);' : '';
-    const ageBadge = isAncient ? '<span style="font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;">archive</span>'
-                   : isOld ? '<span style="font-size:9px;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.15);border-radius:20px;padding:1px 6px;color:rgba(168,180,255,.4);margin-left:4px;">ancien</span>' : '';
+    const ageBadge = isAncient ? `<span style="font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;">${t.ghost_badge_archive}</span>`
+                   : isOld ? `<span style="font-size:9px;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.15);border-radius:20px;padding:1px 6px;color:rgba(168,180,255,.4);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
     // Résonances visuelles (étoiles)
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
@@ -3329,13 +3375,13 @@ function renderGhostList() {
     const virginBadge = ''; // supprimé — info déjà dans hintText
     // Hint dynamique selon état
     const hintText = neverOpened && ageDays > 30
-      ? `🕯 Attend depuis ${Math.floor(ageDays)} jours — jamais lu`
+      ? t.ghost_hint_never_old.replace('{n}', Math.floor(ageDays))
       : neverOpened
-      ? `✦ Aucun regard ne l'a encore lu…`
-      : g.openCondition === 'night' ? "🌙 S'éveille la nuit"
+      ? t.ghost_hint_never
+      : g.openCondition === 'night' ? t.ghost_hint_night
       : g.openCondition === 'hour' ? '⏰ ' + (g.openHour || '')
-      : g.openCondition === 'after' ? '🔗 Prérequis requis'
-      : '✦ Un secret vous attend…';
+      : g.openCondition === 'after' ? t.ghost_hint_prereq
+      : t.ghost_hint_default;
     // Surnom poétique
     const authorDisplay = g.anonymous ? getPoeticName(g.id) : escapeHTML(g.author || '');
     return `
@@ -3515,7 +3561,7 @@ window.openGhost = async (id) => {
   }
 
   if (isLocked) {
-    document.getElementById('detailMessage').textContent = '🔮 Ce fantôme est secret — approchez-vous à moins de 3m pour le révéler.';
+    document.getElementById('detailMessage').textContent = t.ghost_secret_locked;
     document.getElementById('detailMessage').style.color = 'rgba(168,100,255,0.6)';
     document.getElementById('detailAudio').innerHTML = '';
     document.getElementById('detailPhoto').innerHTML = '';
@@ -6819,7 +6865,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div class="map-header">
         <div class="map-title">Carte des fantômes</div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <div class="map-count" id="mapCount" aria-live="polite">0 fantôme(s)</div>
+          <div class="map-count" id="mapCount" aria-live="polite">0 ghost(s)</div>
           <button id="huntModeBtn" onclick="toggleHuntMode()" aria-label="Activer le mode chasse" style="background:rgba(168,180,255,.08);border:1px solid rgba(168,180,255,.25);color:rgba(168,180,255,.7);border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .2s;">🎯 Chasse</button>
         </div>
       </div>
@@ -6970,57 +7016,57 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
   <div class="screen" id="screenHelp" aria-label="Aide">
     <div class="scroll" style="padding-bottom:40px;">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;">
-        <button onclick="history.back()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;">← retour</button>
+        <button onclick="history.back()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;" data-i18n="help_back">← retour</button>
       </div>
       <div style="text-align:center;margin-bottom:28px;">
         <div style="font-size:36px;margin-bottom:8px;">👻</div>
-        <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;">Comment ça marche ?</div>
-        <div style="font-size:13px;color:var(--spirit-dim);">Tout ce que vous devez savoir sur Ghostub</div>
+        <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;" data-i18n="help_title">Comment ça marche ?</div>
+        <div style="font-size:13px;color:var(--spirit-dim);" data-i18n="help_sub">Tout ce que vous devez savoir sur Ghostub</div>
       </div>
 
       <!-- Découvrir -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">🌫️ Découvrir un fantôme</div>
-        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;">Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s'ouvrent qu'à quelques mètres. Certains ont des conditions spéciales : uniquement la nuit, à une heure précise, ou après avoir trouvé un autre fantôme.</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;" data-i18n="help_discover_title">🌫️ Découvrir un fantôme</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;" data-i18n="help_discover_body">Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s'ouvrent qu'à quelques mètres. Certains ont des conditions spéciales : uniquement la nuit, à une heure précise, ou après avoir trouvé un autre fantôme.</div>
       </div>
 
       <!-- Déposer -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📍 Déposer un fantôme</div>
-        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;">Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte. Vous pouvez y joindre une photo, un audio, choisir sa durée de vie et son rayon de détection.</div>
-        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);">⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;" data-i18n="help_deposit_title">📍 Déposer un fantôme</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;" data-i18n="help_deposit_body">Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte. Vous pouvez y joindre une photo, un audio, choisir sa durée de vie et son rayon de détection.</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);" data-i18n="help_deposit_limit">⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.</div>
       </div>
 
       <!-- Premium -->
       <div style="background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.2);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:rgba(255,200,80,.9);margin-bottom:10px;">✦ Spectre Premium</div>
-        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;">Le Premium débloque des fonctionnalités exclusives :</div>
-        <div style="font-size:12px;color:var(--warm-dim);line-height:1.8;">
+        <div style="font-size:13px;font-weight:700;color:rgba(255,200,80,.9);margin-bottom:10px;" data-i18n="help_premium_title">✦ Spectre Premium</div>
+        <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;" data-i18n="help_premium_sub">Le Premium débloque des fonctionnalités exclusives :</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.8;" data-i18n="help_premium_list">
           🎥 Vidéos dans vos fantômes<br>
           📅 Message du futur — s'ouvre à une date précise<br>
           🔗 Chasse au trésor — fantômes enchaînés<br>
           🏪 Mode Commerce — offres exclusives pour commerçants
         </div>
-        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);">Activez votre code dans Profil → Mon compte.</div>
+        <div style="margin-top:10px;font-size:12px;color:var(--spirit-dim);" data-i18n="help_premium_hint">Activez votre code dans Profil → Mon compte.</div>
       </div>
 
       <!-- FAQ -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">❓ Questions fréquentes</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Pourquoi je ne vois pas de fantômes ?</div>
-        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;">Les fantômes n'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Mon fantôme a disparu ?</div>
-        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;">Comment signaler un message inapproprié ?</div>
-        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;">Appuyez sur l'icône ⚑ dans le détail d'un fantôme pour le signaler. Notre équipe examine chaque signalement.</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;" data-i18n="help_faq_title">❓ Questions fréquentes</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q1">Pourquoi je ne vois pas de fantômes ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;" data-i18n="help_faq_a1">Les fantômes n'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q2">Mon fantôme a disparu ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;" data-i18n="help_faq_a2">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.</div>
+        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q3">Comment signaler un message inapproprié ?</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;" data-i18n="help_faq_a3">Appuyez sur l'icône ⚑ dans le détail d'un fantôme pour le signaler. Notre équipe examine chaque signalement.</div>
       </div>
 
       <!-- Mentions légales -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Mentions légales & RGPD</div>
-        <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;" data-i18n="help_legal_title">📋 Mentions légales & RGPD</div>
+        <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;" data-i18n="help_legal_body">
           <strong>Éditeur :</strong> Ghostub — application indépendante<br>
-          <strong>Contact :</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="24544d49544d49574c4b541717644349454d480a474b49">[email&#160;protected]</a><br><br>
+          <strong>Contact :</strong> contact@ghostub.app<br><br>
           <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
           <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
           <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
@@ -7030,7 +7076,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       </div>
 
       <div style="text-align:center;padding:16px 0;">
-        <div style="font-size:12px;color:var(--spirit-dim);opacity:.5;">Ghostub v1.0 — Géocaching émotionnel</div>
+        <div style="font-size:12px;color:var(--spirit-dim);opacity:.5;" data-i18n="help_version">Ghostub v1.0 — Géocaching émotionnel</div>
       </div>
     </div>
   </div>
