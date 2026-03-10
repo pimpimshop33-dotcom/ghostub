@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <!-- PERF: viewport sans maximum-scale (nuit à l'accessibilité) ; géré en JS pour éviter zoom sur input iOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="description" content="Fantôme — des messages invisibles ancrés dans les lieux réels. Découvrez des messages secrets autour de vous.">
+<meta name="description" content="Ghostub — des messages invisibles ancrés dans les lieux réels. Découvrez des messages secrets autour de vous.">
 <meta name="theme-color" content="#060608" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#e8e7f0" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Fantôme">
+<meta name="apple-mobile-web-app-title" content="Ghostub">
 <!-- Sécurité : Content Security Policy -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self' https:;
@@ -22,7 +22,7 @@
   connect-src https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net https://api.cloudinary.com https://www.gstatic.com https://unpkg.com https://*.unpkg.com https://cdnjs.cloudflare.com https://nominatim.openstreetmap.org https://pimpimshop33-dotcom.github.io wss://*.firebaseio.com;
   worker-src 'self' blob:;
 ">
-<title>👻 Fantôme</title>
+<title>👻 Ghostub</title>
 
 <!-- PERF : preconnect pour ressources critiques -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -34,7 +34,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
 <!-- Manifest PWA -->
-<link rel="manifest" href="/fantome/manifest.json">
+<link rel="manifest" href="/ghostub/manifest.json">
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -76,13 +76,13 @@ let recordingInterval = null;
 // ── ANALYTICS LÉGER ─────────────────────────────────────
 // Stocke les événements localement + log console (extensible vers Firebase Analytics)
 const Analytics = {
-  events: JSON.parse(localStorage.getItem('fantome_analytics') || '[]'),
+  events: JSON.parse(localStorage.getItem('ghostub_analytics') || '[]'),
   track(event, params = {}) {
     const entry = { event, params, ts: Date.now() };
     this.events.push(entry);
     // Garde seulement les 200 derniers événements
     if (this.events.length > 200) this.events.shift();
-    try { localStorage.setItem('fantome_analytics', JSON.stringify(this.events)); } catch(e) {}
+    try { localStorage.setItem('ghostub_analytics', JSON.stringify(this.events)); } catch(e) {}
     // Si Firebase Analytics était activé, on enverrait ici
     console.debug('[Analytics]', event, params);
   },
@@ -538,7 +538,7 @@ onAuthStateChanged(auth, async user => {
   } else {
     currentUser = null;
     document.getElementById('bottomNav').style.display = 'none';
-    if (localStorage.getItem('fantome_onboard_seen')) {
+    if (localStorage.getItem('ghostub_onboard_seen')) {
       showScreen('screenAuth');
     } else {
       showScreen('screenOnboard');
@@ -590,7 +590,7 @@ window.login = async () => {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register('/fantome/sw.js');
+    const reg = await navigator.serviceWorker.register('/ghostub/sw.js');
     window._swReg = reg;
 
     // Détection des mises à jour du SW
@@ -655,10 +655,10 @@ function showNotif(title, body) {
   navigator.serviceWorker.ready.then(reg => {
     reg.showNotification(title, {
       body,
-      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon.png',
+      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png',
       tag: 'fantome-' + Date.now(),
       vibrate: [200, 100, 200],
-      data: { url: '/fantome/' }
+      data: { url: '/ghostub/' }
     });
   });
 }
@@ -858,9 +858,9 @@ function sendSwNotifIfNeeded() {
   );
   if (candidates.length === 0) return;
   // Max 1 push par heure
-  const lastPush = parseInt(localStorage.getItem('fantome_last_sw_push') || '0');
+  const lastPush = parseInt(localStorage.getItem('ghostub_last_sw_push') || '0');
   if (Date.now() - lastPush < 3600000) return;
-  localStorage.setItem('fantome_last_sw_push', Date.now());
+  localStorage.setItem('ghostub_last_sw_push', Date.now());
   const g = candidates[0];
   const dist = formatDistance(g.distance);
   navigator.serviceWorker.ready.then(reg => {
@@ -1100,7 +1100,7 @@ window.triggerVideo = () => {
     showToast('info', '🔒 La vidéo est réservée aux membres Premium.', 3000);
     return;
   }
-  console.log('[Fantôme] triggerVideo — isPremium:', isPremium, '_pendingVideoFile:', window._pendingVideoFile);
+  console.log('[Ghostub] triggerVideo — isPremium:', isPremium, '_pendingVideoFile:', window._pendingVideoFile);
   document.getElementById('videoInput').click();
 };
 
@@ -1153,23 +1153,23 @@ async function uploadMedia(uid) {
     const fd = new FormData();
     fd.append('file', window._pendingAudioBlob, 'audio.webm');
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'fantome/audio');
+    fd.append('folder', 'ghostub/audio');
     audioUrl = await uploadToCloudinary(fd, 'video');
   }
   if (window._pendingPhotoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingPhotoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'fantome/photos');
+    fd.append('folder', 'ghostub/photos');
     photoUrl = await uploadToCloudinary(fd, 'image');
   }
   if (window._pendingVideoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingVideoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'fantome/videos');
+    fd.append('folder', 'ghostub/videos');
     videoUrl = await uploadToCloudinary(fd, 'video');
-    console.log('[Fantôme] videoUrl uploadé:', videoUrl);
+    console.log('[Ghostub] videoUrl uploadé:', videoUrl);
   }
   return { audioUrl, photoUrl, videoUrl };
 }
@@ -1228,7 +1228,7 @@ async function refreshProfileStats() {
   animateStatNumber('statDiscovered', count);
   document.getElementById('statRank').textContent = rank.icon + ' ' + rank.label;
   updateFavoritesCount();
-  const firstReaderCount = parseInt(localStorage.getItem('fantome_first_reader') || '0');
+  const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
   try {
     const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid)));
@@ -1612,7 +1612,7 @@ function updateReportBtn(ghostId) {
 
 // ── PARTAGE ──────────────────────────────────────────────
 function buildShareLink(ghost) {
-  const base = 'https://pimpimshop33-dotcom.github.io/fantome/';
+  const base = 'https://pimpimshop33-dotcom.github.io/ghostub/';
   const params = new URLSearchParams({
     ghost: ghost.id,
     lat: ghost.lat ? ghost.lat.toFixed(5) : '',
@@ -1697,7 +1697,7 @@ window.nativeShare = async () => {
 // ── THÈME CLAIR / SOMBRE ─────────────────────────────────
 // Détection automatique des préférences système si pas de préférence sauvegardée
 function getInitialTheme() {
-  const saved = localStorage.getItem('fantome_theme');
+  const saved = localStorage.getItem('ghostub_theme');
   if (saved) return saved;
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
@@ -1712,11 +1712,11 @@ function applyTheme(theme) {
   document.querySelector('meta[name="theme-color"]:not([media])')?.remove();
   const btn = document.getElementById('themeToggleBtn');
   if (btn) { const lbl = document.getElementById('themeToggleLabel'); if (lbl) lbl.textContent = isLight ? 'Mode nuit' : 'Mode jour'; const ico = btn.querySelector('span'); if (ico) ico.textContent = isLight ? '🌙' : '☀️'; }
-  localStorage.setItem('fantome_theme', theme);
+  localStorage.setItem('ghostub_theme', theme);
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('fantome_theme') || 'dark';
+  const current = localStorage.getItem('ghostub_theme') || 'dark';
   const newTheme = current === 'dark' ? 'light' : 'dark';
   applyTheme(newTheme);
   Analytics.track('theme_toggle', { theme: newTheme });
@@ -1728,7 +1728,7 @@ applyTheme(getInitialTheme());
 
 // Écouter les changements de préférence système
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
-  if (!localStorage.getItem('fantome_theme')) {
+  if (!localStorage.getItem('ghostub_theme')) {
     applyTheme(e.matches ? 'light' : 'dark');
   }
 });
@@ -2293,11 +2293,11 @@ window.loadEmpreinteMap = async () => {
 
 window.shareEmpreinte = async () => {
   const deposits = document.querySelector('#empreinteStats div:nth-child(1) .stat-num, #empreinteStats div:nth-child(1) div')?.textContent || '?';
-  const profileUrl = currentUser ? `https://pimpimshop33-dotcom.github.io/fantome/?profil=${currentUser.uid}` : 'https://pimpimshop33-dotcom.github.io/fantome/';
+  const profileUrl = currentUser ? `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}` : 'https://pimpimshop33-dotcom.github.io/ghostub/';
   try {
     await navigator.share({
-      title: '👻 Mon empreinte Fantôme',
-      text: `J'ai laissé des traces dans ${deposits} lieux avec l'app Fantôme — des messages secrets ancrés dans des endroits réels. Approchez-vous.`,
+      title: '👻 Mon empreinte Ghostub',
+      text: `J'ai laissé des traces dans ${deposits} lieux avec l'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.`,
       url: profileUrl
     });
     Analytics.track('empreinte_shared');
@@ -2310,9 +2310,9 @@ window.shareEmpreinte = async () => {
 // ── PARTAGE PROFIL PUBLIC ─────────────────────────────────────────
 window.shareMyProfile = async () => {
   if (!currentUser) return;
-  const url = `https://pimpimshop33-dotcom.github.io/fantome/?profil=${currentUser.uid}`;
+  const url = `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}`;
   try {
-    await navigator.share({ title: '👻 Mon profil Fantôme', text: 'Découvrez mon empreinte fantôme.', url });
+    await navigator.share({ title: '👻 Mon profil Ghostub', text: 'Découvrez mon empreinte fantôme.', url });
   } catch(e) {
     try { await navigator.clipboard.writeText(url); showToast('success', '✓ Lien copié !', 2500); } catch(e2) {}
   }
@@ -2360,7 +2360,7 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs) =
     </div>
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:12px;align-self:flex-start;max-width:340px;width:100%;">🗺 Empreinte publique</div>
     <div id="publicEmpreinteMap" style="width:100%;max-width:340px;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(168,180,255,.15);background:rgba(10,10,20,.8);margin-bottom:24px;"></div>
-    <button onclick="window.location.href='https://pimpimshop33-dotcom.github.io/fantome/'" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid rgba(168,180,255,.35);border-radius:14px;color:rgba(168,180,255,.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;">👻 Rejoindre Fantôme</button>
+    <button onclick="window.location.href='https://pimpimshop33-dotcom.github.io/ghostub/'" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid rgba(168,180,255,.35);border-radius:14px;color:rgba(168,180,255,.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;">👻 Rejoindre Ghostub</button>
   `;
   document.body.appendChild(modal);
   setTimeout(() => {
@@ -2468,7 +2468,7 @@ function renderGhostList() {
     list.innerHTML = isFirstTime ? `
       <div style="text-align:center;padding:32px 16px 20px;">
         <div style="font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;">👻</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">Bienvenue dans Fantôme</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">Bienvenue dans Ghostub</div>
         <div style="font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;">Aucun message caché ici pour l'instant.<br>Vous pouvez en laisser un — quelqu'un passera peut-être.</div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;text-align:left;">
           <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">Comment ça marche</div>
@@ -3247,8 +3247,8 @@ async function _doOpenEnvelope() {
       // 🥇 Premier à lire : openCount était 0 avant cette ouverture
       const wasFirst = !selectedGhost.openCount || selectedGhost.openCount === 0;
       if (wasFirst) {
-        const firstCount = parseInt(localStorage.getItem('fantome_first_reader') || '0') + 1;
-        localStorage.setItem('fantome_first_reader', firstCount);
+        const firstCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0') + 1;
+        localStorage.setItem('ghostub_first_reader', firstCount);
         animateStatNumber('statFirstReader', firstCount);
       }
 
@@ -3584,16 +3584,16 @@ window.showScreen = (id, fromPopstate = false) => {
   }
   // Mettre à jour le titre de la page pour screen reader
   const screenTitles = {
-    screenRadar: 'Radar — Fantôme',
-    screenDetail: 'Détail du fantôme — Fantôme',
-    screenDeposit: 'Déposer un fantôme — Fantôme',
-    screenMap: 'Carte — Fantôme',
-    screenProfile: 'Mon profil — Fantôme',
-    screenAuth: 'Connexion — Fantôme',
-    screenOnboard: 'Fantôme',
-    screenReply: 'Répondre — Fantôme',
+    screenRadar: 'Radar — Ghostub',
+    screenDetail: 'Détail du fantôme — Ghostub',
+    screenDeposit: 'Déposer un fantôme — Ghostub',
+    screenMap: 'Carte — Ghostub',
+    screenProfile: 'Mon profil — Ghostub',
+    screenAuth: 'Connexion — Ghostub',
+    screenOnboard: 'Ghostub',
+    screenReply: 'Répondre — Ghostub',
   };
-  document.title = screenTitles[id] || 'Fantôme';
+  document.title = screenTitles[id] || 'Ghostub';
 };
 
 
@@ -4132,7 +4132,7 @@ window.showTab = (tab) => {
 async function reverseGeocode(lat, lng) {
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=fr`, {
-      headers: { 'User-Agent': 'FantomeApp/1.0' }
+      headers: { 'User-Agent': 'GhostubApp/1.0' }
     });
     const data = await res.json();
     const addr = data.address || {};
@@ -4368,7 +4368,7 @@ function spawnObParticles() {
   }, {passive:true});
 })();
 
-window.goAuth = () => { localStorage.setItem('fantome_onboard_seen', '1'); showScreen('screenAuth'); };
+window.goAuth = () => { localStorage.setItem('ghostub_onboard_seen', '1'); showScreen('screenAuth'); };
 
 function createParticles() {
   const c = document.getElementById('particles');
@@ -5447,18 +5447,18 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
   <div class="notch" aria-hidden="true"></div>
 
   <!-- ONBOARDING -->
-  <div class="screen active" id="screenOnboard" aria-label="Introduction à Fantôme">
+  <div class="screen active" id="screenOnboard" aria-label="Introduction à Ghostub">
     <button class="back-btn" id="obBackBtn" aria-label="Retour au radar" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')">← retour</button>
     <button onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;">Passer →</button>
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
-      <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Fantôme" aria-hidden="false">
+      <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
           <div class="ob-ghost-big">👻</div>
           <div class="ob-glow-ring"></div>
           <div class="ob-glow-ring ob-ring2"></div>
         </div>
         <div class="ob-scene-text">
-          <div class="ob-title">Fantôme</div>
+          <div class="ob-title">Ghostub</div>
           <div class="ob-sub">Des messages invisibles<br>ancrés dans les lieux réels.</div>
         </div>
       </div>
@@ -5506,7 +5506,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       </div>
     </div>
     <div class="ob-dots" role="tablist" aria-label="Navigation entre les slides">
-      <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1 : Fantôme" aria-selected="true"></button>
+      <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1 : Ghostub" aria-selected="true"></button>
       <button class="ob-dot" role="tab" onclick="goObScene(1)" aria-label="Slide 2 : Découvrir" aria-selected="false"></button>
       <button class="ob-dot" role="tab" onclick="goObScene(2)" aria-label="Slide 3 : Ouvrir" aria-selected="false"></button>
       <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4 : Résonner" aria-selected="false"></button>
@@ -5523,7 +5523,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
     <div class="auth-scroll">
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:40px;margin-bottom:8px;" aria-hidden="true">👻</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">Fantôme</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">Ghostub</div>
       </div>
       <div class="auth-tabs" role="tablist" aria-label="Choisir connexion ou inscription">
         <button class="auth-tab active" id="tab-login" onclick="showTab('login')" role="tab" aria-selected="true" aria-controls="tabLogin">Connexion</button>
@@ -6142,7 +6142,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div style="text-align:center;margin-bottom:28px;">
         <div style="font-size:36px;margin-bottom:8px;">👻</div>
         <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;">Comment ça marche ?</div>
-        <div style="font-size:13px;color:var(--spirit-dim);">Tout ce que vous devez savoir sur Fantôme</div>
+        <div style="font-size:13px;color:var(--spirit-dim);">Tout ce que vous devez savoir sur Ghostub</div>
       </div>
 
       <!-- Découvrir -->
@@ -6186,18 +6186,18 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">📋 Mentions légales & RGPD</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;">
-          <strong>Éditeur :</strong> Fantôme — application indépendante<br>
+          <strong>Éditeur :</strong> Ghostub — application indépendante<br>
           <strong>Contact :</strong> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="24544d49544d49574c4b541717644349454d480a474b49">[email&#160;protected]</a><br><br>
           <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
           <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
           <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
           <strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br>
-          En utilisant Fantôme, vous acceptez que vos messages soient visibles par d'autres utilisateurs à proximité géographique.
+          En utilisant Ghostub, vous acceptez que vos messages soient visibles par d'autres utilisateurs à proximité géographique.
         </div>
       </div>
 
       <div style="text-align:center;padding:16px 0;">
-        <div style="font-size:12px;color:var(--spirit-dim);opacity:.5;">Fantôme v1.0 — Géocaching émotionnel</div>
+        <div style="font-size:12px;color:var(--spirit-dim);opacity:.5;">Ghostub v1.0 — Géocaching émotionnel</div>
       </div>
     </div>
   </div>
