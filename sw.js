@@ -1,14 +1,12 @@
-// ── FANTÔME Service Worker ──────────────────────────────
-const CACHE_NAME = 'fantome-v13';
-const STATIC = ['/fantome/', '/fantome/index.html', '/fantome/manifest.json'];
-
+// ── GHOSTUB Service Worker ──────────────────────────────
+const CACHE_NAME = 'ghostub-v13';
+const STATIC = ['/ghostub/', '/ghostub/index.html', '/ghostub/manifest.json'];
 // ── INSTALL ─────────────────────────────────────────────
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
   );
 });
-
 // ── ACTIVATE ────────────────────────────────────────────
 self.addEventListener('activate', e => {
   e.waitUntil(
@@ -17,7 +15,6 @@ self.addEventListener('activate', e => {
     ).then(() => self.clients.claim())
   );
 });
-
 // ── FETCH — Network first, cache fallback ───────────────
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
@@ -34,18 +31,15 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(e.request))
   );
 });
-
 // ── PUSH — Notification fantôme proche ──────────────────
 self.addEventListener('push', e => {
   let data = {};
   try { data = e.data?.json() || {}; } catch(err) {}
-
-  const title   = data.title   || '👻 Fantôme proche';
+  const title   = data.title   || '👻 Ghostub — message proche';
   const body    = data.body    || 'Un message vous attend dans votre quartier.';
-  const icon    = data.icon    || 'https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon.png';
-  const url     = data.url     || '/fantome/';
-  const tag     = data.tag     || 'fantome-nearby';
-
+  const icon    = data.icon    || 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png';
+  const url     = data.url     || '/ghostub/';
+  const tag     = data.tag     || 'ghostub-nearby';
   e.waitUntil(
     self.registration.showNotification(title, {
       body,
@@ -61,33 +55,31 @@ self.addEventListener('push', e => {
     })
   );
 });
-
 // ── NOTIFICATION CLICK ───────────────────────────────────
 self.addEventListener('notificationclick', e => {
   e.notification.close();
   if (e.action === 'dismiss') return;
-  const url = e.notification.data?.url || '/fantome/';
+  const url = e.notification.data?.url || '/ghostub/';
   e.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
       for (const client of list) {
-        if (client.url.includes('/fantome') && 'focus' in client) return client.focus();
+        if (client.url.includes('/ghostub') && 'focus' in client) return client.focus();
       }
       return clients.openWindow(url);
     })
   );
 });
-
 // ── MESSAGE depuis l'app ─────────────────────────────────
 self.addEventListener('message', e => {
   if (e.data?.type === 'SKIP_WAITING') self.skipWaiting();
   if (e.data?.type === 'NOTIFY_NEARBY') {
     const { title, body, tag } = e.data;
-    self.registration.showNotification(title || '👻 Fantôme proche', {
+    self.registration.showNotification(title || '👻 Ghostub — message proche', {
       body: body || 'Un message vous attend.',
-      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/fantome/main/icon.png',
-      tag: tag || 'fantome-nearby',
+      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png',
+      tag: tag || 'ghostub-nearby',
       vibrate: [200, 100, 200],
-      data: { url: '/fantome/' }
+      data: { url: '/ghostub/' }
     });
   }
 });
