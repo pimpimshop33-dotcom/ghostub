@@ -44,6 +44,692 @@ import WorldService, { buildGeohashFields, encodeGeohash } from './services/worl
 import GhostService from './services/ghost.service.js';
 import LocationService from './services/location.service.js';
 
+// ── I18N ─────────────────────────────────────────────────
+const LANGS = {
+  fr: {
+    // Onboarding
+    ob_tagline: '<span data-i18n="ob_tagline">Des inconnus ont laissé quelque chose ici.<br>Approchez-vous.</span>',
+    ob_start: '👻 Commencer',
+    ob_how_title: 'Comment ça marche',
+    ob_step1: 'Approchez-vous d\'un lieu pour découvrir des messages cachés',
+    ob_step2: 'Ouvrez l\'enveloppe et lisez ce qu\'un inconnu a laissé là',
+    ob_step3: 'Déposez vos propres traces — elles resteront ancrées ici',
+    ob_back: '← Retour',
+    // Auth
+    auth_login: 'Se connecter',
+    auth_register: 'Créer un compte',
+    auth_pseudo: 'Pseudo',
+    auth_email: 'Email',
+    auth_password: 'Mot de passe',
+    auth_login_btn: 'Se connecter',
+    auth_register_btn: 'Créer mon compte',
+    auth_err_fields: t.auth_err_fields,
+    auth_err_short_pass: t.auth_err_short_pass,
+    auth_err_email: t.auth_err_email,
+    auth_err_pseudo_len: t.auth_err_pseudo_len,
+    auth_err_email_used: t.auth_err_email_used,
+    auth_err_wrong: t.auth_err_wrong,
+    // Radar
+    radar_locating: t.radar_locating,
+    radar_searching: t.radar_searching,
+    radar_no_gps: t.radar_no_gps,
+    radar_no_ghosts: t.radar_no_ghosts,
+    radar_no_ghosts_widened: t.radar_no_ghosts_widened,
+    radar_firestore_err: t.radar_firestore_err,
+    radar_offline: '📵 Hors ligne — données peut-être incomplètes.',
+    radar_welcome_title: 'Bienvenue dans Ghostub',
+    radar_welcome_sub: 'Aucun message caché ici pour l\'instant.<br>Vous pouvez en laisser un — quelqu\'un passera peut-être.',
+    radar_how_title: 'Comment ça marche',
+    radar_how1: 'Déposez un message ancré à ce lieu',
+    radar_how2: 'Le radar détecte les fantômes proches',
+    radar_how3: 'Approchez-vous pour ouvrir l\'enveloppe',
+    radar_first_btn: '👻 Déposer mon premier fantôme',
+    radar_empty_title: 'Aucun fantôme dans ce lieu',
+    radar_empty_sub: 'Soyez le premier à hanter cet endroit.',
+    radar_deposit_btn: '👻 Déposer un fantôme',
+    radar_filter_empty: t.radar_filter_empty,
+    radar_new_ghost: '👻 {n} nouveau{x} fantôme{s} à proximité',
+    // Detail
+    detail_location_unknown: t.detail_location_unknown,
+    detail_sealed_hint: t.env_hint_reset,
+    detail_of_anon: 'De 👻 Anonyme · ',
+    detail_of: 'De ',
+    detail_from_you: 'de vous',
+    detail_no_replies: t.detail_no_replies,
+    detail_open_btn: '✉ Briser le sceau',
+    detail_reply_btn: '↩ Répondre',
+    detail_share_btn: '🔗 Partager',
+    detail_fav_add: t.detail_fav_add,
+    detail_fav_added: t.detail_fav_added,
+    detail_report_btn: t.detail_report_btn,
+    detail_reported: t.detail_reported,
+    detail_secret_on: '🔮 Mode secret activé',
+    detail_secret_off: '🔮 Passer en secret',
+    detail_first_reader: '🥇 Vous êtes le premier à lire ce message',
+    detail_first_toast: '🥇 Vous êtes le premier à lire ce message !',
+    detail_views: '👁 {n} personne{s} {verbe} lu ce message avant vous',
+    detail_vocal: '🎙 Message vocal',
+    detail_video_label: '🎥 Vidéo',
+    detail_photo_label: '📷 Photo',
+    detail_report_media: '⚑ Signaler',
+    detail_promo_label: '🏪 Offre exclusive',
+    detail_promo_hint: 'Présentez ce message en caisse pour en bénéficier',
+    detail_chain_label: '🔗 La piste continue…',
+    detail_chain_btn: '🗺 Suivre la piste →',
+    detail_reso_used: '✦ Résonance utilisée aujourd\'hui',
+    detail_reso_btn: '✦ Résonner · {n} résonances',
+    detail_reso_sent: '✦ Résonance envoyée — merci ✨',
+    detail_reso_wait: '⏳ Prochaine résonance dans {h}h{m}',
+    detail_expired_last: '👻 Ce fantôme vient de disparaître — vous étiez le dernier à pouvoir le lire.',
+    // Envelope
+    env_gps_checking: t.env_gps_checking,
+    env_gps_slow: t.env_gps_slow,
+    env_gps_unavail: t.env_gps_unavail,
+    env_gps_denied: t.env_gps_denied,
+    env_resist: '🌫️ Le sceau résiste encore',
+    env_resist_dist: 'encore {n}m à parcourir',
+    env_hint_reset: t.env_hint_reset,
+    // Deposit
+    dep_title: 'Déposer',
+    dep_msg_placeholder: 'Laissez un message à cet endroit…',
+    dep_loc_placeholder: 'Nom du lieu (rue, café, parc…)',
+    dep_loc_searching: t.dep_loc_searching,
+    dep_emoji_placeholder: 'Emoji (👻)',
+    dep_btn: '👻 Ancrer ce fantôme',
+    dep_btn_upload: '⬆ Upload…',
+    dep_btn_saving: '✓ Upload · Sauvegarde…',
+    dep_success: '👻 Votre trace est ancrée dans ce lieu…',
+    dep_err_msg: 'Écrivez un message.',
+    dep_err_long: 'Message trop long (280 caractères max).',
+    dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
+    dep_err_offline: 'Vous êtes hors ligne — reconnectez-vous pour déposer.',
+    dep_err_spam: '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.',
+    dep_record_btn: 'Enregistrer un message vocal',
+    dep_record_stop: '⏹ Arrêter l\'enregistrement',
+    dep_photo_btn: '📷 Ajouter une photo',
+    dep_video_btn: '🎥 Ajouter une vidéo (Premium)',
+    dep_video_locked: '🔒 La vidéo est réservée aux membres Premium.',
+    dep_video_big: 'Vidéo trop lourde — 50 Mo maximum.',
+    dep_mic_denied: 'Microphone non autorisé.',
+    dep_photo_invalid: 'Fichier non valide — images uniquement.',
+    dep_duration_label: 'Durée de vie',
+    dep_radius_label: 'Rayon de détection',
+    dep_identity_label: 'Identité',
+    dep_identity_named: '🌫️ Signé',
+    dep_identity_anon: '👻 Anonyme',
+    dep_secret_label: '🔮 Secret (3m)',
+    dep_secret_normal: '👁 Normal',
+    dep_next_btn: 'Continuer →',
+    dep_chain_hint: 'Indice vers le prochain fantôme…',
+    dep_chain_place: 'Placer le prochain point sur la carte',
+    dep_chain_placed: '✓ Point placé — retap pour déplacer',
+    dep_biz_btn: '🏪 Mode Commerce',
+    dep_biz_sub: 'Attirer des clients avec une offre géolocalisée',
+    dep_biz_active: 'Mode activé — formulaire commerce',
+    dep_biz_toast: '🏪 Mode Commerce activé — visible à 50m de votre établissement',
+    dep_biz_locked: '🔒 Mode Commerce réservé au Premium — entrez un code dans votre profil.',
+    dep_biz_title_err: '⚠️ Ajoutez un titre à votre offre.',
+    dep_biz_publish: '🏪 Publier cette offre',
+    dep_cond_label: 'Condition d\'ouverture',
+    dep_cond_always: 'Toujours',
+    dep_cond_night: '🌙 La nuit',
+    dep_cond_hour: '⏰ À l\'heure',
+    dep_cond_after: '🔗 Après un autre',
+    dep_cond_future: '📅 Dans le futur',
+    dep_cond_premium: '🔒 Fonctionnalité réservée au Premium — entrez un code dans votre profil.',
+    // Profile
+    profile_title: 'Mon Empreinte',
+    profile_rank: 'Rang',
+    profile_discovered: 'Découvertes',
+    profile_deposited: 'Dépôts',
+    profile_resonances: 'Résonances',
+    profile_first_reader: 'Premiers lecteurs',
+    profile_favorites: 'Favoris',
+    profile_notif_on: 'Notifications activées ✓',
+    profile_notif_off: 'Activer les notifications',
+    profile_notif_blocked: '🔕 Notifications bloquées — autorisez-les dans les réglages de votre navigateur.',
+    profile_notif_enabled: '🔔 Notifications activées !',
+    profile_notif_disabled: '🔕 Notifications désactivées.',
+    profile_notif_denied: '🔕 Permission refusée — autorisez dans les réglages du navigateur.',
+    profile_premium_label: '👑 Spectre Premium',
+    profile_premium_sub: 'Toutes les fonctionnalités débloquées',
+    profile_free_label: 'Plan gratuit',
+    profile_free_sub: 'Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium',
+    profile_code_placeholder: 'Code Premium',
+    profile_activate_btn: 'Activer',
+    profile_activating: 'Vérification…',
+    profile_activated: 'Activé !',
+    profile_code_empty: 'Entrez un code.',
+    profile_code_short: 'Code trop court.',
+    profile_code_invalid: 'Code invalide.',
+    profile_code_used: 'Code déjà utilisé.',
+    profile_premium_toast: '👑 Premium activé ! Toutes les fonctionnalités sont débloquées.',
+    profile_discovery_btn: t.profile_discovery_btn,
+    profile_deposited_btn: t.profile_deposited_btn,
+    profile_fav_btn: t.profile_fav_btn,
+    profile_leaderboard_btn: t.profile_leaderboard_btn,
+    profile_map_title: 'Mon empreinte',
+    profile_map_deposits: 'Dépôts',
+    profile_map_discoveries: 'Découvertes',
+    profile_map_places: 'Lieux',
+    profile_map_empty: t.profile_map_empty,
+    profile_map_err: 'Impossible de charger l\'empreinte',
+    profile_share_map: '🗺 Partager mon empreinte',
+    profile_share_profile: '👻 Partager mon profil',
+    profile_logout: '🚪 Déconnexion',
+    profile_delete_btn: '🗑 Supprimer tous mes fantômes',
+    profile_delete_confirm_title: t.profile_delete_confirm_title,
+    profile_delete_confirm_sub: t.profile_delete_confirm_sub,
+    profile_delete_success: '✓ {n} fantômes supprimés',
+    profile_delete_err: t.profile_delete_err,
+    profile_day_mode: 'Mode jour',
+    profile_night_mode: 'Mode nuit',
+    profile_lang_label: '🌐 Langue / Language',
+    // Ghost list
+    ghost_hint_never_old: '🕯 Attend depuis {n} jours — jamais lu',
+    ghost_hint_never: '✦ Aucun regard ne l\'a encore lu…',
+    ghost_hint_night: '🌙 S\'éveille la nuit',
+    ghost_hint_prereq: '🔗 Prérequis requis',
+    ghost_hint_default: '✦ Un secret vous attend…',
+    ghost_badge_archive: 'archive',
+    ghost_badge_old: 'ancien',
+    ghost_secret_locked: '🔮 Ce fantôme est secret — approchez-vous à moins de 3m pour le révéler.',
+    // Map
+    map_you: '📍 Vous êtes ici',
+    map_hunt_on: '🎯 Chasse ON',
+    map_hunt_off: '🎯 Chasse',
+    map_hunt_toast: '🎯 Mode chasse activé — approche-toi pour ouvrir !',
+    map_hunt_already: '✓ Déjà découvert',
+    map_hunt_locked: '🔒 Encore {dist} à parcourir pour l\'ouvrir',
+    // Reply
+    reply_title: 'Répondre',
+    reply_placeholder: 'Votre réponse…',
+    reply_btn: '↩ Laisser une réponse',
+    reply_sent: '↩ Réponse déposée',
+    reply_long: 'Message trop long (280 caractères max).',
+    reply_anon: '👻 Anonyme',
+    reply_anon_signed: '🌫️ Signé',
+    // Notifications
+    notif_new_ghost_title: '👻 Nouveau fantôme proche !',
+    notif_reso_title: '✦ Votre trace a résonné',
+    notif_disc_title: t.notif_disc_title,
+    notif_open_title: t.notif_open_title,
+    notif_reply_title: '↩ Quelqu\'un vous a répondu',
+    notif_biz_title: '🏪 Un client a vu votre offre !',
+    notif_nearby_title: t.notif_nearby_title,
+    notif_nearby_sw_title: t.notif_nearby_sw_title,
+    notif_nearby_sw_body: 'À {dist} — un message jamais lu dans votre quartier.',
+    notif_virgin_1yr: '📜 À {dist} d\'ici — une trace vieille de {n} an{s} que personne n\'a jamais lue.',
+    notif_virgin_30d: '🕯 À {dist} — un message laissé il y a {n} jours, jamais ouvert.',
+    notif_virgin_new: '✦ À {dist} d\'ici — un fantôme qui n\'a jamais été lu. Serez-vous le premier ?',
+    notif_virgin_push: 'Un message jamais lu dans votre quartier.',
+    // Toasts
+    toast_fav_added: '★ Ajouté aux favoris',
+    toast_fav_removed: '★ Retiré des favoris',
+    toast_link_copied: '🔗 Lien copié dans le presse-papier',
+    toast_share_copy_fallback: 'Copiez manuellement le lien ci-dessus',
+    toast_copied: t.toast_copied,
+    toast_copy_link: t.share_copy_btn,
+    toast_delete_ghost: '🗑 Fantôme supprimé',
+    toast_delete_err: 'Erreur — réessayez.',
+    toast_report_sent: '✓ Signalement envoyé — merci',
+    toast_report_del: 'Fantôme supprimé — merci pour la communauté. 🌫️',
+    toast_report_saved: 'Signalement enregistré. Merci.',
+    toast_report_err: 'Erreur — réessayez.',
+    toast_renew_ok: '🏪 Offre renouvelée pour 1 mois !',
+    toast_renew_err: '⚠️ Erreur lors du renouvellement.',
+    toast_secret_on: '🔮 Mode secret activé',
+    toast_gps_req: t.toast_gps_req,
+    toast_reply_err: 'Erreur — réessayez.',
+    // Report
+    report_title: 'Signaler ce fantôme',
+    report_spam: '🗑 Spam / Publicité',
+    report_inappropriate: '🔞 Contenu inapproprié',
+    report_harassment: '⚠ Harcèlement',
+    report_own: 'Vous ne pouvez pas signaler votre propre fantôme.',
+    report_already: 'Vous avez déjà signalé ce fantôme.',
+    // Open limit
+    open_limit_title_reached: 'Limite atteinte pour aujourd\'hui',
+    open_limit_sub_reached: 'Tu as déjà ouvert <strong>{n} fantômes</strong> aujourd\'hui.<br>Reviens demain ou passe en Premium.',
+    open_limit_title_last: 'Dernier fantôme du jour !',
+    open_limit_sub_last: 'C\'est ta <strong>dernière ouverture</strong> gratuite d\'aujourd\'hui.<br>Demain le compteur se remet à zéro.',
+    open_limit_title_remaining: 'Il te reste {n} ouverture{s} aujourd\'hui',
+    open_limit_sub_remaining: 'Tu peux encore ouvrir <strong>{n} fantôme{s}</strong> gratuitement aujourd\'hui.',
+    open_limit_btn_last: '✉ Utiliser ma dernière ouverture',
+    open_limit_btn: '✉ Ouvrir ce fantôme',
+    // Blocked conditions
+    blocked_night_title: 'Ce fantôme s\'éveille la nuit',
+    blocked_night_sub: 'Il n\'est accessible qu\'entre 22h et 6h du matin.',
+    blocked_night_timer: 'avant la nuit',
+    blocked_hour_sub: 'Ce fantôme n\'est accessible que 15 min autour de {time}.',
+    blocked_hour_timer: 'avant l\'ouverture',
+    blocked_after_title: 'Un prérequis manque',
+    blocked_after_sub: 'Tu dois d\'abord trouver et ouvrir un autre fantôme pour débloquer celui-ci.',
+    blocked_future_title: 'Message du futur',
+    blocked_future_sub: 'Ce fantôme ne peut être ouvert qu\'à partir du {date}.',
+    blocked_future_timer: 'avant l\'ouverture',
+    // Confirm modal
+    confirm_ok: 'Confirmer',
+    confirm_cancel: 'Annuler',
+    confirm_delete_ghost_title: t.confirm_delete_ghost_title,
+    confirm_delete_ghost_sub: t.confirm_delete_ghost_sub,
+    confirm_renew_title: 'Renouveler l\'offre ?',
+    confirm_renew_sub: 'La durée de vie de cette offre sera remise à 1 mois à partir d\'aujourd\'hui.',
+    confirm_renew_btn: '↻ Renouveler',
+    // Share
+    share_title: '👻 Fantôme à {loc}',
+    share_text: 'Un fantôme t\'attend ici — approche-toi pour le découvrir.',
+    share_profile_text: t.share_profile_text,
+    share_empreinte_text: 'J\'ai laissé des traces dans {n} lieux avec l\'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.',
+    share_copy_btn: t.share_copy_btn,
+    // Nav
+    nav_radar: 'Radar',
+    nav_map: 'Carte',
+    nav_deposit: 'Déposer',
+    nav_profile: 'Profil',
+    // Misc
+    misc_loading: 'Chargement…',
+    misc_error_load: 'Erreur de chargement',
+    misc_unavailable: 'Données indisponibles',
+    misc_no_discoveries: t.misc_no_discoveries,
+    misc_no_deposited: t.misc_no_deposited,
+    misc_no_favorites: t.misc_no_favorites,
+    misc_no_leaderboard: t.misc_no_leaderboard,
+    misc_leaderboard_err: t.misc_leaderboard_err,
+    misc_biz_none: 'Aucune offre commerce active',
+    misc_offline_title: '📵 Hors ligne',
+    misc_update_banner: t.misc_update_banner,
+    misc_update_btn: 'Mettre à jour',
+    misc_public_profile_subtitle: 'Chasseur de fantômes',
+    misc_public_profile_deposited: 'Fantômes déposés',
+    misc_public_profile_opens: 'Ouvertures totales',
+    misc_public_profile_map: '🗺 Empreinte publique',
+    misc_public_profile_no_loc: 'Aucun lieu public',
+    misc_public_profile_join: '👻 Rejoindre Ghostub',
+    misc_discovery_btn_label: 'Votre dépôt',
+    misc_discovery_found_label: 'Découverte',
+    misc_deposit_your: 'Votre dépôt',
+    misc_expire_soon: '⏰ Expire dans {n}j',
+    misc_expired: '⏳ Expirée',
+    misc_days_left: '⏳ {n}j restants',
+    misc_opens: '👁 {n} ouverture{s}',
+    misc_ptr_pull: t.misc_ptr_pull,
+    misc_ptr_release: t.misc_ptr_release,
+    misc_ptr_refreshing: t.misc_ptr_refreshing,
+    misc_screen_radar: 'Radar — Ghostub',
+    misc_screen_detail: 'Détail du fantôme — Ghostub',
+    misc_screen_deposit: 'Déposer un fantôme — Ghostub',
+    misc_screen_map: 'Carte — Ghostub',
+    misc_screen_profile: 'Mon profil — Ghostub',
+    misc_screen_auth: 'Connexion — Ghostub',
+    misc_screen_onboard: 'Ghostub',
+    misc_screen_reply: 'Répondre — Ghostub',
+  },
+  en: {
+    // Onboarding
+    ob_tagline: 'Strangers have left something here.<br>Come closer.',
+    ob_start: '👻 Get started',
+    ob_how_title: 'How it works',
+    ob_step1: 'Move close to a location to discover hidden messages',
+    ob_step2: 'Open the envelope and read what a stranger left there',
+    ob_step3: 'Drop your own traces — they will stay anchored here',
+    ob_back: '← Back',
+    // Auth
+    auth_login: 'Sign in',
+    auth_register: 'Create account',
+    auth_pseudo: 'Username',
+    auth_email: 'Email',
+    auth_password: 'Password',
+    auth_login_btn: 'Sign in',
+    auth_register_btn: 'Create my account',
+    auth_err_fields: 'Please fill in all fields.',
+    auth_err_short_pass: 'Password too short (6 chars min).',
+    auth_err_email: 'Invalid email.',
+    auth_err_pseudo_len: 'Username must be 2–30 characters.',
+    auth_err_email_used: 'Email already in use.',
+    auth_err_wrong: 'Incorrect email or password.',
+    // Radar
+    radar_locating: 'Getting your location…',
+    radar_searching: '🔍 Searching for ghosts…',
+    radar_no_gps: 'Location denied — enable it in your browser settings.',
+    radar_no_ghosts: 'No ghosts nearby — be the first!',
+    radar_no_ghosts_widened: 'No ghosts within 5km — showing up to 50km',
+    radar_firestore_err: 'Could not load ghosts — check your connection.',
+    radar_offline: '📵 Offline — data may be incomplete.',
+    radar_welcome_title: 'Welcome to Ghostub',
+    radar_welcome_sub: 'No hidden messages here yet.<br>You can leave one — someone might pass by.',
+    radar_how_title: 'How it works',
+    radar_how1: 'Drop a message anchored to this place',
+    radar_how2: 'The radar detects nearby ghosts',
+    radar_how3: 'Move closer to open the envelope',
+    radar_first_btn: '👻 Drop my first ghost',
+    radar_empty_title: 'No ghosts in this area',
+    radar_empty_sub: 'Be the first to haunt this place.',
+    radar_deposit_btn: '👻 Drop a ghost',
+    radar_filter_empty: 'No ghosts match this filter.',
+    radar_new_ghost: '👻 {n} new ghost{s} nearby',
+    // Detail
+    detail_location_unknown: 'Unknown place',
+    detail_sealed_hint: 'Move closer to break the seal',
+    detail_of_anon: 'From 👻 Anonymous · ',
+    detail_of: 'From ',
+    detail_from_you: 'from you',
+    detail_no_replies: 'No replies yet — be the first.',
+    detail_open_btn: '✉ Break the seal',
+    detail_reply_btn: '↩ Reply',
+    detail_share_btn: '🔗 Share',
+    detail_fav_add: '★ Add to favorites',
+    detail_fav_added: '★ In your favorites',
+    detail_report_btn: '⚑ Report this ghost',
+    detail_reported: '✓ Already reported',
+    detail_secret_on: '🔮 Secret mode on',
+    detail_secret_off: '🔮 Switch to secret',
+    detail_first_reader: '🥇 You are the first to read this message',
+    detail_first_toast: '🥇 You are the first to read this message!',
+    detail_views: '👁 {n} person{s} {verbe} read this message before you',
+    detail_vocal: '🎙 Voice message',
+    detail_video_label: '🎥 Video',
+    detail_photo_label: '📷 Photo',
+    detail_report_media: '⚑ Report',
+    detail_promo_label: '🏪 Exclusive offer',
+    detail_promo_hint: 'Show this message at checkout to redeem',
+    detail_chain_label: '🔗 The trail continues…',
+    detail_chain_btn: '🗺 Follow the trail →',
+    detail_reso_used: '✦ Resonance used today',
+    detail_reso_btn: '✦ Resonate · {n} resonances',
+    detail_reso_sent: '✦ Resonance sent — thank you ✨',
+    detail_reso_wait: '⏳ Next resonance in {h}h{m}',
+    detail_expired_last: '👻 This ghost just vanished — you were the last one who could read it.',
+    // Envelope
+    env_gps_checking: '📡 Checking your position…',
+    env_gps_slow: '⚠️ GPS taking too long — go outside and try again.',
+    env_gps_unavail: '⚠️ GPS not available on this device.',
+    env_gps_denied: '⚠️ GPS unavailable — enable it and try outside.',
+    env_resist: '🌫️ The seal still resists',
+    env_resist_dist: '{n}m still to go',
+    env_hint_reset: 'Move closer to break the seal',
+    // Deposit
+    dep_title: 'Drop',
+    dep_msg_placeholder: 'Leave a message at this spot…',
+    dep_loc_placeholder: 'Place name (street, café, park…)',
+    dep_loc_searching: 'Looking up place…',
+    dep_emoji_placeholder: 'Emoji (👻)',
+    dep_btn: '👻 Anchor this ghost',
+    dep_btn_upload: '⬆ Uploading…',
+    dep_btn_saving: '✓ Upload · Saving…',
+    dep_success: '👻 Your trace is anchored to this place…',
+    dep_err_msg: 'Write a message.',
+    dep_err_long: 'Message too long (280 chars max).',
+    dep_err_gps: 'Location required — enable it in your browser.',
+    dep_err_offline: 'You\'re offline — reconnect to drop a ghost.',
+    dep_err_spam: '🏪 For commercial messages, use the Premium Commerce Mode.',
+    dep_record_btn: 'Record a voice message',
+    dep_record_stop: '⏹ Stop recording',
+    dep_photo_btn: '📷 Add a photo',
+    dep_video_btn: '🎥 Add a video (Premium)',
+    dep_video_locked: '🔒 Video is for Premium members only.',
+    dep_video_big: 'Video too large — 50 MB maximum.',
+    dep_mic_denied: 'Microphone access denied.',
+    dep_photo_invalid: 'Invalid file — images only.',
+    dep_duration_label: 'Lifespan',
+    dep_radius_label: 'Detection radius',
+    dep_identity_label: 'Identity',
+    dep_identity_named: '🌫️ Signed',
+    dep_identity_anon: '👻 Anonymous',
+    dep_secret_label: '🔮 Secret (3m)',
+    dep_secret_normal: '👁 Normal',
+    dep_next_btn: 'Continue →',
+    dep_chain_hint: 'Hint toward the next ghost…',
+    dep_chain_place: 'Place the next point on the map',
+    dep_chain_placed: '✓ Point placed — tap again to move',
+    dep_biz_btn: '🏪 Commerce Mode',
+    dep_biz_sub: 'Attract customers with a geolocated offer',
+    dep_biz_active: 'Mode on — commerce form',
+    dep_biz_toast: '🏪 Commerce Mode on — visible within 50m of your business',
+    dep_biz_locked: '🔒 Commerce Mode is Premium only — enter a code in your profile.',
+    dep_biz_title_err: '⚠️ Add a title to your offer.',
+    dep_biz_publish: '🏪 Publish this offer',
+    dep_cond_label: 'Opening condition',
+    dep_cond_always: 'Always',
+    dep_cond_night: '🌙 At night',
+    dep_cond_hour: '⏰ At a time',
+    dep_cond_after: '🔗 After another',
+    dep_cond_future: '📅 In the future',
+    dep_cond_premium: '🔒 Premium feature — enter a code in your profile.',
+    // Profile
+    profile_title: 'My Footprint',
+    profile_rank: 'Rank',
+    profile_discovered: 'Discovered',
+    profile_deposited: 'Dropped',
+    profile_resonances: 'Resonances',
+    profile_first_reader: 'First reads',
+    profile_favorites: 'Favorites',
+    profile_notif_on: 'Notifications enabled ✓',
+    profile_notif_off: 'Enable notifications',
+    profile_notif_blocked: '🔕 Notifications blocked — allow them in your browser settings.',
+    profile_notif_enabled: '🔔 Notifications enabled!',
+    profile_notif_disabled: '🔕 Notifications disabled.',
+    profile_notif_denied: '🔕 Permission denied — allow in browser settings.',
+    profile_premium_label: '👑 Premium Spectre',
+    profile_premium_sub: 'All features unlocked',
+    profile_free_label: 'Free plan',
+    profile_free_sub: 'Video 🎥 · Chain 🔗 · Commerce Mode 🏪 — Premium only',
+    profile_code_placeholder: 'Premium code',
+    profile_activate_btn: 'Activate',
+    profile_activating: 'Checking…',
+    profile_activated: 'Activated!',
+    profile_code_empty: 'Enter a code.',
+    profile_code_short: 'Code too short.',
+    profile_code_invalid: 'Invalid code.',
+    profile_code_used: 'Code already used.',
+    profile_premium_toast: '👑 Premium activated! All features are unlocked.',
+    profile_discovery_btn: '📜 My discoveries',
+    profile_deposited_btn: '👻 My dropped ghosts',
+    profile_fav_btn: '★ My favorites',
+    profile_leaderboard_btn: '🏆 Leaderboard',
+    profile_map_title: 'My footprint',
+    profile_map_deposits: 'Drops',
+    profile_map_discoveries: 'Discoveries',
+    profile_map_places: 'Places',
+    profile_map_empty: 'Your footprint is empty.<br>Drop or discover ghosts!',
+    profile_map_err: 'Could not load your footprint',
+    profile_share_map: '🗺 Share my footprint',
+    profile_share_profile: '👻 Share my profile',
+    profile_logout: '🚪 Sign out',
+    profile_delete_btn: '🗑 Delete all my ghosts',
+    profile_delete_confirm_title: '🗑 Delete all my ghosts?',
+    profile_delete_confirm_sub: 'This is irreversible — all your messages and replies will be deleted.',
+    profile_delete_success: '✓ {n} ghosts deleted',
+    profile_delete_err: 'Error — try again',
+    profile_day_mode: 'Day mode',
+    profile_night_mode: 'Night mode',
+    profile_lang_label: '🌐 Langue / Language',
+    // Ghost list
+    ghost_hint_never_old: '🕯 Waiting {n} days — never read',
+    ghost_hint_never: '✦ No one has read this yet…',
+    ghost_hint_night: '🌙 Awakens at night',
+    ghost_hint_prereq: '🔗 Prerequisite required',
+    ghost_hint_default: '✦ A secret awaits you…',
+    ghost_badge_archive: 'archive',
+    ghost_badge_old: 'old',
+    ghost_secret_locked: '🔮 This ghost is secret — move within 3m to reveal it.',
+    // Map
+    map_you: '📍 You are here',
+    map_hunt_on: '🎯 Hunt ON',
+    map_hunt_off: '🎯 Hunt',
+    map_hunt_toast: '🎯 Hunt mode on — get close to open!',
+    map_hunt_already: '✓ Already discovered',
+    map_hunt_locked: '🔒 Still {dist} away to open it',
+    // Reply
+    reply_title: 'Reply',
+    reply_placeholder: 'Your reply…',
+    reply_btn: '↩ Leave a reply',
+    reply_sent: '↩ Reply posted',
+    reply_long: 'Message too long (280 chars max).',
+    reply_anon: '👻 Anonymous',
+    reply_anon_signed: '🌫️ Signed',
+    // Notifications
+    notif_new_ghost_title: '👻 New ghost nearby!',
+    notif_reso_title: '✦ Your trace resonated',
+    notif_disc_title: '🔮 Your secret ghost was found!',
+    notif_open_title: '✉ Your trace was discovered',
+    notif_reply_title: '↩ Someone replied to you',
+    notif_biz_title: '🏪 A customer saw your offer!',
+    notif_nearby_title: '👻 A new ghost near you!',
+    notif_nearby_sw_title: '👻 A ghost is waiting for you',
+    notif_nearby_sw_body: '{dist} away — an unread message in your area.',
+    notif_virgin_1yr: '📜 {dist} from here — a trace {n} year{s} old that no one has ever read.',
+    notif_virgin_30d: '🕯 {dist} away — a message left {n} days ago, never opened.',
+    notif_virgin_new: '✦ {dist} from here — a ghost that has never been read. Will you be the first?',
+    notif_virgin_push: 'An unread message in your area.',
+    // Toasts
+    toast_fav_added: '★ Added to favorites',
+    toast_fav_removed: '★ Removed from favorites',
+    toast_link_copied: '🔗 Link copied to clipboard',
+    toast_share_copy_fallback: 'Copy the link manually above',
+    toast_copied: '✓ Copied!',
+    toast_copy_link: '📋 Copy link',
+    toast_delete_ghost: '🗑 Ghost deleted',
+    toast_delete_err: 'Error — try again.',
+    toast_report_sent: '✓ Report sent — thank you',
+    toast_report_del: 'Ghost removed — thank you for the community. 🌫️',
+    toast_report_saved: 'Report recorded. Thank you.',
+    toast_report_err: 'Error — try again.',
+    toast_renew_ok: '🏪 Offer renewed for 1 month!',
+    toast_renew_err: '⚠️ Renewal error.',
+    toast_secret_on: '🔮 Secret mode on',
+    toast_gps_req: 'Location required.',
+    toast_reply_err: 'Error — try again.',
+    // Report
+    report_title: 'Report this ghost',
+    report_spam: '🗑 Spam / Advertising',
+    report_inappropriate: '🔞 Inappropriate content',
+    report_harassment: '⚠ Harassment',
+    report_own: 'You cannot report your own ghost.',
+    report_already: 'You have already reported this ghost.',
+    // Open limit
+    open_limit_title_reached: 'Daily limit reached',
+    open_limit_sub_reached: 'You\'ve already opened <strong>{n} ghosts</strong> today.<br>Come back tomorrow or go Premium.',
+    open_limit_title_last: 'Last ghost of the day!',
+    open_limit_sub_last: 'This is your <strong>last free open</strong> today.<br>The counter resets tomorrow.',
+    open_limit_title_remaining: '{n} open{s} left today',
+    open_limit_sub_remaining: 'You can still open <strong>{n} ghost{s}</strong> for free today.',
+    open_limit_btn_last: '✉ Use my last open',
+    open_limit_btn: '✉ Open this ghost',
+    // Blocked conditions
+    blocked_night_title: 'This ghost awakens at night',
+    blocked_night_sub: 'It is only accessible between 10 PM and 6 AM.',
+    blocked_night_timer: 'until night',
+    blocked_hour_sub: 'This ghost is only accessible 15 min around {time}.',
+    blocked_hour_timer: 'until opening',
+    blocked_after_title: 'A prerequisite is missing',
+    blocked_after_sub: 'You must first find and open another ghost to unlock this one.',
+    blocked_future_title: 'Message from the future',
+    blocked_future_sub: 'This ghost can only be opened from {date}.',
+    blocked_future_timer: 'until opening',
+    // Confirm modal
+    confirm_ok: 'Confirm',
+    confirm_cancel: 'Cancel',
+    confirm_delete_ghost_title: 'Delete this ghost?',
+    confirm_delete_ghost_sub: 'This message and its replies will be permanently deleted.',
+    confirm_renew_title: 'Renew the offer?',
+    confirm_renew_sub: 'The lifespan of this offer will be reset to 1 month from today.',
+    confirm_renew_btn: '↻ Renew',
+    // Share
+    share_title: '👻 Ghost at {loc}',
+    share_text: 'A ghost is waiting for you here — come closer to discover it.',
+    share_profile_text: 'Check out my ghost footprint.',
+    share_empreinte_text: 'I\'ve left traces in {n} places with the Ghostub app — secret messages anchored in real spots. Come closer.',
+    share_copy_btn: '📋 Copy link',
+    // Nav
+    nav_radar: 'Radar',
+    nav_map: 'Map',
+    nav_deposit: 'Drop',
+    nav_profile: 'Profile',
+    // Misc
+    misc_loading: 'Loading…',
+    misc_error_load: 'Load error',
+    misc_unavailable: 'Data unavailable',
+    misc_no_discoveries: 'No discoveries yet…',
+    misc_no_deposited: 'No ghosts dropped yet…',
+    misc_no_favorites: 'No favorites yet — tap ★ on a ghost.',
+    misc_no_leaderboard: 'No hunters yet…',
+    misc_leaderboard_err: 'Could not load leaderboard.',
+    misc_biz_none: 'No active commerce offer',
+    misc_offline_title: '📵 Offline',
+    misc_update_banner: '🔄 New version available',
+    misc_update_btn: 'Update',
+    misc_public_profile_subtitle: 'Ghost hunter',
+    misc_public_profile_deposited: 'Ghosts dropped',
+    misc_public_profile_opens: 'Total opens',
+    misc_public_profile_map: '🗺 Public footprint',
+    misc_public_profile_no_loc: 'No public locations',
+    misc_public_profile_join: '👻 Join Ghostub',
+    misc_discovery_btn_label: 'Your drop',
+    misc_discovery_found_label: 'Discovery',
+    misc_deposit_your: 'Your drop',
+    misc_expire_soon: '⏰ Expires in {n}d',
+    misc_expired: '⏳ Expired',
+    misc_days_left: '⏳ {n}d left',
+    misc_opens: '👁 {n} open{s}',
+    misc_ptr_pull: 'Pull to refresh',
+    misc_ptr_release: 'Release to refresh',
+    misc_ptr_refreshing: 'Refreshing…',
+    misc_screen_radar: 'Radar — Ghostub',
+    misc_screen_detail: 'Ghost detail — Ghostub',
+    misc_screen_deposit: 'Drop a ghost — Ghostub',
+    misc_screen_map: 'Map — Ghostub',
+    misc_screen_profile: 'My profile — Ghostub',
+    misc_screen_auth: 'Sign in — Ghostub',
+    misc_screen_onboard: 'Ghostub',
+    misc_screen_reply: 'Reply — Ghostub',
+  }
+};
+
+// Détection et application de la langue
+function _detectLang() {
+  const saved = localStorage.getItem('ghostub_lang');
+  if (saved && LANGS[saved]) return saved;
+  const browser = (navigator.language || 'fr').slice(0, 2).toLowerCase();
+  return LANGS[browser] ? browser : 'fr';
+}
+let _currentLang = _detectLang();
+const t = new Proxy({}, {
+  get(_, key) {
+    return (LANGS[_currentLang] && LANGS[_currentLang][key] !== undefined)
+      ? LANGS[_currentLang][key]
+      : (LANGS['fr'][key] || key);
+  }
+});
+window.t = t;
+
+window.setLang = (lang) => {
+  if (!LANGS[lang]) return;
+  _currentLang = lang;
+  localStorage.setItem('ghostub_lang', lang);
+  // Mettre à jour le html lang attr
+  document.documentElement.lang = lang;
+  // Re-render les éléments statiques qui ont data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.innerHTML = t[key];
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key]) el.placeholder = t[key];
+  });
+  // Mettre à jour les boutons langue
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+  // Recharger les listes dynamiques si nécessaire
+  if (document.getElementById('screenRadar')?.classList.contains('active')) renderGhostList();
+};
+
+// Appliquer la langue au démarrage (attribut html)
+document.documentElement.lang = _currentLang;
+
+
 const firebaseConfig = {
   apiKey: "AIzaSyDtxsiaZgs2iycJRBK3SCvNuOarW7wEWaI",
   authDomain: "fantome-app.firebaseapp.com",
@@ -306,7 +992,7 @@ window.toggleHuntMode = () => {
     btn.style.color = 'rgba(200,210,255,1)';
     btn.style.borderColor = 'rgba(168,180,255,.7)';
     btn.textContent = '🎯 Chasse ON';
-    showToast('info', '🎯 Mode chasse activé — approche-toi pour ouvrir !');
+    showToast('info', t.map_hunt_toast);
   } else {
     btn.style.background = 'rgba(168,180,255,.08)';
     btn.style.color = 'rgba(168,180,255,.7)';
@@ -386,7 +1072,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
         .addTo(map)
         .on('click', () => {
           if (alreadyOpened) {
-            showToast('info', '✓ Déjà découvert');
+            showToast('info', t.map_hunt_already);
           } else if (isInRange) {
             openGhost(g.id);
             showScreen('screenDetail');
@@ -551,11 +1237,11 @@ window.register = async () => {
   const email  = document.getElementById('regEmail').value.trim();
   const pass   = document.getElementById('regPass').value;
   const err    = document.getElementById('regAuthError');
-  if (!pseudo || !email || !pass) { err.textContent = 'Remplissez tous les champs.'; return; }
+  if (!pseudo || !email || !pass) { err.textContent = t.auth_err_fields; return; }
   // Validation basique côté client
-  if (pass.length < 6) { err.textContent = 'Mot de passe trop court (6 car. min).'; return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = 'Email invalide.'; return; }
-  if (pseudo.length < 2 || pseudo.length > 30) { err.textContent = 'Pseudo entre 2 et 30 caractères.'; return; }
+  if (pass.length < 6) { err.textContent = t.auth_err_short_pass; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = t.auth_err_email; return; }
+  if (pseudo.length < 2 || pseudo.length > 30) { err.textContent = t.auth_err_pseudo_len; return; }
   err.textContent = '';
   const btn = document.getElementById('registerBtn') || document.querySelector('#screenRegister button[type=submit], #screenRegister .btn-primary');
   setLoading(btn, true);
@@ -564,8 +1250,8 @@ window.register = async () => {
     await updateProfile(cred.user, { displayName: pseudo });
     Analytics.track('register');
   } catch(e) {
-    err.textContent = e.code === 'auth/email-already-in-use' ? 'Email déjà utilisé.' :
-                      e.code === 'auth/weak-password' ? 'Mot de passe trop court (6 car. min).' :
+    err.textContent = e.code === 'auth/email-already-in-use' ? t.auth_err_email_used :
+                      e.code === 'auth/weak-password' ? t.auth_err_short_pass :
                       'Erreur : ' + e.message;
   }
 };
@@ -575,14 +1261,14 @@ window.login = async () => {
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginAuthError');
   err.textContent = '';
-  if (!email || !pass) { err.textContent = 'Remplissez tous les champs.'; return; }
+  if (!email || !pass) { err.textContent = t.auth_err_fields; return; }
   const btn = document.querySelector('#tabLogin .btn-primary');
   if (btn) { btn.textContent = 'Connexion…'; btn.disabled = true; }
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     Analytics.track('login');
   } catch(e) {
-    err.textContent = 'Email ou mot de passe incorrect.';
+    err.textContent = t.auth_err_wrong;
     if (btn) { btn.textContent = 'Se connecter'; btn.disabled = false; }
   }
 };
@@ -681,7 +1367,7 @@ async function checkNewGhosts() {
       if (dist <= 5000) {
         notifCheckedGhosts.add(g.id);
         if (g.createdAt && (Date.now() - g.createdAt.seconds * 1000) < 600000) {
-          showNotif('👻 Nouveau fantôme proche !', `À ${formatDistance(dist)} de vous — ${escapeHTML(g.location || 'Lieu inconnu')}`);
+          showNotif(t.notif_new_ghost_title, `À ${formatDistance(dist)} de vous — ${escapeHTML(g.location || t.detail_location_unknown)}`);
         }
       }
     });
@@ -704,7 +1390,7 @@ async function checkResonances() {
       if (curr > prev) {
         const lieu = escapeHTML(g.location || 'ce lieu');
         const msg = _resoMessage(lieu, curr);
-        showNotif('✦ Votre trace a résonné', msg);
+        showNotif(t.notif_reso_title, msg);
         showToast('info', msg, 5000);
         localStorage.setItem('prev_reso_' + d.id, curr);
       }
@@ -739,7 +1425,7 @@ async function checkDiscoveries() {
     for (const d of snap.docs) {
       const disc = d.data();
       showNotif(
-        '🔮 Votre fantôme secret a été trouvé !',
+        t.notif_disc_title,
         `${escapeHTML(disc.discoveredBy)} a découvert votre fantôme à "${escapeHTML(disc.ghostLocation)}"`
       );
       updateDoc(doc(db, 'discoveries', d.id), { notified: true }).catch(() => {});
@@ -765,14 +1451,15 @@ function checkVirginGhostNearby() {
   const dist = formatDistance(ghost.distance);
   let msg;
   if (ageDays > 365) {
-    msg = `📜 À ${dist} d'ici — une trace vieille de ${Math.floor(ageDays/365)} an${ageDays > 730 ? 's' : ''} que personne n'a jamais lue.`;
+    const yrs = Math.floor(ageDays/365);
+    msg = t.notif_virgin_1yr.replace('{dist}', dist).replace('{n}', yrs).replace('{s}', yrs > 1 ? 's' : '');
   } else if (ageDays > 30) {
-    msg = `🕯 À ${dist} — un message laissé il y a ${ageDays} jours, jamais ouvert.`;
+    msg = t.notif_virgin_30d.replace('{dist}', dist).replace('{n}', ageDays);
   } else {
-    msg = `✦ À ${dist} d'ici — un fantôme qui n'a jamais été lu. Serez-vous le premier ?`;
+    msg = t.notif_virgin_new.replace('{dist}', dist);
   }
   showToast('info', msg, 6000);
-  showNotif('👻 Une trace vous attend', msg);
+  showNotif(t.notif_nearby_sw_title, msg);
   _lastVirginNotif = Date.now();
 }
 
@@ -820,7 +1507,7 @@ async function checkReplyNotifications() {
       const lieu = escapeHTML(n.ghostLocation || 'ce lieu');
       let title, msg;
       if (n.type === 'reply') {
-        title = '↩ Quelqu\'un vous a répondu';
+        title = t.notif_reply_title;
         msg = `${escapeHTML(n.fromAuthor || 'Un inconnu')} a laissé une réponse à votre fantôme de <b>${lieu}</b>.`;
       } else if (n.type === 'biz_open') {
         title = '🏪 Un client a vu votre offre !';
@@ -832,10 +1519,10 @@ async function checkReplyNotifications() {
           `Votre fantôme de <b>${lieu}</b> a été découvert pour la première fois.`,
         ];
         const hash = (n.ghostId || '').length % openMsgs.length;
-        title = '✉ Votre trace a été découverte';
+        title = t.notif_open_title;
         msg = openMsgs[hash];
       } else if (n.type === 'nearby_new') {
-        title = '👻 Un nouveau fantôme près de vous !';
+        title = t.notif_nearby_title;
         const lieu = escapeHTML(n.ghostLocation || 'un lieu que vous connaissez');
         msg = `Un inconnu vient de laisser une trace à <b>${lieu}</b> — un endroit où vous avez déjà été.`;
       } else continue;
@@ -866,8 +1553,8 @@ function sendSwNotifIfNeeded() {
   navigator.serviceWorker.ready.then(reg => {
     reg.active?.postMessage({
       type: 'NOTIFY_NEARBY',
-      title: '👻 Un fantôme vous attend',
-      body: `À ${dist} — un message jamais lu dans votre quartier.`,
+      title: t.notif_nearby_sw_title,
+      body: t.notif_nearby_sw_body.replace('{dist}', dist),
       tag: 'fantome-nearby-bg'
     });
   });
@@ -915,10 +1602,10 @@ function _setNotifBtnState(active) {
   if (!btn) return;
   const span = btn.querySelector('span:nth-child(2)');
   if (active) {
-    if (span) span.textContent = 'Notifications activées ✓';
+    if (span) span.textContent = t.profile_notif_on;
     btn.style.color = 'rgba(100,220,160,.9)';
   } else {
-    if (span) span.textContent = 'Activer les notifications';
+    if (span) span.textContent = t.profile_notif_off;
     btn.style.color = 'var(--text)';
   }
 }
@@ -934,13 +1621,13 @@ window.enableNotifications = async () => {
     localStorage.removeItem('notif_enabled');
     _setNotifBtnState(false);
     btn.style.borderColor = '';
-    showToast('info', '🔕 Notifications désactivées.');
+    showToast('info', t.profile_notif_disabled);
     return;
   }
 
   // Permission bloquée par le navigateur
   if (Notification.permission === 'denied') {
-    showToast('warning', '🔕 Notifications bloquées — autorisez-les dans les réglages de votre navigateur.', 5000);
+    showToast('warning', t.profile_notif_blocked, 5000);
     return;
   }
 
@@ -951,14 +1638,14 @@ window.enableNotifications = async () => {
     _setNotifBtnState(true);
     btn.style.borderColor = 'rgba(100,220,160,.4)';
     localStorage.setItem('notif_enabled', '1');
-    showToast('success', '🔔 Notifications activées !');
+    showToast('success', t.profile_notif_enabled);
     _startNotifIntervals();
     checkDiscoveries();
   } else {
     const span4 = btn.querySelector('span:nth-child(2)'); if (span4) span4.textContent = 'Notifications refusées';
     btn.style.borderColor = 'rgba(255,100,100,.3)';
     btn.style.color = 'rgba(255,100,100,.7)';
-    showToast('warning', '🔕 Permission refusée — autorisez dans les réglages du navigateur.', 5000);
+    showToast('warning', t.profile_notif_denied, 5000);
   }
 };
 
@@ -1005,7 +1692,7 @@ async function startRecording() {
     }, 1000);
     Analytics.track('record_start');
   } catch(e) {
-    document.getElementById('depositError').textContent = 'Microphone non autorisé.';
+    document.getElementById('depositError').textContent = t.dep_mic_denied;
   }
 }
 
@@ -1053,7 +1740,7 @@ window.handlePhoto = (input) => {
   const file = input.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) {
-    document.getElementById('depositError').textContent = 'Fichier non valide — images uniquement.';
+    document.getElementById('depositError').textContent = t.dep_photo_invalid;
     return;
   }
   // Compression canvas avant upload
@@ -1104,7 +1791,7 @@ window.clearPhoto = () => {
 // ── VIDÉO (Premium) ──────────────────────────────────────
 window.triggerVideo = () => {
   if (!isPremium) {
-    showToast('info', '🔒 La vidéo est réservée aux membres Premium.', 3000);
+    showToast('info', t.dep_video_locked, 3000);
     return;
   }
   console.log('[Ghostub] triggerVideo — isPremium:', isPremium, '_pendingVideoFile:', window._pendingVideoFile);
@@ -1114,7 +1801,7 @@ window.triggerVideo = () => {
 window.handleVideo = (input) => {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 50 * 1024 * 1024) { showToast('warning', 'Vidéo trop lourde — 50 Mo maximum.'); input.value = ''; return; }
+  if (file.size > 50 * 1024 * 1024) { showToast('warning', t.dep_video_big); input.value = ''; return; }
   const url = URL.createObjectURL(file);
   if (window._pendingVideoBlobUrl) URL.revokeObjectURL(window._pendingVideoBlobUrl);
   window._pendingVideoBlobUrl = url;
@@ -1287,7 +1974,7 @@ async function loadBizDashboard() {
     const id  = d.id;
     const opens = Math.max(g.openCount || 0, statsMap[id] || 0);
     const expired = isExpired(g);
-    const location = escapeHTML(g.location || 'Lieu inconnu');
+    const location = escapeHTML(g.location || t.detail_location_unknown);
     const title = g.message ? escapeHTML(g.message.split('\n')[0].replace(/^🏪 [^:]+: /, '')) : location;
 
     // Calcul expiration
@@ -1337,10 +2024,10 @@ window.renewBusinessGhost = async (ghostId) => {
       createdAt: serverTimestamp(),
       expired: false
     });
-    showToast('success', '🏪 Offre renouvelée pour 1 mois !');
+    showToast('success', t.toast_renew_ok);
     loadBizDashboard();
   } catch(e) {
-    showToast('warning', '⚠️ Erreur lors du renouvellement.');
+    showToast('warning', t.toast_renew_err);
   }
 };
 
@@ -1364,7 +2051,7 @@ window.toggleDiscoveryHistory = async () => {
           results.push(`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
             <span style="font-size:20px;">${escapeHTML(g.emoji||'👻')}</span>
             <div>
-              <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||'Lieu inconnu')}</div>
+              <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||t.detail_location_unknown)}</div>
               <div style="font-size:11px;opacity:.5;">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString('fr-FR') : ''}</div>
             </div>
           </div>`);
@@ -1407,7 +2094,7 @@ window.toggleDepositedList = async () => {
         <div id="deposited-item-${escapeHTML(id)}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
           <span style="font-size:22px;flex-shrink:0;">${escapeHTML(g.emoji||'👻')}</span>
           <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||'Lieu inconnu')}</div>
+            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||t.detail_location_unknown)}</div>
             <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
               <span>${date}</span>
               <span>✦ ${resonances} résonance${resonances > 1 ? 's' : ''}</span>
@@ -1426,7 +2113,7 @@ window.toggleDepositedList = async () => {
 };
 
 window.deleteOneGhost = async (ghostId) => {
-  const confirmed = await showConfirm('Supprimer ce fantôme ?', 'Ce message et ses réponses seront définitivement effacés.');
+  const confirmed = await showConfirm(t.confirm_delete_ghost_title, t.confirm_delete_ghost_sub);
   if (!confirmed) return;
   try {
     // Supprimer les réponses associées
@@ -1446,10 +2133,10 @@ window.deleteOneGhost = async (ghostId) => {
     // Retirer du radar si présent
     nearbyGhosts = nearbyGhosts.filter(g => g.id !== ghostId);
     renderGhostList();
-    showToast('success', '🗑 Fantôme supprimé');
+    showToast('success', t.toast_delete_ghost);
     Analytics.track('delete_one_ghost');
   } catch(e) {
-    showToast('error', 'Erreur — réessayez.');
+    showToast('error', t.toast_delete_err);
   }
 };
 
@@ -1470,25 +2157,25 @@ window.activatePremium = async () => {
   const input = document.getElementById('premiumCode');
   const code = input.value.trim().toUpperCase();
   const errEl = document.getElementById('premiumError');
-  if (!code) { errEl.textContent = 'Entrez un code.'; return; }
+  if (!code) { errEl.textContent = t.profile_code_empty; return; }
   // Validation basique du format
-  if (!code || code.length < 4) { errEl.textContent = 'Code trop court.'; return; }
+  if (!code || code.length < 4) { errEl.textContent = t.profile_code_short; return; }
   errEl.textContent = '';
   const btn = document.getElementById('activateBtn');
-  btn.textContent = 'Vérification…';
+  btn.textContent = t.profile_activating;
   btn.disabled = true;
   try {
     const codeDoc = await getDoc(doc(db, 'premiumCodes', code));
     if (!codeDoc.exists()) {
-      errEl.textContent = 'Code invalide.';
-      btn.textContent = 'Activer';
+      errEl.textContent = t.profile_code_invalid;
+      btn.textContent = t.profile_activate_btn;
       btn.disabled = false;
       return;
     }
     const data = codeDoc.data();
     if (data.used) {
-      errEl.textContent = 'Code déjà utilisé.';
-      btn.textContent = 'Activer';
+      errEl.textContent = t.profile_code_used;
+      btn.textContent = t.profile_activate_btn;
       btn.disabled = false;
       return;
     }
@@ -1497,12 +2184,12 @@ window.activatePremium = async () => {
     isPremium = true;
     updatePremiumUI();
     input.value = '';
-    btn.textContent = 'Activé !';
-    showToast('success', '👑 Premium activé ! Toutes les fonctionnalités sont débloquées.', 4000);
+    btn.textContent = t.profile_activated;
+    showToast('success', t.profile_premium_toast, 4000);
     Analytics.track('premium_activated');
   } catch(e) {
     errEl.textContent = 'Erreur : ' + e.message;
-    btn.textContent = 'Activer';
+    btn.textContent = t.profile_activate_btn;
     btn.disabled = false;
   }
 };
@@ -1515,11 +2202,11 @@ function openReportModal() {
   if (!selectedGhost) return;
   const key = 'reported_' + currentUser.uid + '_' + selectedGhost.id;
   if (localStorage.getItem(key)) {
-    showReportFeedback('Vous avez déjà signalé ce fantôme.');
+    showReportFeedback(t.report_already);
     return;
   }
   if (selectedGhost.authorUid === currentUser.uid) {
-    showReportFeedback('Vous ne pouvez pas signaler votre propre fantôme.');
+    showReportFeedback(t.report_own);
     return;
   }
   openModal('reportModal', 'reportBtn');
@@ -1547,7 +2234,7 @@ window.submitReport = async (reason) => {
       createdAt: serverTimestamp()
     });
     localStorage.setItem(key, '1');
-    showToast('success', '✓ Signalement envoyé — merci');
+    showToast('success', t.toast_report_sent);
     await updateDoc(doc(db, 'ghosts', ghostId), { reportCount: increment(1) });
     const ghostDoc = await getDocs(query(collection(db, 'reports'), where('ghostId', '==', ghostId)));
     if (ghostDoc.size >= REPORT_THRESHOLD) {
@@ -1555,15 +2242,15 @@ window.submitReport = async (reason) => {
       showScreen('screenRadar');
       setNav('nav-radar');
       await loadNearbyGhosts();
-      showReportFeedback('Fantôme supprimé — merci pour la communauté. 🌫️');
+      showReportFeedback(t.toast_report_del);
       return;
     }
     const btn = document.getElementById('reportBtn');
     if (btn) { btn.classList.add('reported'); btn.innerHTML = '✓ Signalement envoyé'; }
-    showReportFeedback('Signalement enregistré. Merci.');
+    showReportFeedback(t.toast_report_saved);
     Analytics.track('ghost_reported', { reason });
   } catch(e) {
-    showReportFeedback('Erreur — réessayez.');
+    showReportFeedback(t.toast_report_err);
   }
 };
 
@@ -1605,10 +2292,10 @@ function updateReportBtn(ghostId) {
     btn.style.display = '';
     if (localStorage.getItem(key)) {
       btn.classList.add('reported');
-      btn.innerHTML = '✓ Déjà signalé';
+      btn.innerHTML = t.detail_reported;
     } else {
       btn.classList.remove('reported');
-      btn.innerHTML = '⚑ Signaler ce fantôme';
+      btn.innerHTML = t.detail_report_btn;
     }
   }
 }
@@ -1656,12 +2343,12 @@ window.copyShareLink = () => {
   const link = document.getElementById('shareLinkBox').textContent;
   const btn = document.querySelector('.share-copy-btn');
   navigator.clipboard.writeText(link).then(() => {
-    if (btn) { btn.textContent = '✓ Copié !'; btn.style.borderColor = 'rgba(100,220,160,.4)'; setTimeout(() => { btn.textContent = '📋 Copier le lien'; btn.style.borderColor = ''; }, 2000); }
-    showToast('link', '🔗 Lien copié dans le presse-papier');
+    if (btn) { btn.textContent = t.toast_copied; btn.style.borderColor = 'rgba(100,220,160,.4)'; setTimeout(() => { btn.textContent = t.share_copy_btn; btn.style.borderColor = ''; }, 2000); }
+    showToast('link', t.toast_link_copied);
     closeModal('shareModal');
     Analytics.track('share_copied');
   }).catch(() => {
-    showToast('warning', 'Copiez manuellement le lien ci-dessus');
+    showToast('warning', t.toast_share_copy_fallback);
   });
 };
 
@@ -1752,7 +2439,7 @@ function watchMyGhostResonances() {
         if (curr > prev) {
           const lieu = escapeHTML(g.location || 'ce lieu');
           const msg = _resoMessage(lieu, curr);
-          showNotif('✦ Votre trace a résonné', msg);
+          showNotif(t.notif_reso_title, msg);
           showToast('info', msg, 5000);
           localStorage.setItem('prev_reso_' + id, curr);
           if (document.getElementById('screenProfile').classList.contains('active')) {
@@ -1827,8 +2514,8 @@ window.logout = async () => {
 window.deleteMyGhosts = async () => {
   if (!currentUser) return;
   const confirmed = await showConfirm(
-    '🗑 Supprimer tous mes fantômes ?',
-    'Cette action est irréversible — tous vos messages et réponses seront effacés.',
+    t.profile_delete_confirm_title,
+    t.profile_delete_confirm_sub,
     { requireTyped: true }
   );
   if (!confirmed) return;
@@ -1863,7 +2550,7 @@ window.deleteMyGhosts = async () => {
     renderGhostList();
     Analytics.track('delete_all_ghosts', { count: snap.size });
   } catch(e) {
-    btn.textContent = 'Erreur — réessayez';
+    btn.textContent = t.profile_delete_err;
     btn.disabled = false;
   }
 };
@@ -1875,7 +2562,7 @@ const timeRemaining = g => GhostService.timeRemaining(g);
 window.loadNearbyGhosts = async () => {
   // Vérification offline
   if (!navigator.onLine) {
-    showToast('warning', '📵 Hors ligne — données peut-être incomplètes.');
+    showToast('warning', t.radar_offline);
   }
   document.getElementById('ghostCount').textContent = '';
   document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">Localisation en cours…</span>';
@@ -1935,7 +2622,7 @@ window.loadNearbyGhosts = async () => {
         if (currentUser && g.authorUid && g.authorUid !== currentUser.uid) {
           addDoc(collection(db, 'discoveries'), {
             ghostId: g.id,
-            ghostLocation: g.location || 'Lieu inconnu',
+            ghostLocation: g.location || t.detail_location_unknown,
             ghostMessage: (g.message || '').substring(0, 60),
             authorUid: g.authorUid,
             discoveredBy: currentUser.displayName || 'quelqu\'un',
@@ -2077,16 +2764,16 @@ window.toggleFavorite = () => {
   const idx = favs.findIndex(f => f.id === selectedGhost.id);
   if (idx >= 0) {
     favs.splice(idx, 1);
-    showToast('info', '★ Retiré des favoris');
+    showToast('info', t.toast_fav_removed);
   } else {
     favs.unshift({
       id: selectedGhost.id,
       emoji: selectedGhost.emoji || '👻',
-      location: selectedGhost.location || 'Lieu inconnu',
+      location: selectedGhost.location || t.detail_location_unknown,
       message: (selectedGhost.message || '').substring(0, 60),
       savedAt: Date.now()
     });
-    showToast('success', '★ Ajouté aux favoris');
+    showToast('success', t.toast_fav_added);
   }
   saveFavorites(favs);
   updateFavoriteBtn();
@@ -2097,7 +2784,7 @@ function updateFavoriteBtn() {
   const btn = document.getElementById('favoriteBtn');
   if (!btn || !selectedGhost) return;
   const fav = isFavorite(selectedGhost.id);
-  btn.textContent = fav ? '★ Dans vos favoris' : '★ Ajouter aux favoris';
+  btn.textContent = fav ? t.detail_fav_added : t.detail_fav_add;
   btn.style.color = fav ? 'rgba(255,200,80,.9)' : 'rgba(255,200,80,.5)';
   btn.style.borderColor = fav ? 'rgba(255,200,80,.5)' : 'rgba(255,200,80,.2)';
   btn.style.background = fav ? 'rgba(255,200,80,.1)' : 'rgba(255,200,80,.05)';
@@ -2323,7 +3010,7 @@ window.shareEmpreinte = async () => {
     Analytics.track('empreinte_shared');
   } catch(e) {
     // Fallback : copier le lien
-    try { await navigator.clipboard.writeText(profileUrl); showToast('success', '✓ Lien copié !', 2500); } catch(e2) {}
+    try { await navigator.clipboard.writeText(profileUrl); showToast('success', t.toast_copied, 2500); } catch(e2) {}
   }
 };
 
@@ -2332,9 +3019,9 @@ window.shareMyProfile = async () => {
   if (!currentUser) return;
   const url = `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}`;
   try {
-    await navigator.share({ title: '👻 Mon profil Ghostub', text: 'Découvrez mon empreinte fantôme.', url });
+    await navigator.share({ title: t.share_profile_text, text: t.share_profile_text, url });
   } catch(e) {
-    try { await navigator.clipboard.writeText(url); showToast('success', '✓ Lien copié !', 2500); } catch(e2) {}
+    try { await navigator.clipboard.writeText(url); showToast('success', t.toast_copied, 2500); } catch(e2) {}
   }
 };
 
@@ -2547,12 +3234,12 @@ function renderGhostList() {
     // Surnom poétique
     const authorDisplay = g.anonymous ? getPoeticName(g.id) : escapeHTML(g.author || '');
     return `
-    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}" style="${ageStyle}" onclick="openGhost('${escapeHTML(g.id)}')" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || 'Lieu inconnu')}, ${formatDistance(g.distance)}" onkeydown="if(event.key==='Enter'||event.key===' ')openGhost('${escapeHTML(g.id)}')">
+    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}" style="${ageStyle}" onclick="openGhost('${escapeHTML(g.id)}')" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || t.detail_location_unknown)}, ${formatDistance(g.distance)}" onkeydown="if(event.key==='Enter'||event.key===' ')openGhost('${escapeHTML(g.id)}')">
       <div class="envelope-flap" aria-hidden="true"><div class="envelope-flap-inner"></div></div>
       <div class="envelope-body">
         <div class="envelope-emoji" aria-hidden="true">${emoji}</div>
         <div class="envelope-content">
-          <div class="envelope-location">📍 ${escapeHTML(g.location || 'Lieu inconnu')}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${ageBadge}${virginBadge}</div>
+          <div class="envelope-location">📍 ${escapeHTML(g.location || t.detail_location_unknown)}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${ageBadge}${virginBadge}</div>
           <div class="envelope-hint">${hintText}</div>
         </div>
         <div class="envelope-meta">
@@ -2687,7 +3374,7 @@ window.openGhost = async (id) => {
     } catch(e) { return; }
   }
 
-  document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || 'Lieu inconnu');
+  document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
   document.getElementById('sealedEmoji').textContent = selectedGhost.secret ? '🔮' : (selectedGhost.businessMode ? '🏪' : (selectedGhost.emoji || '👻'));
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
@@ -2716,7 +3403,7 @@ window.openGhost = async (id) => {
     if (!condCheck.ok) {
       showScreen('screenDetail');
       setNav('nav-radar');
-      document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || 'Lieu inconnu');
+      document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
       showBlockedOverlay(condCheck);
       return;
     }
@@ -2785,7 +3472,7 @@ window.openGhost = async (id) => {
     const resoBtn = document.getElementById('resonanceBtn');
     if (alreadyToday) {
       resoBtn.classList.add('resonated');
-      resoBtn.textContent = "✦ Résonance utilisée aujourd'hui";
+      resoBtn.textContent = t.detail_reso_used;
       resoBtn.style.borderColor = 'rgba(168,180,255,.2)';
       resoBtn.style.color = 'rgba(168,180,255,.4)';
       resoBtn.style.cursor = 'default';
@@ -2794,7 +3481,7 @@ window.openGhost = async (id) => {
       resoBtn.style.borderColor = '';
       resoBtn.style.color = '';
       resoBtn.style.cursor = '';
-      document.getElementById('resonanceCount').textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
+      document.getElementById('resonanceCount').textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
     }
 
     const secretBtn = document.getElementById('secretBtn');
@@ -3022,7 +3709,7 @@ window.resonate = async () => {
     const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
     const h = Math.floor(msUntilMidnight / 3600000);
     const m = Math.floor((msUntilMidnight % 3600000) / 60000);
-    btn.textContent = `⏳ Prochaine résonance dans ${h}h${m < 10 ? '0' + m : m}`;
+    btn.textContent = t.detail_reso_wait.replace('{h}', h).replace('{m}', m < 10 ? '0' + m : m);
     setTimeout(() => {
       btn.style.borderColor = '';
       btn.style.color = '';
@@ -3032,14 +3719,14 @@ window.resonate = async () => {
   }
   fireResonanceParticles(btn);
   btn.classList.add('resonated');
-  btn.textContent = '✦ Résonance envoyée — merci ✨';
+  btn.textContent = t.detail_reso_sent;
   markResonatedToday(selectedGhost.id);
   await updateDoc(doc(db, 'ghosts', selectedGhost.id), { resonances: increment(1) });
   Analytics.track('resonate');
 };
 
 window.setChainMarker = () => {
-  if (!userLat) { alert('Géolocalisation requise.'); return; }
+  if (!userLat) { alert(t.toast_gps_req); return; }
   const preview = document.getElementById('chainMapPreview');
   preview.style.display = 'block';
   preview.innerHTML = '<div id="chainMiniMap" style="width:100%;height:120px;"></div>';
@@ -3112,14 +3799,14 @@ window.depositGhost = async () => {
   const secret   = typeBtns[0]?.querySelector('.type-btn.active')?.dataset.val === 'secret';
   const err      = document.getElementById('depositError');
 
-  if (!message) { err.textContent = 'Écrivez un message.'; document.getElementById('depositMsg').focus(); return; }
-  if (message.length > 280) { err.textContent = 'Message trop long (280 caractères max).'; return; }
+  if (!message) { err.textContent = t.dep_err_msg; document.getElementById('depositMsg').focus(); return; }
+  if (message.length > 280) { err.textContent = t.dep_err_long; return; }
   if (!userLat) {
     // Tenter une dernière fois
     try { await getLocation(); } catch(e) { userLat = 44.6333; userLng = -1.1333; }
-    if (!userLat) { err.textContent = 'Géolocalisation requise — activez-la dans votre navigateur.'; return; }
+    if (!userLat) { err.textContent = t.dep_err_gps; return; }
   }
-  if (!navigator.onLine) { err.textContent = 'Vous êtes hors ligne — reconnectez-vous pour déposer.'; return; }
+  if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
 
   err.textContent = '';
   const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid, isExpired);
@@ -3131,7 +3818,7 @@ window.depositGhost = async () => {
 
   try {
     const { audioUrl, photoUrl, videoUrl } = await uploadMedia(currentUser.uid + '_' + Date.now());
-    if (hasMedia) depositBtn.textContent = '✓ Upload · Sauvegarde…';
+    if (hasMedia) depositBtn.textContent = t.dep_btn_saving;
     const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
     const chainNext = isPremium ? (window._chainNextCoords || null) : null;
     const openCondition = getSelectedCond();
@@ -3179,7 +3866,7 @@ window.depositGhost = async () => {
     depositBtn.disabled = false;
     clearAudio(); clearPhoto(); clearVideo();
     document.getElementById('depositSuccess').classList.add('show');
-    showToast('success', '👻 Votre trace est ancrée dans ce lieu…');
+    showToast('success', t.dep_success);
     // Notifier les utilisateurs qui ont des fantômes dans ce périmètre
     _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(() => {});
     playDepositSound();
@@ -3212,7 +3899,7 @@ window.sendReply = async () => {
     return;
   }
   if (msg.length > 280) {
-    showToast('warning', 'Message trop long (280 caractères max).');
+    showToast('warning', t.reply_long);
     return;
   }
   const btn = document.querySelector('#screenReply .btn-primary');
@@ -3232,7 +3919,7 @@ window.sendReply = async () => {
         type: 'reply',
         toUid: selectedGhost.authorUid,
         ghostId: selectedGhost.id,
-        ghostLocation: selectedGhost.location || 'Lieu inconnu',
+        ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: anon ? '👻 Anonyme' : (currentUser.displayName || 'Quelqu\'un'),
         notified: false,
         createdAt: serverTimestamp()
@@ -3240,11 +3927,11 @@ window.sendReply = async () => {
     }
     msgEl.value = '';
     updateReplyCount(msgEl);
-    showToast('success', '↩ Réponse déposée');
+    showToast('success', t.reply_sent);
     openGhost(selectedGhost.id);
     Analytics.track('reply_sent');
   } catch(e) {
-    showToast('error', 'Erreur — réessayez.');
+    showToast('error', t.toast_delete_err);
   } finally {
     if (btn) setLoading(btn, false, '↩ Laisser une réponse');
   }
@@ -3292,7 +3979,7 @@ async function _doOpenEnvelope() {
         readCountEl.style.display = 'block';
       }
 
-      if (wasFirst) showToast('success', '🥇 Vous êtes le premier à lire ce message !', 4000);
+      if (wasFirst) showToast('success', t.detail_first_toast, 4000);
       updateDoc(doc(db, 'ghosts', selectedGhost.id), {
         openCount: increment(1),
         ...(nowExpired ? { expired: true } : {})
@@ -3304,7 +3991,7 @@ async function _doOpenEnvelope() {
           authorUid: selectedGhost.authorUid || null
         }, { merge: true }).catch(() => {});
       });
-      if (nowExpired) showToast('info', '👻 Ce fantôme vient de disparaître — vous étiez le dernier à pouvoir le lire.', 5000);
+      if (nowExpired) showToast('info', t.detail_expired_last, 5000);
       // Notifier l'auteur si ce n'est pas soi-même
       if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser?.uid) {
         const lieu = selectedGhost.location || 'ce lieu';
@@ -3448,18 +4135,18 @@ function _checkDistanceThenOpen() {
   const origHint = hint.textContent;
 
   btn.disabled = true;
-  hint.textContent = '📡 Vérification de votre position…';
+  hint.textContent = t.env_gps_checking;
   // FIX: Timeout de sécurité si géoloc bloque trop longtemps
   const fallbackTimer = setTimeout(() => {
     btn.disabled = false;
-    hint.textContent = '⚠️ GPS trop long — déplacez-vous en extérieur et réessayez.';
+    hint.textContent = t.env_gps_slow;
     setTimeout(() => { hint.textContent = origHint; }, 4000);
   }, 8000);
 
   if (!navigator.geolocation) {
     clearTimeout(fallbackTimer);
     btn.disabled = false;
-    hint.textContent = '⚠️ GPS indisponible sur cet appareil.';
+    hint.textContent = t.env_gps_unavail;
     setTimeout(() => { hint.textContent = origHint; }, 4000);
     return;
   }
@@ -3496,7 +4183,7 @@ function _checkDistanceThenOpen() {
           showDistanceError(dist);
         }
       } else {
-        hint.textContent = '⚠️ GPS indisponible — activez-le et réessayez en extérieur.';
+        hint.textContent = t.env_gps_denied;
         setTimeout(() => { hint.textContent = origHint; }, 4000);
       }
     },
@@ -3628,7 +4315,7 @@ window.showScreen = (id, fromPopstate = false) => {
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
 window.toggleBusinessMode = () => {
   if (!isPremium) {
-    showToast('warning', '🔒 Mode Commerce réservé au Premium — entrez un code dans votre profil.', 4000);
+    showToast('warning', t.dep_biz_locked, 4000);
     setTimeout(() => { showScreen('screenProfile'); setNav('nav-profile'); }, 1500);
     return;
   }
@@ -3690,7 +4377,7 @@ window.toggleBusinessMode = () => {
         }
       });
     }, 100);
-    showToast('success', '🏪 Mode Commerce activé — visible à 50m de votre établissement');
+    showToast('success', t.dep_biz_toast);
   } else {
     // Retour au formulaire normal
     normalForm.style.display = 'block';
@@ -3722,13 +4409,13 @@ window.toggleBusinessMode = () => {
 
 window.selectCond = (btn) => {
   if (btn.dataset.cond === 'future' && !isPremium) {
-    showToast('info', '🔒 Fonctionnalité réservée au Premium — entrez un code dans votre profil.', 3500);
+    showToast('info', t.dep_cond_premium, 3500);
     return;
   }
   btn.closest('.cond-selector').querySelectorAll('.cond-btn').forEach(b => b.classList.remove('active'));
   // Vérif Premium pour "après un autre"
   if (btn.dataset.cond === 'after' && !isPremium) {
-    showToast('info', '🔒 Fonctionnalité réservée au Premium.', 3000);
+    showToast('info', t.dep_cond_premium, 3000);
     return;
   }
   btn.classList.add('active');
@@ -3971,9 +4658,9 @@ window.hideDepositBadge = () => {
     if (dy > MIN_PULL && !triggered) {
       triggered = true;
       spinner.classList.add('spin');
-      if (txt) txt.textContent = 'Actualisation…';
+      if (txt) txt.textContent = t.misc_ptr_refreshing;
     } else if (!triggered && txt) {
-      txt.textContent = 'Tirer pour actualiser';
+      txt.textContent = t.misc_ptr_pull;
     }
   }, { passive: true });
 
@@ -3987,7 +4674,7 @@ window.hideDepositBadge = () => {
       loadNearbyGhosts().finally(() => {
         if (ind) ind.classList.remove('visible');
         if (spinner) spinner.classList.remove('spin');
-        if (txt) txt.textContent = 'Relâcher pour actualiser';
+        if (txt) txt.textContent = t.misc_ptr_release;
       });
     } else {
       if (ind) ind.classList.remove('visible');
@@ -4080,7 +4767,7 @@ function checkForNewGhosts(newCount) {
     const diff = newCount - _lastGhostCount;
     const b = document.getElementById('depositBadge');
     // On montre plutôt sur le radar, mais on peut signaler
-    showToast('info', `👻 ${diff} nouveau${diff>1?'x':''} fantôme${diff>1?'s':''} à proximité`);
+    showToast('info', t.radar_new_ghost.replace('{n}', diff).replace('{x}', diff>1?'x':'').replace('{s}', diff>1?'s':''));
   }
   _lastGhostCount = newCount;
 }
@@ -4184,7 +4871,7 @@ window.wizardNext = (step) => {
         el.style.borderColor = 'rgba(255,100,100,.5)';
         setTimeout(() => el.style.borderColor = '', 1500);
         el.focus();
-        showToast('warning', '⚠️ Ajoutez un titre à votre offre.');
+        showToast('warning', t.dep_biz_title_err);
         return;
       }
       // Construire le message auto depuis les champs commerce
@@ -4223,7 +4910,7 @@ window.wizardNext = (step) => {
     // Auto-remplir le nom du lieu si vide
     const locInput = document.getElementById('depositLocation');
     if (userLat && !locInput.value) {
-      locInput.placeholder = 'Recherche du lieu…';
+      locInput.placeholder = t.dep_loc_searching;
       reverseGeocode(userLat, userLng).then(name => {
         if (name && !locInput.value) {
           locInput.value = name;
@@ -4411,6 +5098,11 @@ function createParticles() {
   }
 }
 createParticles();
+
+// Initialiser les boutons langue
+document.querySelectorAll('.lang-btn').forEach(b => {
+  b.classList.toggle('active', b.dataset.lang === _currentLang);
+});
 
 // Fermer openLimitModal au clic fond
 document.addEventListener('click', (e) => {
@@ -4697,6 +5389,8 @@ button, [role="button"] {
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;}
 .stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--ether);}
 .stat-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.5px;margin-top:2px;}
+.lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
+.lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
 .logout-btn{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,100,100,.3);border-radius:13px;color:rgba(255,100,100,.7);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-top:8px;}
 .logout-btn:hover{background:rgba(255,100,100,.08);}
 
@@ -5458,8 +6152,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
 <!-- Bannière mise à jour -->
 <div class="update-banner" id="updateBanner" role="status" aria-live="polite" style="display:none;">
-  ✨ Mise à jour disponible
-  <button class="update-banner-btn" onclick="applyUpdate()">Actualiser</button>
+  <span data-i18n="misc_update_banner">🔄 Nouvelle version disponible</span>
+  <button class="update-banner-btn" data-i18n="misc_update_btn" onclick="applyUpdate()">Mettre à jour</button>
 </div>
 
 <div class="particles" id="particles" aria-hidden="true"></div>
@@ -6152,9 +6846,15 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <span style="font-size:11px;color:var(--spirit-dim);">›</span>
         </button>
       </div>
+      <!-- Sélecteur de langue -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;">
+        <span data-i18n="profile_lang_label" style="font-size:12px;color:var(--spirit-dim);">🌐 Langue / Language</span>
+        <button class="lang-btn" data-lang="fr" onclick="setLang('fr')" style="padding:4px 12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--warm-dim);cursor:pointer;transition:all .2s;">FR</button>
+        <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="padding:4px 12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--warm-dim);cursor:pointer;transition:all .2s;">EN</button>
+      </div>
       <!-- Actions danger -->
       <div style="display:flex;gap:12px;justify-content:center;padding-bottom:24px;">
-        <button onclick="logout()" id="logoutBtn" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;">🚪 Déconnexion</button>
+        <button onclick="logout()" id="logoutBtn" data-i18n="profile_logout" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;">🚪 Déconnexion</button>
         <span style="color:var(--border);font-size:12px;line-height:28px;">·</span>
         <button id="deleteBtn" onclick="deleteMyGhosts()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.35);padding:6px 12px;border-radius:8px;">🗑 Tout supprimer</button>
       </div>
@@ -6233,20 +6933,20 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav" id="bottomNav" style="display:none;" aria-label="Navigation principale">
     <div class="nav-item active" id="nav-radar" onclick="showScreen('screenRadar');setNav('nav-radar')" role="button" tabindex="0" aria-label="Radar" aria-current="page" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="nav-icon" aria-hidden="true">🌫️</div><span>Radar</span>
+      <div class="nav-icon" aria-hidden="true">🌫️</div><span data-i18n="nav_radar">Radar</span>
     </div>
     <div class="nav-item" id="nav-map" onclick="showScreen('screenMap');setNav('nav-map')" role="button" tabindex="0" aria-label="Carte" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="nav-icon" aria-hidden="true">🗺️</div><span>Carte</span>
+      <div class="nav-icon" aria-hidden="true">🗺️</div><span data-i18n="nav_map">Carte</span>
     </div>
     <div class="nav-item" id="nav-deposit" onclick="showScreen('screenDeposit');setNav('nav-deposit');hideDepositBadge()" role="button" tabindex="0" aria-label="Déposer un fantôme" onkeydown="if(event.key==='Enter')this.click()">
       <div style="position:relative;display:inline-block;">
         <div class="nav-icon" aria-hidden="true">👻</div>
         <div class="nav-badge" id="depositBadge" aria-label="Nouveau">!</div>
       </div>
-      <span>Déposer</span>
+      <span data-i18n="nav_deposit">Déposer</span>
     </div>
     <div class="nav-item" id="nav-profile" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Mon profil" onkeydown="if(event.key==='Enter')this.click()">
-      <div class="nav-icon" aria-hidden="true">🌑</div><span>Profil</span>
+      <div class="nav-icon" aria-hidden="true">🌑</div><span data-i18n="nav_profile">Profil</span>
     </div>
   </nav>
 </div>
