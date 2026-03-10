@@ -2672,10 +2672,10 @@ window.openGhost = async (id) => {
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
 
-  // FIX: Guard contre lat/lng manquants
-  const ghostDist = (selectedGhost.distance != null) ? selectedGhost.distance :
-    (selectedGhost.lat && selectedGhost.lng && userLat ?
-      distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng) : 0);
+  // FIX: Toujours recalculer depuis la position GPS actuelle (évite distances périmées)
+  const ghostDist = (selectedGhost.lat && selectedGhost.lng && userLat)
+    ? distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng)
+    : (selectedGhost.distance || 0);
 
   document.getElementById('sealedHint').textContent = selectedGhost.anonymous
     ? 'De 👻 Anonyme · ' + formatDistance(ghostDist)
