@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="fr" style="background:#060608">
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
 <!-- PERF: viewport sans maximum-scale (nuit à l'accessibilité) ; géré en JS pour éviter zoom sur input iOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="description" content="Ghostub — des messages invisibles ancrés dans les lieux réels. Découvrez des messages secrets autour de vous.">
-<meta name="theme-color" content="#060608" media="(prefers-color-scheme: dark)"><meta name="theme-color" content="#060608">
+<meta name="theme-color" content="#060608" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#e8e7f0" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -880,6 +880,7 @@ document.addEventListener('visibilitychange', () => {
 
 let _visibilityListenerAdded = false;
 
+let _notifIntervalsStarted = false;
 function _startNotifIntervals() {
   if (_notifIntervalsStarted) return; // déjà démarrés, pas de doublon
   _notifIntervalsStarted = true;
@@ -1519,10 +1520,6 @@ function openReportModal() {
 }
 window.openReportModal = openReportModal;
 
-function closeReportModal(e) {
-  if (e && e.target !== document.getElementById('reportModal')) return;
-  closeModal('reportModal');
-}
 window.closeReportModal = (e) => {
   if (e && e.target !== document.getElementById('reportModal')) return;
   closeModal('reportModal');
@@ -2117,7 +2114,7 @@ window.toggleFavoritesList = async () => {
   content.innerHTML = favs.map(f => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:22px;flex-shrink:0;">${escapeHTML(f.emoji)}</span>
-      <div style="flex:1;min-width:0;" onclick="openGhost('${escapeHTML(f.id)}')" style="cursor:pointer;">
+      <div style="flex:1;min-width:0;cursor:pointer;" onclick="openGhost('${escapeHTML(f.id)}')">
         <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
         <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
       </div>
@@ -2672,10 +2669,10 @@ window.openGhost = async (id) => {
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
 
-  // FIX: Toujours recalculer depuis la position GPS actuelle (évite distances périmées)
-  const ghostDist = (selectedGhost.lat && selectedGhost.lng && userLat)
-    ? distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng)
-    : (selectedGhost.distance || 0);
+  // FIX: Guard contre lat/lng manquants
+  const ghostDist = (selectedGhost.distance != null) ? selectedGhost.distance :
+    (selectedGhost.lat && selectedGhost.lng && userLat ?
+      distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng) : 0);
 
   document.getElementById('sealedHint').textContent = selectedGhost.anonymous
     ? 'De 👻 Anonyme · ' + formatDistance(ghostDist)
@@ -3244,15 +3241,8 @@ async function _doOpenEnvelope() {
       const newOpenCount = (selectedGhost.openCount || 0) + 1;
       const maxOpen = selectedGhost.maxOpenCount || 0;
       const nowExpired = maxOpen > 0 && newOpenCount >= maxOpen;
-      // 🥇 Premier à lire : lire openCount réel depuis Firestore
-      let realOpenCount = 0;
-      try {
-        const ghostSnap = await getDoc(doc(db, 'ghosts', selectedGhost.id));
-        realOpenCount = ghostSnap.exists() ? (ghostSnap.data().openCount || 0) : 0;
-      } catch(e) {
-        realOpenCount = selectedGhost.openCount || 0;
-      }
-      const wasFirst = realOpenCount === 0;
+      // 🥇 Premier à lire : openCount était 0 avant cette ouverture
+      const wasFirst = !selectedGhost.openCount || selectedGhost.openCount === 0;
       if (wasFirst) {
         const firstCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0') + 1;
         localStorage.setItem('ghostub_first_reader', firstCount);
@@ -3265,7 +3255,8 @@ async function _doOpenEnvelope() {
         if (wasFirst) {
           readCountEl.innerHTML = `<span style="color:rgba(100,220,160,.9);">🥇 Vous êtes le premier à lire ce message</span>`;
         } else {
-          readCountEl.innerHTML = `<span style="color:var(--spirit-dim);">👁 ${realOpenCount} personne${realOpenCount > 1 ? 's' : ''} ${realOpenCount > 1 ? 'ont' : 'a'} lu ce message avant vous</span>`;
+          const prev = selectedGhost.openCount || 0;
+          readCountEl.innerHTML = `<span style="color:var(--spirit-dim);">👁 ${prev} personne${prev > 1 ? 's' : ''} ${prev > 1 ? 'ont' : 'a'} lu ce message avant vous</span>`;
         }
         readCountEl.style.display = 'block';
       }
@@ -3404,7 +3395,7 @@ window.openEnvelope = async () => {
   if (!selectedGhost) return;
   // Vérifier si déjà ouvert (pas de vérif distance pour relecture)
   const revealed = document.getElementById('envelopeContent');
-  if (revealed && revealed.style.display !== 'none') { _doOpenEnvelope(); return; }
+  if (revealed && revealed.style.display !== 'none') return; // déjà ouvert — ne pas reincrémenter
 
   // ── Vérifier limite journalière AVANT la distance ───────
   const remaining = await remainingOpensToday();
@@ -6299,4 +6290,3 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 <!-- TOAST DÉCOUVERTE -->
 <div class="discovery-toast" id="discoveryToast" role="status" aria-live="polite" aria-atomic="true">
   <span class="discovery-toast-icon"
-
