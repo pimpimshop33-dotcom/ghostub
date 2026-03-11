@@ -194,6 +194,8 @@ const LANGS = {
     profile_premium_label: '👑 Spectre Premium',
     profile_premium_sub: 'Toutes les fonctionnalités débloquées',
     profile_free_label: 'Plan gratuit',
+    profile_premium_plan: 'Spectre Premium',
+    profile_premium_sub: 'Toutes les fonctionnalités débloquées',
     profile_free_plan: 'Plan gratuit',
     profile_free_sub: 'Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium',
     profile_code_placeholder: 'Code Premium',
@@ -588,6 +590,8 @@ const LANGS = {
     profile_premium_label: '👑 Premium Spectre',
     profile_premium_sub: 'All features unlocked',
     profile_free_label: 'Free plan',
+    profile_premium_plan: 'Spectre Premium',
+    profile_premium_sub: 'All features unlocked',
     profile_free_plan: 'Free plan',
     profile_free_sub: 'Video 🎥 · Chain 🔗 · Commerce Mode 🏪 — Premium only',
     profile_code_placeholder: 'Premium code',
@@ -2299,7 +2303,7 @@ function updatePremiumUI() {
   const codeSection = document.getElementById('codeSection');
   if (!planEl) return;
   if (isPremium) {
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 Spectre Premium</div><div style="font-size:13px;color:var(--warm-dim);">Toutes les fonctionnalités débloquées</div>';
+    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
   } else {
     planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;">' + t.profile_free_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_free_sub + '</div>';
@@ -2555,7 +2559,7 @@ function applyTheme(theme) {
   // Active le bon
   document.querySelector('meta[name="theme-color"]:not([media])')?.remove();
   const btn = document.getElementById('themeToggleBtn');
-  if (btn) { const lbl = document.getElementById('themeToggleLabel'); if (lbl) lbl.textContent = isLight ? 'Mode nuit' : 'Mode jour'; const ico = btn.querySelector('span'); if (ico) ico.textContent = isLight ? '🌙' : '☀️'; }
+  if (btn) { const lbl = document.getElementById('themeToggleLabel'); if (lbl) lbl.textContent = isLight ? t.profile_night_mode : t.profile_day_mode; const ico = btn.querySelector('span'); if (ico) ico.textContent = isLight ? '🌙' : '☀️'; }
   localStorage.setItem('ghostub_theme', theme);
 }
 
@@ -3076,7 +3080,7 @@ window.loadEmpreinteMap = async () => {
 
     if (allPoints.length === 0) {
       if (loader) loader.style.display = 'flex';
-      loader.innerHTML = '<div style="font-size:32px;">👻</div><div style="font-size:12px;color:var(--spirit-dim);text-align:center;">Votre empreinte est vide.<br>Déposez ou découvrez des fantômes !</div>';
+      loader.innerHTML = '<div style="font-size:32px;">👻</div><div style="font-size:12px;color:var(--spirit-dim);text-align:center;">' + t.profile_map_empty + '</div>';
       return;
     }
 
@@ -6981,7 +6985,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
         <button id="themeToggleBtn" onclick="toggleTheme()" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);text-align:left;">
           <span style="font-size:16px;">🌙</span>
-          <span id="themeToggleLabel" style="flex:1;">Mode jour</span>
+          <span id="themeToggleLabel" style="flex:1;" data-i18n="profile_day_mode">Mode jour</span>
           <span style="font-size:11px;color:var(--spirit-dim);">›</span>
         </button>
         <button id="notifBtn" onclick="enableNotifications()" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);text-align:left;">
