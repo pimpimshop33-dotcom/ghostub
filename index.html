@@ -93,6 +93,9 @@ const LANGS = {
     detail_first_reader: '🥇 Vous êtes le premier à lire ce message',
     detail_location_unknown: 'Lieu inconnu',
     detail_sealed_label: 'Une trace vous attend ici',
+    detail_anonymous: 'Anonyme',
+    detail_from_you: 'de vous',
+    detail_open_aria: 'Ouvrir le fantôme et révéler le message',
     detail_sealed_hint: 'Approchez-vous pour briser le sceau',
     detail_of_anon: 'De 👻 Anonyme · ',
     detail_of: 'De ',
@@ -519,6 +522,9 @@ const LANGS = {
     // Detail
     detail_location_unknown: 'Unknown place',
     detail_sealed_label: 'A trace is waiting here',
+    detail_anonymous: 'Anonymous',
+    detail_from_you: 'from you',
+    detail_open_aria: 'Open the ghost and reveal the message',
     detail_sealed_hint: 'Move closer to break the seal',
     detail_of_anon: 'From 👻 Anonymous · ',
     detail_of: 'From ',
@@ -3659,10 +3665,11 @@ window.openGhost = async (id) => {
     (selectedGhost.lat && selectedGhost.lng && userLat ?
       distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng) : 0);
 
-  document.getElementById('sealedHint').textContent = selectedGhost.anonymous
-    ? 'De 👻 Anonyme · ' + formatDistance(ghostDist)
-    : 'De ' + escapeHTML(selectedGhost.author || '') + ' · ' + formatDistance(ghostDist);
-  document.getElementById('detailDistance').textContent = formatDistance(ghostDist) + ' de vous';
+  const _authorLabel = selectedGhost.anonymous
+    ? '👻 ' + t.detail_anonymous
+    : escapeHTML(selectedGhost.author || '');
+  document.getElementById('sealedHint').textContent = _authorLabel + ' · ' + formatDistance(ghostDist);
+  document.getElementById('detailDistance').textContent = formatDistance(ghostDist) + ' ' + t.detail_from_you;
 
   const isOwner = currentUser && selectedGhost && (
     selectedGhost.authorUid === currentUser.uid ||
@@ -6636,8 +6643,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
             <div class="envelope-sealed-hint" id="sealedHint" data-i18n="detail_sealed_hint">Approchez-vous pour briser le sceau</div>
           </div>
         </div>
-        <button class="envelope-open-btn" id="envelopeOpenBtn" onclick="openEnvelope()" aria-label="Ouvrir le fantôme et révéler le message">
-          <span>✉ Briser le sceau</span>
+        <button class="envelope-open-btn" id="envelopeOpenBtn" onclick="openEnvelope()" data-i18n-aria-label="detail_open_aria">
+          <span data-i18n="detail_open_btn">✉ Briser le sceau</span>
         </button>
       </div>
       <div id="envelopeContent" style="display:none;">
