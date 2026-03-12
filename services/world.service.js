@@ -131,7 +131,11 @@ const WorldService = {
     const { collection, getDocs, query, where, limit } = this._fns;
 
     if (!lat) {
-      return getDocs(collection(this._db, 'ghosts'));
+      return getDocs(query(
+        collection(this._db, 'ghosts'),
+        where('expired', '==', false),
+        limit(QUERY_LIMIT)
+      ));
     }
 
     const prefix = encodeGeohash(lat, lng, GEOHASH_QUERY_PRECISION);
@@ -147,12 +151,18 @@ const WorldService = {
       if (snap.size > 0) {
         return snap;
       }
-      console.debug('[WorldService] geohash vide, fallback global');
+      console.debug('[WorldService] geohash vide, fallback filtre expired');
     } catch (e) {
       console.warn('[WorldService] getVisibleGhosts fallback:', e.code);
     }
 
-    return getDocs(collection(this._db, 'ghosts'));
+    // Fallback : fantômes sans geohash4 (créés avant le fix geohash)
+    // On filtre sur expired=false pour respecter les règles Firestore
+    return getDocs(query(
+      collection(this._db, 'ghosts'),
+      where('expired', '==', false),
+      limit(QUERY_LIMIT)
+    ));
   },
 
   async registerPresence(ghostId, isNewDiscovery = false) {
