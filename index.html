@@ -1110,6 +1110,16 @@ function escapeHTML(str) {
 
 const distanceMeters = (lat1, lng1, lat2, lng2) => LocationService.distanceMeters(lat1, lng1, lat2, lng2);
 
+// Vérifie si un fantôme est expiré selon sa durée
+function isExpired(g) {
+  if (g.expired) return true;
+  if (!g.createdAt) return false;
+  const durations = { '24h': 86_400_000, '7 jours': 604_800_000, '1 mois': 2_592_000_000 };
+  const maxAge = durations[g.duration];
+  if (!maxAge) return false;
+  return (Date.now() - g.createdAt.seconds * 1000) > maxAge;
+}
+
 // ── GEOHASH NEIGHBORS ────────────────────────────────────
 // Calcule les 8 cellules voisines d'un geohash — nécessaire pour couvrir
 // les bords de cellule (un fantôme à 100m peut être dans une cellule adjacente)
