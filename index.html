@@ -2640,6 +2640,149 @@ function buildShareLink(ghost) {
   return base + '?' + params.toString();
 }
 
+
+// ── GHOST CARD GENERATOR ──────────────────────────────────
+window.generateGhostCard = async () => {
+  if (!selectedGhost) return;
+  const btn = document.getElementById('ghostCardBtn');
+  if (btn) { btn.textContent = '⏳ Génération…'; btn.disabled = true; }
+
+  try {
+    const W = 1080, H = 1920;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // ── Fond ─────────────────────────────────────────────
+    const bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0,   '#06040e');
+    bg.addColorStop(0.5, '#0a0818');
+    bg.addColorStop(1,   '#04030c');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Étoiles
+    const rng = (s) => { let x = Math.sin(s) * 10000; return x - Math.floor(x); };
+    for (let i = 0; i < 180; i++) {
+      const x = rng(i * 7.3) * W;
+      const y = rng(i * 13.7) * H;
+      const r = rng(i * 3.1) * 1.8 + 0.3;
+      const a = rng(i * 5.9) * 0.6 + 0.2;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,210,255,${a})`;
+      ctx.fill();
+    }
+
+    // Halo central
+    const halo = ctx.createRadialGradient(W/2, H*0.42, 0, W/2, H*0.42, 420);
+    halo.addColorStop(0,   'rgba(140,100,255,0.18)');
+    halo.addColorStop(0.5, 'rgba(100,80,200,0.07)');
+    halo.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(0, 0, W, H);
+
+    // Ligne déco haut
+    ctx.strokeStyle = 'rgba(168,180,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(80, 140); ctx.lineTo(W-80, 140); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(80, 146); ctx.lineTo(W-80, 146); ctx.stroke();
+
+    // ── Logo / app name ──────────────────────────────────
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(168,180,255,0.5)';
+    ctx.font = '500 38px "Instrument Sans", sans-serif';
+    ctx.letterSpacing = '6px';
+    ctx.fillText('GHOSTUB', W/2, 110);
+    ctx.letterSpacing = '0px';
+
+    // ── Ghost emoji central ───────────────────────────────
+    ctx.font = '200px serif';
+    ctx.fillText('👻', W/2, H*0.42);
+
+    // ── Message principal ─────────────────────────────────
+    ctx.fillStyle = 'rgba(230,225,255,0.92)';
+    ctx.font = 'italic 72px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText('J\u2019ai brisé un sceau', W/2, H*0.56);
+
+    ctx.fillStyle = 'rgba(168,180,255,0.6)';
+    ctx.font = 'italic 52px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText('dans ce lieu…', W/2, H*0.56 + 80);
+
+    // ── Lieu ─────────────────────────────────────────────
+    const lieu = selectedGhost.location || 'Lieu inconnu';
+    const lieuShort = lieu.length > 38 ? lieu.substring(0, 36) + '…' : lieu;
+    ctx.fillStyle = 'rgba(255,240,200,0.75)';
+    ctx.font = '500 44px "Instrument Sans", sans-serif';
+    ctx.fillText('📍 ' + lieuShort, W/2, H*0.67);
+
+    // ── Date ─────────────────────────────────────────────
+    const now = new Date();
+    const dateStr = now.toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+    ctx.fillStyle = 'rgba(168,180,255,0.45)';
+    ctx.font = '36px "Instrument Sans", sans-serif';
+    ctx.fillText(dateStr, W/2, H*0.74);
+
+    // ── Coordonnées ───────────────────────────────────────
+    if (selectedGhost.lat && selectedGhost.lng) {
+      const lat = selectedGhost.lat.toFixed(4);
+      const lng = selectedGhost.lng.toFixed(4);
+      ctx.fillStyle = 'rgba(120,130,180,0.4)';
+      ctx.font = '500 30px "Instrument Sans", sans-serif';
+      ctx.letterSpacing = '2px';
+      ctx.fillText(`${lat}° N   ${lng}° E`, W/2, H*0.79);
+      ctx.letterSpacing = '0px';
+    }
+
+    // Ligne déco bas
+    ctx.strokeStyle = 'rgba(168,180,255,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(80, H - 160); ctx.lineTo(W - 80, H - 160); ctx.stroke();
+
+    // CTA bas
+    ctx.fillStyle = 'rgba(168,180,255,0.35)';
+    ctx.font = '34px "Instrument Sans", sans-serif';
+    ctx.fillText('Viens découvrir ce qui t’attend', W/2, H - 108);
+    ctx.fillStyle = 'rgba(168,180,255,0.2)';
+    ctx.font = '28px "Instrument Sans", sans-serif';
+    ctx.fillText('ghostub.app', W/2, H - 65);
+
+    // ── Export ────────────────────────────────────────────
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'ghostcard.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: '👻 Ghost Card — Ghostub',
+            text: 'J\u2019ai brisé un sceau ici…'
+          });
+          Analytics.track('ghost_card_shared');
+        } catch(e) {
+          if (e.name !== 'AbortError') _downloadGhostCard(canvas);
+        }
+      } else {
+        _downloadGhostCard(canvas);
+      }
+      if (btn) { btn.textContent = '👻 Créer une Ghost Card'; btn.disabled = false; }
+    }, 'image/png');
+
+  } catch(e) {
+    console.warn('generateGhostCard:', e);
+    if (btn) { btn.textContent = '👻 Créer une Ghost Card'; btn.disabled = false; }
+  }
+};
+
+function _downloadGhostCard(canvas) {
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = 'ghostcard-' + Date.now() + '.png';
+  a.click();
+  Analytics.track('ghost_card_downloaded');
+}
+
 function openShareModal() {
   if (!selectedGhost) return;
   const link = buildShareLink(selectedGhost);
@@ -5981,6 +6124,8 @@ button, [role="button"] {
 .detail-badge{display:flex;align-items:center;gap:5px;background:var(--ghost);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--warm-dim);}
 .resonance-btn{width:100%;padding:13px;background:var(--ghost);border:1px solid var(--border-bright);border-radius:13px;color:var(--spirit);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;touch-action:manipulation;}
 .resonance-btn:hover{background:var(--spirit-glow);}
+.ghost-card-btn{width:100%;padding:12px;background:linear-gradient(135deg,rgba(168,180,255,.1),rgba(100,220,160,.06));border:1px solid rgba(168,180,255,.3);border-radius:13px;color:rgba(200,210,255,.85);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .25s;margin-bottom:8px;touch-action:manipulation;letter-spacing:.2px;}
+.ghost-card-btn:active{transform:scale(0.98);background:rgba(168,180,255,.18);}
 .resonance-btn.resonated{color:var(--ether);border-color:var(--spirit);background:rgba(168,180,255,.1);}
 .reply-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;margin-bottom:7px;}
 .reply-text{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--warm-dim);line-height:1.6;}
@@ -6018,23 +6163,6 @@ button, [role="button"] {
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;}
 .stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--ether);}
 .stat-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.5px;margin-top:2px;}
-/* ── EMPREINTE MYSTIQUE ────────────────────────────────── */
-.empreinte-header{text-align:center;padding:16px 0 20px;}
-.empreinte-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--ether);margin-bottom:4px;}
-.empreinte-sub{font-size:11px;color:var(--spirit-dim);letter-spacing:.6px;}
-.empreinte-trio{display:flex;align-items:flex-end;justify-content:center;gap:0;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
-.empreinte-stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:18px 8px 14px;text-align:center;cursor:default;transition:background .2s;}
-.empreinte-stat:active{background:rgba(168,180,255,.06);}
-.empreinte-stat-center{border-left:1px solid var(--border);border-right:1px solid var(--border);background:linear-gradient(180deg,rgba(168,180,255,.05) 0%,rgba(168,180,255,.01) 100%);padding-top:22px;padding-bottom:18px;}
-.empreinte-num{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--ether);line-height:1;}
-.empreinte-num-big{font-size:46px;}
-.empreinte-icon{font-size:16px;margin:4px 0 2px;opacity:.7;}
-.empreinte-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.8px;text-transform:uppercase;}
-.empreinte-row{display:flex;gap:8px;margin-bottom:16px;}
-.empreinte-pill{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-align:center;transition:background .2s;}
-.empreinte-pill:active{background:rgba(168,180,255,.06);}
-.empreinte-pill-num{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ether);line-height:1;}
-.empreinte-pill-label{font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;}
 .lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
 .lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
 .logout-btn{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,100,100,.3);border-radius:13px;color:rgba(255,100,100,.7);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-top:8px;}
@@ -7041,6 +7169,9 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <button class="resonance-btn" id="resonanceBtn" onclick="resonate()">
           <span id="resonanceCount">✦ Résonner</span>
         </button>
+        <button class="ghost-card-btn" id="ghostCardBtn" onclick="generateGhostCard()" aria-label="Créer une Ghost Card partageable">
+          <span>👻 Créer une Ghost Card</span>
+        </button>
         <button class="btn-secondary" id="secretBtn" onclick="toggleSecret()" aria-label="Passer ce fantôme en mode secret" style="display:none;margin-bottom:8px;font-size:13px;padding:11px;">🔮 Passer en secret</button>
         <button class="share-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));border:1px solid rgba(168,180,255,.4);color:rgba(168,180,255,.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
         <button class="btn-secondary" id="ghostReplyBtn" onclick="showScreen('screenReply')" style="margin-bottom:8px;" data-i18n="detail_reply_ghost_btn">↩ Laisser une réponse ici</button>
@@ -7393,42 +7524,32 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div style="font-size:10px;color:var(--spirit-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;" data-i18n="profile_rank">Rang</div>
       </div>
 
-      <!-- ── MON EMPREINTE ──────────────────────────────── -->
-      <div class="empreinte-header">
-        <div class="empreinte-title">Mon empreinte</div>
-        <div class="empreinte-sub">Les traces que tu laisses dans le monde</div>
-      </div>
-      <!-- Trio principal -->
-      <div class="empreinte-trio">
-        <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
-          <div class="empreinte-num" id="statDeposited">0</div>
-          <div class="empreinte-icon">👻</div>
-          <div class="empreinte-label">Invoqués</div>
+      <!-- ── MES STATS ─────────────────────────────────── -->
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:8px;" data-i18n="profile_stats_label">Mes stats</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <div class="stat-card" role="listitem" onclick="toggleDiscoveryHistory()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir les fantômes découverts">
+          <div class="stat-num" id="statDiscovered" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_discovered">Découverts</div>
         </div>
-        <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
-          <div class="empreinte-num empreinte-num-big" id="statDiscovered">0</div>
-          <div class="empreinte-icon">🔮</div>
-          <div class="empreinte-label">Sceaux brisés</div>
+        <div class="stat-card" role="listitem" onclick="toggleDepositedList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes fantômes déposés">
+          <div class="stat-num" id="statDeposited" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_deposited">Déposés</div>
         </div>
-        <div class="empreinte-stat" role="listitem">
-          <div class="empreinte-num" id="statResonances">0</div>
-          <div class="empreinte-icon">✦</div>
-          <div class="empreinte-label">Résonances</div>
+        <div class="stat-card" role="listitem" onclick="toggleFavoritesList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes favoris">
+          <div class="stat-num" id="statFavorites" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_favorites">Favoris ★</div>
         </div>
-      </div>
-      <!-- Ligne secondaire -->
-      <div class="empreinte-row">
-        <div class="empreinte-pill" onclick="toggleFavoritesList()" style="cursor:pointer;" aria-label="Mes favoris">
-          <span class="empreinte-pill-num" id="statFavorites">0</span>
-          <span class="empreinte-pill-label">★ Favoris</span>
+        <div class="stat-card" role="listitem" style="padding:12px 8px;">
+          <div class="stat-num" id="statResonances" style="font-size:22px;">0</div>
+          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_resonances">Résonances ✨</div>
         </div>
-        <div class="empreinte-pill" style="border-color:rgba(100,220,160,.25);background:rgba(100,220,160,.04);">
-          <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(100,220,160,.9);">0</span>
-          <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);">🥇 Premier lecteur</span>
+        <div class="stat-card" role="listitem" style="padding:12px 8px;background:linear-gradient(135deg,rgba(100,220,160,.06),rgba(100,220,160,.02));border-color:rgba(100,220,160,.2);">
+          <div class="stat-num" id="statFirstReader" style="font-size:22px;color:rgba(100,220,160,.9);">0</div>
+          <div class="stat-label" style="font-size:10px;color:rgba(100,220,160,.6);" data-i18n="profile_stat_first">🥇 Premier à lire</div>
         </div>
-        <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(255,200,80,.25);background:rgba(255,200,80,.04);" aria-label="Classement">
-          <span style="font-size:16px;">🏆</span>
-          <span class="empreinte-pill-label" style="color:rgba(255,200,80,.7);">Classement</span>
+        <div class="stat-card" role="listitem" onclick="toggleLeaderboard()" style="cursor:pointer;padding:12px 8px;background:linear-gradient(135deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border-color:rgba(255,200,80,.15);" aria-label="Voir le classement">
+          <div class="stat-num" style="font-size:22px;">🏆</div>
+          <div class="stat-label" style="font-size:10px;color:rgba(255,200,80,.6);" data-i18n="profile_stat_leaderboard">Classement</div>
         </div>
       </div>
       <!-- Panel classement inline -->
