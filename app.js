@@ -3663,7 +3663,6 @@ function skeletonGhostList() {
 const POETIC_ADJ  = ['silencieux','nocturne','perdu','oublié','errant','pâle','lointain','secret','invisible','sombre','brumeux','éphémère'];
 const POETIC_NOUN = ['passant','souffle','murmure','reflet','voyageur','ombre','témoin','spectre','visiteur','veilleur','rêveur','fantôme'];
 const POETIC_TIME = ["du soir","de l'aube","d'hiver","de minuit","d'automne","du crépuscule","de mars","sans nom","sans visage","d'un instant"];
-const POETIC_TIME_EN = ["of the evening","of the dawn","of winter","of midnight","of autumn","of dusk","of march","with no name","with no face","of a moment"];
 
 // Tableaux EN — même index que FR pour cohérence (même ghost = même "persona")
 const POETIC_ADJ_EN  = ['silent','nocturnal','lost','forgotten','wandering','pale','distant','secret','invisible','somber','misty','fleeting'];
