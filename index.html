@@ -36,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=15"></script>
+<script type="module" src="app.js?v=16"></script>
 
 <link rel="stylesheet" href="style.css?v=2">
 </head>
@@ -567,60 +567,79 @@
           <div id="photoPreview"></div>
         </div>
         <!-- VIDÉO PREMIUM — toujours visible -->
-        <div class="form-group" id="step3VideoWrap" style="margin-bottom:12px;position:relative;">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Vidéo (optionnel)</span>
-            <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
-          </label>
-          <button class="media-btn" onclick="triggerVideo()" type="button" aria-label="Ajouter une vidéo" style="${''}">
-            <span class="media-icon" aria-hidden="true">🎥</span>
-            <span data-i18n="dep_video_btn_short">Ajouter une vidéo</span>
-            <span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span>
+        <div class="form-group" id="step3VideoWrap" style="margin-bottom:12px;">
+          <!-- Aperçu Free — même design que cond-btn -->
+          <button id="videoPreview_free" class="cond-btn" onclick="showScreen('screenProfile');setNav('nav-profile')" type="button" style="display:none;width:100%;">
+            <span class="cond-btn-icon">🎥</span>
+            <span class="cond-btn-text">
+              <div class="cond-btn-label">Vidéo <span style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;">✦ Premium</span></div>
+              <div class="cond-btn-sub">Jusqu’à 20 sec · s’ouvre seulement sur place</div>
+            </span>
           </button>
-          <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
-          <div id="videoPreview"></div>
-
-        </div>
-        <!-- CHAÎNE DE FANTÔMES PREMIUM — masquée en mode Commerce -->
-        <div id="step3ChainWrap" class="form-group" style="margin-bottom:14px;position:relative;" data-section="chainSection">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>🔗 Chaîne de fantômes</span>
-            <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);" aria-label="Fonctionnalité Premium">👑 Premium</span>
-          </label>
-          <div id="chainContent" style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;">
-            <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
-            <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
-              <span class="media-icon" aria-hidden="true">🗺</span>
-              <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
+          <!-- Contenu Premium -->
+          <div id="videoContent_premium">
+            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>Vidéo (optionnel)</span>
+              <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
+            </label>
+            <button class="media-btn" onclick="triggerVideo()" type="button" aria-label="Ajouter une vidéo" style="${''}">
+              <span class="media-icon" aria-hidden="true">🎥</span>
+              <span data-i18n="dep_video_btn_short">Ajouter une vidéo</span>
+              <span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span>
             </button>
-            <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
+            <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
+            <div id="videoPreview"></div>
           </div>
-
+        </div>
+        <!-- CHAÎNE DE FANTÔMES PREMIUM -->
+        <div id="step3ChainWrap" class="form-group" style="margin-bottom:14px;" data-section="chainSection">
+          <!-- Aperçu Free -->
+          <button id="chainPreview_free" class="cond-btn" onclick="showScreen('screenProfile');setNav('nav-profile')" type="button" style="display:none;width:100%;">
+            <span class="cond-btn-icon">🔗</span>
+            <span class="cond-btn-text">
+              <div class="cond-btn-label">Chaîne de fantômes <span style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;">✦ Premium</span></div>
+              <div class="cond-btn-sub">Chasse au trésor urbaine · enchaîne tes ghosts</div>
+            </span>
+          </button>
+          <!-- Contenu Premium -->
+          <div id="chainContent_premium">
+            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>🔗 Chaîne de fantômes</span>
+              <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
+            </label>
+            <div id="chainContent" style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+              <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
+              <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
+                <span class="media-icon" aria-hidden="true">🗺</span>
+                <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
+              </button>
+              <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
+            </div>
+          </div>
         </div>
         <!-- Ghost dédié — Premium -->
-        <div class="form-group" id="step3DedicatedWrap" style="margin-bottom:14px;position:relative;">
-          <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>💌 Pour quelqu’un (optionnel)</span>
-            <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
-          </label>
-          <div id="dedicatedContent" style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;">
-            <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l’email du destinataire — seul lui pourra ouvrir ce ghost.</div>
-            <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
-            <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n’importe qui puisse l’ouvrir.</div>
+        <!-- Ghost dédié — Premium -->
+        <div class="form-group" id="step3DedicatedWrap" style="margin-bottom:14px;">
+          <!-- Aperçu Free -->
+          <button id="dedicatedPreview_free" class="cond-btn" onclick="showScreen('screenProfile');setNav('nav-profile')" type="button" style="display:none;width:100%;">
+            <span class="cond-btn-icon">💌</span>
+            <span class="cond-btn-text">
+              <div class="cond-btn-label">Pour quelqu’un <span style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;">✦ Premium</span></div>
+              <div class="cond-btn-sub">Ghost secret réservé à une seule personne</div>
+            </span>
+          </button>
+          <!-- Contenu Premium -->
+          <div id="dedicatedContent_premium">
+            <label class="form-label" style="display:flex;align-items:center;justify-content:space-between;">
+              <span>💌 Pour quelqu’un (optionnel)</span>
+              <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
+            </label>
+            <div id="dedicatedContent" style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;">
+              <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l’email du destinataire — seul lui pourra ouvrir ce ghost.</div>
+              <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
+              <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n’importe qui puisse l’ouvrir.</div>
+            </div>
           </div>
-
-        </div>
-        <!-- Carte Premium résumé -->
-        <div id="premiumBannerDeposit" style="display:none;background:linear-gradient(135deg,rgba(255,200,80,.07),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')">
-          <div style="font-size:11px;color:rgba(255,200,80,.85);font-weight:600;margin-bottom:6px;">✦ Premium — 0,99€/mois</div>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;">
-            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🎥 Vidéo</span>
-            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🔗 Chaîne de ghosts</span>
-            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">💌 Ghost dédié</span>
-            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">♾ Éternel</span>
-            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🎙 Vocal</span>
-          </div>
-          <div style="font-size:10px;color:rgba(255,200,80,.5);margin-top:7px;text-align:right;">Appuie pour en savoir plus →</div>
         </div>
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite"></div>
         <div style="display:flex;gap:10px;">
