@@ -6018,6 +6018,23 @@ button, [role="button"] {
 .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;}
 .stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--ether);}
 .stat-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.5px;margin-top:2px;}
+/* ── EMPREINTE MYSTIQUE ────────────────────────────────── */
+.empreinte-header{text-align:center;padding:16px 0 20px;}
+.empreinte-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-style:italic;color:var(--ether);margin-bottom:4px;}
+.empreinte-sub{font-size:11px;color:var(--spirit-dim);letter-spacing:.6px;}
+.empreinte-trio{display:flex;align-items:flex-end;justify-content:center;gap:0;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.empreinte-stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:18px 8px 14px;text-align:center;cursor:default;transition:background .2s;}
+.empreinte-stat:active{background:rgba(168,180,255,.06);}
+.empreinte-stat-center{border-left:1px solid var(--border);border-right:1px solid var(--border);background:linear-gradient(180deg,rgba(168,180,255,.05) 0%,rgba(168,180,255,.01) 100%);padding-top:22px;padding-bottom:18px;}
+.empreinte-num{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:400;color:var(--ether);line-height:1;}
+.empreinte-num-big{font-size:46px;}
+.empreinte-icon{font-size:16px;margin:4px 0 2px;opacity:.7;}
+.empreinte-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.8px;text-transform:uppercase;}
+.empreinte-row{display:flex;gap:8px;margin-bottom:16px;}
+.empreinte-pill{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-align:center;transition:background .2s;}
+.empreinte-pill:active{background:rgba(168,180,255,.06);}
+.empreinte-pill-num{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ether);line-height:1;}
+.empreinte-pill-label{font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;}
 .lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
 .lang-btn.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.4);color:var(--ether);}
 .logout-btn{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,100,100,.3);border-radius:13px;color:rgba(255,100,100,.7);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-top:8px;}
@@ -7376,32 +7393,42 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div style="font-size:10px;color:var(--spirit-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;" data-i18n="profile_rank">Rang</div>
       </div>
 
-      <!-- ── MES STATS ─────────────────────────────────── -->
-      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:8px;" data-i18n="profile_stats_label">Mes stats</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-        <div class="stat-card" role="listitem" onclick="toggleDiscoveryHistory()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir les fantômes découverts">
-          <div class="stat-num" id="statDiscovered" style="font-size:22px;">0</div>
-          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_discovered">Découverts</div>
+      <!-- ── MON EMPREINTE ──────────────────────────────── -->
+      <div class="empreinte-header">
+        <div class="empreinte-title">Mon empreinte</div>
+        <div class="empreinte-sub">Les traces que tu laisses dans le monde</div>
+      </div>
+      <!-- Trio principal -->
+      <div class="empreinte-trio">
+        <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
+          <div class="empreinte-num" id="statDeposited">0</div>
+          <div class="empreinte-icon">👻</div>
+          <div class="empreinte-label">Invoqués</div>
         </div>
-        <div class="stat-card" role="listitem" onclick="toggleDepositedList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes fantômes déposés">
-          <div class="stat-num" id="statDeposited" style="font-size:22px;">0</div>
-          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_deposited">Déposés</div>
+        <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
+          <div class="empreinte-num empreinte-num-big" id="statDiscovered">0</div>
+          <div class="empreinte-icon">🔮</div>
+          <div class="empreinte-label">Sceaux brisés</div>
         </div>
-        <div class="stat-card" role="listitem" onclick="toggleFavoritesList()" style="cursor:pointer;padding:12px 8px;" aria-label="Voir mes favoris">
-          <div class="stat-num" id="statFavorites" style="font-size:22px;">0</div>
-          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_favorites">Favoris ★</div>
+        <div class="empreinte-stat" role="listitem">
+          <div class="empreinte-num" id="statResonances">0</div>
+          <div class="empreinte-icon">✦</div>
+          <div class="empreinte-label">Résonances</div>
         </div>
-        <div class="stat-card" role="listitem" style="padding:12px 8px;">
-          <div class="stat-num" id="statResonances" style="font-size:22px;">0</div>
-          <div class="stat-label" style="font-size:10px;" data-i18n="profile_stat_resonances">Résonances ✨</div>
+      </div>
+      <!-- Ligne secondaire -->
+      <div class="empreinte-row">
+        <div class="empreinte-pill" onclick="toggleFavoritesList()" style="cursor:pointer;" aria-label="Mes favoris">
+          <span class="empreinte-pill-num" id="statFavorites">0</span>
+          <span class="empreinte-pill-label">★ Favoris</span>
         </div>
-        <div class="stat-card" role="listitem" style="padding:12px 8px;background:linear-gradient(135deg,rgba(100,220,160,.06),rgba(100,220,160,.02));border-color:rgba(100,220,160,.2);">
-          <div class="stat-num" id="statFirstReader" style="font-size:22px;color:rgba(100,220,160,.9);">0</div>
-          <div class="stat-label" style="font-size:10px;color:rgba(100,220,160,.6);" data-i18n="profile_stat_first">🥇 Premier à lire</div>
+        <div class="empreinte-pill" style="border-color:rgba(100,220,160,.25);background:rgba(100,220,160,.04);">
+          <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(100,220,160,.9);">0</span>
+          <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);">🥇 Premier lecteur</span>
         </div>
-        <div class="stat-card" role="listitem" onclick="toggleLeaderboard()" style="cursor:pointer;padding:12px 8px;background:linear-gradient(135deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border-color:rgba(255,200,80,.15);" aria-label="Voir le classement">
-          <div class="stat-num" style="font-size:22px;">🏆</div>
-          <div class="stat-label" style="font-size:10px;color:rgba(255,200,80,.6);" data-i18n="profile_stat_leaderboard">Classement</div>
+        <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(255,200,80,.25);background:rgba(255,200,80,.04);" aria-label="Classement">
+          <span style="font-size:16px;">🏆</span>
+          <span class="empreinte-pill-label" style="color:rgba(255,200,80,.7);">Classement</span>
         </div>
       </div>
       <!-- Panel classement inline -->
