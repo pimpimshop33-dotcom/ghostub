@@ -2597,8 +2597,6 @@ function updatePremiumUI() {
   // Lock/unlock sections Premium
   const dedLock = document.getElementById('dedicatedLock');
   if (dedLock) dedLock.style.display = isPremium ? 'none' : 'flex';
-  const videoLock = document.getElementById('videoLock');
-  if (videoLock) videoLock.style.display = isPremium ? 'none' : 'flex';
   const premiumBanner = document.getElementById('premiumBannerDeposit');
   if (premiumBanner) premiumBanner.style.display = isPremium ? 'none' : 'block';
   // Badge avatar Premium
