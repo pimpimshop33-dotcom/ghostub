@@ -1449,6 +1449,29 @@ function buildLeafletMap(centerLat, centerLng, h) {
     }
   });
 
+  // ── GHOST SPOTS : clusters 3+ ghosts dans 50m ───────────
+  const _spotted = new Set();
+  nearbyGhosts.forEach((g, i) => {
+    if (_spotted.has(g.id) || !g.lat || !g.lng) return;
+    const cluster = nearbyGhosts.filter(h =>
+      h.id !== g.id && h.lat && h.lng &&
+      distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 50
+    );
+    if (cluster.length >= 2) { // g + 2 autres = 3 au total
+      const clusterIds = [g.id, ...cluster.map(h => h.id)];
+      clusterIds.forEach(id => _spotted.add(id));
+      const spotIcon = L.divIcon({
+        html: `<div style="position:relative;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(255,200,80,.08);border:1.5px solid rgba(255,200,80,.4);animation:ghostFloat 3s ease-in-out infinite;"></div>
+          <div style="font-size:11px;font-weight:600;color:rgba(255,200,80,.9);background:rgba(10,8,20,.85);border:1px solid rgba(255,200,80,.5);border-radius:20px;padding:3px 8px;white-space:nowrap;position:relative;z-index:1;">✦ Ghost Spot · ${clusterIds.length}</div>
+        </div>`,
+        iconSize: [120, 32], iconAnchor: [60, 16], className: ''
+      });
+      L.marker([g.lat, g.lng], { icon: spotIcon })
+        .addTo(map)
+        .on('click', () => showToast('info', clusterIds.length + ' présences ici — approche-toi !'));
+    }
+  });
   setTimeout(() => map && map.invalidateSize(), 500);
   Analytics.track('map_opened', { ghost_count: nearbyGhosts.length, hunt_mode: huntMode });
 }
@@ -2796,7 +2819,8 @@ window.shareMapLocation = async () => {
         }
       } else if (navigator.share) {
         try {
-          await navigator.share({ title: '👻 Ghostub', text: shareText, url: 'https://pimpimshop33-dotcom.github.io/ghostub/' });
+          const _refParam = currentUser ? '?ref=' + currentUser.uid.slice(0,8) : '';
+          await navigator.share({ title: '👻 Ghostub', text: shareText, url: 'https://pimpimshop33-dotcom.github.io/ghostub/' + _refParam });
         } catch(e) {}
       } else {
         _downloadCanvas(canvas, 'ghostub-lieu.png');
@@ -2824,6 +2848,7 @@ function buildShareLink(ghost) {
     lng: ghost.lng ? ghost.lng.toFixed(5) : '',
     loc: ghost.location || 'Lieu mystérieux'
   });
+  if (currentUser) params.set('ref', currentUser.uid.slice(0, 8));
   return base + '?' + params.toString();
 }
 
