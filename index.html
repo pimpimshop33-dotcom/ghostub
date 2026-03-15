@@ -4330,8 +4330,9 @@ window.depositGhost = async () => {
   if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
 
   err.textContent = '';
-  const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid, isExpired);
-  if (!cooldownCheck.ok) { err.textContent = cooldownCheck.reason; return; }
+  // TEST MODE — cooldown désactivé (à réactiver avant prod)
+  // const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid, isExpired);
+  // if (!cooldownCheck.ok) { err.textContent = cooldownCheck.reason; return; }
   const depositBtn = document.getElementById('depositBtn');
   const hasMedia = !!(window._pendingAudioBlob || window._pendingPhotoFile || window._pendingVideoFile);
   setLoading(depositBtn, true);
