@@ -1282,8 +1282,8 @@ function closeModal(modalId) {
 }
 
 window.renderStaticMap = () => {
-  const centerLat = userLat || 44.6333;
-  const centerLng = userLng || -1.1333;
+  const centerLat = userLat || 48.8566; // Paris par défaut si GPS indisponible
+  const centerLng = userLng || 2.3522;
   const container = document.getElementById('mapContainer');
   const h = Math.max(window.innerHeight - 160, 500);
   container.style.height = h + 'px';
@@ -1305,6 +1305,23 @@ window.renderStaticMap = () => {
     document.head.appendChild(script);
   }
 };
+
+
+// Met à jour les marqueurs sans reconstruire la carte
+function _updateMapMarkers(centerLat, centerLng) {
+  if (!map) return;
+  // Supprimer les anciens marqueurs (garder uniquement les layers de tuiles)
+  map.eachLayer(layer => {
+    if (layer instanceof L.Marker || layer instanceof L.Circle) {
+      map.removeLayer(layer);
+    }
+  });
+  // Ré-ajouter position utilisateur
+  const userIcon = L.divIcon({ html: '<div class="user-map-dot"></div>', iconSize: [16,16], iconAnchor: [8,8], className: '' });
+  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map);
+  // Ré-ajouter les ghosts (déléguer au reste de buildLeafletMap via flag)
+  _addGhostMarkersToMap(centerLat, centerLng);
+}
 
 // ── MODE CHASSE ─────────────────────────────────────────
 let huntMode = false;
@@ -1328,8 +1345,16 @@ window.toggleHuntMode = () => {
 
 function buildLeafletMap(centerLat, centerLng, h) {
   const container = document.getElementById('mapContainer');
-  container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
 
+  // Si la carte existe déjà — réutiliser sans reconstruire
+  if (map && document.getElementById('leafletMap')) {
+    map.setView([centerLat, centerLng], map.getZoom());
+    setTimeout(() => map.invalidateSize(), 100);
+    _updateMapMarkers(centerLat, centerLng);
+    return;
+  }
+
+  container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
   if (map) { try { map.remove(); } catch(e){} map = null; }
 
   map = L.map('leafletMap', { zoomControl: true, attributionControl: false })
@@ -1458,6 +1483,19 @@ function buildLeafletMap(centerLat, centerLng, h) {
   });
   setTimeout(() => map && map.invalidateSize(), 500);
   Analytics.track('map_opened', { ghost_count: nearbyGhosts.length, hunt_mode: huntMode });
+}
+
+
+// Géolocalisation par IP en dernier recours (évite le hardcode Arcachon)
+async function _getIpLocation() {
+  try {
+    const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    if (d.latitude && d.longitude) {
+      return { lat: parseFloat(d.latitude), lng: parseFloat(d.longitude) };
+    }
+  } catch(e) {}
+  return null;
 }
 
 function getLocation() {
@@ -3403,7 +3441,13 @@ window.loadNearbyGhosts = async () => {
       userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
   } catch(e) {
     document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_no_gps + '</span>';
-    userLat = 44.6333; userLng = -1.1333;
+    // Tentative géoloc IP avant fallback définitif
+    const _ipLoc = await _getIpLocation();
+    if (_ipLoc) { userLat = _ipLoc.lat; userLng = _ipLoc.lng; }
+    else {
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + (t.radar_no_gps || 'GPS indisponible') + '</span>';
+      return; // Ne pas charger de ghosts sans position
+    }
   }
 
   // ── QUERY FIRESTORE (géohash ~15km) ─────────────────────────────────
@@ -4297,24 +4341,23 @@ window.loadLeaderboard = async () => {
   if (!el) return;
   el.innerHTML = `<div style="font-size:12px;color:var(--spirit-dim);">${t.loading || 'Chargement…'}</div>`;
   try {
-    // Classement par nombre de découvertes (openCount total sur leurs fantômes)
+    // Lire directement les compteurs dénormalisés sur users (1 requête légère)
     const snap = await getDocs(query(
-      collection(db, COLL.GHOSTS),
-      where('anonymous', '==', false),
-      limit(100)
+      collection(db, COLL.USERS),
+      where('totalResonances', '>', 0),
+      orderBy('totalResonances', 'desc'),
+      limit(10)
     ));
-    // Agréger par auteur
-    const scores = {};
+    const sorted = [];
     snap.forEach(d => {
-      const g = d.data();
-      if (!g.author || !g.authorUid) return;
-      if (!scores[g.authorUid]) scores[g.authorUid] = { name: g.author, resonances: 0, ghosts: 0 };
-      scores[g.authorUid].resonances += g.resonances || 0;
-      scores[g.authorUid].ghosts += 1;
+      const u = d.data();
+      if (!u.displayName && !u.email) return;
+      sorted.push({
+        name: u.displayName || u.email,
+        resonances: u.totalResonances || 0,
+        ghosts: u.ghostCount || 0
+      });
     });
-    const sorted = Object.values(scores)
-      .sort((a, b) => b.resonances - a.resonances)
-      .slice(0, 5);
     if (sorted.length === 0) {
       el.innerHTML = `<div style="font-size:12px;color:var(--spirit-dim);font-style:italic;">${t.profile_no_hunters || 'Aucun chasseur encore…'}</div>`;
       return;
@@ -5029,7 +5072,12 @@ window.depositGhost = async () => {
   if (message.length > 280) { err.textContent = t.dep_err_long; return; }
   if (!userLat) {
     // Tenter une dernière fois
-    try { await getLocation(); } catch(e) { userLat = 44.6333; userLng = -1.1333; }
+    try {
+      await getLocation();
+    } catch(e) {
+      const _ipLoc2 = await _getIpLocation();
+      if (_ipLoc2) { userLat = _ipLoc2.lat; userLng = _ipLoc2.lng; }
+    }
     if (!userLat) { err.textContent = t.dep_err_gps; return; }
   }
   if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
