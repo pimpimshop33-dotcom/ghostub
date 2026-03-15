@@ -3944,7 +3944,7 @@ window.openGhost = async (id) => {
     document.getElementById('detailMessage').style.color = '';
     document.getElementById('resonanceBtn').style.display = '';
     document.querySelector('#screenDetail .btn-secondary').style.display = '';
-    document.getElementById('detailMessage').textContent = '"' + escapeHTML(selectedGhost.message) + '"';
+    document.getElementById('detailMessage').innerHTML = '&ldquo;' + escapeHTML(selectedGhost.message).replace(/&#39;/g, "'") + '&rdquo;';
     // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
     const msgReportBtn = document.getElementById('msgReportBtn');
     if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
