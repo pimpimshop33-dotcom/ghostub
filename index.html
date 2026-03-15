@@ -464,6 +464,14 @@ const LANGS = {
     profile_stat_resonances: 'Résonances ✨',
     profile_stat_first: '🥇 Premier à lire',
     profile_stat_leaderboard: 'Classement',
+    empreinte_title: 'Mon empreinte',
+    empreinte_sub: 'Les traces que tu laisses dans le monde',
+    empreinte_invoques: 'Invoqués',
+    empreinte_sceaux: 'Sceaux brisés',
+    empreinte_resonances: 'Résonances',
+    empreinte_favoris: '★ Favoris',
+    empreinte_premier: '🥇 Premier lecteur',
+    empreinte_classement: 'Classement',
     profile_stats_label: 'Mes stats',
     profile_top_hunters: '🏆 Top chasseurs',
     profile_map_section: '🗺 Mon empreinte fantôme',
@@ -919,6 +927,14 @@ const LANGS = {
     profile_stat_resonances: 'Resonances ✨',
     profile_stat_first: '🥇 First reads',
     profile_stat_leaderboard: 'Leaderboard',
+    empreinte_title: 'My footprint',
+    empreinte_sub: 'The traces you leave in the world',
+    empreinte_invoques: 'Invoked',
+    empreinte_sceaux: 'Seals broken',
+    empreinte_resonances: 'Resonances',
+    empreinte_favoris: '★ Favorites',
+    empreinte_premier: '🥇 First reader',
+    empreinte_classement: 'Leaderboard',
     profile_stats_label: 'My stats',
     profile_top_hunters: '🏆 Top hunters',
     profile_map_section: '🗺 My ghost footprint',
@@ -2247,7 +2263,9 @@ async function refreshProfileStats() {
   animateStatNumber('statFirstReader', firstReaderCount);
   try {
     const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid)));
-    animateStatNumber('statDeposited', snap.size);
+    const _depKey2 = 'ghostub_total_deposited_' + currentUser.uid;
+    const _localDep = parseInt(localStorage.getItem(_depKey2) || '0');
+    animateStatNumber('statDeposited', Math.max(snap.size, _localDep));
     let totalReso = 0;
     snap.forEach(d => { totalReso += d.data().resonances || 0; });
     animateStatNumber('statResonances', totalReso);
@@ -4612,6 +4630,9 @@ window.depositGhost = async () => {
     depositBtn.disabled = false;
     clearAudio(); clearPhoto(); clearVideo();
     document.getElementById('depositSuccess').classList.add('show');
+    // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
+    const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
+    localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
     // Haptic ancrage : impact court + long vibration
     if (navigator.vibrate) navigator.vibrate([15, 40, 15, 40, 300]);
     // Particules dorées
@@ -7543,38 +7564,38 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
       <!-- ── MON EMPREINTE ──────────────────────────────── -->
       <div class="empreinte-header">
-        <div class="empreinte-title">Mon empreinte</div>
-        <div class="empreinte-sub">Les traces que tu laisses dans le monde</div>
+        <div class="empreinte-title" data-i18n="empreinte_title">Mon empreinte</div>
+        <div class="empreinte-sub" data-i18n="empreinte_sub">Les traces que tu laisses dans le monde</div>
       </div>
       <div class="empreinte-trio">
         <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
           <div class="empreinte-num" id="statDeposited">0</div>
           <div class="empreinte-icon">👻</div>
-          <div class="empreinte-label">Invoqués</div>
+          <div class="empreinte-label" data-i18n="empreinte_invoques">Invoqués</div>
         </div>
         <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
           <div class="empreinte-num empreinte-num-big" id="statDiscovered">0</div>
           <div class="empreinte-icon">🔮</div>
-          <div class="empreinte-label">Sceaux brisés</div>
+          <div class="empreinte-label" data-i18n="empreinte_sceaux">Sceaux brisés</div>
         </div>
         <div class="empreinte-stat" role="listitem">
           <div class="empreinte-num" id="statResonances">0</div>
           <div class="empreinte-icon">✦</div>
-          <div class="empreinte-label">Résonances</div>
+          <div class="empreinte-label" data-i18n="empreinte_resonances">Résonances</div>
         </div>
       </div>
       <div class="empreinte-row">
         <div class="empreinte-pill" onclick="toggleFavoritesList()" style="cursor:pointer;" aria-label="Mes favoris">
           <span class="empreinte-pill-num" id="statFavorites">0</span>
-          <span class="empreinte-pill-label">★ Favoris</span>
+          <span class="empreinte-pill-label" data-i18n="empreinte_favoris">★ Favoris</span>
         </div>
         <div class="empreinte-pill" style="border-color:rgba(100,220,160,.25);background:rgba(100,220,160,.04);">
           <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(100,220,160,.9);">0</span>
-          <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);">🥇 Premier lecteur</span>
+          <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);" data-i18n="empreinte_premier">🥇 Premier lecteur</span>
         </div>
         <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(255,200,80,.25);background:rgba(255,200,80,.04);" aria-label="Classement">
           <span style="font-size:16px;">🏆</span>
-          <span class="empreinte-pill-label" style="color:rgba(255,200,80,.7);">Classement</span>
+          <span class="empreinte-pill-label" style="color:rgba(255,200,80,.7);" data-i18n="empreinte_classement">Classement</span>
         </div>
       </div>
       <!-- Panel classement inline -->
