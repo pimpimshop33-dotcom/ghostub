@@ -2722,7 +2722,9 @@ window.shareMapLocation = async () => {
     if (userLat && userLng) {
       ctx.fillStyle = 'rgba(255,240,200,0.6)';
       ctx.font = '38px "Instrument Sans", sans-serif';
-      ctx.fillText(`${userLat.toFixed(3)}° N  ${userLng.toFixed(3)}° E`, W/2, H/2 + 140);
+      const _lngAbs = Math.abs(userLng).toFixed(3);
+      const _lngDir = userLng < 0 ? '° O' : '° E';
+      ctx.fillText(`${userLat.toFixed(3)}° N  ${_lngAbs}${_lngDir}`, W/2, H/2 + 140);
     }
 
     // CTA
@@ -2785,6 +2787,11 @@ window.generateGhostCard = async () => {
   if (btn) { btn.textContent = '⏳ Génération…'; btn.disabled = true; }
 
   try {
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('italic 72px "Cormorant Garamond"'),
+      document.fonts.load('500 38px "Instrument Sans"')
+    ]);
     const W = 1080, H = 1920;
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
@@ -2869,7 +2876,9 @@ window.generateGhostCard = async () => {
       ctx.fillStyle = 'rgba(120,130,180,0.4)';
       ctx.font = '500 30px "Instrument Sans", sans-serif';
       ctx.letterSpacing = '2px';
-      ctx.fillText(`${lat}° N   ${lng}° E`, W/2, H*0.79);
+      const lngAbs = Math.abs(selectedGhost.lng).toFixed(4);
+      const lngDir = selectedGhost.lng < 0 ? '° O' : '° E';
+      ctx.fillText(`${lat}° N   ${lngAbs}${lngDir}`, W/2, H*0.79);
       ctx.letterSpacing = '0px';
     }
 
@@ -3244,7 +3253,10 @@ const timeRemaining = g => {
     .replace(/dans /i,                  'in ');
 };
 
+let _ghostsLoading = false;
 window.loadNearbyGhosts = async () => {
+  if (_ghostsLoading) return;
+  _ghostsLoading = true;
   // Vérification offline
   if (!navigator.onLine) {
     showToast('warning', t.radar_offline);
@@ -3365,6 +3377,7 @@ window.loadNearbyGhosts = async () => {
     }
   }
   Analytics.track('ghosts_loaded', { count });
+  _ghostsLoading = false;
   checkForNewGhosts(count);
   // Notification fantôme jamais ouvert (3s après le chargement)
   setTimeout(() => checkVirginGhostNearby(), 3000);
