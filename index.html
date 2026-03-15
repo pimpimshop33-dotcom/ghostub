@@ -36,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=14"></script>
+<script type="module" src="app.js?v=15"></script>
 
 <link rel="stylesheet" href="style.css?v=2">
 </head>
@@ -579,9 +579,7 @@
           </button>
           <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
           <div id="videoPreview"></div>
-          <div id="videoLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
-          </div>
+
         </div>
         <!-- CHAÎNE DE FANTÔMES PREMIUM — masquée en mode Commerce -->
         <div id="step3ChainWrap" class="form-group" style="margin-bottom:14px;position:relative;" data-section="chainSection">
@@ -597,9 +595,7 @@
             </button>
             <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
           </div>
-          <div id="chainLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
-          </div>
+
         </div>
         <!-- Ghost dédié — Premium -->
         <div class="form-group" id="step3DedicatedWrap" style="margin-bottom:14px;position:relative;">
@@ -612,9 +608,7 @@
             <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
             <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n’importe qui puisse l’ouvrir.</div>
           </div>
-          <div id="dedicatedLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
-          </div>
+
         </div>
         <!-- Carte Premium résumé -->
         <div id="premiumBannerDeposit" style="display:none;background:linear-gradient(135deg,rgba(255,200,80,.07),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')">
