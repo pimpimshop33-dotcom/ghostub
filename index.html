@@ -36,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=13"></script>
+<script type="module" src="app.js?v=14"></script>
 
 <link rel="stylesheet" href="style.css?v=2">
 </head>
@@ -616,15 +616,17 @@
             <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
           </div>
         </div>
-        <!-- Bandeau Premium unique -->
-        <div id="premiumBannerDeposit" style="display:none;background:linear-gradient(135deg,rgba(255,200,80,.08),rgba(255,200,80,.03));border:1px solid rgba(255,200,80,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')">
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div>
-              <div style="font-size:11px;color:rgba(255,200,80,.9);font-weight:500;">👑 Vidéo · Chaîne · Ghost dédié</div>
-              <div style="font-size:10px;color:var(--spirit-dim);margin-top:2px;">Tout inclus dans Premium — 0,99€/mois</div>
-            </div>
-            <div style="font-size:11px;color:rgba(255,200,80,.7);white-space:nowrap;">Voir ›</div>
+        <!-- Carte Premium résumé -->
+        <div id="premiumBannerDeposit" style="display:none;background:linear-gradient(135deg,rgba(255,200,80,.07),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:12px;padding:12px 14px;margin-bottom:10px;cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')">
+          <div style="font-size:11px;color:rgba(255,200,80,.85);font-weight:600;margin-bottom:6px;">✦ Premium — 0,99€/mois</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">
+            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🎥 Vidéo</span>
+            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🔗 Chaîne de ghosts</span>
+            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">💌 Ghost dédié</span>
+            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">♾ Éternel</span>
+            <span style="font-size:11px;color:var(--warm-dim);background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.15);border-radius:8px;padding:2px 8px;">🎙 Vocal</span>
           </div>
+          <div style="font-size:10px;color:rgba(255,200,80,.5);margin-top:7px;text-align:right;">Appuie pour en savoir plus →</div>
         </div>
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite"></div>
         <div style="display:flex;gap:10px;">
