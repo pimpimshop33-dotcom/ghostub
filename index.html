@@ -3974,6 +3974,169 @@ window.shareEmpreinte = async () => {
 };
 
 // ── PARTAGE PROFIL PUBLIC ─────────────────────────────────────────
+
+// ── MON ANNÉE GHOSTUB ────────────────────────────────────
+window.generateYearCard = async () => {
+  const btn = document.getElementById('yearCardBtn');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+
+  try {
+    await document.fonts.ready;
+    await Promise.all([
+      document.fonts.load('italic 72px "Cormorant Garamond"'),
+      document.fonts.load('500 36px "Instrument Sans"')
+    ]);
+
+    // Collecter les données
+    const discovered = getDiscoveryCount();
+    const deposited  = Math.max(
+      parseInt(localStorage.getItem('ghostub_total_deposited_' + (currentUser?.uid || 'anon')) || '0'),
+      parseInt(document.getElementById('statDeposited')?.textContent || '0')
+    );
+    const resonances = parseInt(document.getElementById('statResonances')?.textContent || '0');
+    const firstReads = parseInt(document.getElementById('statFirstReader')?.textContent || '0');
+    const streak     = _getStreak().count;
+    const rank       = getRank(discovered);
+    const name       = currentUser?.displayName || 'Chasseur';
+
+    // Données Firestore pour le lieu le plus visité
+    let topLocation = '';
+    try {
+      const snap = await getDocs(query(
+        collection(db, 'ghosts'),
+        where('authorUid', '==', currentUser.uid),
+        orderBy('openCount', 'desc'),
+        limit(1)
+      ));
+      if (!snap.empty) topLocation = snap.docs[0].data().location || '';
+    } catch(e) {}
+
+    const W = 1080, H = 1920;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // ── Fond ─────────────────────────────────────────────
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0,   '#06040e');
+    bg.addColorStop(0.4, '#0d0820');
+    bg.addColorStop(1,   '#04030c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // Étoiles
+    for (let i = 0; i < 200; i++) {
+      const sx = (Math.sin(i*7.3)*0.5+0.5)*W;
+      const sy = (Math.sin(i*13.7)*0.5+0.5)*H;
+      const sr = (Math.sin(i*3.1)*0.5+0.5)*1.8+0.2;
+      const sa = 0.1+(Math.sin(i*5.9)*0.5+0.5)*0.5;
+      ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2);
+      ctx.fillStyle = `rgba(200,210,255,${sa})`; ctx.fill();
+    }
+
+    // Halos
+    [[W*0.25,H*0.35,'rgba(120,80,255,0.15)'],[W*0.75,H*0.6,'rgba(80,160,255,0.1)']].forEach(([x,y,c])=>{
+      const h = ctx.createRadialGradient(x,y,0,x,y,300);
+      h.addColorStop(0,c); h.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=h; ctx.fillRect(0,0,W,H);
+    });
+
+    ctx.textAlign = 'center';
+
+    // App name
+    ctx.fillStyle = 'rgba(168,180,255,0.4)';
+    ctx.font = '500 34px "Instrument Sans", sans-serif';
+    ctx.fillText('GHOSTUB', W/2, 110);
+
+    // Ligne déco
+    ctx.strokeStyle = 'rgba(168,180,255,0.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(80,140); ctx.lineTo(W-80,140); ctx.stroke();
+
+    // Titre
+    ctx.fillStyle = 'rgba(255,200,80,0.85)';
+    ctx.font = 'italic 62px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText('Mon année en fantômes', W/2, 230);
+
+    // Nom + rang
+    ctx.fillStyle = 'rgba(230,225,255,0.9)';
+    ctx.font = '500 44px "Instrument Sans", sans-serif';
+    ctx.fillText(name, W/2, 310);
+    ctx.fillStyle = 'rgba(168,180,255,0.5)';
+    ctx.font = '34px "Instrument Sans", sans-serif';
+    ctx.fillText(rank.icon + ' ' + rank.label, W/2, 370);
+
+    // Ligne déco milieu
+    ctx.strokeStyle = 'rgba(255,200,80,0.15)';
+    ctx.beginPath(); ctx.moveTo(120,420); ctx.lineTo(W-120,420); ctx.stroke();
+
+    // Stats grandes
+    const stats = [
+      { num: discovered, label: 'sceaux brisés',  icon: '🔮', y: 560 },
+      { num: deposited,  label: 'fantômes invoqués', icon: '👻', y: 760 },
+      { num: resonances, label: 'résonances données', icon: '✦', y: 960 },
+    ];
+
+    stats.forEach(({ num, label, icon, y }) => {
+      // Halo derrière le chiffre
+      const sh = ctx.createRadialGradient(W/2,y-40,0,W/2,y-40,120);
+      sh.addColorStop(0,'rgba(168,180,255,0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle = sh; ctx.fillRect(0,0,W,H);
+
+      ctx.fillStyle = 'rgba(230,225,255,0.95)';
+      ctx.font = `bold ${num >= 100 ? 110 : 130}px "Cormorant Garamond", Georgia, serif`;
+      ctx.fillText(String(num), W/2, y);
+
+      ctx.fillStyle = 'rgba(168,180,255,0.65)';
+      ctx.font = 'italic 40px "Cormorant Garamond", Georgia, serif';
+      ctx.fillText(icon + '  ' + label, W/2, y+60);
+    });
+
+    // Extras
+    ctx.strokeStyle = 'rgba(168,180,255,0.1)';
+    ctx.beginPath(); ctx.moveTo(120,1080); ctx.lineTo(W-120,1080); ctx.stroke();
+
+    const extras = [];
+    if (streak >= 2) extras.push(`🔥 ${streak} jours de streak`);
+    if (firstReads > 0) extras.push(`🥇 ${firstReads} premier${firstReads>1?'s':''} lecteur${firstReads>1?'s':''}`);
+    if (topLocation) extras.push(`📍 ${topLocation.substring(0,30)}`);
+
+    ctx.fillStyle = 'rgba(255,200,80,0.6)';
+    ctx.font = '36px "Instrument Sans", sans-serif';
+    extras.forEach((e, i) => ctx.fillText(e, W/2, 1160 + i*70));
+
+    // Ligne bas
+    ctx.strokeStyle = 'rgba(168,180,255,0.12)';
+    ctx.beginPath(); ctx.moveTo(80,H-150); ctx.lineTo(W-80,H-150); ctx.stroke();
+
+    // CTA
+    ctx.fillStyle = 'rgba(168,180,255,0.35)';
+    ctx.font = '32px "Instrument Sans", sans-serif';
+    ctx.fillText('Et toi, qu’est-ce que tu as laissé cette année ?', W/2, H-100);
+    ctx.fillStyle = 'rgba(168,180,255,0.2)';
+    ctx.font = '28px "Instrument Sans", sans-serif';
+    ctx.fillText('ghostub.app', W/2, H-55);
+
+    // Export
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'mon-annee-ghostub.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: '✨ Mon année Ghostub', text: `${discovered} sceaux brisés, ${deposited} fantômes invoqués. #Ghostub` });
+          Analytics.track('year_card_shared');
+        } catch(e) {
+          if (e.name !== 'AbortError') _downloadCanvas(canvas, 'mon-annee-ghostub.png');
+        }
+      } else {
+        _downloadCanvas(canvas, 'mon-annee-ghostub.png');
+      }
+      if (btn) { btn.textContent = '❆ Mon année'; btn.disabled = false; }
+    }, 'image/png');
+
+  } catch(e) {
+    console.warn('generateYearCard:', e);
+    if (btn) { btn.textContent = '❆ Mon année'; btn.disabled = false; }
+  }
+};
+
 window.shareMyProfile = async () => {
   if (!currentUser) return;
   const url = `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}`;
@@ -6117,7 +6280,7 @@ window.selectMaxOpen = (el) => {
 
 // ── ONBOARDING CAROUSEL ─────────────────
 let obCurrentScene = 0;
-const OB_TOTAL = 5;
+const OB_TOTAL = 4;
 
 function goObScene(n) {
   const scenes = document.querySelectorAll('.ob-scene');
@@ -6142,69 +6305,9 @@ function goObScene(n) {
     cta.classList.remove('visible');
     if (hint) hint.style.display = '';
   }
-  if (n === 4) spawnObParticles();
-  if (n === 2) _resetObDemo();
+  if (n === 3) spawnObParticles();
 }
 window.goObScene = goObScene;
-
-
-// ── ONBOARDING INTERACTIF ────────────────────────────────
-function _resetObDemo() {
-  const sealed = document.getElementById('obDemoSealed');
-  const revealed = document.getElementById('obDemoRevealed');
-  const btn = document.getElementById('obDemoBtn');
-  const sub = document.getElementById('obSub2Demo');
-  if (sealed) { sealed.style.display = 'block'; sealed.style.opacity = '1'; }
-  if (revealed) revealed.style.display = 'none';
-  if (btn) { btn.textContent = '✉ Briser le sceau'; btn.disabled = false; }
-  if (sub) sub.innerHTML = 'Chaque message est une<br>enveloppe scellée à dévoiler.';
-}
-
-window.obDemoBreakSeal = () => {
-  const btn = document.getElementById('obDemoBtn');
-  const sealed = document.getElementById('obDemoSealed');
-  const revealed = document.getElementById('obDemoRevealed');
-  const sub = document.getElementById('obSub2Demo');
-  if (!btn || btn.disabled) return;
-  btn.disabled = true;
-  // Haptic + son + flash — les vraies fonctions de l'app
-  if (navigator.vibrate) navigator.vibrate([10, 30, 20, 40, 10, 30, 250]);
-  const flash = document.getElementById('sealBreakFlash');
-  if (flash) { flash.style.animation = 'none'; flash.offsetHeight; flash.style.animation = 'sealFlash 0.9s ease-out forwards'; }
-  _launchSealParticles();
-  playRevealSound();
-  // Fade out enveloppe
-  sealed.style.opacity = '0';
-  setTimeout(() => {
-    sealed.style.display = 'none';
-    revealed.style.display = 'block';
-    if (sub) sub.innerHTML = '✓ Tu viens de briser un sceau.<br><span style="color:rgba(100,220,160,.7);">Glisse pour continuer →</span>';
-    // Auto-avance vers slide GPS après 2s
-    setTimeout(() => goObScene(3), 2200);
-  }, 400);
-};
-
-window.obRequestGps = async () => {
-  const btn = document.getElementById('obGpsBtn');
-  const icon = document.getElementById('obGpsIcon');
-  if (!btn) return;
-  btn.textContent = '⏳ Activation…';
-  btn.disabled = true;
-  try {
-    await new Promise((res, rej) => {
-      navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, maximumAge: 60000 });
-    });
-    if (icon) icon.textContent = '✓';
-    btn.textContent = '✓ GPS activé !';
-    btn.style.borderColor = 'rgba(100,220,160,.7)';
-    btn.style.color = 'rgba(100,220,160,.95)';
-    setTimeout(() => goObScene(4), 1200);
-  } catch(e) {
-    btn.textContent = 'Continuer sans GPS →';
-    btn.disabled = false;
-    btn.onclick = () => goObScene(4);
-  }
-};
 
 function spawnObParticles() {
   const wrap = document.getElementById('obResoParticles');
@@ -7389,39 +7492,21 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         </div>
       </div>
       <div class="ob-scene" id="obScene2" role="group" aria-roledescription="slide" aria-label="Slide 3 : Ouvrir" aria-hidden="true">
-        <div class="ob-scene-visual" aria-hidden="true" style="width:260px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
-          <div id="obDemoSealed" style="width:220px;background:linear-gradient(160deg,rgba(22,22,34,.98),rgba(14,14,24,.99));border:1px solid rgba(168,180,255,.2);border-radius:16px;padding:16px;text-align:center;transition:opacity .3s;">
-            <div style="font-size:36px;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(168,180,255,.5));">👻</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(230,225,255,.8);margin-bottom:12px;">Un inconnu a laissé quelque chose ici…</div>
-            <button id="obDemoBtn" onclick="obDemoBreakSeal()" style="width:100%;padding:11px;background:linear-gradient(135deg,rgba(168,180,255,.15),rgba(168,180,255,.06));border:1px solid rgba(168,180,255,.3);border-radius:12px;color:rgba(230,225,255,.95);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:all .2s;">✉ Briser le sceau</button>
-          </div>
-          <div id="obDemoRevealed" style="display:none;width:220px;background:linear-gradient(160deg,rgba(22,22,34,.98),rgba(14,14,24,.99));border:1px solid rgba(100,220,160,.25);border-radius:16px;padding:16px;text-align:center;animation:revealContent .45s cubic-bezier(.25,.8,.25,1) forwards;">
-            <div style="font-size:28px;margin-bottom:8px;">👻</div>
-            <div style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(230,225,255,.9);line-height:1.5;">"La vie est trop courte pour ne pas laisser une trace."</div>
-            <div style="font-size:10px;color:rgba(168,180,255,.4);margin-top:8px;letter-spacing:.5px;">Un inconnu · Il y a 3 jours</div>
+        <div class="ob-scene-visual" aria-hidden="true">
+          <div class="ob-envelope">
+            <div class="ob-env-flap"></div>
+            <div class="ob-env-body">
+              <div class="ob-env-emoji">👻</div>
+              <div class="ob-env-lines"><div class="ob-env-line"></div><div class="ob-env-line ob-line2"></div><div class="ob-env-line ob-line3"></div></div>
+            </div>
           </div>
         </div>
         <div class="ob-scene-text">
           <div class="ob-title" data-i18n="ob_title2">Ouvrez</div>
-          <div class="ob-sub" id="obSub2Demo" data-i18n="ob_sub2">Chaque message est une<br>enveloppe scellée à dévoiler.</div>
+          <div class="ob-sub" data-i18n="ob_sub2">Chaque message est une<br>enveloppe scellée à dévoiler.</div>
         </div>
       </div>
-      <div class="ob-scene" id="obScene3" role="group" aria-roledescription="slide" aria-label="Slide 4 : GPS" aria-hidden="true">
-        <div class="ob-scene-visual" aria-hidden="true" style="width:200px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
-          <div style="position:relative;width:100px;height:100px;display:flex;align-items:center;justify-content:center;">
-            <div class="ob-glow-ring" style="width:90px;height:90px;"></div>
-            <div class="ob-glow-ring ob-ring2" style="width:120px;height:120px;"></div>
-            <div style="font-size:42px;filter:drop-shadow(0 0 20px rgba(100,220,160,.6));" id="obGpsIcon">📍</div>
-          </div>
-          <button id="obGpsBtn" onclick="obRequestGps()" style="padding:10px 24px;background:linear-gradient(135deg,rgba(100,220,160,.2),rgba(100,220,160,.08));border:1px solid rgba(100,220,160,.4);border-radius:20px;color:rgba(100,220,160,.95);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:all .25s;">📡 Activer la détection</button>
-        </div>
-        <div class="ob-scene-text">
-          <div class="ob-title">Localisez-vous</div>
-          <div class="ob-sub">Le GPS permet de détecter<br>les ghosts autour de vous.</div>
-        </div>
-      </div>
-
-      <div class="ob-scene" id="obScene4" role="group" aria-roledescription="slide" aria-label="Slide 5 : Résonner" aria-hidden="true">
+      <div class="ob-scene" id="obScene3" role="group" aria-roledescription="slide" aria-label="Slide 4 : Résonner" aria-hidden="true">
         <div class="ob-scene-visual" aria-hidden="true">
           <div class="ob-reso-wrap">
             <div class="ob-reso-btn">✦ Résonner</div>
@@ -7438,8 +7523,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1 : Ghostub" aria-selected="true"></button>
       <button class="ob-dot" role="tab" onclick="goObScene(1)" aria-label="Slide 2 : Découvrir" aria-selected="false"></button>
       <button class="ob-dot" role="tab" onclick="goObScene(2)" aria-label="Slide 3 : Ouvrir" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4 : GPS" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(4)" aria-label="Slide 5 : Résonner" aria-selected="false"></button>
+      <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4 : Résonner" aria-selected="false"></button>
     </div>
     <div class="ob-cta" id="obCta" style="opacity:0;pointer-events:none;">
       <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;" data-i18n="ob_cta">Entrer dans les lieux ›</button>
@@ -7954,7 +8038,10 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div class="profile-hdr">
         <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true">?</div>
         <div class="profile-name-big" id="profileName">…</div>
-        <button onclick="shareMyProfile()" style="margin-top:10px;font-size:12px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
+          <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
+          <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.07);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;">✦ Mon année</button>
+        </div>
       </div>
       <!-- ── RANG sous le nom ─────────────────────────── -->
       <div style="text-align:center;margin-bottom:16px;padding:8px 0;">
