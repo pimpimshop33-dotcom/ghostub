@@ -1113,6 +1113,19 @@ WorldService.init(db, {
   doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp
 }, Analytics);
 
+
+// ── COLLECTIONS FIRESTORE ────────────────────────────────
+const COLL = {
+  GHOSTS:  'ghosts',
+  USERS:   'users',
+  REPLIES: 'replies',
+  NOTIFS:  'notifications',
+  REPORTS: 'reports',
+  DISCOVERIES: 'discoveries',
+  PREMIUM_CODES: 'premiumCodes',
+  GHOST_STATS: 'ghostStats'
+};
+
 // ── UTILS ────────────────────────────────────────────────
 // Escaper le HTML pour éviter XSS lors de l'affichage du contenu utilisateur
 function escapeHTML(str) {
@@ -1507,7 +1520,7 @@ onAuthStateChanged(auth, async user => {
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
     document.getElementById('profileName').textContent = escapeHTML(user.displayName || user.email);
     document.getElementById('profileAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
-    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
     updatePremiumUI();
     showScreen('screenRadar');
@@ -1760,7 +1773,7 @@ async function checkResonances() {
   if (!currentUser || _checkResonancesRunning) return;
   _checkResonancesRunning = true;
   try {
-    const myGhosts = await getDocs(query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid), limit(50)));
+    const myGhosts = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid), limit(50)));
     myGhosts.forEach(d => {
       const g = d.data();
       const prev = parseInt(localStorage.getItem('prev_reso_' + d.id) || '0');
@@ -1796,7 +1809,7 @@ async function checkDiscoveries() {
   if (!currentUser) return;
   try {
     const snap = await getDocs(query(
-      collection(db, 'discoveries'),
+      collection(db, COLL.DISCOVERIES),
       where('authorUid', '==', currentUser.uid),
       where('notified', '==', false)
     ));
@@ -1806,7 +1819,7 @@ async function checkDiscoveries() {
         t.notif_disc_title,
         `${escapeHTML(disc.discoveredBy)} a découvert votre fantôme à "${escapeHTML(disc.ghostLocation)}"`
       );
-      updateDoc(doc(db, 'discoveries', d.id), { notified: true }).catch(() => {});
+      updateDoc(doc(db, COLL.DISCOVERIES, d.id), { notified: true }).catch(() => {});
     }
   } catch(e) {}
 }
@@ -1847,7 +1860,7 @@ async function _notifyNearbyUsers(newGhostId, lat, lng, location) {
   // Chercher des fantômes dans un rayon ~150m (delta lat/lng ~0.0014°)
   const delta = 0.0014;
   const snap = await getDocs(query(
-    collection(db, 'ghosts'),
+    collection(db, COLL.GHOSTS),
     where('lat', '>=', lat - delta),
     where('lat', '<=', lat + delta),
     limit(20)
@@ -1860,7 +1873,7 @@ async function _notifyNearbyUsers(newGhostId, lat, lng, location) {
     // Vérifier aussi longitude (Firestore ne filtre que sur lat)
     if (Math.abs((g.lng || 0) - lng) > delta * 2) continue;
     notified.add(g.authorUid);
-    await addDoc(collection(db, 'notifications'), {
+    await addDoc(collection(db, COLL.NOTIFS), {
       type: 'nearby_new',
       toUid: g.authorUid,
       ghostId: newGhostId,
@@ -1875,7 +1888,7 @@ async function checkReplyNotifications() {
   if (!currentUser) return;
   try {
     const snap = await getDocs(query(
-      collection(db, 'notifications'),
+      collection(db, COLL.NOTIFS),
       where('toUid', '==', currentUser.uid),
       where('notified', '==', false),
       limit(10)
@@ -1906,7 +1919,7 @@ async function checkReplyNotifications() {
       } else continue;
       showNotif(title, msg);
       showToast('info', msg, 5000);
-      updateDoc(doc(db, 'notifications', d.id), { notified: true }).catch(() => {});
+      updateDoc(doc(db, COLL.NOTIFS, d.id), { notified: true }).catch(() => {});
     }
   } catch(e) {}
 }
@@ -1964,12 +1977,17 @@ function _startNotifIntervals() {
     _visibilityListenerAdded = true;
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
+        // Reprendre les intervals suspendus
+        if (!_notifIntervalsStarted) _startNotifIntervals();
         setTimeout(() => {
           checkNewGhosts();
           checkDiscoveries();
           checkReplyNotifications();
           checkVirginGhostNearby();
         }, 1500);
+      } else {
+        // Suspendre les intervals quand l'app passe en arrière-plan
+        _stopNotifIntervals();
       }
     });
   }
@@ -2331,27 +2349,13 @@ async function refreshProfileStats() {
   const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
   try {
-    // Lire d'abord les compteurs dénormalisés (1 lecture) si disponibles
-    const userRef = doc(db, 'users', currentUser.uid);
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.exists() ? userSnap.data() : {};
+    const snap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid)));
     const _depKey2 = 'ghostub_total_deposited_' + currentUser.uid;
     const _localDep = parseInt(localStorage.getItem(_depKey2) || '0');
-    if (userData.ghostCount != null) {
-      animateStatNumber('statDeposited', Math.max(userData.ghostCount, _localDep));
-    } else {
-      // Fallback : compter les docs (progressivement remplacé par ghostCount)
-      const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid), limit(100)));
-      animateStatNumber('statDeposited', Math.max(snap.size, _localDep));
-    }
-    if (userData.totalResonances != null) {
-      animateStatNumber('statResonances', userData.totalResonances);
-    } else {
-      const snap2 = await getDocs(query(collection(db, 'ghosts'), where('authorUid','==', currentUser.uid), limit(100)));
-      let totalReso = 0;
-      snap2.forEach(d => { totalReso += d.data().resonances || 0; });
-      animateStatNumber('statResonances', totalReso);
-    }
+    animateStatNumber('statDeposited', Math.max(snap.size, _localDep));
+    let totalReso = 0;
+    snap.forEach(d => { totalReso += d.data().resonances || 0; });
+    animateStatNumber('statResonances', totalReso);
   } catch(e) { console.warn('refreshProfileStats:', e); }
 }
 
@@ -2365,7 +2369,7 @@ async function loadBizDashboard() {
   let snap;
   try {
     snap = await getDocs(query(
-      collection(db, 'ghosts'),
+      collection(db, COLL.GHOSTS),
       where('authorUid', '==', currentUser.uid),
       limit(50)
     ));
@@ -2383,7 +2387,7 @@ async function loadBizDashboard() {
   const statsMap = {};
   try {
     const statsSnap = await getDocs(query(
-      collection(db, 'ghostStats'),
+      collection(db, COLL.GHOST_STATS),
       where('authorUid', '==', currentUser.uid)
     ));
     statsSnap.forEach(d => { statsMap[d.id] = d.data().openCount || 0; });
@@ -2441,7 +2445,7 @@ window.renewBusinessGhost = async (ghostId) => {
   const confirmed = await showConfirm('Renouveler l\'offre ?', 'La durée de vie de cette offre sera remise à 1 mois à partir d\'aujourd\'hui.', { confirmLabel: '↻ Renouveler' });
   if (!confirmed) return;
   try {
-    await updateDoc(doc(db, 'ghosts', ghostId), {
+    await updateDoc(doc(db, COLL.GHOSTS, ghostId), {
       createdAt: serverTimestamp(),
       expired: false
     });
@@ -2466,7 +2470,7 @@ window.toggleDiscoveryHistory = async () => {
     const results = [];
     for (const id of ids.slice(-20).reverse()) { // 20 dernières
       try {
-        const d = await getDoc(doc(db, 'ghosts', id));
+        const d = await getDoc(doc(db, COLL.GHOSTS, id));
         if (d.exists()) {
           const g = d.data();
           results.push(`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
@@ -2495,7 +2499,7 @@ window.toggleDepositedList = async () => {
   content.innerHTML = `<div style="opacity:.5;">${t.loading || 'Chargement…'}</div>`;
   try {
     const snap = await getDocs(query(
-      collection(db, 'ghosts'),
+      collection(db, COLL.GHOSTS),
       where('authorUid', '==', currentUser.uid),
       orderBy('createdAt', 'desc'),
       limit(30)
@@ -2538,9 +2542,9 @@ window.deleteOneGhost = async (ghostId) => {
   if (!confirmed) return;
   try {
     // Supprimer les réponses associées
-    const replies = await getDocs(query(collection(db, 'replies'), where('ghostId', '==', ghostId), limit(50)));
-    const dels = replies.docs.map(d => deleteDoc(doc(db, 'replies', d.id)));
-    await Promise.all([...dels, deleteDoc(doc(db, 'ghosts', ghostId))]);
+    const replies = await getDocs(query(collection(db, COLL.REPLIES), where('ghostId', '==', ghostId)));
+    const dels = replies.docs.map(d => deleteDoc(doc(db, COLL.REPLIES, d.id)));
+    await Promise.all([...dels, deleteDoc(doc(db, COLL.GHOSTS, ghostId))]);
     // Retirer l'élément de la liste sans recharger
     const item = document.getElementById('deposited-item-' + ghostId);
     if (item) {
@@ -2644,11 +2648,11 @@ window.activatePremium = async () => {
     // Transaction atomique : lecture + écriture en une seule opération
     // → impossible d'activer le même code deux fois simultanément
     await runTransaction(db, async (txn) => {
-      const codeRef = doc(db, 'premiumCodes', code);
+      const codeRef = doc(db, COLL.PREMIUM_CODES, code);
       const codeSnap = await txn.get(codeRef);
       if (!codeSnap.exists()) throw { code: 'not-found' };
       if (codeSnap.data().used) throw { code: 'already-used' };
-      const userRef = doc(db, 'users', currentUser.uid);
+      const userRef = doc(db, COLL.USERS, currentUser.uid);
       txn.update(codeRef, { used: true, usedBy: currentUser.uid, usedAt: serverTimestamp() });
       txn.set(userRef, { premium: true, premiumSince: serverTimestamp() }, { merge: true });
     });
@@ -2698,7 +2702,7 @@ window.submitReport = async (reason) => {
   const reporterUid = currentUser.uid;
   const key = 'reported_' + reporterUid + '_' + ghostId;
   try {
-    await addDoc(collection(db, 'reports'), {
+    await addDoc(collection(db, COLL.REPORTS), {
       ghostId,
       ghostLocation: selectedGhost.location || '',
       ghostAuthorUid: selectedGhost.authorUid || '',
@@ -2708,10 +2712,10 @@ window.submitReport = async (reason) => {
     });
     localStorage.setItem(key, '1');
     showToast('success', t.toast_report_sent);
-    await updateDoc(doc(db, 'ghosts', ghostId), { reportCount: increment(1) });
-    const ghostDoc = await getDocs(query(collection(db, 'reports'), where('ghostId', '==', ghostId), limit(1)));
+    await updateDoc(doc(db, COLL.GHOSTS, ghostId), { reportCount: increment(1) });
+    const ghostDoc = await getDocs(query(collection(db, COLL.REPORTS), where('ghostId', '==', ghostId)));
     if (ghostDoc.size >= REPORT_THRESHOLD) {
-      await deleteDoc(doc(db, 'ghosts', ghostId));
+      await deleteDoc(doc(db, COLL.GHOSTS, ghostId));
       showScreen('screenRadar');
       setNav('nav-radar');
       await loadNearbyGhosts();
@@ -3159,7 +3163,7 @@ let _unsubResonances = null;
 function watchMyGhostResonances() {
   if (_unsubResonances) { _unsubResonances(); _unsubResonances = null; }
   if (!currentUser) return;
-  const q = query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid));
+  const q = query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid));
   _unsubResonances = onSnapshot(q, snap => {
     snap.docChanges().forEach(change => {
       if (change.type === 'modified') {
@@ -3255,20 +3259,20 @@ window.deleteMyGhosts = async () => {
   btn.disabled = true;
   try {
     // Récupérer mes fantômes
-    const snap = await getDocs(query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid), limit(50)));
+    const snap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid)));
     const ghostIds = snap.docs.map(d => d.id);
-    const dels = snap.docs.map(d => deleteDoc(doc(db, 'ghosts', d.id)));
+    const dels = snap.docs.map(d => deleteDoc(doc(db, COLL.GHOSTS, d.id)));
 
     // FIX: Supprimer mes réponses ET toutes les réponses sur mes fantômes
-    const myReplies = await getDocs(query(collection(db, 'replies'), where('authorUid', '==', currentUser.uid), limit(100)));
-    const rDels = myReplies.docs.map(d => deleteDoc(doc(db, 'replies', d.id)));
+    const myReplies = await getDocs(query(collection(db, COLL.REPLIES), where('authorUid', '==', currentUser.uid)));
+    const rDels = myReplies.docs.map(d => deleteDoc(doc(db, COLL.REPLIES, d.id)));
 
     // Supprimer aussi les réponses d'autres utilisateurs sur mes fantômes
     const replyDelsOnMyGhosts = [];
     for (const gid of ghostIds.slice(0, 20)) { // limiter à 20 pour éviter trop d'appels
       try {
-        const r = await getDocs(query(collection(db, 'replies'), where('ghostId', '==', gid), limit(20)));
-        r.docs.forEach(d => replyDelsOnMyGhosts.push(deleteDoc(doc(db, 'replies', d.id))));
+        const r = await getDocs(query(collection(db, COLL.REPLIES), where('ghostId', '==', gid)));
+        r.docs.forEach(d => replyDelsOnMyGhosts.push(deleteDoc(doc(db, COLL.REPLIES, d.id))));
       } catch(e) {}
     }
 
@@ -3293,11 +3297,11 @@ window.exportMyData = async () => {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Préparation…'; }
   try {
     // 1. Mes fantômes déposés
-    const ghostsSnap = await getDocs(query(collection(db, 'ghosts'), where('authorUid', '==', currentUser.uid), limit(200)));
+    const ghostsSnap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid)));
     const ghosts = ghostsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // 2. Mes réponses envoyées
-    const repliesSnap = await getDocs(query(collection(db, 'replies'), where('authorUid', '==', currentUser.uid), limit(200)));
+    const repliesSnap = await getDocs(query(collection(db, COLL.REPLIES), where('authorUid', '==', currentUser.uid)));
     const replies = repliesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     // 3. Mes découvertes (localStorage)
@@ -3402,13 +3406,13 @@ window.loadNearbyGhosts = async () => {
     const g = { id: d.id, ...d.data() };
     if (g.expired) return;
     if (isExpired(g)) {
-      updateDoc(doc(db, 'ghosts', g.id), { expired: true }).catch(()=>{});
+      updateDoc(doc(db, COLL.GHOSTS, g.id), { expired: true }).catch(()=>{});
       // Supprimer automatiquement les fantômes expirés depuis plus de 60 jours si on est l'auteur
       if (g.authorUid === currentUser?.uid && g.createdAt) {
         const msSinceCreated = Date.now() - g.createdAt.seconds * 1000;
         const durationMs = 60 * 24 * 3600 * 1000; // 60 jours
         if (msSinceCreated > durationMs) {
-          deleteDoc(doc(db, 'ghosts', g.id)).catch(() => {});
+          deleteDoc(doc(db, COLL.GHOSTS, g.id)).catch(() => {});
         }
       }
       return;
@@ -3431,7 +3435,7 @@ window.loadNearbyGhosts = async () => {
           `"${(g.message || '').substring(0, 80)}" — à ${formatDistance(g.distance)}`
         );
         if (currentUser && g.authorUid && g.authorUid !== currentUser.uid) {
-          addDoc(collection(db, 'discoveries'), {
+          addDoc(collection(db, COLL.DISCOVERIES), {
             ghostId: g.id,
             ghostLocation: g.location || t.detail_location_unknown,
             ghostMessage: (g.message || '').substring(0, 60),
@@ -3883,7 +3887,7 @@ window.loadEmpreinteMap = async () => {
   try {
     // 1. Charger les fantômes déposés par l'utilisateur
     const depositSnap = await getDocs(query(
-      collection(db, 'ghosts'),
+      collection(db, COLL.GHOSTS),
       where('authorUid', '==', currentUser.uid),
       limit(100)
     ));
@@ -3895,7 +3899,7 @@ window.loadEmpreinteMap = async () => {
 
     // 2. Charger les fantômes découverts (depuis Firestore discoveries)
     const discSnap = await getDocs(query(
-      collection(db, 'discoveries'),
+      collection(db, COLL.DISCOVERIES),
       where('discoveredByUid', '==', currentUser.uid),
       limit(100)
     )).catch(() => null);
@@ -3915,7 +3919,7 @@ window.loadEmpreinteMap = async () => {
     if (missingIds.length > 0) {
       await Promise.all(missingIds.map(async id => {
         try {
-          const d = await getDoc(doc(db, 'ghosts', id));
+          const d = await getDoc(doc(db, COLL.GHOSTS, id));
           if (d.exists()) {
             const g = d.data();
             if (g.lat && g.lng) discoveries.push({ lat: g.lat, lng: g.lng, emoji: g.emoji || '👁', location: g.location || '?', id });
@@ -4049,7 +4053,7 @@ window.generateYearCard = async () => {
     let topLocation = '';
     try {
       const snap = await getDocs(query(
-        collection(db, 'ghosts'),
+        collection(db, COLL.GHOSTS),
         where('authorUid', '==', currentUser.uid),
         orderBy('openCount', 'desc'),
         limit(1)
@@ -4197,10 +4201,10 @@ window.checkPublicProfileParam = async () => {
   const uid = new URLSearchParams(window.location.search).get('profil');
   if (!uid) return;
   try {
-    const userDoc = await getDoc(doc(db, 'users', uid));
+    const userDoc = await getDoc(doc(db, COLL.USERS, uid));
     const name = userDoc.exists() ? (userDoc.data().displayName || (t.profile_ghost_hunter || 'Chasseur de fantômes')) : (t.profile_ghost_hunter || 'Chasseur de fantômes');
     const ghostsSnap = await getDocs(query(
-      collection(db, 'ghosts'),
+      collection(db, COLL.GHOSTS),
       where('authorUid', '==', uid),
       where('anonymous', '==', false),
       limit(100)
@@ -4272,7 +4276,7 @@ window.loadLeaderboard = async () => {
   try {
     // Classement par nombre de découvertes (openCount total sur leurs fantômes)
     const snap = await getDocs(query(
-      collection(db, 'ghosts'),
+      collection(db, COLL.GHOSTS),
       where('anonymous', '==', false),
       limit(100)
     ));
@@ -4541,7 +4545,7 @@ window.openGhost = async (id) => {
 
   if (!selectedGhost) {
     try {
-      const docSnap = await getDoc(doc(db, 'ghosts', id));
+      const docSnap = await getDoc(doc(db, COLL.GHOSTS, id));
       if (!docSnap.exists()) return;
       selectedGhost = { id: docSnap.id, ...docSnap.data(), distance: 0 };
     } catch(e) { return; }
@@ -4726,7 +4730,7 @@ window.openGhost = async (id) => {
   }
 
   const repliesSnap = await getDocs(query(
-    collection(db, 'replies'),
+    collection(db, COLL.REPLIES),
     where('ghostId', '==', id),
     orderBy('createdAt', 'desc')
   ));
@@ -4915,13 +4919,7 @@ window.resonate = async () => {
   btn.classList.add('resonated');
   btn.textContent = t.detail_reso_sent;
   markResonatedToday(selectedGhost.id);
-  await updateDoc(doc(db, 'ghosts', selectedGhost.id), { resonances: increment(1) });
-  // Compteur dénormalisé sur l'auteur du ghost
-  if (selectedGhost.authorUid) {
-    setDoc(doc(db, 'users', selectedGhost.authorUid),
-      { totalResonances: increment(1) }, { merge: true }
-    ).catch(e => console.warn('totalResonances increment:', e));
-  }
+  await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), { resonances: increment(1) });
   Analytics.track('resonate');
 };
 
@@ -4973,7 +4971,7 @@ window.toggleSecret = async () => {
   const nowSecret = !selectedGhost.secret;
   const btn = document.getElementById('secretBtn');
   btn.textContent = t.dep_pending || 'En cours…';
-  await updateDoc(doc(db, 'ghosts', selectedGhost.id), {
+  await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), {
     secret: nowSecret,
     radius: nowSecret ? '3m' : (selectedGhost.radius || '10m'),
     emoji: nowSecret ? '🔮' : '👻'
@@ -5049,13 +5047,9 @@ window.depositGhost = async () => {
     );
     // Secours : forcer videoUrl dans Firestore si présent
     if (videoUrl && ghostId) {
-      updateDoc(doc(db, 'ghosts', ghostId), { videoUrl }).catch(e => console.warn('videoUrl update:', e));
+      updateDoc(doc(db, COLL.GHOSTS, ghostId), { videoUrl }).catch(e => console.warn('videoUrl update:', e));
     }
     await WorldService.recordDepositTimestamp(currentUser.uid);
-    // Compteur dénormalisé — 1 lecture au lieu de N pour refreshProfileStats
-    setDoc(doc(db, 'users', currentUser.uid),
-      { ghostCount: increment(1) }, { merge: true }
-    ).catch(e => console.warn('ghostCount increment:', e));
     document.getElementById('depositMsg').value = '';
     document.getElementById('depositLocation').value = '';
     document.getElementById('chainHint').value = '';
@@ -5130,7 +5124,7 @@ window.sendReply = async () => {
   const btn = document.querySelector('#screenReply .btn-primary');
   if (btn) setLoading(btn, true);
   try {
-    await addDoc(collection(db, 'replies'), {
+    await addDoc(collection(db, COLL.REPLIES), {
       ghostId: selectedGhost.id,
       message: msg,
       anonymous: anon,
@@ -5140,7 +5134,7 @@ window.sendReply = async () => {
     });
     // Notifier l'auteur du fantôme si ce n'est pas soi-même
     if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser.uid) {
-      addDoc(collection(db, 'notifications'), {
+      addDoc(collection(db, COLL.NOTIFS), {
         type: 'reply',
         toUid: selectedGhost.authorUid,
         ghostId: selectedGhost.id,
@@ -5176,7 +5170,7 @@ async function _doOpenEnvelope() {
       // FIX: Lire le vrai openCount depuis Firestore pour éviter les faux "Premier à lire"
       let realOpenCount = 0;
       try {
-        const ghostSnap = await getDoc(doc(db, 'ghosts', selectedGhost.id));
+        const ghostSnap = await getDoc(doc(db, COLL.GHOSTS, selectedGhost.id));
         realOpenCount = ghostSnap.exists() ? (ghostSnap.data().openCount || 0) : 0;
       } catch(e) {
         realOpenCount = selectedGhost.openCount || 0;
@@ -5205,7 +5199,7 @@ async function _doOpenEnvelope() {
       }
 
       if (wasFirst) showToast('success', t.detail_first_toast, 4000);
-      updateDoc(doc(db, 'ghosts', selectedGhost.id), {
+      updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), {
         openCount: increment(1),
         ...(nowExpired ? { expired: true } : {})
       }).catch(() => {
@@ -5220,7 +5214,7 @@ async function _doOpenEnvelope() {
       // Notifier l'auteur si ce n'est pas soi-même
       if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser?.uid) {
         const lieu = selectedGhost.location || 'ce lieu';
-        addDoc(collection(db, 'notifications'), {
+        addDoc(collection(db, COLL.NOTIFS), {
           type: selectedGhost.businessMode ? 'biz_open' : 'open',
           toUid: selectedGhost.authorUid,
           ghostId: selectedGhost.id,
