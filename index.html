@@ -2575,11 +2575,12 @@ function updatePremiumUI() {
   }
   const pricingSection = document.getElementById('pricingSection');
   if (isPremium) {
+    planEl.style.display = 'block';
     planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
     if (pricingSection) pricingSection.style.display = 'none';
   } else {
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;">' + t.profile_free_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_free_sub + '</div>';
+    planEl.style.display = 'none';
     if (codeSection) codeSection.style.display = 'block';
     if (pricingSection) pricingSection.style.display = 'block';
   }
@@ -8164,8 +8165,8 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div class="section-label" style="margin-bottom:8px;" data-i18n="profile_account_section">Mon compte</div>
 
       <!-- ── PLAN ACTUEL ─────────────────────────────────── -->
-      <div id="planInfo" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:4px;" data-i18n="profile_free_plan">Plan gratuit</div>
+      <div id="planInfo" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;" data-i18n="profile_free_plan">Plan gratuit</div>
         <div style="font-size:13px;color:var(--warm-dim);" data-i18n="profile_free_sub">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
       </div>
 
