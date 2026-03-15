@@ -1481,10 +1481,18 @@ function buildLeafletMap(centerLat, centerLng, h) {
 function getLocation() {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject((_currentLang === 'en' ? 'Geolocation not supported' : 'Géolocalisation non supportée')); return; }
+    // Tentative haute précision
     navigator.geolocation.getCurrentPosition(
       pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
-      err => reject(err),
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 3000 }
+      () => {
+        // Fallback basse précision si haute précision échoue (fréquent sur mobile)
+        navigator.geolocation.getCurrentPosition(
+          pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
+          err => reject(err),
+          { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 }
     );
   });
 }
