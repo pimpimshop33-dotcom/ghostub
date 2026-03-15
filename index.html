@@ -1026,6 +1026,7 @@ window.setLang = (lang) => {
   // Profile — re-render si les données sont déjà chargées
   if (typeof refreshProfileStats === 'function') refreshProfileStats();
   if (typeof updatePremiumUI === 'function') updatePremiumUI();
+  if (typeof _renderStreak === 'function') _renderStreak();
   if (typeof loadBizDashboard === 'function') loadBizDashboard();
 
   // Empreinte map — re-render seulement si déjà initialisée (évite appel Firestore inutile)
@@ -2222,6 +2223,35 @@ async function uploadMedia(uid) {
   return { audioUrl, photoUrl, videoUrl };
 }
 
+
+// ── STREAK DE DÉCOUVERTE ─────────────────────────────────
+function _getStreakKey() { return currentUser ? 'ghostub_streak_' + currentUser.uid : 'ghostub_streak_anon'; }
+function _getStreak() {
+  try { return JSON.parse(localStorage.getItem(_getStreakKey()) || '{"count":0,"lastDate":""}'); } catch(e) { return {count:0,lastDate:''}; }
+}
+function _updateStreak() {
+  const today = new Date().toISOString().slice(0,10);
+  const s = _getStreak();
+  if (s.lastDate === today) return s; // déjà mis à jour aujourd'hui
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const newCount = s.lastDate === yesterday ? s.count + 1 : 1; // continuité ou reset
+  const updated = { count: newCount, lastDate: today };
+  localStorage.setItem(_getStreakKey(), JSON.stringify(updated));
+  return updated;
+}
+function _renderStreak() {
+  const s = _getStreak();
+  const el = document.getElementById('streakDisplay');
+  if (!el) return;
+  if (s.count >= 2) {
+    el.textContent = '🔥 ' + s.count + 'j';
+    el.style.display = 'inline-block';
+    el.title = s.count + ' jours consécutifs';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 // ── MILESTONES ──────────────────────────────────────────
 const MILESTONES = [1,5,10,25,50,100];
 const RANKS = [
@@ -2245,6 +2275,7 @@ function showDiscoveryToast(count, isNew) {
   if (!toast) return;
   const rank = getRank(count);
   const isMilestone = MILESTONES.includes(count) && isNew;
+  if (isNew) { _updateStreak(); _renderStreak(); }
   if (isMilestone) {
     icon.textContent = rank.icon;
     text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
@@ -2500,6 +2531,25 @@ function updatePremiumUI() {
   const planEl = document.getElementById('planInfo');
   const codeSection = document.getElementById('codeSection');
   if (!planEl) return;
+  // Badge avatar Premium
+  const avatar = document.getElementById('profileAvatar');
+  if (avatar) {
+    avatar.style.border = isPremium
+      ? '1.5px solid rgba(255,200,80,.6)'
+      : '1px solid var(--border-bright)';
+    avatar.style.boxShadow = isPremium ? '0 0 14px rgba(255,200,80,.2)' : '';
+    // Badge ✦ Premium sous l'avatar
+    const existingBadge = document.getElementById('premiumAvatarBadge');
+    if (isPremium && !existingBadge) {
+      const badge = document.createElement('div');
+      badge.id = 'premiumAvatarBadge';
+      badge.textContent = '✦ Premium';
+      badge.style.cssText = 'font-size:10px;color:rgba(255,200,80,.85);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:2px 10px;margin-top:4px;letter-spacing:.5px;display:inline-block;';
+      avatar.parentNode.insertBefore(badge, avatar.nextSibling);
+    } else if (!isPremium && existingBadge) {
+      existingBadge.remove();
+    }
+  }
   if (isPremium) {
     planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
@@ -2722,9 +2772,7 @@ window.shareMapLocation = async () => {
     if (userLat && userLng) {
       ctx.fillStyle = 'rgba(255,240,200,0.6)';
       ctx.font = '38px "Instrument Sans", sans-serif';
-      const _lngAbs = Math.abs(userLng).toFixed(3);
-      const _lngDir = userLng < 0 ? '° O' : '° E';
-      ctx.fillText(`${userLat.toFixed(3)}° N  ${_lngAbs}${_lngDir}`, W/2, H/2 + 140);
+      ctx.fillText(`${userLat.toFixed(3)}° N  ${userLng.toFixed(3)}° E`, W/2, H/2 + 140);
     }
 
     // CTA
@@ -2787,11 +2835,6 @@ window.generateGhostCard = async () => {
   if (btn) { btn.textContent = '⏳ Génération…'; btn.disabled = true; }
 
   try {
-    await document.fonts.ready;
-    await Promise.all([
-      document.fonts.load('italic 72px "Cormorant Garamond"'),
-      document.fonts.load('500 38px "Instrument Sans"')
-    ]);
     const W = 1080, H = 1920;
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
@@ -2876,9 +2919,7 @@ window.generateGhostCard = async () => {
       ctx.fillStyle = 'rgba(120,130,180,0.4)';
       ctx.font = '500 30px "Instrument Sans", sans-serif';
       ctx.letterSpacing = '2px';
-      const lngAbs = Math.abs(selectedGhost.lng).toFixed(4);
-      const lngDir = selectedGhost.lng < 0 ? '° O' : '° E';
-      ctx.fillText(`${lat}° N   ${lngAbs}${lngDir}`, W/2, H*0.79);
+      ctx.fillText(`${lat}° N   ${lng}° E`, W/2, H*0.79);
       ctx.letterSpacing = '0px';
     }
 
@@ -3253,10 +3294,7 @@ const timeRemaining = g => {
     .replace(/dans /i,                  'in ');
 };
 
-let _ghostsLoading = false;
 window.loadNearbyGhosts = async () => {
-  if (_ghostsLoading) return;
-  _ghostsLoading = true;
   // Vérification offline
   if (!navigator.onLine) {
     showToast('warning', t.radar_offline);
@@ -3377,7 +3415,6 @@ window.loadNearbyGhosts = async () => {
     }
   }
   Analytics.track('ghosts_loaded', { count });
-  _ghostsLoading = false;
   checkForNewGhosts(count);
   // Notification fantôme jamais ouvert (3s après le chargement)
   setTimeout(() => checkVirginGhostNearby(), 3000);
@@ -7334,6 +7371,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
       <div style="font-size:15px;" aria-hidden="true">📳</div>
       <div style="font-size:12px;color:var(--warm-dim);flex:1;" data-i18n="radar_vibe_label">Détection active · présences en attente</div>
       <div id="resoStatus" title="Résonance quotidienne disponible" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(168,180,255,.15);color:rgba(168,180,255,.5);cursor:default;" aria-label="Résonance quotidienne">✦ 1</div>
+      <div id="streakDisplay" style="display:none;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,150,50,.25);color:rgba(255,150,50,.8);cursor:default;" aria-label="Streak de découvertes"></div>
       <div class="vibe-dot" aria-hidden="true"></div>
     </div>
     <div class="radar-wrap" aria-hidden="true">
