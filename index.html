@@ -36,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=12"></script>
+<script type="module" src="app.js?v=13"></script>
 
 <link rel="stylesheet" href="style.css?v=2">
 </head>
@@ -579,11 +579,8 @@
           </button>
           <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
           <div id="videoPreview"></div>
-          <div id="videoLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.78);border-radius:14px;flex-direction:column;align-items:center;justify-content:center;gap:8px;backdrop-filter:blur(4px);cursor:pointer;padding:16px;text-align:center;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.8);">👑 Premium</div>
-            <div style="font-size:13px;color:var(--ether);font-weight:500;">Ajoute une vidéo à ton ghost</div>
-            <div style="font-size:11px;color:var(--warm-dim);line-height:1.5;">Jusqu’à 20 secondes · 50 Mo · s’ouvre seulement quand on est sur place.</div>
-            <div style="margin-top:4px;padding:7px 18px;background:linear-gradient(135deg,rgba(255,200,80,.25),rgba(255,200,80,.1));border:1px solid rgba(255,200,80,.5);border-radius:20px;font-size:12px;color:rgba(255,200,80,.95);font-weight:500;">✦ Passer Premium — 0,99€/mois</div>
+          <div id="videoLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" onkeydown="if(event.key==='Enter')this.click()">
+            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
           </div>
         </div>
         <!-- CHAÎNE DE FANTÔMES PREMIUM — masquée en mode Commerce -->
@@ -600,11 +597,8 @@
             </button>
             <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
           </div>
-          <div id="chainLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.78);border-radius:14px;flex-direction:column;align-items:center;justify-content:center;gap:8px;backdrop-filter:blur(4px);cursor:pointer;padding:16px;text-align:center;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.8);">👑 Premium</div>
-            <div style="font-size:13px;color:var(--ether);font-weight:500;">Crée une chasse au trésor urbaine</div>
-            <div style="font-size:11px;color:var(--warm-dim);line-height:1.5;">Enchaîne tes ghosts — le lecteur doit trouver le premier pour débloquer le suivant.</div>
-            <div style="margin-top:4px;padding:7px 18px;background:linear-gradient(135deg,rgba(255,200,80,.25),rgba(255,200,80,.1));border:1px solid rgba(255,200,80,.5);border-radius:20px;font-size:12px;color:rgba(255,200,80,.95);font-weight:500;">✦ Passer Premium — 0,99€/mois</div>
+          <div id="chainLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
+            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
           </div>
         </div>
         <!-- Ghost dédié — Premium -->
@@ -618,11 +612,18 @@
             <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
             <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n’importe qui puisse l’ouvrir.</div>
           </div>
-          <div id="dedicatedLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.78);border-radius:14px;flex-direction:column;align-items:center;justify-content:center;gap:8px;backdrop-filter:blur(4px);cursor:pointer;padding:16px;text-align:center;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.8);">👑 Premium</div>
-            <div style="font-size:13px;color:var(--ether);font-weight:500;">Envoie un ghost secret à quelqu’un</div>
-            <div style="font-size:11px;color:var(--warm-dim);line-height:1.5;">Entre son email — seul lui pourra l’ouvrir. Idéal pour surprendre quelqu’un à un endroit précis.</div>
-            <div style="margin-top:4px;padding:7px 18px;background:linear-gradient(135deg,rgba(255,200,80,.25),rgba(255,200,80,.1));border:1px solid rgba(255,200,80,.5);border-radius:20px;font-size:12px;color:rgba(255,200,80,.95);font-weight:500;">✦ Passer Premium — 0,99€/mois</div>
+          <div id="dedicatedLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.6);border-radius:14px;align-items:center;justify-content:center;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium" onkeydown="if(event.key==='Enter')this.click()">
+            <div style="font-size:11px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:4px 12px;">🔒 Premium</div>
+          </div>
+        </div>
+        <!-- Bandeau Premium unique -->
+        <div id="premiumBannerDeposit" style="display:none;background:linear-gradient(135deg,rgba(255,200,80,.08),rgba(255,200,80,.03));border:1px solid rgba(255,200,80,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-size:11px;color:rgba(255,200,80,.9);font-weight:500;">👑 Vidéo · Chaîne · Ghost dédié</div>
+              <div style="font-size:10px;color:var(--spirit-dim);margin-top:2px;">Tout inclus dans Premium — 0,99€/mois</div>
+            </div>
+            <div style="font-size:11px;color:rgba(255,200,80,.7);white-space:nowrap;">Voir ›</div>
           </div>
         </div>
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite"></div>
