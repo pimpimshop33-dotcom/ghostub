@@ -36,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=10"></script>
+<script type="module" src="app.js?v=11"></script>
 
 <link rel="stylesheet" href="style.css?v=2">
 </head>
@@ -607,9 +607,9 @@
             <span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span>
           </label>
           <div id="dedicatedContent" style="background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;">
-            <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Seul le destinataire pourra ouvrir ce ghost. Partage-lui le code après le dépôt.</div>
-            <input class="form-input" id="dedicatedUidInput" type="text" placeholder="UID ou email du destinataire (optionnel)" style="font-size:13px !important;margin-bottom:8px;" aria-label="UID du destinataire">
-            <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour générer un code QR après le dépôt.</div>
+            <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l’email du destinataire — seul lui pourra ouvrir ce ghost.</div>
+            <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
+            <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n’importe qui puisse l’ouvrir.</div>
           </div>
           <div id="dedicatedLock" style="display:none;position:absolute;inset:0;background:rgba(6,6,8,.85);border-radius:14px;flex-direction:column;align-items:center;justify-content:center;gap:6px;backdrop-filter:blur(3px);cursor:pointer;" onclick="showScreen('screenProfile');setNav('nav-profile')" role="button" tabindex="0" aria-label="Fonctionnalité Premium">
             <div style="font-size:24px;" aria-hidden="true">🔒</div>
