@@ -997,6 +997,7 @@ window.setLang = (lang) => {
   // Profile — re-render si les données sont déjà chargées
   if (typeof refreshProfileStats === 'function') refreshProfileStats();
   if (typeof updatePremiumUI === 'function') updatePremiumUI();
+  if (typeof _renderPricingCards === 'function') _renderPricingCards();
   if (typeof _renderStreak === 'function') _renderStreak();
   if (typeof loadBizDashboard === 'function') loadBizDashboard();
 
@@ -1478,7 +1479,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
       });
       L.marker([g.lat, g.lng], { icon: spotIcon })
         .addTo(map)
-        .on('click', () => showToast('info', clusterIds.length + ' présences ici — approche-toi !'));
+        .on('click', () => showToast('info', clusterIds.length + (_currentLang === 'en' ? ' presences here — come closer!' : ' présences ici — approche-toi !')));
     }
   });
   setTimeout(() => map && map.invalidateSize(), 500);
@@ -1500,7 +1501,7 @@ async function _getIpLocation() {
 
 function getLocation() {
   return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) { reject('Géolocalisation non supportée'); return; }
+    if (!navigator.geolocation) { reject((_currentLang === 'en' ? 'Geolocation not supported' : 'Géolocalisation non supportée')); return; }
     navigator.geolocation.getCurrentPosition(
       pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; resolve(pos); },
       err => reject(err),
@@ -1532,6 +1533,7 @@ onAuthStateChanged(auth, async user => {
     const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
     updatePremiumUI();
+    _renderPricingCards();
     showScreen('screenRadar');
     setNav('nav-radar');
     // ── Présence passive — GPS watch ─────────────────────────────────
@@ -1803,14 +1805,21 @@ async function checkResonances() {
 }
 
 function _resoMessage(lieu, total) {
-  const messages = [
+  const messages_fr = [
     `Quelqu'un à <b>${lieu}</b> a été touché par ce que vous avez laissé là.`,
     `Une âme est passée à <b>${lieu}</b> — votre trace a résonné en elle.`,
     `À <b>${lieu}</b>, quelqu'un a senti que ce message existait.`,
     `Votre fantôme de <b>${lieu}</b> n'est plus seul — quelqu'un l'a entendu.`,
     `Un inconnu à <b>${lieu}</b> a résonné avec vos mots.`,
   ];
-  // Déterministe selon le total pour varier les messages
+  const messages_en = [
+    `Someone at <b>${lieu}</b> was moved by what you left there.`,
+    `A soul passed by <b>${lieu}</b> — your trace resonated within them.`,
+    `At <b>${lieu}</b>, someone felt this message existed.`,
+    `Your ghost at <b>${lieu}</b> is no longer alone — someone heard it.`,
+    `A stranger at <b>${lieu}</b> resonated with your words.`,
+  ];
+  const messages = _currentLang === 'en' ? messages_en : messages_fr;
   return messages[total % messages.length];
 }
 
@@ -1911,12 +1920,18 @@ async function checkReplyNotifications() {
         msg = `${escapeHTML(n.fromAuthor || 'Un inconnu')} a laissé une réponse à votre fantôme de <b>${lieu}</b>.`;
       } else if (n.type === 'biz_open') {
         title = '🏪 Un client a vu votre offre !';
-        msg = `Quelqu'un vient de découvrir votre offre commerce à <b>${lieu}</b>.`;
+        msg = _currentLang === 'en' ? `Someone just discovered your commerce offer at <b>${lieu}</b>.` : `Quelqu'un vient de découvrir votre offre commerce à <b>${lieu}</b>.`;
       } else if (n.type === 'open') {
         const openMsgs = [
-          `Quelqu'un vient de briser le sceau de votre trace à <b>${lieu}</b>.`,
-          `Un inconnu a ouvert votre enveloppe à <b>${lieu}</b> — votre message existe.`,
-          `Votre fantôme de <b>${lieu}</b> a été découvert pour la première fois.`,
+          ..._currentLang === 'en' ? [
+            `Someone just broke the seal of your trace at <b>${lieu}</b>.`,
+            `A stranger opened your envelope at <b>${lieu}</b> — your message exists.`,
+            `Your ghost at <b>${lieu}</b> was discovered for the first time.`,
+          ] : [
+            `Quelqu'un vient de briser le sceau de votre trace à <b>${lieu}</b>.`,
+            `Un inconnu a ouvert votre enveloppe à <b>${lieu}</b> — votre message existe.`,
+            `Votre fantôme de <b>${lieu}</b> a été découvert pour la première fois.`,
+          ],
         ];
         const hash = (n.ghostId || '').length % openMsgs.length;
         title = t.notif_open_title;
@@ -2654,6 +2669,63 @@ async function _verifyPremiumServer() {
     console.warn('_verifyPremiumServer:', e);
     return isPremium; // fallback sur valeur locale si réseau indispo
   }
+}
+
+
+// ── PRICING CARDS BILINGUES ──────────────────────────────
+function _renderPricingCards() {
+  const section = document.getElementById('pricingSection');
+  if (!section || isPremium) return;
+  const isEn = _currentLang === 'en';
+  section.innerHTML = `
+    <!-- Premium -->
+    <div style="background:linear-gradient(160deg,rgba(168,180,255,.07),rgba(168,180,255,.02));border:1px solid rgba(168,180,255,.3);border-radius:16px;padding:16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(168,180,255,.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
+        </div>
+        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(168,180,255,.4));">👻</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Instant drop' : 'Dépôt immédiat'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Video + audio 🎥' : 'Vidéo + vocal 🎥'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Dedicated ghost 💌' : 'Ghost dédié 💌'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Ghost chain 🔗' : 'Chaîne fantômes 🔗'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Future message 📅' : 'Message futur 📅'}</div>
+      </div>
+      <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(168,180,255,.25),rgba(168,180,255,.1));border:1px solid rgba(168,180,255,.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">${t.stripe_btn_premium || '✦ Become Premium Hunter'}</button>
+    </div>
+    <!-- Commerce -->
+    <div style="background:linear-gradient(160deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:16px;padding:16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:2px;">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">4,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
+        </div>
+        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(255,200,80,.4));">🏪</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'All Premium included' : 'Tout Premium inclus'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Commerce ghosts' : 'Ghosts Commerce'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Promo code built-in' : 'Code promo intégré'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Openings dashboard' : 'Dashboard ouvertures'}</div>
+      </div>
+      <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(255,200,80,.2),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:13px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">${t.stripe_btn_commerce || '🏪 Activate Commerce Plan'}</button>
+    </div>
+    <!-- Code promo discret -->
+    <div id="codeSection" style="padding:4px 0;">
+      <details style="cursor:pointer;">
+        <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;">${isEn ? 'Have an activation code?' : 'Vous avez un code d\'activation ?'}</summary>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
+          <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,200,80,.15),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:12px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;">${t.profile_activate_btn || 'Activer'}</button>
+        </div>
+        <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
+      </details>
+    </div>
+  `;
 }
 
 // ── STRIPE CHECKOUT ──────────────────────────────────────
@@ -3591,6 +3663,7 @@ function skeletonGhostList() {
 const POETIC_ADJ  = ['silencieux','nocturne','perdu','oublié','errant','pâle','lointain','secret','invisible','sombre','brumeux','éphémère'];
 const POETIC_NOUN = ['passant','souffle','murmure','reflet','voyageur','ombre','témoin','spectre','visiteur','veilleur','rêveur','fantôme'];
 const POETIC_TIME = ["du soir","de l'aube","d'hiver","de minuit","d'automne","du crépuscule","de mars","sans nom","sans visage","d'un instant"];
+const POETIC_TIME_EN = ["of the evening","of the dawn","of winter","of midnight","of autumn","of dusk","of march","with no name","with no face","of a moment"];
 
 // Tableaux EN — même index que FR pour cohérence (même ghost = même "persona")
 const POETIC_ADJ_EN  = ['silent','nocturnal','lost','forgotten','wandering','pale','distant','secret','invisible','somber','misty','fleeting'];
@@ -4074,7 +4147,7 @@ window.shareEmpreinte = async () => {
   try {
     await navigator.share({
       title: '👻 Mon empreinte Ghostub',
-      text: `J'ai laissé des traces dans ${deposits} lieux avec l'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.`,
+      text: _currentLang === 'en' ? `I've left traces in ${deposits} places with Ghostub — secret messages anchored in real locations. Come closer.` : `J'ai laissé des traces dans ${deposits} lieux avec l'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.`,
       url: profileUrl
     });
     Analytics.track('empreinte_shared');
@@ -4527,7 +4600,7 @@ function renderRadarDots() {
     dot.onclick = () => openGhost(g.id);
     dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGhost(g.id); } };
     const emoji = g.secret ? '🔮' : (g.businessMode ? '🏪' : (g.emoji || '👻'));
-    const label = escapeHTML(g.location || 'Fantôme');
+    const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
     const sweepDuration = 4;
     const angleNorm = ((angle + Math.PI / 2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
     const delay = -(angleNorm / (2 * Math.PI)) * sweepDuration;
