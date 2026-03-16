@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>
+// Force SW update — à supprimer après v21
+(function(){
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    var needReload = regs.length > 0;
+    var done = 0;
+    if (regs.length === 0) return;
+    regs.forEach(function(reg){
+      reg.unregister().then(function(){
+        done++;
+        if (done === regs.length && needReload) {
+          // Recharger proprement sans cache
+          var url = new URL(location.href);
+          url.searchParams.set('_sw_cleared', Date.now());
+          location.replace(url.toString());
+        }
+      });
+    });
+  });
+})();
+</script>
 <meta charset="UTF-8">
 <!-- PERF: viewport sans maximum-scale (nuit à l'accessibilité) ; géré en JS pour éviter zoom sur input iOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
