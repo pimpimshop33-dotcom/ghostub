@@ -1609,14 +1609,6 @@ if ('serviceWorker' in navigator) {
               </span>
             </button>
 
-            <button class="cond-btn" data-cond="after" onclick="selectCond(this)" type="button" id="condAfterBtn">
-              <span class="cond-btn-icon">🔗</span>
-              <span class="cond-btn-text">
-                <div class="cond-btn-label"><span data-i18n="dep_cond_chain_label">Après un autre fantôme</span> <span class="badge-premium">✦ Premium</span></div>
-                <div class="cond-btn-sub" data-i18n="dep_cond_chain_sub">Chasse au trésor urbaine</div>
-              </span>
-            </button>
-
             <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button" id="condFutureBtn">
               <span class="cond-btn-icon">📅</span>
               <span class="cond-btn-text">
@@ -1649,13 +1641,6 @@ if ('serviceWorker' in navigator) {
             <label class="form-label" style="margin-bottom:6px;" for="condHourInput">Heure d'ouverture</label>
             <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
             <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera accessible 15 min avant et après cette heure</div>
-          </div>
-
-          <!-- Extra : après un fantôme (Premium) -->
-          <div class="cond-extra" id="condExtraAfter">
-            <label class="form-label" style="margin-bottom:6px;" for="condAfterInput">ID du fantôme prérequis</label>
-            <input class="form-input" type="text" id="condAfterInput" placeholder="Colle l'ID d'un fantôme existant…" style="font-size:13px !important;" aria-label="ID du fantôme à lire avant">
-            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">L'utilisateur doit d'abord ouvrir ce fantôme pour débloquer le tien</div>
           </div>
 
           <!-- Extra : message du futur -->
