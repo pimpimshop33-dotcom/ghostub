@@ -1652,7 +1652,7 @@ window.login = async () => {
 async function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register('/ghostub/sw.js');
+    const reg = await navigator.serviceWorker.register('/ghostub/sw.js?v=21');
     window._swReg = reg;
 
     // Détection des mises à jour du SW
