@@ -78,7 +78,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=26"></script>
+<script type="module" src="app.js?v=27"></script>
 
 <style>
 /* ── BASE VARIABLES ────────────────────────────────────── */
@@ -1161,6 +1161,15 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
 </style>
 </head>
+<script>
+if ('serviceWorker' in navigator) {
+  // Enregistrer sw2.js immédiatement, sans attendre app.js
+  navigator.serviceWorker.register('/ghostub/sw2.js', {scope:'/ghostub/'})
+    .then(function(reg){
+      console.log('sw2 registered:', reg.scope);
+    });
+}
+</script>
 <body>
 <!-- Skip link pour accessibilité clavier -->
 <a class="skip-link" href="#main-content">Aller au contenu principal</a>
@@ -2104,5 +2113,17 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 </div>
 <div id="sealBreakFlash"></div>
 <canvas id="sealParticles"></canvas>
+<script>
+// Masquage sécurisé des sections premium — indépendant de app.js
+document.addEventListener('DOMContentLoaded', function(){
+  // Ces éléments doivent être cachés par défaut pour les non-premium
+  // app.js les affiche uniquement si isPremium === true
+  var toHide = ['chainContent', 'dedicatedContent'];
+  toHide.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+});
+</script>
 </body>
 </html>
