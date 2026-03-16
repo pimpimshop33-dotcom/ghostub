@@ -1687,25 +1687,29 @@ window._swReg = null; // garder une référence globale
 
 window.applyUpdate = () => {
   const doReload = () => {
-    // Forcer rechargement sans cache via URL avec timestamp
     const url = new URL(window.location.href);
     url.searchParams.set('_r', Date.now());
     window.location.replace(url.toString());
   };
+  // Recharger dès que le controller change
   navigator.serviceWorker.addEventListener('controllerchange', doReload, { once: true });
-  const trySkip = (reg) => {
-    if (reg && reg.waiting) {
-      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+  // Fallback absolu après 4s
+  const fallback = setTimeout(doReload, 4000);
+  // Essayer dans l'ordre : newWorker → reg.waiting → doReload direct
+  const skip = (worker) => {
+    if (worker) {
+      worker.postMessage({ type: 'SKIP_WAITING' });
     } else {
+      clearTimeout(fallback);
       doReload();
     }
   };
-  // Fallback si controllerchange ne se déclenche pas dans les 3s
-  setTimeout(doReload, 3000);
-  if (window._swReg) {
-    trySkip(window._swReg);
+  if (window._swNewWorker) {
+    skip(window._swNewWorker);
+  } else if (window._swReg && window._swReg.waiting) {
+    skip(window._swReg.waiting);
   } else {
-    navigator.serviceWorker.ready.then(trySkip);
+    navigator.serviceWorker.ready.then(reg => skip(reg.waiting));
   }
 };
 
