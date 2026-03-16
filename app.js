@@ -2598,15 +2598,28 @@ function updatePremiumUI() {
   const dedLock = document.getElementById('dedicatedLock');
   if (dedLock) dedLock.style.display = isPremium ? 'none' : 'flex';
   // Basculer aperçu / contenu pour chaque section Premium
-  const _togglePremiumSection = (freeId, premiumId) => {
-    const freeEl = document.getElementById(freeId);
-    const premEl = document.getElementById(premiumId);
+  const _premiumPreviews = [
+    { freeId: 'videoPreview_free',     premId: 'videoContent_premium',     icon: '🎥', label: 'Vidéo', sub: 'Jusqu’à 20 sec · s’ouvre uniquement sur place' },
+    { freeId: 'chainPreview_free',     premId: 'chainContent_premium',     icon: '🔗', label: 'Chaîne de fantômes', sub: 'Chasse au trésor urbaine · enchaîne tes ghosts' },
+    { freeId: 'dedicatedPreview_free', premId: 'dedicatedContent_premium', icon: '💌', label: 'Pour quelqu’un', sub: 'Ghost secret réservé à une seule personne' },
+  ];
+  _premiumPreviews.forEach(({ freeId, premId, icon, label, sub }) => {
+    let freeEl = document.getElementById(freeId);
+    const premEl = document.getElementById(premId);
+    // Créer le bouton aperçu s'il n'existe pas (ancien HTML en cache)
+    if (!freeEl && premEl) {
+      freeEl = document.createElement('button');
+      freeEl.id = freeId;
+      freeEl.className = 'cond-btn';
+      freeEl.type = 'button';
+      freeEl.style.cssText = 'display:none;width:100%;';
+      freeEl.onclick = () => { showScreen('screenProfile'); setNav('nav-profile'); };
+      freeEl.innerHTML = `<span class="cond-btn-icon">${icon}</span><span class="cond-btn-text"><div class="cond-btn-label">${label} <span style="font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.8);border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:middle;">✦ Premium</span></div><div class="cond-btn-sub">${sub}</div></span>`;
+      premEl.parentNode.insertBefore(freeEl, premEl);
+    }
     if (freeEl) freeEl.style.display = isPremium ? 'none' : 'flex';
     if (premEl) premEl.style.display = isPremium ? 'block' : 'none';
-  };
-  _togglePremiumSection('videoPreview_free', 'videoContent_premium');
-  _togglePremiumSection('chainPreview_free', 'chainContent_premium');
-  _togglePremiumSection('dedicatedPreview_free', 'dedicatedContent_premium');
+  });
   // Badge avatar Premium
   const avatar = document.getElementById('profileAvatar');
   if (avatar) {
