@@ -1,6 +1,6 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
 // Version auto-générée au build — ne pas modifier manuellement
-const CACHE_NAME = 'ghostub-v17';
+const CACHE_NAME = 'ghostub-v18';
 const STATIC = [
   '/ghostub/',
   '/ghostub/index.html',
