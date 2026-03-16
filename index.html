@@ -2,24 +2,28 @@
 <html lang="fr">
 <head>
 <script>
-// Force SW update — à supprimer après v21
+// Nuke vieux SW + enregistrer sw2.js directement
 (function(){
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.getRegistrations().then(function(regs){
-    var needReload = regs.length > 0;
-    var done = 0;
-    if (regs.length === 0) return;
-    regs.forEach(function(reg){
-      reg.unregister().then(function(){
-        done++;
-        if (done === regs.length && needReload) {
-          // Recharger proprement sans cache
-          var url = new URL(location.href);
-          url.searchParams.set('_sw_cleared', Date.now());
-          location.replace(url.toString());
-        }
-      });
+    var oldSWs = regs.filter(function(r){
+      return r.scope && r.scope.includes('/ghostub/') && 
+             !(r.active && r.active.scriptURL && r.active.scriptURL.includes('sw2.js'));
     });
+    var unregPromises = oldSWs.map(function(r){ return r.unregister(); });
+    Promise.all(unregPromises).then(function(){
+      // Enregistrer sw2.js immédiatement
+      return navigator.serviceWorker.register('/ghostub/sw2.js', {scope: '/ghostub/'});
+    }).then(function(reg){
+      // Si nouvelle version en attente, l'activer
+      if (reg.waiting) reg.waiting.postMessage({type:'SKIP_WAITING'});
+      reg.addEventListener('updatefound', function(){
+        var w = reg.installing;
+        w.addEventListener('statechange', function(){
+          if (w.state === 'installed') w.postMessage({type:'SKIP_WAITING'});
+        });
+      });
+    }).catch(function(e){ console.warn('SW2 reg:', e); });
   });
 })();
 </script>
@@ -58,7 +62,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=23"></script>
+<script type="module" src="app.js?v=24"></script>
 
 <style>
 /* ── BASE VARIABLES ────────────────────────────────────── */
