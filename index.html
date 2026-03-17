@@ -1,48 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<script>
-(function(){
-  if (!('serviceWorker' in navigator)) return;
-  // Déjà nettoyé lors d'un passage précédent ?
-  if (sessionStorage.getItem('sw_nuked')) return;
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    var hasOld = regs.some(function(r){
-      return !(r.active && r.active.scriptURL && r.active.scriptURL.includes('sw2.js'));
-    });
-    if (!hasOld) return; // sw2.js déjà actif, rien à faire
-    // Désinstaller tous les vieux SW
-    Promise.all(regs.map(function(r){ return r.unregister(); })).then(function(){
-      sessionStorage.setItem('sw_nuked', '1');
-      // Recharger sur une URL fraîche sans cache
-      var url = location.pathname + '?_fresh=' + Date.now();
-      location.replace(url);
-    });
-  });
-})();
-</script>
-<script>
-// Force SW update — à supprimer après v21
-(function(){
-  if (!('serviceWorker' in navigator)) return;
-  navigator.serviceWorker.getRegistrations().then(function(regs){
-    var needReload = regs.length > 0;
-    var done = 0;
-    if (regs.length === 0) return;
-    regs.forEach(function(reg){
-      reg.unregister().then(function(){
-        done++;
-        if (done === regs.length && needReload) {
-          // Recharger proprement sans cache
-          var url = new URL(location.href);
-          url.searchParams.set('_sw_cleared', Date.now());
-          location.replace(url.toString());
-        }
-      });
-    });
-  });
-})();
-</script>
 <meta charset="UTF-8">
 <!-- PERF: viewport sans maximum-scale (nuit à l'accessibilité) ; géré en JS pour éviter zoom sur input iOS -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -78,7 +36,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=39"></script>
+<script type="module" src="app.js?v=40"></script>
 
 <style>
 /* ── BASE VARIABLES ────────────────────────────────────── */
@@ -1192,15 +1150,6 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
 </style>
 </head>
-<script>
-if ('serviceWorker' in navigator) {
-  // Enregistrer sw2.js immédiatement, sans attendre app.js
-  navigator.serviceWorker.register('/ghostub/sw2.js', {scope:'/ghostub/'})
-    .then(function(reg){
-      console.log('sw2 registered:', reg.scope);
-    });
-}
-</script>
 <body>
 <!-- Skip link pour accessibilité clavier -->
 <a class="skip-link" href="#main-content">Aller au contenu principal</a>
@@ -1351,7 +1300,7 @@ if ('serviceWorker' in navigator) {
     <span id="main-content" tabindex="-1" style="position:absolute;top:0;"></span>
     <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
       <div class="ptr-spinner" id="ptrSpinner"></div>
-      <span id="ptrText">Relâcher pour actualiser</span>
+      <span id="ptrText">data-i18n="misc_ptr_release">Relâcher pour actualiser</span>
     </div>
     <div class="radar-header">
       <div class="radar-title" data-i18n="radar_area_title">Aux alentours</div>
@@ -1384,7 +1333,7 @@ if ('serviceWorker' in navigator) {
         <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
       </div>
       <div class="ghost-list" id="ghostList" aria-label="Liste des traces proches">
-        <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;">Invocation en cours…</div>
+        <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;" data-i18n="misc_loading">Invocation en cours…</div>
       </div>
     </div>
   </div>
@@ -1467,7 +1416,7 @@ if ('serviceWorker' in navigator) {
       <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:4px;" data-i18n="reply_screen_title">Répondre ici</div>
       <div style="font-size:12px;color:var(--warm-dim);margin-bottom:18px;" data-i18n="reply_screen_sub">Votre réponse restera ancrée au même endroit.</div>
       <div class="form-group" style="margin-bottom:4px;">
-        <label class="form-label" for="replyMsg">Votre message</label>
+        <label class="form-label" for="replyMsg" data-i18n="reply_msg_label">Votre message</label>
         <textarea class="form-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" style="height:110px;" maxlength="280" aria-required="true" oninput="updateReplyCount(this)"></textarea>
       </div>
       <div class="reply-char-count" id="replyCharCount">0 / 280</div>
@@ -1662,7 +1611,7 @@ if ('serviceWorker' in navigator) {
             <div id="dedicatedContent" style="display:none;background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;">
               <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
               <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
-              <div style="font-size:10px;color:var(--spirit-dim);">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
+              <div style="font-size:10px;color:var(--spirit-dim);" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
             </div>
 
           </div>
@@ -1678,7 +1627,7 @@ if ('serviceWorker' in navigator) {
           <div class="cond-extra" id="condExtraFuture">
             <label class="form-label" style="margin-bottom:6px;" for="condFutureInput">Date d'ouverture</label>
             <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
-            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
           </div>
         </div>
 
@@ -1691,7 +1640,7 @@ if ('serviceWorker' in navigator) {
       <!-- ÉTAPE 3 -->
       <div class="wizard-pane" id="wizardStep3" style="display:none;">
         <div class="wizard-pane-title" id="step3Title" data-i18n="dep_pane3_title">Récapitulatif</div>
-        <div class="wizard-pane-sub" id="step3Sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
+        <div class="wizard-pane-sub" id="step3Sub" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
         <!-- Identité + Visibilité — masqué en mode Commerce -->
         <div id="step3IdentityWrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
           <div>
@@ -1702,7 +1651,7 @@ if ('serviceWorker' in navigator) {
             </div>
           </div>
           <div>
-            <label class="form-label">Visibilité</label>
+            <label class="form-label" data-i18n="dep_visibility_label">Visibilité</label>
             <div class="type-selector" role="group" aria-label="Visibilité du fantôme">
               <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
               <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
@@ -1711,7 +1660,7 @@ if ('serviceWorker' in navigator) {
         </div>
         <!-- Vocal — masqué en mode Commerce -->
         <div id="step3VocalWrap" class="form-group" style="margin-bottom:10px;">
-          <label class="form-label" for="recordBtn">Message vocal (optionnel)</label>
+          <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
           <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
             <span class="media-icon" aria-hidden="true">🎙</span>
             <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
@@ -1721,7 +1670,7 @@ if ('serviceWorker' in navigator) {
         </div>
         <!-- Photo — toujours visible -->
         <div class="form-group" style="margin-bottom:12px;">
-          <label class="form-label">Photo (optionnel)</label>
+          <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
           <button class="media-btn" onclick="triggerPhoto()" type="button" aria-label="Ajouter une photo depuis la galerie ou l'appareil photo">
             <span class="media-icon" aria-hidden="true">📷</span>
             <span data-i18n="dep_photo_btn_short">Ajouter une photo</span>
@@ -1741,7 +1690,7 @@ if ('serviceWorker' in navigator) {
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite"></div>
         <div style="display:flex;gap:10px;">
           <button class="wizard-back-btn" onclick="wizardBack(3)">← Retour</button>
-          <button class="btn-primary" id="depositBtn" style="flex:2;" onclick="depositGhost()">👻 Ancrer ce fantôme</button>
+          <button class="btn-primary" id="depositBtn" style="flex:2;" onclick="depositGhost()" data-i18n="dep_deposit_btn">👻 Ancrer ce fantôme</button>
         </div>
       </div>
 
@@ -1908,7 +1857,7 @@ if ('serviceWorker' in navigator) {
         <!-- Code promo discret en bas -->
         <div id="codeSection" style="padding:4px 0;">
           <details style="cursor:pointer;">
-            <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;">Vous avez un code d'activation ?</summary>
+            <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
             <div style="display:flex;gap:8px;margin-top:8px;">
               <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
               <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,200,80,.15),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:12px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;" data-i18n="profile_activate_btn">Activer</button>
@@ -2123,17 +2072,5 @@ if ('serviceWorker' in navigator) {
 </div>
 <div id="sealBreakFlash"></div>
 <canvas id="sealParticles"></canvas>
-<script>
-// Masquage sécurisé des sections premium — indépendant de app.js
-document.addEventListener('DOMContentLoaded', function(){
-  // Ces éléments doivent être cachés par défaut pour les non-premium
-  // app.js les affiche uniquement si isPremium === true
-  var toHide = ['chainContent', 'dedicatedContent'];
-  toHide.forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
-});
-</script>
 </body>
 </html>
