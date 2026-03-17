@@ -254,6 +254,14 @@ const LANGS = {
     map_you: '📍 Vous êtes ici',
     map_hunt_on: '🎯 Chasse ON',
     map_hunt_off: '🎯 Chasse',
+    map_share_btn: '↗ Partager',
+    dep_success_title: 'Fantôme ancré',
+    dep_success_sub: 'Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
+    dep_success_hint: 'Appuie pour continuer',
+    prem_chain_label: 'Chaîne de fantômes',
+    prem_chain_sub: 'Chasse au trésor urbaine · enchaîne tes ghosts',
+    prem_dedicated_label: 'Pour quelqu\'un',
+    prem_dedicated_sub: 'Ghost secret réservé à une seule personne',
     map_hunt_toast: '🎯 Mode chasse activé — approche-toi pour ouvrir !',
     map_hunt_already: '✓ Déjà découvert',
     map_hunt_locked: '🔒 Encore {dist} à parcourir pour l\'ouvrir',
@@ -721,6 +729,15 @@ const LANGS = {
     // Map
     map_you: '📍 You are here',
     map_hunt_on: '🎯 Hunt ON',
+    map_hunt_off: '🎯 Hunt',
+    map_share_btn: '↗ Share',
+    dep_success_title: 'Ghost anchored',
+    dep_success_sub: 'Your trace rests in this place.<br>A soul will discover it… perhaps.',
+    dep_success_hint: 'Tap to continue',
+    prem_chain_label: 'Ghost chain',
+    prem_chain_sub: 'Urban treasure hunt · chain your ghosts',
+    prem_dedicated_label: 'For someone',
+    prem_dedicated_sub: 'Secret ghost reserved for one person',
     map_hunt_off: '🎯 Hunt',
     map_hunt_toast: '🎯 Hunt mode on — get close to open!',
     map_hunt_already: '✓ Already discovered',
@@ -2609,9 +2626,9 @@ function updatePremiumUI() {
   const _premSections = [
     { id: 'premSection_video',     icon: '🎥', label: 'Vidéo', sub: 'Jusqu’à 20 sec · s’ouvre uniquement sur place',
       premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>Vidéo (optionnel)</span><span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>Ajouter une vidéo</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
-    { id: 'premSection_chain',     icon: '🔗', label: 'Chaîne de fantômes', sub: 'Chasse au trésor urbaine · enchaîne tes ghosts',
+    { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
-    { id: 'premSection_dedicated', icon: '💌', label: 'Pour quelqu’un', sub: 'Ghost secret réservé à une seule personne',
+    { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
   ];
 
@@ -3017,12 +3034,12 @@ window.shareMapLocation = async () => {
       } else {
         _downloadCanvas(canvas, 'ghostub-lieu.png');
       }
-      if (btn) { btn.textContent = '↗ Partager'; btn.disabled = false; }
+      if (btn) { btn.textContent = t.map_share_btn || '↗ Partager'; btn.disabled = false; }
     }, 'image/png');
 
   } catch(e) {
     console.warn('shareMapLocation:', e);
-    if (btn) { btn.textContent = '↗ Partager'; btn.disabled = false; }
+    if (btn) { btn.textContent = t.map_share_btn || '↗ Partager'; btn.disabled = false; }
   }
 };
 
@@ -5261,7 +5278,7 @@ window.depositGhost = async () => {
       setTimeout(() => loadNearbyGhosts().catch(() => {}), 1500);
     };
     successEl.addEventListener('click', dismissSuccess);
-    setTimeout(() => dismissSuccess(), 2500);
+    setTimeout(() => dismissSuccess(), 6000);
   } catch(e) {
     err.textContent = t.dep_err_generic || 'Une erreur est survenue — vérifie ta connexion et réessaie.';
     console.warn('depositGhost error:', e);
