@@ -472,6 +472,13 @@ const LANGS = {
     profile_stats_label: 'Mes stats',
     profile_top_hunters: '🏆 Top chasseurs',
     profile_map_section: '🗺 Mon empreinte fantôme',
+    profile_map_deposits: 'Dépôts',
+    profile_map_discoveries: 'Découvertes',
+    profile_map_places: 'Lieux',
+    profile_map_your_deposit: 'Votre dépôt',
+    profile_map_discovery: 'Découverte',
+    profile_map_score: 'Score empreinte',
+    profile_map_trail: 'Traces',
     profile_biz_section: '🏪 Mes offres Commerce',
     profile_discoveries_panel: 'Mes découvertes',
     profile_deposited_panel: 'Mes fantômes déposés',
@@ -960,6 +967,13 @@ const LANGS = {
     profile_stats_label: 'My stats',
     profile_top_hunters: '🏆 Top hunters',
     profile_map_section: '🗺 My ghost footprint',
+    profile_map_deposits: 'Deposits',
+    profile_map_discoveries: 'Discoveries',
+    profile_map_places: 'Places',
+    profile_map_your_deposit: 'Your deposit',
+    profile_map_discovery: 'Discovery',
+    profile_map_score: 'Footprint score',
+    profile_map_trail: 'Traces',
     profile_biz_section: '🏪 My commerce offers',
     profile_discoveries_panel: 'My discoveries',
     profile_deposited_panel: 'My dropped ghosts',
@@ -4176,8 +4190,40 @@ window.loadEmpreinteMap = async () => {
     }
     setTimeout(() => _empreinteMap.invalidateSize(), 300);
 
-    // 6. Stats sous la carte
+    // 3b. Ligne de trajet chronologique (dépôts reliés)
+    if (deposits.length > 1) {
+      const trailCoords = deposits.map(p => [p.lat, p.lng]);
+      L.polyline(trailCoords, {
+        color: 'rgba(168,180,255,0.35)',
+        weight: 1.5,
+        dashArray: '4, 6',
+        lineCap: 'round'
+      }).addTo(_empreinteMap);
+    }
+
+    // 3c. Heatmap simulée — cercles de chaleur sur les zones actives
+    allPoints.forEach(p => {
+      // Cercle de chaleur extérieur (glow)
+      L.circle([p.lat, p.lng], {
+        radius: 60,
+        color: 'transparent',
+        fillColor: p === deposits.find(d => d.id === p.id)
+          ? 'rgba(168,180,255,0.08)'
+          : 'rgba(255,200,80,0.06)',
+        fillOpacity: 1,
+        interactive: false
+      }).addTo(_empreinteMap);
+    });
+
+    // 6. Score d'empreinte mystérieux
     const cities = new Set(allPoints.map(p => p.location.split(',')[0])).size;
+    const score = Math.round(
+      deposits.length * 15 +
+      discoveries.length * 8 +
+      cities * 12 +
+      Math.min(allPoints.length, 20) * 3
+    );
+
     if (loader) loader.style.display = 'none';
     statsEl.innerHTML = `
       <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
@@ -4188,9 +4234,13 @@ window.loadEmpreinteMap = async () => {
         <div style="font-size:16px;color:rgba(255,200,80,.9);font-weight:600;">${discoveries.length}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_discoveries || 'Découvertes'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;">
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
         <div style="font-size:16px;color:rgba(100,220,160,.9);font-weight:600;">${cities}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_places || 'Lieux'}</div>
+      </div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;">
+        <div style="font-size:16px;color:rgba(168,180,255,.9);font-weight:600;">✦${score}</div>
+        <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_score || 'Score'}</div>
       </div>`;
 
     // Afficher bouton partage si Web Share API dispo
