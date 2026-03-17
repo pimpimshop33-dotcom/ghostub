@@ -258,6 +258,10 @@ const LANGS = {
     dep_success_title: 'Fantôme ancré',
     dep_success_sub: 'Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
     dep_success_hint: 'Appuie pour continuer',
+    prem_video_label: 'Vidéo',
+    prem_video_sub: 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
+    prem_video_optional: 'Vidéo (optionnel)',
+    dep_video_btn: 'Ajouter une vidéo',
     prem_chain_label: 'Chaîne de fantômes',
     prem_chain_sub: 'Chasse au trésor urbaine · enchaîne tes ghosts',
     prem_dedicated_label: 'Pour quelqu\'un',
@@ -734,6 +738,10 @@ const LANGS = {
     dep_success_title: 'Ghost anchored',
     dep_success_sub: 'Your trace rests in this place.<br>A soul will discover it… perhaps.',
     dep_success_hint: 'Tap to continue',
+    prem_video_label: 'Video',
+    prem_video_sub: 'Up to 20 sec · opens only on site',
+    prem_video_optional: 'Video (optional)',
+    dep_video_btn: 'Add a video',
     prem_chain_label: 'Ghost chain',
     prem_chain_sub: 'Urban treasure hunt · chain your ghosts',
     prem_dedicated_label: 'For someone',
@@ -2624,8 +2632,8 @@ function updatePremiumUI() {
   if (dedLock) dedLock.style.display = isPremium ? 'none' : 'flex';
   // Sections Premium — injection directe dans les wrappers
   const _premSections = [
-    { id: 'premSection_video',     icon: '🎥', label: 'Vidéo', sub: 'Jusqu’à 20 sec · s’ouvre uniquement sur place',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>Vidéo (optionnel)</span><span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>Ajouter une vidéo</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
+    { id: 'premSection_video',     icon: '🎥', label: t.prem_video_label || 'Vidéo', sub: t.prem_video_sub || 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
+      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
     { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
