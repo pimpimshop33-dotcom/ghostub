@@ -4331,18 +4331,134 @@ window.loadEmpreinteMap = async () => {
 };
 
 window.shareEmpreinte = async () => {
-  const deposits = document.querySelector('#empreinteStats div:nth-child(1) .stat-num, #empreinteStats div:nth-child(1) div')?.textContent || '?';
-  const profileUrl = currentUser ? `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}` : 'https://pimpimshop33-dotcom.github.io/ghostub/';
+  const shareBtn = document.getElementById('empreinteShareBtn');
+  if (shareBtn) { shareBtn.textContent = '⏳'; shareBtn.disabled = true; }
+
   try {
-    await navigator.share({
-      title: '👻 Mon empreinte Ghostub',
-      text: _currentLang === 'en' ? `I've left traces in ${deposits} places with Ghostub — secret messages anchored in real locations. Come closer.` : `J'ai laissé des traces dans ${deposits} lieux avec l'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.`,
-      url: profileUrl
+    await document.fonts.ready;
+
+    // Lire les stats depuis le DOM empreinteStats
+    const statDivs = document.querySelectorAll('#empreinteStats > div');
+    const depositsNum = statDivs[0]?.querySelector('div:first-child')?.textContent?.trim() || '0';
+    const discovNum   = statDivs[1]?.querySelector('div:first-child')?.textContent?.trim() || '0';
+    const scoreNum    = statDivs[2]?.querySelector('div:first-child')?.textContent?.trim() || '0';
+    const name        = currentUser?.displayName || 'Chasseur';
+
+    const W = 1080, H = 1080;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // ── Fond dégradé sombre ──────────────────────────────
+    const bg = ctx.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, '#06040e');
+    bg.addColorStop(0.5, '#0d0820');
+    bg.addColorStop(1, '#04030c');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+    // Étoiles
+    for (let i = 0; i < 180; i++) {
+      const sx = (Math.sin(i * 7.3) * 0.5 + 0.5) * W;
+      const sy = (Math.sin(i * 13.7) * 0.5 + 0.5) * H;
+      const sr = (Math.sin(i * 3.1) * 0.5 + 0.5) * 1.6 + 0.2;
+      const sa = 0.1 + (Math.sin(i * 5.9) * 0.5 + 0.5) * 0.5;
+      ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200,210,255,${sa})`; ctx.fill();
+    }
+
+    // Halo central violet
+    const halo = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, 420);
+    halo.addColorStop(0, 'rgba(120,80,255,0.18)');
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
+
+    ctx.textAlign = 'center';
+
+    // App name
+    ctx.fillStyle = 'rgba(168,180,255,0.4)';
+    ctx.font = '500 32px "Instrument Sans", sans-serif';
+    ctx.fillText('GHOSTUB', W/2, 90);
+
+    // Ligne déco haut
+    ctx.strokeStyle = 'rgba(168,180,255,0.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(100, 115); ctx.lineTo(W - 100, 115); ctx.stroke();
+
+    // Titre principal
+    ctx.fillStyle = 'rgba(230,220,255,0.92)';
+    ctx.font = 'italic 72px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(_currentLang === 'en' ? 'My ghost footprint' : 'Mon empreinte fantôme', W/2, 220);
+
+    // Nom
+    ctx.fillStyle = 'rgba(168,180,255,0.6)';
+    ctx.font = '500 36px "Instrument Sans", sans-serif';
+    ctx.fillText(name, W/2, 278);
+
+    // Ligne déco milieu
+    ctx.strokeStyle = 'rgba(255,200,80,0.15)';
+    ctx.beginPath(); ctx.moveTo(140, 320); ctx.lineTo(W - 140, 320); ctx.stroke();
+
+    // 3 stats grandes
+    const stats = [
+      { num: depositsNum, label: _currentLang === 'en' ? 'ghosts invoked' : 'fantômes invoqués', icon: '👻', y: 490 },
+      { num: discovNum,   label: _currentLang === 'en' ? 'seals broken'   : 'sceaux brisés',     icon: '🔮', y: 680 },
+      { num: scoreNum,    label: _currentLang === 'en' ? 'footprint score' : 'score empreinte',   icon: '✦',  y: 870 },
+    ];
+
+    stats.forEach(({ num, label, icon, y }) => {
+      // Halo derrière chiffre
+      const sh = ctx.createRadialGradient(W/2, y - 50, 0, W/2, y - 50, 110);
+      sh.addColorStop(0, 'rgba(168,180,255,0.07)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = sh; ctx.fillRect(0, 0, W, H);
+
+      ctx.fillStyle = 'rgba(230,225,255,0.96)';
+      ctx.font = `bold ${parseInt(num) >= 100 ? 100 : 118}px "Cormorant Garamond", Georgia, serif`;
+      ctx.fillText(String(num), W/2, y);
+
+      ctx.fillStyle = 'rgba(168,180,255,0.62)';
+      ctx.font = 'italic 38px "Cormorant Garamond", Georgia, serif';
+      ctx.fillText(icon + '  ' + label, W/2, y + 52);
     });
-    Analytics.track('empreinte_shared');
+
+    // Ligne bas
+    ctx.strokeStyle = 'rgba(168,180,255,0.12)';
+    ctx.beginPath(); ctx.moveTo(100, H - 130); ctx.lineTo(W - 100, H - 130); ctx.stroke();
+
+    // CTA bas
+    ctx.fillStyle = 'rgba(168,180,255,0.35)';
+    ctx.font = '30px "Instrument Sans", sans-serif';
+    ctx.fillText(_currentLang === 'en' ? 'And you, what are you leaving behind?' : 'Et toi, qu\'est-ce que tu laisses derrière toi ?', W/2, H - 80);
+    ctx.fillStyle = 'rgba(168,180,255,0.2)';
+    ctx.font = '26px "Instrument Sans", sans-serif';
+    ctx.fillText('ghostub.app', W/2, H - 38);
+
+    // Export / partage
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'mon-empreinte-ghostub.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: _currentLang === 'en' ? '👻 My Ghostub Footprint' : '👻 Mon empreinte Ghostub',
+            text: _currentLang === 'en'
+              ? `${depositsNum} ghosts invoked, ${discovNum} seals broken. #Ghostub`
+              : `${depositsNum} fantômes invoqués, ${discovNum} sceaux brisés. #Ghostub`
+          });
+          Analytics.track('empreinte_shared', { type: 'canvas_card' });
+        } catch(e) {
+          if (e.name !== 'AbortError') _downloadCanvas(canvas, 'mon-empreinte-ghostub.png');
+        }
+      } else {
+        _downloadCanvas(canvas, 'mon-empreinte-ghostub.png');
+      }
+      if (shareBtn) { shareBtn.textContent = t.profile_share_map_btn || '↗ Partager'; shareBtn.disabled = false; }
+    }, 'image/png');
+
   } catch(e) {
-    // Fallback : copier le lien
+    console.warn('shareEmpreinte:', e);
+    // Fallback lien
+    const profileUrl = currentUser ? `https://pimpimshop33-dotcom.github.io/ghostub/?profil=${currentUser.uid}` : 'https://pimpimshop33-dotcom.github.io/ghostub/';
     try { await navigator.clipboard.writeText(profileUrl); showToast('success', t.toast_copied, 2500); } catch(e2) {}
+    if (shareBtn) { shareBtn.textContent = t.profile_share_map_btn || '↗ Partager'; shareBtn.disabled = false; }
   }
 };
 
@@ -5654,6 +5770,43 @@ async function _doOpenEnvelope() {
     }, 350);
   }, 600);
   Analytics.track('envelope_opened');
+
+  // ── Prompt notifs après la 1ère découverte ─────────────
+  // Affiché une seule fois, 3s après l'ouverture, si notifs pas déjà activées/refusées
+  const discTotal = getDiscoveryCount();
+  const alreadyPrompted = localStorage.getItem('ghostub_notif_prompted') === '1';
+  if (discTotal >= 1 && !alreadyPrompted
+      && Notification.permission === 'default'
+      && localStorage.getItem('notif_enabled') !== '1') {
+    localStorage.setItem('ghostub_notif_prompted', '1');
+    setTimeout(() => {
+      const msg = _currentLang === 'en'
+        ? '🔔 Get notified when a new ghost appears near you?'
+        : '🔔 Être averti quand un nouveau fantôme apparaît près de vous ?';
+      const yesLabel = _currentLang === 'en' ? 'Yes' : 'Oui';
+      const noLabel  = _currentLang === 'en' ? 'Later' : 'Plus tard';
+      // Toast interactif custom
+      const toastEl = document.createElement('div');
+      toastEl.style.cssText = `position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+        background:rgba(14,10,28,0.97);border:1px solid rgba(168,180,255,.3);border-radius:16px;
+        padding:14px 18px;z-index:9999;display:flex;flex-direction:column;gap:10px;
+        font-family:'Instrument Sans',sans-serif;font-size:13px;color:rgba(230,225,255,.9);
+        max-width:320px;width:90%;box-shadow:0 4px 24px rgba(0,0,0,.6);animation:fadeInUp .35s ease-out;`;
+      toastEl.innerHTML = `
+        <div>${msg}</div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="_notifNo" style="background:none;border:1px solid rgba(168,180,255,.2);border-radius:20px;
+            padding:5px 14px;color:rgba(168,180,255,.5);font-family:inherit;font-size:12px;cursor:pointer;">${noLabel}</button>
+          <button id="_notifYes" style="background:rgba(168,180,255,.12);border:1px solid rgba(168,180,255,.4);border-radius:20px;
+            padding:5px 14px;color:rgba(168,180,255,.9);font-family:inherit;font-size:12px;cursor:pointer;">${yesLabel} 🔔</button>
+        </div>`;
+      document.body.appendChild(toastEl);
+      const dismiss = () => { toastEl.style.opacity = '0'; toastEl.style.transition = 'opacity .25s'; setTimeout(() => toastEl.remove(), 260); };
+      document.getElementById('_notifNo').onclick = dismiss;
+      document.getElementById('_notifYes').onclick = () => { dismiss(); if (typeof enableNotifications === 'function') enableNotifications(); };
+      setTimeout(dismiss, 12000); // auto-dismiss après 12s
+    }, 3000);
+  }
 }
 
 function showDistanceError(dist) {
@@ -6737,6 +6890,17 @@ function goObScene(n) {
     if (hint) hint.style.display = '';
   }
   if (n === 3) spawnObParticles();
+
+  // ── GPS silencieux au slide 1 (radar) ──────────────────
+  // On pre-warm la permission GPS au moment où l'utilisateur
+  // comprend visuellement que l'app est basée sur la position.
+  if (n === 1 && navigator.geolocation && !userLat) {
+    navigator.geolocation.getCurrentPosition(
+      pos => { userLat = pos.coords.latitude; userLng = pos.coords.longitude; },
+      () => {}, // refus silencieux — on ne bloque pas l'onboarding
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+    );
+  }
 }
 window.goObScene = goObScene;
 
