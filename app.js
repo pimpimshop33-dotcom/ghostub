@@ -1864,7 +1864,7 @@ function showNotif(title, body) {
   navigator.serviceWorker.ready.then(reg => {
     reg.showNotification(title, {
       body,
-      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png',
+      icon: '/ghostub/icon.png',
       tag: 'fantome-' + Date.now(),
       vibrate: [200, 100, 200],
       data: { url: '/ghostub/' }
@@ -5916,7 +5916,7 @@ window.showScreen = (id, fromPopstate = false) => {
     document.getElementById('condExtraFuture').classList.remove('show');
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
-    const chainSection = document.getElementById();
+    const chainSection = document.getElementById('premSection_chain');
     // Reset depositSuccess overlay
     document.getElementById('depositSuccess')?.classList.remove('show');
     if (chainSection) chainSection.style.position = 'relative';
