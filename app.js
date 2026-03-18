@@ -1668,10 +1668,12 @@ onAuthStateChanged(auth, async user => {
       }
       userLat = lat; userLng = lng;
       // Recharger les fantômes à la première position GPS précise
-      // pour corriger les distances calculées depuis le fallback
+      // SEULEMENT si on utilisait le fallback centre-France
       if (!_firstAccuratePosition) {
         _firstAccuratePosition = true;
-        loadNearbyGhosts();
+        if (window._gpsIsFallback) {
+          loadNearbyGhosts();
+        }
         // Recentrer la carte si elle est déjà ouverte
         if (window.map) window.map.setView([lat, lng], 16);
       }
@@ -3761,7 +3763,7 @@ window.loadNearbyGhosts = async () => {
       const g = { id: d.id, ...d.data() };
       if (g.expired || !g.lat || !g.lng) return;
       g.distance = distanceMeters(userLat, userLng, g.lat, g.lng);
-      if (g.distance <= 50000) { nearbyGhosts.push(g); widened = true; }
+      if (g.distance <= 15000) { nearbyGhosts.push(g); widened = true; }
     });
     nearbyGhosts.sort((a,b) => a.distance - b.distance);
   }
