@@ -1580,7 +1580,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
       radius: radius * 1.6,
       color: 'transparent',
       fillColor,
-      fillOpacity: fillOpacity * 0.45,
+      fillOpacity: 0.06,
       interactive: false
     }).addTo(map);
 
@@ -1589,7 +1589,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
       radius,
       color,
       fillColor,
-      fillOpacity,
+      fillOpacity: 0.04,
       weight: level === 'infest' ? 2 : 1.5,
       dashArray: level === 'spot' ? '4 5' : ''
     }).addTo(map);
