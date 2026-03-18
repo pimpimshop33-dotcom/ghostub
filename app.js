@@ -1545,7 +1545,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
     if (_spotted.has(g.id) || !g.lat || !g.lng) return;
     const cluster = nearbyGhosts.filter(h =>
       h.id !== g.id && h.lat && h.lng &&
-      distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 150
+      distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 300
     );
     if (cluster.length < 2) return; // min 3 ghosts total
 
@@ -1559,19 +1559,19 @@ function buildLeafletMap(centerLat, centerLng, h) {
       level = 'infest';
       labelFr = `🔥 Infestation · ${n}`; labelEn = `🔥 Infestation · ${n}`;
       color = 'rgba(255,80,60,0.7)'; fillColor = 'rgba(255,80,60,0.13)';
-      fillOpacity = 1; radius = 110;
+      fillOpacity = 1; radius = 250;
       pulseColor = 'rgba(255,80,60,'; borderColor = 'rgba(255,80,60,.8)';
     } else if (n >= 5) {
       level = 'haunted';
       labelFr = `👻 Zone hantée · ${n}`; labelEn = `👻 Haunted zone · ${n}`;
       color = 'rgba(168,100,255,0.6)'; fillColor = 'rgba(168,100,255,0.10)';
-      fillOpacity = 1; radius = 90;
+      fillOpacity = 1; radius = 200;
       pulseColor = 'rgba(168,100,255,'; borderColor = 'rgba(168,100,255,.7)';
     } else {
       level = 'spot';
       labelFr = `✦ Ghost Spot · ${n}`; labelEn = `✦ Ghost Spot · ${n}`;
       color = 'rgba(255,200,80,0.5)'; fillColor = 'rgba(255,200,80,0.07)';
-      fillOpacity = 1; radius = 70;
+      fillOpacity = 1; radius = 150;
       pulseColor = 'rgba(255,200,80,'; borderColor = 'rgba(255,200,80,.6)';
     }
 
