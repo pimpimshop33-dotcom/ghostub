@@ -1428,12 +1428,10 @@ window.toggleHuntMode = () => {
 function buildLeafletMap(centerLat, centerLng, h) {
   const container = document.getElementById('mapContainer');
 
-  // Si la carte existe déjà — réutiliser sans reconstruire
+  // Si la carte existe déjà — réinitialiser pour redessiner marqueurs et zones
   if (map && document.getElementById('leafletMap')) {
-    map.setView([centerLat, centerLng], map.getZoom());
-    setTimeout(() => map.invalidateSize(), 100);
-    _updateMapMarkers(centerLat, centerLng);
-    return;
+    try { map.remove(); } catch(e) {}
+    map = null;
   }
 
   container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
@@ -1547,7 +1545,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
     if (_spotted.has(g.id) || !g.lat || !g.lng) return;
     const cluster = nearbyGhosts.filter(h =>
       h.id !== g.id && h.lat && h.lng &&
-      distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 80
+      distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 150
     );
     if (cluster.length < 2) return; // min 3 ghosts total
 
@@ -1652,6 +1650,8 @@ onAuthStateChanged(auth, async user => {
     const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
     updatePremiumUI();
+    // Retry après 800ms pour couvrir les cas où le DOM n'est pas encore stable
+    setTimeout(() => updatePremiumUI(), 800);
     _renderPricingCards();
     showScreen('screenRadar');
     setNav('nav-radar');
