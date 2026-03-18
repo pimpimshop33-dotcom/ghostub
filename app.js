@@ -5137,6 +5137,7 @@ async function canOpenToday() {
 }
 
 async function incrementDailyOpenCount() {
+  if (currentUser?.uid === '5xeDyHqkFRelXjKQstm2TJVQQOo2') return; // bypass dev
   if (!currentUser) { _incrementLocal(); return; }
   const today = _todayKey();
   const ref = doc(db, 'userStats', currentUser.uid);
@@ -5148,6 +5149,7 @@ async function incrementDailyOpenCount() {
 
 async function remainingOpensToday() {
   if (isPremium) return Infinity;
+  if (currentUser?.uid === '5xeDyHqkFRelXjKQstm2TJVQQOo2') return Infinity; // bypass dev
   if (!currentUser) return Math.max(0, DAILY_OPEN_LIMIT - getDailyOpenCountLocal());
   try {
     const ref = doc(db, 'userStats', currentUser.uid);
