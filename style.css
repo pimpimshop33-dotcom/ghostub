@@ -307,8 +307,10 @@ button, [role="button"] {
 .leaflet-popup-content-wrapper{background:#1a1a24 !important;border:1px solid rgba(168,180,255,0.3) !important;border-radius:12px !important;color:#f0e8d8 !important;box-shadow:0 8px 24px rgba(0,0,0,0.6) !important;}
 .leaflet-popup-tip{background:#1a1a24 !important;}
 .leaflet-popup-content{font-family:'Instrument Sans',sans-serif;font-size:13px;line-height:1.5;}
-/* Tuiles sombres — brightness pour lisibilité rues sans perdre l'ambiance */
-.leaflet-tile{filter:brightness(1.9) contrast(1.25);}
+/* Fond carte : bâtiments visibles, ambiance sombre préservée */
+.tile-base .leaflet-tile{filter:brightness(1.9) contrast(0.85);}
+/* Labels rues : bien contrastés pour navigation en plein soleil */
+.tile-labels .leaflet-tile{filter:brightness(2.8) contrast(1.5);}
 
 /* ── DEPOSIT SUCCESS ───────────────────────────────────── */
 .deposit-success{position:absolute;inset:0;background:rgba(6,4,16,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;z-index:100;opacity:0;pointer-events:none;transition:opacity .5s;}
