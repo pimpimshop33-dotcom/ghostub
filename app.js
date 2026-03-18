@@ -1716,11 +1716,7 @@ onAuthStateChanged(auth, async user => {
           card.style.boxShadow = '';
           card.style.borderColor = '';
           card.classList.remove('ghost-envelope-close');
-          g._buzzed10 = false;
-        }
-      });
-    });
-    } // fin guard _locationWatchStarted
+      } // fin guard _locationWatchStarted
     document.getElementById('bottomNav').style.display = 'flex';
     // Obtenir la position GPS réelle avant de charger les fantômes
     try {
