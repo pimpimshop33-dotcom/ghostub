@@ -1222,36 +1222,23 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
       <!-- SLIDE 0 — Splash -->
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
-
-        <!-- Visual : logo centré avec rings (HomeScreen style) -->
-        <div class="ob-home-visual" aria-hidden="true">
-          <div class="ob-home-ring ob-hr1"></div>
-          <div class="ob-home-ring ob-hr2"></div>
-          <div class="ob-home-ring ob-hr3"></div>
-          <div class="ob-home-logo">👻</div>
-          <div class="ob-home-glow"></div>
+        <div class="ob-scene-visual" aria-hidden="true">
+          <div class="ob-splash-ring ob-sr1"></div>
+          <div class="ob-splash-ring ob-sr2"></div>
+          <div class="ob-splash-ring ob-sr3"></div>
+          <div class="ob-ghost-big" style="font-size:96px;">👻</div>
         </div>
-
-        <!-- Texte centré (HomeScreen) -->
-        <div class="ob-home-text">
-          <div class="ob-home-title">
-            <span class="ob-home-title-ghost">👻</span>
-            <span class="ob-home-title-word ob-typewriter" id="obTypewriter">Ghostub</span>
-          </div>
+        <div class="ob-scene-text">
+          <div class="ob-title ob-typewriter" id="obTypewriter">Ghostub</div>
           <div class="ob-home-subtitle" data-i18n="ob_sub0">
-            Des messages secrets<br>cachés près de toi
+            Des messages secrets cachés près de toi
           </div>
-        </div>
-
-        <!-- Bouton Explorer (HomeScreen button) -->
-        <div class="ob-home-actions">
-          <button class="ob-home-btn" onclick="goObScene(1)" aria-label="Explorer les fantômes">
-            <span class="ob-home-btn-icon">🔮</span>
+          <button class="ob-home-btn" onclick="goObScene(1)" style="margin-top:32px;">
+            <span>🔮</span>
             <span data-i18n="ob_explore">Explorer</span>
           </button>
-          <div class="ob-home-hint" data-i18n="ob_free">Gratuit · Sans pub · Sans algorithme</div>
+          <div class="ob-home-hint" data-i18n="ob_free" style="margin-top:14px;">Gratuit · Sans pub</div>
         </div>
-
       </div>
 
       <!-- SLIDE 1 — Découvrir -->
