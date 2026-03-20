@@ -3697,6 +3697,12 @@ const timeRemaining = g => {
 };
 
 window.loadNearbyGhosts = async () => {
+  // Animation refresh btn
+  const refreshBtn = document.querySelector('.refresh-btn');
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+  // Shimmer vibe bar
+  const vibeBar = document.querySelector('.vibe-bar');
+  if (vibeBar) vibeBar.classList.add('invoking');
   // Vérification offline
   if (!navigator.onLine) {
     showToast('warning', t.radar_offline);
@@ -3829,6 +3835,11 @@ window.loadNearbyGhosts = async () => {
   setTimeout(() => checkVirginGhostNearby(), 3000);
   // Nettoyage des clés prev_reso_* orphelines (fantômes supprimés/expirés)
   cleanOldResoKeys();
+  // Fin animations refresh
+  const _rb = document.querySelector('.refresh-btn');
+  if (_rb) _rb.classList.remove('spinning');
+  const _vb = document.querySelector('.vibe-bar');
+  if (_vb) _vb.classList.remove('invoking');
 };
 
 function cleanOldResoKeys() {
