@@ -252,3 +252,73 @@ const GhostMicro = (() => {
 })();
 
 export default GhostMicro;
+
+// ── ONBOARDING STARFIELD ────────────────────────────────────
+(function initObStars() {
+  const tryInit = () => {
+    const canvas = document.getElementById('obStars');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let raf;
+
+    function resize() {
+      const parent = canvas.parentElement;
+      canvas.width  = parent.offsetWidth  || 390;
+      canvas.height = parent.offsetHeight || 680;
+      buildStars();
+    }
+
+    function buildStars() {
+      const n = Math.floor((canvas.width * canvas.height) / 3000);
+      stars = Array.from({ length: n }, () => ({
+        x:    Math.random() * canvas.width,
+        y:    Math.random() * canvas.height,
+        r:    Math.random() * 1.2 + 0.3,
+        a:    Math.random(),
+        da:   (Math.random() * 0.004 + 0.001) * (Math.random() < 0.5 ? 1 : -1),
+        vy:   -(Math.random() * 0.15 + 0.05),
+      }));
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const s of stars) {
+        s.a += s.da;
+        if (s.a > 1) { s.a = 1; s.da *= -1; }
+        if (s.a < 0) { s.a = 0; s.da *= -1; }
+        s.y += s.vy;
+        if (s.y < -2) s.y = canvas.height + 2;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(168,180,255,${(s.a * 0.5).toFixed(2)})`;
+        ctx.fill();
+      }
+      raf = requestAnimationFrame(draw);
+    }
+
+    // Stopper quand l'onboarding n'est plus visible
+    const screen = document.getElementById('screenOnboard');
+    const mo = new MutationObserver(() => {
+      if (screen.classList.contains('active')) {
+        resize();
+        if (!raf) draw();
+      } else {
+        cancelAnimationFrame(raf);
+        raf = null;
+      }
+    });
+    if (screen) mo.observe(screen, { attributes: true, attributeFilter: ['class'] });
+
+    window.addEventListener('resize', resize, { passive: true });
+    resize();
+    draw();
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', tryInit);
+  } else {
+    tryInit();
+  }
+})();
