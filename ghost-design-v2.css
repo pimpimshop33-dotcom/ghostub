@@ -758,15 +758,18 @@ button, [role="button"], .cond-btn, .type-btn, .dur-btn, .radius-btn {
 }
 
 /* ── TYPEWRITER TITLE ────────────────────────────────────── */
+/* BUG FIX #6 : pas d'animation par défaut — déclenchée par JS après fonts.ready */
 .ob-typewriter {
   overflow: hidden;
   white-space: nowrap;
   border-right: 3px solid rgba(168,180,255,0.7);
+  display: inline-block;
+  width: 0;
+}
+.ob-typewriter.fonts-ready {
   animation:
     obTypeReveal 1.2s steps(7, end) 0.3s both,
     obTypeBlink  0.8s step-end 1.5s 3;
-  width: 0;
-  display: inline-block;
 }
 @keyframes obTypeReveal {
   from { width: 0; }
@@ -832,7 +835,8 @@ button, [role="button"], .cond-btn, .type-btn, .dur-btn, .radius-btn {
   white-space: nowrap;
   opacity: 0;
   transform: translateY(4px);
-  transition: all 0.3s;
+  /* BUG FIX #7 : delay pour éviter le flash au chargement du slide */
+  transition: opacity 0.3s ease 0.5s, transform 0.3s ease 0.5s;
 }
 .ob-radar-ghost:hover .ob-radar-ghost-dist,
 .ob-scene.active .ob-radar-ghost-dist { opacity: 1; transform: translateY(0); }
