@@ -1184,74 +1184,147 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
 
   <!-- ONBOARDING -->
   <div class="screen active" id="screenOnboard" aria-label="Introduction à Ghostub">
-    <button class="back-btn" id="obBackBtn" aria-label="Retour au radar" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')" data-i18n="help_back">← retour</button>
-    <button onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
+
+    <!-- Fond étoilé canvas -->
+    <canvas id="obStars" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.6;"></canvas>
+
+    <!-- Brume flottante décorative -->
+    <div class="ob-mist" aria-hidden="true"></div>
+    <div class="ob-mist ob-mist2" aria-hidden="true"></div>
+
+    <!-- Bouton retour (affiché depuis le profil) -->
+    <button class="back-btn" id="obBackBtn" aria-label="Retour au radar"
+      style="display:none;flex-shrink:0;position:absolute;top:16px;left:16px;z-index:10;"
+      onclick="showScreen('screenRadar');setNav('nav-radar')" data-i18n="help_back">← retour</button>
+
+    <!-- Bouton passer -->
+    <button onclick="window.goAuth()" class="ob-skip-btn" data-i18n="ob_skip" aria-label="Passer l'introduction">Passer →</button>
+
+    <!-- Carousel -->
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
+
+      <!-- SLIDE 0 — Splash -->
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
-          <div class="ob-ghost-big">👻</div>
-          <div class="ob-glow-ring"></div>
-          <div class="ob-glow-ring ob-ring2"></div>
+          <div class="ob-splash-ring ob-sr1"></div>
+          <div class="ob-splash-ring ob-sr2"></div>
+          <div class="ob-splash-ring ob-sr3"></div>
+          <div class="ob-ghost-big" style="font-size:90px;">👻</div>
         </div>
         <div class="ob-scene-text">
-          <div class="ob-title">Ghostub</div>
-          <div class="ob-sub" data-i18n="ob_sub0">Des messages invisibles<br>ancrés dans les lieux réels.</div>
-        </div>
-      </div>
-      <div class="ob-scene" id="obScene1" role="group" aria-roledescription="slide" aria-label="Slide 2 : Découvrir" aria-hidden="true">
-        <div class="ob-scene-visual" aria-hidden="true">
-          <div class="ob-radar">
-            <div class="ob-radar-ring"></div><div class="ob-radar-ring ob-rring2"></div><div class="ob-radar-ring ob-rring3"></div>
-            <div class="ob-radar-sweep"></div><div class="ob-radar-center"></div>
-            <div class="ob-ghost-dot" style="left:62%;top:28%;">👻</div>
-            <div class="ob-ghost-dot ob-dot2" style="left:35%;top:55%;">🔮</div>
-            <div class="ob-ghost-dot ob-dot3" style="left:70%;top:65%;">💬</div>
+          <div class="ob-title ob-typewriter" id="obTypewriter">Ghostub</div>
+          <div class="ob-tagline" data-i18n="ob_sub0">
+            Des messages invisibles<br>ancrés dans les lieux réels.
+          </div>
+          <div class="ob-sub-detail">
+            <span class="ob-pill">📍 GPS</span>
+            <span class="ob-pill">👻 Mystère</span>
+            <span class="ob-pill">✦ Gratuit</span>
           </div>
         </div>
-        <div class="ob-scene-text">
-          <div class="ob-title" data-i18n="ob_title1">Découvrez</div>
-          <div class="ob-sub" data-i18n="ob_sub1">Passez près d'un lieu et les<br>fantômes autour de vous apparaissent.</div>
-        </div>
       </div>
-      <div class="ob-scene" id="obScene2" role="group" aria-roledescription="slide" aria-label="Slide 3 : Ouvrir" aria-hidden="true">
+
+      <!-- SLIDE 1 — Découvrir -->
+      <div class="ob-scene" id="obScene1" role="group" aria-roledescription="slide" aria-label="Slide 2 : Découvrir" aria-hidden="true">
         <div class="ob-scene-visual" aria-hidden="true">
-          <div class="ob-envelope">
-            <div class="ob-env-flap"></div>
-            <div class="ob-env-body">
-              <div class="ob-env-emoji">👻</div>
-              <div class="ob-env-lines"><div class="ob-env-line"></div><div class="ob-env-line ob-line2"></div><div class="ob-env-line ob-line3"></div></div>
+          <div class="ob-radar ob-radar-v2">
+            <div class="ob-radar-ring"></div>
+            <div class="ob-radar-ring ob-rring2"></div>
+            <div class="ob-radar-ring ob-rring3"></div>
+            <div class="ob-radar-sweep"></div>
+            <div class="ob-radar-center"></div>
+            <!-- Fantômes sur le radar avec labels distance -->
+            <div class="ob-radar-ghost" style="left:62%;top:28%;">
+              <span>👻</span><div class="ob-radar-ghost-dist">120m</div>
+            </div>
+            <div class="ob-radar-ghost ob-rg2" style="left:32%;top:58%;">
+              <span>🔮</span><div class="ob-radar-ghost-dist">240m</div>
+            </div>
+            <div class="ob-radar-ghost ob-rg3" style="left:72%;top:65%;">
+              <span>💬</span><div class="ob-radar-ghost-dist">80m</div>
+            </div>
+            <div class="ob-radar-ghost ob-rg4" style="left:48%;top:72%;">
+              <span>❤️</span><div class="ob-radar-ghost-dist">310m</div>
             </div>
           </div>
         </div>
         <div class="ob-scene-text">
-          <div class="ob-title" data-i18n="ob_title2">Ouvrez</div>
-          <div class="ob-sub" data-i18n="ob_sub2">Chaque message est une<br>enveloppe scellée à dévoiler.</div>
+          <div class="ob-step-num">01</div>
+          <div class="ob-title" data-i18n="ob_title1">Découvrez</div>
+          <div class="ob-tagline" data-i18n="ob_sub1">Approchez-vous d'un lieu —<br>les traces des inconnus apparaissent.</div>
         </div>
       </div>
+
+      <!-- SLIDE 2 — Ouvrir -->
+      <div class="ob-scene" id="obScene2" role="group" aria-roledescription="slide" aria-label="Slide 3 : Ouvrir" aria-hidden="true">
+        <div class="ob-scene-visual" aria-hidden="true">
+          <div class="ob-envelope-v2">
+            <div class="ob-env-v2-shadow"></div>
+            <div class="ob-env-v2-flap">
+              <div class="ob-env-v2-triangle"></div>
+            </div>
+            <div class="ob-env-v2-body">
+              <div class="ob-env-v2-wax">👻</div>
+              <div class="ob-env-v2-lines">
+                <div class="ob-env-v2-line" style="width:80%"></div>
+                <div class="ob-env-v2-line" style="width:65%;animation-delay:.08s"></div>
+                <div class="ob-env-v2-line" style="width:45%;animation-delay:.16s"></div>
+              </div>
+            </div>
+            <div class="ob-env-v2-scratch">
+              <span>✧</span> Frottez pour révéler
+            </div>
+          </div>
+        </div>
+        <div class="ob-scene-text">
+          <div class="ob-step-num">02</div>
+          <div class="ob-title" data-i18n="ob_title2">Révélez</div>
+          <div class="ob-tagline" data-i18n="ob_sub2">Frottez l'enveloppe scellée —<br>le message se dévoile sous vos doigts.</div>
+        </div>
+      </div>
+
+      <!-- SLIDE 3 — Résonner + CTA intégré -->
       <div class="ob-scene" id="obScene3" role="group" aria-roledescription="slide" aria-label="Slide 4 : Résonner" aria-hidden="true">
         <div class="ob-scene-visual" aria-hidden="true">
           <div class="ob-reso-wrap">
-            <div class="ob-reso-btn">✦ Résonner</div>
+            <div class="ob-reso-orb">
+              <div class="ob-reso-orb-ring"></div>
+              <div class="ob-reso-orb-ring ob-ror2"></div>
+              <div class="ob-reso-orb-core">✦</div>
+            </div>
             <div class="ob-reso-particles" id="obResoParticles" aria-hidden="true"></div>
           </div>
         </div>
         <div class="ob-scene-text">
+          <div class="ob-step-num">03</div>
           <div class="ob-title" data-i18n="ob_title3">Résonnez</div>
-          <div class="ob-sub" data-i18n="ob_sub3">Une résonance par jour —<br>choisissez le message qui vous touche.</div>
+          <div class="ob-tagline" data-i18n="ob_sub3">Une résonance par jour —<br>l'auteur le ressentira dans sa poche.</div>
         </div>
       </div>
-    </div>
+
+    </div><!-- fin carousel -->
+
+    <!-- Dots navigation -->
     <div class="ob-dots" role="tablist" aria-label="Navigation entre les slides">
-      <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1 : Ghostub" aria-selected="true"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(1)" aria-label="Slide 2 : Découvrir" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(2)" aria-label="Slide 3 : Ouvrir" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4 : Résonner" aria-selected="false"></button>
+      <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1" aria-selected="true"></button>
+      <button class="ob-dot" role="tab" onclick="goObScene(1)" aria-label="Slide 2" aria-selected="false"></button>
+      <button class="ob-dot" role="tab" onclick="goObScene(2)" aria-label="Slide 3" aria-selected="false"></button>
+      <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4" aria-selected="false"></button>
     </div>
+
+    <!-- CTA (affiché slide 3) -->
     <div class="ob-cta" id="obCta" style="opacity:0;pointer-events:none;">
-      <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;" data-i18n="ob_cta">Entrer dans les lieux ›</button>
-      <div style="font-size:11px;color:rgba(168,180,255,.3);text-align:center;margin-top:6px;" data-i18n="ob_free">Gratuit · Sans pub</div>
+      <button class="ob-cta-btn" onclick="goAuth()" data-i18n="ob_cta">
+        <span class="ob-cta-ghost">👻</span>
+        <span>Entrer dans les lieux</span>
+        <span class="ob-cta-arrow">›</span>
+      </button>
+      <div class="ob-cta-sub" data-i18n="ob_free">Gratuit · Sans pub · Sans algorithme</div>
     </div>
+
+    <!-- Hint swipe -->
     <div class="ob-swipe-hint" id="obSwipeHint" aria-hidden="true" data-i18n="ob_swipe_hint">Glissez pour découvrir →</div>
+
   </div>
 
   <!-- AUTH -->
