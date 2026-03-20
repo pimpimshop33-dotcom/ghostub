@@ -36,7 +36,8 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=65"></script>
+<link rel="stylesheet" href="ghost-design-v2.css">
+<script type="module" src="app.js?v=66"></script>
 
 <style>
 /* ── BASE VARIABLES ────────────────────────────────────── */
@@ -1383,6 +1384,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
           <span data-i18n="detail_open_btn" style="position:relative;z-index:1;">✉ Briser le sceau</span>
         </button>
       </div>
+      <div id="scratchWrapper">
       <div id="envelopeContent" style="display:none;">
         <div style="position:relative;">
           <div class="detail-message" id="detailMessage" tabindex="-1"></div>
@@ -1413,6 +1415,7 @@ body.light-theme .cond-btn.active{border-color:var(--spirit-dim);background:rgba
         <div class="section-label" data-i18n="detail_replies_title">Réponses dans ce lieu</div>
         <div id="repliesList"></div>
       </div>
+      </div><!-- fin scratchWrapper -->
     </div>
   </div>
 
