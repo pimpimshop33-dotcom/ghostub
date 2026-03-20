@@ -1,29 +1,88 @@
 {
   "name": "Ghostub",
   "short_name": "Ghostub",
-  "description": "Des messages invisibles ancrés dans les lieux réels.",
+  "description": "Des messages secrets cachés près de toi",
   "start_url": "/ghostub/",
-  "scope": "/ghostub/",
   "display": "standalone",
-  "background_color": "#060608",
-  "theme_color": "#060608",
+  "background_color": "#07101E",
+  "theme_color": "#4A9EDB",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icons/icon-192.png",
+      "src": "icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "icons/icon-maskable-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Écran radar"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Radar",
+      "short_name": "Radar",
+      "description": "Voir les fantômes proches",
+      "url": "/ghostub/?screen=radar",
+      "icons": [{ "src": "icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Déposer",
+      "short_name": "Déposer",
+      "description": "Laisser un message",
+      "url": "/ghostub/?screen=deposit",
+      "icons": [{ "src": "icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["social", "lifestyle", "utilities"],
+  "lang": "fr",
+  "dir": "ltr"
 }
