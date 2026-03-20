@@ -3736,6 +3736,9 @@ window.loadNearbyGhosts = async () => {
     console.error('Firestore error:', firestoreErr);
     showToast('error', t.radar_firestore_err || 'Erreur de chargement.');
     document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_firestore_err + '</span>';
+    // BUG FIX #3 : nettoyer les animations même en cas d'erreur
+    document.querySelector('.refresh-btn')?.classList.remove('spinning');
+    document.querySelector('.vibe-bar')?.classList.remove('invoking');
     renderGhostList(); renderRadarDots(); return;
   }
   nearbyGhosts = [];
@@ -5696,14 +5699,17 @@ async function _doOpenEnvelope() {
       // ── SCRATCH TO REVEAL ───────────────────────────────
       const msgEl = document.getElementById('detailMessage');
       const fullText = msgEl ? msgEl.textContent : '';
-      if (msgEl && fullText.length > 1) {
-        msgEl.textContent = '';
-        msgEl.style.opacity = '0';
-      }
 
+      // BUG FIX #4 : forcer une hauteur min AVANT d'effacer le texte
+      // sinon le canvas scratch mesure un offsetHeight quasi nul
+      revealed.style.minHeight = '320px';
+
+      // BUG FIX #4 suite : init scratch AVANT d'effacer le texte
+      // pour que getBoundingClientRect() capte le vrai contenu
       GhostScratch.init(revealed, () => {
         // Callback : message révélé après grattage
         revealed.classList.add('scratch-revealed');
+        revealed.style.minHeight = '';
         if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
 
         if (msgEl && fullText.length > 1) {
@@ -5723,6 +5729,12 @@ async function _doOpenEnvelope() {
         const firstFocusable = revealed.querySelector('button, [tabindex]');
         if (firstFocusable) firstFocusable.focus();
       });
+
+      // Effacer le texte APRÈS init scratch
+      if (msgEl && fullText.length > 1) {
+        msgEl.textContent = '';
+        msgEl.style.opacity = '0';
+      }
     }, 350);
   }, 600);
   Analytics.track('envelope_opened');
@@ -6292,11 +6304,13 @@ function animateScreenTransition(newId) {
 }
 
 // Patch showScreen pour ajouter les animations
+// BUG FIX #5 : guard si showScreen n'est pas encore défini
 const _showScreenOrig = window.showScreen;
+if (!_showScreenOrig) console.error('[Ghostub] showScreen non défini avant patch animations');
 window.showScreen = (id, fromPopstate = false) => {
   if (id !== 'screenDetail') GhostScratch.destroy();
   animateScreenTransition(id);
-  _showScreenOrig(id, fromPopstate);
+  if (_showScreenOrig) _showScreenOrig(id, fromPopstate);
 };
 
 // ── REPLY CHAR COUNTER ───────────────────────────────────
@@ -6792,10 +6806,13 @@ const OB_TOTAL = 4;
 function goObScene(n) {
   const scenes = document.querySelectorAll('.ob-scene');
   const dots   = document.querySelectorAll('.ob-dot');
-  scenes[obCurrentScene].classList.remove('active');
-  scenes[obCurrentScene].classList.add('exit');
-  scenes[obCurrentScene].setAttribute('aria-hidden', 'true');
-  setTimeout(() => scenes[obCurrentScene].classList.remove('exit'), 450);
+  // BUG FIX #2 : capturer prevScene AVANT la mise à jour de obCurrentScene
+  // sinon le setTimeout retire 'exit' du mauvais slide si l'user swipe vite
+  const prevScene = obCurrentScene;
+  scenes[prevScene].classList.remove('active');
+  scenes[prevScene].classList.add('exit');
+  scenes[prevScene].setAttribute('aria-hidden', 'true');
+  setTimeout(() => scenes[prevScene].classList.remove('exit'), 450);
   obCurrentScene = n;
   scenes[n].classList.add('active');
   scenes[n].setAttribute('aria-hidden', 'false');
