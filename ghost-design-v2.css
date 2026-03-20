@@ -673,3 +673,347 @@ button, [role="button"], .cond-btn, .type-btn, .dur-btn, .radius-btn {
   50%  { box-shadow: 0 0 0 16px rgba(168,180,255,0); }
   100% { box-shadow: 0 0 20px rgba(168,180,255,0.1); }
 }
+
+/* ══════════════════════════════════════════════════════════
+   ONBOARDING IMMERSIF v2
+   ══════════════════════════════════════════════════════════ */
+
+/* ── SCREEN ─────────────────────────────────────────────── */
+#screenOnboard {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%,   rgba(40,20,80,0.6) 0%, transparent 60%),
+              radial-gradient(ellipse at 20% 100%,  rgba(20,10,60,0.4) 0%, transparent 50%),
+              var(--void);
+}
+
+/* ── BRUME FLOTTANTE ─────────────────────────────────────── */
+.ob-mist {
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(168,180,255,0.06) 0%, transparent 70%);
+  animation: obMistFloat 12s ease-in-out infinite;
+  z-index: 0;
+  top: 10%; left: -20%;
+}
+.ob-mist2 {
+  width: 200px; height: 200px;
+  top: 50%; left: 70%;
+  animation-delay: -6s;
+  animation-duration: 16s;
+  background: radial-gradient(circle, rgba(100,80,200,0.05) 0%, transparent 70%);
+}
+@keyframes obMistFloat {
+  0%,100% { transform: translate(0,0) scale(1); opacity: 0.6; }
+  33%     { transform: translate(40px,-30px) scale(1.1); opacity: 1; }
+  66%     { transform: translate(-20px,20px) scale(0.9); opacity: 0.4; }
+}
+
+/* ── SKIP BTN ────────────────────────────────────────────── */
+.ob-skip-btn {
+  position: absolute; top: 14px; right: 16px; z-index: 10;
+  background: rgba(168,180,255,0.07);
+  border: 1px solid rgba(168,180,255,0.15);
+  border-radius: 20px;
+  font-size: 11px; color: rgba(168,180,255,0.55);
+  font-family: 'Instrument Sans', sans-serif;
+  cursor: pointer; padding: 6px 14px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.ob-skip-btn:hover {
+  background: rgba(168,180,255,0.12);
+  color: rgba(168,180,255,0.85);
+}
+
+/* ── SPLASH RINGS ────────────────────────────────────────── */
+.ob-splash-ring {
+  position: absolute; border-radius: 50%;
+  border: 1px solid rgba(168,180,255,0.12);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  animation: obSplashRing 4s ease-out infinite;
+  pointer-events: none;
+}
+.ob-sr1 { width: 160px; height: 160px; animation-delay: 0s; }
+.ob-sr2 { width: 240px; height: 240px; animation-delay: 1.2s; border-style: dashed; opacity: 0.5; }
+.ob-sr3 { width: 320px; height: 320px; animation-delay: 2.4s; opacity: 0.25; }
+@keyframes obSplashRing {
+  0%   { transform: translate(-50%,-50%) scale(0.7); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 0.3; }
+  100% { transform: translate(-50%,-50%) scale(1.3); opacity: 0; }
+}
+
+/* ── GHOST BIG — plus de glow ────────────────────────────── */
+.ob-ghost-big {
+  position: relative; z-index: 2;
+  filter:
+    drop-shadow(0 0 30px rgba(168,180,255,0.8))
+    drop-shadow(0 0 60px rgba(168,180,255,0.35))
+    drop-shadow(0 0 100px rgba(100,80,200,0.2)) !important;
+  animation: floatG 4s ease-in-out infinite;
+}
+
+/* ── TYPEWRITER TITLE ────────────────────────────────────── */
+.ob-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 3px solid rgba(168,180,255,0.7);
+  animation:
+    obTypeReveal 1.2s steps(7, end) 0.3s both,
+    obTypeBlink  0.8s step-end 1.5s 3;
+  width: 0;
+  display: inline-block;
+}
+@keyframes obTypeReveal {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+@keyframes obTypeBlink {
+  50% { border-color: transparent; }
+}
+
+/* ── TAGLINE ─────────────────────────────────────────────── */
+.ob-tagline {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 19px; font-style: italic;
+  color: rgba(240,232,216,0.75);
+  line-height: 1.7;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* ── PILLS ───────────────────────────────────────────────── */
+.ob-sub-detail {
+  display: flex; gap: 8px; justify-content: center;
+  flex-wrap: wrap;
+  animation: fadeUp 0.5s ease 1.8s both;
+}
+.ob-pill {
+  font-size: 10px; letter-spacing: 0.8px;
+  background: rgba(168,180,255,0.07);
+  border: 1px solid rgba(168,180,255,0.18);
+  border-radius: 20px; padding: 4px 12px;
+  color: rgba(168,180,255,0.65);
+}
+
+/* ── NUMÉRO ÉTAPE ────────────────────────────────────────── */
+.ob-step-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 64px; font-weight: 300;
+  color: rgba(168,180,255,0.08);
+  line-height: 1;
+  margin-bottom: -8px;
+  letter-spacing: -2px;
+  text-align: center;
+}
+
+/* ── RADAR V2 ────────────────────────────────────────────── */
+.ob-radar-v2 { position: relative; }
+
+.ob-radar-ghost {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  animation: ghostReveal 3s linear infinite;
+}
+.ob-radar-ghost span { font-size: 20px; }
+.ob-radar-ghost-dist {
+  font-size: 9px; letter-spacing: 0.5px;
+  color: rgba(168,180,255,0.7);
+  background: rgba(10,8,20,0.85);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(168,180,255,0.2);
+  border-radius: 8px; padding: 1px 6px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: all 0.3s;
+}
+.ob-radar-ghost:hover .ob-radar-ghost-dist,
+.ob-scene.active .ob-radar-ghost-dist { opacity: 1; transform: translateY(0); }
+
+.ob-rg2 { animation-delay: -1s; }
+.ob-rg3 { animation-delay: -2s; }
+.ob-rg4 { animation-delay: -0.5s; }
+
+/* ── ENVELOPE V2 ─────────────────────────────────────────── */
+.ob-envelope-v2 {
+  position: relative;
+  width: 200px;
+  animation: obEnvFloat 3s ease-in-out infinite;
+}
+@keyframes obEnvFloat {
+  0%,100% { transform: translateY(0) rotate(-1deg); }
+  50%     { transform: translateY(-10px) rotate(1deg); }
+}
+.ob-env-v2-shadow {
+  position: absolute; bottom: -16px; left: 50%;
+  transform: translateX(-50%);
+  width: 140px; height: 12px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.4);
+  filter: blur(8px);
+  animation: obEnvFloat 3s ease-in-out infinite;
+}
+.ob-env-v2-flap {
+  width: 100%; height: 60px;
+  background: linear-gradient(180deg,rgba(168,180,255,0.22) 0%,rgba(168,180,255,0.08) 100%);
+  border-radius: 14px 14px 0 0;
+  border: 1px solid rgba(168,180,255,0.3); border-bottom: none;
+  position: relative; overflow: hidden;
+  transform-origin: top center;
+  animation: obFlapAnim 3s ease-in-out infinite;
+}
+.ob-env-v2-triangle {
+  position: absolute; top:0; left:50%; transform:translateX(-50%);
+  width:0; height:0;
+  border-left: 100px solid transparent;
+  border-right: 100px solid transparent;
+  border-top: 60px solid rgba(168,180,255,0.1);
+}
+.ob-env-v2-body {
+  background: linear-gradient(160deg,rgba(24,20,46,0.98) 0%,rgba(14,12,26,1) 100%);
+  border: 1px solid rgba(168,180,255,0.25); border-top: none;
+  border-radius: 0 0 14px 14px;
+  padding: 18px 16px 14px;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+.ob-env-v2-wax {
+  font-size: 32px;
+  filter: drop-shadow(0 0 12px rgba(168,180,255,0.5));
+  flex-shrink: 0;
+}
+.ob-env-v2-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+.ob-env-v2-line {
+  height: 7px; border-radius: 4px;
+  background: linear-gradient(90deg,rgba(168,180,255,0.2),rgba(168,180,255,0.05));
+  animation: obLineReveal 3s ease-in-out infinite;
+}
+.ob-env-v2-scratch {
+  text-align: center;
+  font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(168,180,255,0.45);
+  padding: 8px 0 2px;
+  animation: obHintFade 2s ease-in-out infinite;
+}
+
+/* ── RESO ORB ────────────────────────────────────────────── */
+.ob-reso-orb {
+  position: relative;
+  width: 100px; height: 100px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ob-reso-orb-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(168,180,255,0.35);
+  animation: obResoPulse 2s ease-in-out infinite;
+}
+.ob-ror2 {
+  inset: -20px;
+  border-color: rgba(168,180,255,0.15);
+  animation-delay: -1s;
+}
+.ob-reso-orb-core {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,rgba(168,180,255,0.25),rgba(100,80,200,0.2));
+  border: 1px solid rgba(168,180,255,0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; color: rgba(168,180,255,0.9);
+  box-shadow: var(--glow-strong);
+  animation: obResoPulse 2s ease-in-out infinite, floatG 3s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes obResoPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(168,180,255,0.3); transform: scale(1); }
+  50%     { box-shadow: 0 0 0 20px rgba(168,180,255,0); transform: scale(1.06); }
+}
+
+/* ── CTA BOUTON FINAL ────────────────────────────────────── */
+.ob-cta { padding: 0 24px 28px; width: 100%; }
+
+.ob-cta-btn {
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(135deg,rgba(168,180,255,0.22),rgba(100,80,200,0.18));
+  border: 1px solid rgba(168,180,255,0.5);
+  border-radius: 18px;
+  color: var(--ether);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 16px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  letter-spacing: 0.3px;
+  box-shadow: var(--glow-spirit), 0 8px 32px rgba(0,0,0,0.4);
+  transition: all 0.25s ease;
+  touch-action: manipulation;
+  margin-bottom: 12px;
+  animation: ctaPulse 3s ease-in-out infinite;
+}
+.ob-cta-btn:hover {
+  box-shadow: var(--glow-strong), 0 12px 40px rgba(0,0,0,0.5);
+  transform: translateY(-2px);
+}
+.ob-cta-btn:active { transform: scale(0.97); }
+
+.ob-cta-ghost {
+  font-size: 22px;
+  filter: drop-shadow(0 0 8px rgba(168,180,255,0.6));
+  animation: floatG 2s ease-in-out infinite;
+}
+.ob-cta-arrow {
+  font-size: 20px; opacity: 0.7;
+  animation: arrowBounce 1.5s ease-in-out infinite;
+}
+@keyframes arrowBounce {
+  0%,100% { transform: translateX(0); }
+  50%     { transform: translateX(4px); }
+}
+@keyframes ctaPulse {
+  0%,100% { box-shadow: var(--glow-spirit), 0 8px 32px rgba(0,0,0,0.4); }
+  50%     { box-shadow: var(--glow-strong), 0 8px 32px rgba(0,0,0,0.4); }
+}
+
+.ob-cta-sub {
+  text-align: center;
+  font-size: 11px; letter-spacing: 0.5px;
+  color: rgba(168,180,255,0.3);
+}
+
+/* ── TRANSITIONS SLIDES ──────────────────────────────────── */
+.ob-scene {
+  z-index: 1;
+}
+.ob-scene.active {
+  animation: obSlideIn 0.5s cubic-bezier(0.25,0.8,0.25,1) forwards !important;
+}
+.ob-scene.exit {
+  animation: obSlideOut 0.45s cubic-bezier(0.25,0.8,0.25,1) forwards !important;
+}
+@keyframes obSlideIn {
+  from { opacity: 0; transform: translateX(40px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes obSlideOut {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  to   { opacity: 0; transform: translateX(-40px) scale(0.97); }
+}
+
+/* ── DOTS AMÉLIORÉS ──────────────────────────────────────── */
+.ob-dot {
+  background: rgba(168,180,255,0.2) !important;
+  border: none !important;
+  transition: all 0.35s cubic-bezier(0.25,0.8,0.25,1) !important;
+}
+.ob-dot.active {
+  width: 32px !important;
+  background: var(--spirit) !important;
+  box-shadow: 0 0 8px rgba(168,180,255,0.5) !important;
+}
