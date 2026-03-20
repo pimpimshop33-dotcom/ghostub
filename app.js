@@ -4,6 +4,7 @@ import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
 import GhostService from './services/ghost.service.js';
 import LocationService from './services/location.service.js';
+import GhostScratch from './ghost-scratch.js';
 
 // ── I18N ─────────────────────────────────────────────────
 const LANGS = {
@@ -5679,17 +5680,22 @@ async function _doOpenEnvelope() {
     setTimeout(() => {
       sealed.style.display = 'none';
       revealed.style.display = 'block';
-      revealed.classList.add('envelope-reveal');
       playRevealSound();
-      // Vibration finale douce
-      setTimeout(() => { if (navigator.vibrate) navigator.vibrate([20, 60, 20]); }, 200);
-      // Apparition mot par mot — décalé après la fin de l'animation envelope-reveal (450ms)
+
+      // ── SCRATCH TO REVEAL ───────────────────────────────
       const msgEl = document.getElementById('detailMessage');
-      if (msgEl && msgEl.textContent && msgEl.textContent.length > 1) {
-        const fullText = msgEl.textContent;
+      const fullText = msgEl ? msgEl.textContent : '';
+      if (msgEl && fullText.length > 1) {
         msgEl.textContent = '';
         msgEl.style.opacity = '0';
-        setTimeout(() => {
+      }
+
+      GhostScratch.init(revealed, () => {
+        // Callback : message révélé après grattage
+        revealed.classList.add('scratch-revealed');
+        if (navigator.vibrate) navigator.vibrate([20, 60, 20]);
+
+        if (msgEl && fullText.length > 1) {
           msgEl.style.opacity = '1';
           const words = fullText.split(' ');
           let i = 0;
@@ -5702,10 +5708,10 @@ async function _doOpenEnvelope() {
               if (navigator.vibrate) navigator.vibrate(40);
             }
           }, 80);
-        }, 460);
-      }
-      const firstFocusable = revealed.querySelector('button, [tabindex]');
-      if (firstFocusable) firstFocusable.focus();
+        }
+        const firstFocusable = revealed.querySelector('button, [tabindex]');
+        if (firstFocusable) firstFocusable.focus();
+      });
     }, 350);
   }, 600);
   Analytics.track('envelope_opened');
@@ -6277,6 +6283,7 @@ function animateScreenTransition(newId) {
 // Patch showScreen pour ajouter les animations
 const _showScreenOrig = window.showScreen;
 window.showScreen = (id, fromPopstate = false) => {
+  if (id !== 'screenDetail') GhostScratch.destroy();
   animateScreenTransition(id);
   _showScreenOrig(id, fromPopstate);
 };
