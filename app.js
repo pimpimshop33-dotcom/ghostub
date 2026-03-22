@@ -5739,10 +5739,11 @@ function _buildScratchCanvas(msgEl) {
   const hintOverlay = document.createElement('div');
   hintOverlay.className = 'scratch-hint-overlay';
   // Hint positionné en BAS du canvas — le ghost reste visible au centre
-  hintOverlay.style.cssText = 'position:absolute;left:0;right:0;bottom:0;height:72px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:10px;z-index:10;pointer-events:none;border-radius:0 0 20px 20px;background:linear-gradient(0deg,rgba(10,8,22,.85) 0%,transparent 100%);';
+  // Fond totalement transparent — seuls le texte et la main sont visibles
+  hintOverlay.style.cssText = 'position:absolute;left:0;right:0;bottom:12px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:10;pointer-events:none;background:none;';
   hintOverlay.innerHTML = `
-    <div style="font-size:36px;line-height:1;filter:drop-shadow(0 0 12px rgba(255,220,180,1)) drop-shadow(0 0 20px rgba(255,180,100,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:#f0e8d8;letter-spacing:1px;text-shadow:0 0 10px rgba(168,180,255,.9),0 1px 6px rgba(0,0,0,1);">Frottez pour révéler...</div>
+    <div style="font-size:28px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(168,180,255,1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</div>
   `;
   wrapper.appendChild(hintOverlay);
 
