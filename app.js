@@ -5686,10 +5686,25 @@ async function _doOpenEnvelope() {
       playRevealSound();
       // Vibration finale douce
       setTimeout(() => { if (navigator.vibrate) navigator.vibrate([20, 60, 20]); }, 200);
-      // ── SCRATCH-TO-REVEAL ─────────────────────────────────
-      const msgEl = document.getElementById('detailMessage');
-      if (msgEl && msgEl.textContent && msgEl.textContent.length > 1) {
-        _initScratchReveal(msgEl);
+      // ── SCRATCH-TO-REVEAL — couvre message + audio + photo ──
+      {
+        const msgEl    = document.getElementById('detailMessage');
+        const audioEl  = document.getElementById('detailAudio');
+        const photoEl  = document.getElementById('detailPhoto');
+        const countEl  = document.getElementById('detailReadCount');
+
+        // Créer un wrapper qui englobe tout le contenu média
+        const scratchZone = document.createElement('div');
+        scratchZone.id = 'scratchZone';
+        // Insérer le wrapper avant le premier élément
+        msgEl.parentNode.parentNode.insertBefore(scratchZone, msgEl.parentNode);
+        // Déplacer les éléments dans la zone
+        scratchZone.appendChild(msgEl.parentNode); // div position:relative avec detailMessage
+        if (audioEl)  scratchZone.appendChild(audioEl);
+        if (photoEl)  scratchZone.appendChild(photoEl);
+        if (countEl)  scratchZone.appendChild(countEl);
+
+        _initScratchReveal(scratchZone);
       }
       const firstFocusable = revealed.querySelector('button, [tabindex]');
       if (firstFocusable) firstFocusable.focus();
@@ -5700,38 +5715,32 @@ async function _doOpenEnvelope() {
 
 
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
-function _initScratchReveal(msgEl) {
-  // Masquer IMMÉDIATEMENT le texte avant toute animation
-  msgEl.style.opacity = '0';
-  msgEl.style.visibility = 'hidden';
-  // Attendre que l'animation d'ouverture soit terminée et le DOM stable
+function _initScratchReveal(container) {
+  // Masquer IMMÉDIATEMENT tout le contenu avant toute animation
+  container.style.opacity = '0';
+  container.style.visibility = 'hidden';
+  // Attendre que le DOM soit stable
   setTimeout(() => {
-    _buildScratchCanvas(msgEl);
+    _buildScratchCanvas(container);
   }, 500);
 }
 
-function _buildScratchCanvas(msgEl) {
+function _buildScratchCanvas(container) {
   // Nettoyer un éventuel canvas précédent
   const old = document.getElementById('scratchCanvas');
   if (old) old.remove();
   const oldHint = document.querySelector('.scratch-hint-overlay');
   if (oldHint) oldHint.remove();
 
-  // Wrapper positionné autour du message
-  let wrapper = msgEl.closest('.scratch-wrapper');
-  if (!wrapper) {
-    wrapper = document.createElement('div');
-    wrapper.className = 'scratch-wrapper';
-    msgEl.parentNode.insertBefore(wrapper, msgEl);
-    wrapper.appendChild(msgEl);
-  }
+  // Le container EST le wrapper — lui appliquer la classe
+  container.className = (container.className + ' scratch-wrapper').trim();
+  const wrapper = container;
 
-  // Hauteur fixe généreuse — indépendante de la taille du texte
-  const CANVAS_H = 220;
-  wrapper.style.minHeight = CANVAS_H + 'px';
-  msgEl.style.opacity = '0';
-  msgEl.style.visibility = 'hidden';
-  msgEl.style.userSelect = 'none';
+  // Hauteur auto — s'adapte au contenu réel
+  wrapper.style.minHeight = '220px';
+  container.style.opacity = '0';
+  container.style.visibility = 'hidden';
+  container.style.userSelect = 'none';
 
   // Canvas
   const canvas = document.createElement('canvas');
@@ -5854,7 +5863,7 @@ function _buildScratchCanvas(msgEl) {
       if (cleared / total > 0.50) {
         revealed = true;
         clearTimeout(checkTimer);
-        _completeReveal(canvas, hintOverlay, msgEl);
+        _completeReveal(canvas, hintOverlay, wrapper);
       }
     }
 
@@ -5898,7 +5907,7 @@ function _buildScratchCanvas(msgEl) {
   });
 }
 
-function _completeReveal(canvas, hintOverlay, msgEl) {
+function _completeReveal(canvas, hintOverlay, container) {
   // Flash violet subtil
   const flash = document.getElementById('sealBreakFlash');
   if (flash) {
@@ -5906,9 +5915,7 @@ function _completeReveal(canvas, hintOverlay, msgEl) {
     flash.offsetHeight;
     flash.style.animation = 'sealFlash 0.5s ease-out forwards';
   }
-  // Vibration de révélation
   if (navigator.vibrate) navigator.vibrate([15, 30, 15, 60, 120]);
-  // Fade out du canvas
   canvas.style.transition = 'opacity .5s ease';
   canvas.style.opacity = '0';
   hintOverlay.style.opacity = '0';
@@ -5916,25 +5923,33 @@ function _completeReveal(canvas, hintOverlay, msgEl) {
   setTimeout(() => {
     canvas.remove();
     hintOverlay.remove();
-    // Apparition mot par mot
-    const fullText = msgEl.textContent || msgEl.innerText;
-    msgEl.textContent = '';
-    msgEl.style.visibility = 'visible';
-    msgEl.style.opacity = '0';
-    msgEl.style.transition = 'opacity .25s';
+    // Révéler tout le container
+    container.style.visibility = 'visible';
+    container.style.transition = 'opacity .35s ease';
+    container.style.opacity = '0';
     requestAnimationFrame(() => {
-      msgEl.style.opacity = '1';
-      const words = fullText.split(' ').filter(Boolean);
-      let i = 0;
-      const iv = setInterval(() => {
-        if (i < words.length) {
-          msgEl.textContent += (i === 0 ? '' : ' ') + words[i++];
-        } else {
-          clearInterval(iv);
-          if (navigator.vibrate) navigator.vibrate(50);
-        }
-      }, 70);
+      container.style.opacity = '1';
     });
+    // Apparition mot par mot du message
+    const msgEl = container.querySelector('.detail-message') || container.querySelector('#detailMessage');
+    if (msgEl) {
+      const fullText = msgEl.textContent || msgEl.innerText;
+      if (fullText.trim().length > 1) {
+        msgEl.textContent = '';
+        setTimeout(() => {
+          const words = fullText.split(' ').filter(Boolean);
+          let i = 0;
+          const iv = setInterval(() => {
+            if (i < words.length) {
+              msgEl.textContent += (i === 0 ? '' : ' ') + words[i++];
+            } else {
+              clearInterval(iv);
+              if (navigator.vibrate) navigator.vibrate(50);
+            }
+          }, 70);
+        }, 100);
+      }
+    }
   }, 520);
 }
 
