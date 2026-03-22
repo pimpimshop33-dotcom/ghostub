@@ -1085,6 +1085,44 @@ button, [role="button"], input, textarea, select,
   -webkit-text-fill-color: rgba(168,180,255,0.5) !important;
 }
 
+/* ── Enveloppes : espace pour le rabat ── */
+.ghost-list {
+  padding-top: 16px !important; /* espace pour le rabat qui dépasse */
+}
+
+/* Le flap doit être visible — s'assurer que rien ne le coupe */
+.ghost-envelope {
+  overflow: visible !important;
+  margin-top: 16px !important;
+}
+
+/* Premier enfant : moins de marge car padding du container suffit */
+.ghost-envelope:first-child {
+  margin-top: 2px !important;
+}
+
+/* Forcer la couleur du fond pour le flap selon le vrai fond */
+.envelope-flap {
+  position: absolute !important;
+  top: -14px !important;
+  left: -1px !important; right: -1px !important;
+  height: 0 !important;
+  background: none !important;
+  border-left: calc(50% + 1px) solid transparent !important;
+  border-right: calc(50% + 1px) solid transparent !important;
+  border-bottom: 14px solid #1a1e2e !important;
+  border-top: none !important;
+  z-index: 5 !important;
+  display: block !important;
+}
+
+/* Enveloppe scellée sur screenDetail — forme aussi */
+.envelope-sealed {
+  overflow: visible !important;
+  border-radius: 4px 4px 12px 12px !important;
+  margin-top: 16px !important;
+}
+
 </style>
 </head>
 <body>
