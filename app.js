@@ -2003,6 +2003,80 @@ async function checkDiscoveries() {
 
 // ── NOTIFICATION RÉTENTION — FANTÔME JAMAIS OUVERT ───────
 let _lastVirginNotif = 0;
+
+// ══════════════════════════════════════════════════════════
+// NOTIFICATIONS INTELLIGENTES
+// ══════════════════════════════════════════════════════════
+
+// ── 1. Limite globale : 2 notifs push max par jour ────────
+const _NOTIF_DAILY_KEY = () => 'ghostub_notif_daily_' + new Date().toISOString().slice(0,10)
+  + (currentUser ? '_' + currentUser.uid : '');
+
+function _canSendNotif() {
+  const key = _NOTIF_DAILY_KEY();
+  const count = parseInt(localStorage.getItem(key) || '0');
+  return count < 2;
+}
+
+function _recordNotifSent() {
+  const key = _NOTIF_DAILY_KEY();
+  const count = parseInt(localStorage.getItem(key) || '0');
+  localStorage.setItem(key, count + 1);
+}
+
+// Wrapper autour de showNotif qui respecte la limite
+function _smartNotif(title, body) {
+  if (!_canSendNotif()) return; // quota journalier atteint
+  showNotif(title, body);
+  _recordNotifSent();
+}
+
+// ── 2. Lieu fréquenté — "Tu passes souvent par ici" ───────
+const _FREQ_PLACES_KEY = () => currentUser ? 'ghostub_freq_' + currentUser.uid : null;
+
+function _trackFrequentPlace(geohash5) {
+  const key = _FREQ_PLACES_KEY();
+  if (!key || !geohash5) return;
+  let data;
+  try { data = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) { data = {}; }
+
+  const today = new Date().toISOString().slice(0,10);
+  if (!data[geohash5]) data[geohash5] = { visits: [], lastNotif: '' };
+
+  // Ajouter visite du jour si pas déjà enregistrée aujourd'hui
+  if (!data[geohash5].visits.includes(today)) {
+    data[geohash5].visits.push(today);
+    // Garder seulement les 30 derniers jours
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0,10);
+    data[geohash5].visits = data[geohash5].visits.filter(d => d >= cutoff);
+  }
+
+  const visitCount = data[geohash5].visits.length;
+  const lastNotif  = data[geohash5].lastNotif || '';
+  const weekAgo    = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
+
+  // Seuil : 3+ visites sur 30j ET notif pas envoyée cette semaine
+  if (visitCount >= 3 && lastNotif < weekAgo) {
+    // Y a-t-il un fantôme récent non ouvert par cet utilisateur dans ce geohash ?
+    const freshGhost = nearbyGhosts.find(g =>
+      g.geohash === geohash5 &&
+      (!g.openCount || g.openCount === 0) &&
+      g.authorUid !== currentUser?.uid
+    );
+    if (freshGhost) {
+      const lieu = freshGhost.location || 'ce lieu';
+      const msg = _currentLang === 'en'
+        ? `You come here often. Someone left something for you at "${lieu}".`
+        : `Tu passes souvent par ici. Quelqu'un t'a laissé quelque chose à "${lieu}".`;
+      showToast('info', msg, 7000);
+      _smartNotif('👻 ' + (freshGhost.emoji || ''), msg);
+      data[geohash5].lastNotif = today;
+    }
+  }
+
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+}
+
 function checkVirginGhostNearby() {
   if (!currentUser || nearbyGhosts.length === 0) return;
   // Max 1 fois par heure
@@ -2026,8 +2100,14 @@ function checkVirginGhostNearby() {
   } else {
     msg = t.notif_virgin_new.replace('{dist}', dist);
   }
+  // Toast toujours visible
   showToast('info', msg, 6000);
-  showNotif(t.notif_nearby_sw_title, msg);
+  // Notif push — seulement si quota pas atteint
+  const ghostEmoji = ghost.emoji || '👻';
+  const pushTitle  = _currentLang === 'en'
+    ? `${ghostEmoji} Never opened — be the first`
+    : `${ghostEmoji} Jamais ouvert — sois le premier`;
+  _smartNotif(pushTitle, msg);
   _lastVirginNotif = Date.now();
 }
 
@@ -3562,7 +3642,7 @@ function watchMyGhostResonances() {
         if (curr > prev) {
           const lieu = escapeHTML(g.location || 'ce lieu');
           const msg = _resoMessage(lieu, curr);
-          showNotif(t.notif_reso_title, msg);
+          _smartNotif(t.notif_reso_title, msg);
           showToast('info', msg, 5000);
           // Vérifier milestones de résonance collective
           _checkResoMilestone(id, lieu, prev, curr);
@@ -3920,7 +4000,7 @@ function _checkResoMilestone(ghostId, lieu, prev, curr) {
       const msg_fr = `${emoji} Ton fantôme à "${lieu}" vient d'atteindre ${milestone} résonances — il touche du monde.`;
       const msg_en = `${emoji} Your ghost at "${lieu}" just reached ${milestone} resonances — it's touching people.`;
       const msg = _currentLang === 'en' ? msg_en : msg_fr;
-      showNotif(`${emoji} ${milestone} résonances !`, msg);
+      _smartNotif(`${emoji} ${milestone} résonances !`, msg);
       showToast('info', msg, 6000);
       if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
       break;
@@ -4011,8 +4091,11 @@ window.loadNearbyGhosts = async () => {
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
   // Streak de présence physique — tracker le geohash du lieu actuel
   if (userLat && userLng) {
-    const { geohash5 } = buildGeohashFields(userLat, userLng);
-    if (geohash5) _trackPlaceVisit(geohash5);
+    const _gf = buildGeohashFields(userLat, userLng);
+    if (_gf && _gf.geohash5) {
+      _trackPlaceVisit(_gf.geohash5);
+      _trackFrequentPlace(_gf.geohash5); // détection lieu fréquenté
+    }
   }
   // Vérifier fenêtres éphémères après chaque chargement
   setTimeout(_checkEphemeralWindows, 500);
