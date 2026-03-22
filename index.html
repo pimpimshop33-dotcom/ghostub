@@ -1369,7 +1369,7 @@ button, [role="button"], input, textarea, select,
             <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">✨</button>
             <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">🔥</button>
             <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">🌸</button>
-            <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="…" maxlength="2" oninput="pickEmojiCustom(this)">
+            <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" oninput="pickEmojiCustom(this)" style="width:44px;height:44px;text-align:center;font-size:20px;background:rgba(168,180,255,.06);border-radius:12px;border:none;color:var(--warm);-webkit-text-fill-color:var(--warm)!important;">
           </div>
           <textarea class="form-textarea wizard-textarea" id="depositMsg" data-i18n-placeholder="dep_msg_placeholder" placeholder="Une pensée, un souvenir, un secret… quelque chose que vous laissez derrière vous." style="height:130px;margin-bottom:0;" maxlength="280" aria-required="true" aria-describedby="msgCharCount"></textarea>
           <div class="wizard-char-count"><span id="msgCharCount">0</span>/280</div>
