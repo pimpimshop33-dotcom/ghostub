@@ -5702,9 +5702,11 @@ async function _doOpenEnvelope() {
 function _initScratchReveal() {
   const zone = document.getElementById('scratchZone');
   if (!zone) return;
-  // Masquer le contenu immédiatement
-  zone.style.opacity = '0';
-  zone.style.visibility = 'hidden';
+  // Cacher le CONTENU (pas la zone elle-même — sinon le canvas hérite de opacity:0)
+  ['detailMessage','detailAudio','detailPhoto','detailReadCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.opacity = '0'; el.style.visibility = 'hidden'; }
+  });
   setTimeout(_buildScratchCanvas, 400);
 }
 
@@ -5715,10 +5717,6 @@ function _buildScratchCanvas() {
 
   const zone = document.getElementById('scratchZone');
   if (!zone) return;
-
-  // Rendre la zone visible pour mesurer sa vraie hauteur
-  zone.style.visibility = 'visible';
-  zone.style.opacity    = '0'; // toujours invisible pour l'utilisateur
 
   const dpr  = window.devicePixelRatio || 1;
   const cssW = zone.offsetWidth  || 320;
@@ -5805,9 +5803,15 @@ function _completeScratchReveal(canvas, hint, zone) {
   hint.style.opacity='0';
   setTimeout(()=>{
     canvas.remove(); hint.remove();
-    // Révéler la zone en fondu
-    zone.style.transition='opacity .35s ease';
-    zone.style.opacity='1';
+    // Révéler les éléments intérieurs
+    ['detailMessage','detailAudio','detailPhoto','detailReadCount'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.visibility = 'visible';
+        el.style.transition = 'opacity .35s ease';
+        el.style.opacity = '1';
+      }
+    });
     // Apparition mot par mot du message
     setTimeout(()=>{
       const m=document.getElementById('detailMessage');
