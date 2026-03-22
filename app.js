@@ -1683,6 +1683,8 @@ onAuthStateChanged(auth, async user => {
     _renderPricingCards();
     showScreen('screenRadar');
     setNav('nav-radar');
+    // Fantôme garanti au 1er lancement — décalé après le GPS
+    setTimeout(() => _seedWelcomeGhost(), 4000);
     // ── Présence passive — GPS watch ─────────────────────────────────
     if (!window._locationWatchStarted) {
       window._locationWatchStarted = true;
@@ -2840,9 +2842,9 @@ function updatePremiumUI() {
     rb.id = 'radarPremiumBadge';
     rb.textContent = '✦';
     rb.setAttribute('aria-label', 'Compte Premium');
-    rb.style.cssText = 'margin-left:7px;font-size:13px;color:rgba(255,200,80,.75);' +
+    rb.style.cssText = 'margin-left:7px;font-size:13px;color:rgba(255,200,80,.85);' +
       'animation:ghostFloat 2.8s ease-in-out infinite;display:inline-block;' +
-      'filter:drop-shadow(0 0 5px rgba(255,200,80,.5));vertical-align:middle;';
+      '-webkit-text-fill-color:rgba(255,200,80,.85)!important;vertical-align:middle;';
     radarTitle.appendChild(rb);
   } else if (!isPremium && existingRadarBadge) {
     existingRadarBadge.remove();
@@ -3751,6 +3753,99 @@ const timeRemaining = g => {
     .replace(/dans /i,                  'in ');
 };
 
+
+// ══════════════════════════════════════════════════════════
+// FEATURE 1 : FANTÔME GARANTI AU 1er LANCEMENT
+// ══════════════════════════════════════════════════════════
+async function _seedWelcomeGhost() {
+  if (!currentUser || currentUser.isAnonymous) return;
+  if (!userLat || !userLng) return;
+  const key = 'ghostub_welcomed_' + currentUser.uid;
+  if (localStorage.getItem(key)) return;
+
+  try {
+    const _wLat = userLat + (Math.random()-0.5)*0.0003;
+    const _wLng = userLng + (Math.random()-0.5)*0.0003;
+    const fields = buildGeohashFields(_wLat, _wLng);
+    await addDoc(collection(db, COLL.GHOSTS), {
+      message: _currentLang === 'en'
+        ? 'Someone was here before you… and left this trace for whoever would find it.'
+        : 'Quelqu’un est passé ici avant toi… et a laissé ça pour qui le trouverait.',
+      emoji: '👻',
+      lat: _wLat,
+      lng: _wLng,
+      location: _currentLang === 'en' ? 'Right here' : 'Juste ici',
+      radius: '30m',
+      duration: '7j',
+      maxOpenCount: 0,
+      anonymous: true,
+      author: 'Spectre_Errant',
+      authorUid: 'system',
+      geohash: fields.geohash5 || fields.geohash,
+      geohash4: fields.geohash4,
+      expired: false,
+      createdAt: serverTimestamp(),
+      resonances: Math.floor(Math.random()*3)+1,
+      openCount: Math.floor(Math.random()*6)+2,
+      _welcome: true,
+    });
+    localStorage.setItem(key, '1');
+    // Recharger pour qu'il apparaisse immédiatement
+    setTimeout(() => loadNearbyGhosts(), 1200);
+  } catch(e) { console.warn('_seedWelcomeGhost:', e); }
+}
+
+// ══════════════════════════════════════════════════════════
+// FEATURE 2 : FENÊTRES ÉPHÉMÈRES — FOMO NOTIFICATION
+// Vérifie périodiquement si un fantôme proche expire bientôt
+// ══════════════════════════════════════════════════════════
+const _EPHEM_NOTIFIED_KEY = 'ghostub_ephem_notified';
+
+function _checkEphemeralWindows() {
+  if (!nearbyGhosts || !nearbyGhosts.length) return;
+  const now = Date.now();
+  const TWO_H = 7200000;
+  let notified = [];
+  try { notified = JSON.parse(localStorage.getItem(_EPHEM_NOTIFIED_KEY) || '[]'); } catch(e) {}
+  const notifiedSet = new Set(notified);
+
+  nearbyGhosts.forEach(g => {
+    if (notifiedSet.has(g.id)) return;
+    // Fantôme avec date d'expiration calculable (duration connue)
+    if (!g.createdAt) return;
+    const created = g.createdAt.seconds ? g.createdAt.seconds * 1000 : Date.now();
+    const durMap = { '24h': 86400000, '7j': 604800000, '1m': 2592000000 };
+    const durMs = durMap[g.duration] || 0;
+    if (!durMs) return;
+    const expiresAt = created + durMs;
+    const remaining = expiresAt - now;
+    if (remaining <= 0 || remaining > TWO_H) return;
+
+    // Fantôme qui expire dans moins de 2h — FOMO !
+    notifiedSet.add(g.id);
+    const mins = Math.round(remaining / 60000);
+    const dist = Math.round(g.distance || 0);
+    const distStr = dist > 999 ? (dist/1000).toFixed(1)+'km' : dist+'m';
+    const timeStr = mins < 60 ? `${mins} min` : `${Math.round(mins/60)}h`;
+
+    showNotif(
+      `⏳ ${g.emoji || '👻'} — ${timeStr} restante${mins > 1 ? 's' : ''}`,
+      `${_currentLang === 'en'
+        ? `A trace at ${distStr} will disappear soon. Be quick.`
+        : `Une trace à ${distStr} va disparaître. Fais vite.`}`
+    );
+    // Toast en app aussi
+    showToast('info',
+      `⏳ ${g.emoji || '👻'} à ${distStr} — expire dans ${timeStr}`,
+      5000
+    );
+  });
+
+  // Sauvegarder les notifiés (garder les 50 derniers max)
+  const arr = [...notifiedSet].slice(-50);
+  try { localStorage.setItem(_EPHEM_NOTIFIED_KEY, JSON.stringify(arr)); } catch(e) {}
+}
+
 window.loadNearbyGhosts = async () => {
   // Vérification offline
   if (!navigator.onLine) {
@@ -3809,6 +3904,8 @@ window.loadNearbyGhosts = async () => {
     }
   });
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
+  // Vérifier fenêtres éphémères après chaque chargement
+  setTimeout(_checkEphemeralWindows, 500);
 
   for (const g of nearbyGhosts) {
     if (g.secret) {
