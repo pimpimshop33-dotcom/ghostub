@@ -5686,26 +5686,8 @@ async function _doOpenEnvelope() {
       playRevealSound();
       // Vibration finale douce
       setTimeout(() => { if (navigator.vibrate) navigator.vibrate([20, 60, 20]); }, 200);
-      // ── SCRATCH-TO-REVEAL — couvre message + audio + photo ──
-      {
-        const msgEl    = document.getElementById('detailMessage');
-        const audioEl  = document.getElementById('detailAudio');
-        const photoEl  = document.getElementById('detailPhoto');
-        const countEl  = document.getElementById('detailReadCount');
-
-        // Créer un wrapper qui englobe tout le contenu média
-        const scratchZone = document.createElement('div');
-        scratchZone.id = 'scratchZone';
-        // Insérer le wrapper avant le premier élément
-        msgEl.parentNode.parentNode.insertBefore(scratchZone, msgEl.parentNode);
-        // Déplacer les éléments dans la zone
-        scratchZone.appendChild(msgEl.parentNode); // div position:relative avec detailMessage
-        if (audioEl)  scratchZone.appendChild(audioEl);
-        if (photoEl)  scratchZone.appendChild(photoEl);
-        if (countEl)  scratchZone.appendChild(countEl);
-
-        _initScratchReveal(scratchZone);
-      }
+      // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
+      _initScratchReveal();
       const firstFocusable = revealed.querySelector('button, [tabindex]');
       if (firstFocusable) firstFocusable.focus();
     }, 350);
@@ -5713,244 +5695,145 @@ async function _doOpenEnvelope() {
   Analytics.track('envelope_opened');
 }
 
-
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
-function _initScratchReveal(container) {
-  // Masquer IMMÉDIATEMENT tout le contenu avant toute animation
-  container.style.opacity = '0';
-  container.style.visibility = 'hidden';
-  // Attendre que le DOM soit stable
-  setTimeout(() => {
-    _buildScratchCanvas(container);
-  }, 500);
+// Canvas flottant sur envelopeContent — sans déplacer aucun élément DOM.
+
+function _initScratchReveal() {
+  const envelopeContent = document.getElementById('envelopeContent');
+  if (!envelopeContent) return;
+
+  // Masquer immédiatement message + media (pas les boutons)
+  const toHide = ['detailMessage','detailAudio','detailPhoto','detailReadCount','detailChain','msgReportBtn'];
+  toHide.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.dataset.scratchHidden = '1'; el.style.opacity = '0'; el.style.visibility = 'hidden'; }
+  });
+
+  setTimeout(_buildScratchCanvas, 400);
 }
 
-function _buildScratchCanvas(container) {
-  // Nettoyer un éventuel canvas précédent
-  const old = document.getElementById('scratchCanvas');
-  if (old) old.remove();
-  const oldHint = document.querySelector('.scratch-hint-overlay');
-  if (oldHint) oldHint.remove();
+function _buildScratchCanvas() {
+  const oldC = document.getElementById('scratchCanvas');   if (oldC) oldC.remove();
+  const oldH = document.getElementById('scratchHint');     if (oldH) oldH.remove();
 
-  // Le container EST le wrapper — lui appliquer la classe
-  container.className = (container.className + ' scratch-wrapper').trim();
-  const wrapper = container;
+  const ec    = document.getElementById('envelopeContent');
+  const msgEl = document.getElementById('detailMessage');
+  if (!ec || !msgEl) return;
 
-  // Hauteur auto — s'adapte au contenu réel
-  wrapper.style.minHeight = '220px';
-  container.style.opacity = '0';
-  container.style.visibility = 'hidden';
-  container.style.userSelect = 'none';
+  // Zone à couvrir : de detailMessage jusqu'au dernier média présent
+  let bottomEl = msgEl;
+  ['detailAudio','detailPhoto','detailReadCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && (el.children.length > 0 || (el.style.display !== 'none' && el.textContent.trim()))) bottomEl = el;
+  });
+
+  const ecRect     = ec.getBoundingClientRect();
+  const msgRect    = msgEl.getBoundingClientRect();
+  const bottomRect = bottomEl.getBoundingClientRect();
+
+  const scrollTop = ec.scrollTop || 0;
+  const relTop    = msgRect.top - ecRect.top + scrollTop - 8;
+  const relLeft   = Math.max(0, msgRect.left - ecRect.left - 4);
+  const cssW      = ecRect.width - relLeft + 4;
+  const cssH      = Math.max(220, bottomRect.bottom - msgRect.top + 24);
+
+  ec.style.position = 'relative';
 
   // Canvas
   const canvas = document.createElement('canvas');
   canvas.id = 'scratchCanvas';
-  wrapper.appendChild(canvas);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.style.cssText = `position:absolute;top:${relTop}px;left:${relLeft}px;width:${cssW}px;height:${cssH}px;border-radius:20px;cursor:crosshair;touch-action:none;z-index:20;pointer-events:auto;`;
+  canvas.width  = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  ec.appendChild(canvas);
 
-  // Hint overlay
-  const hintOverlay = document.createElement('div');
-  hintOverlay.className = 'scratch-hint-overlay';
-  // Hint positionné en BAS du canvas — le ghost reste visible au centre
-  // Fond totalement transparent — seuls le texte et la main sont visibles
-  hintOverlay.style.cssText = 'position:absolute;left:0;right:0;bottom:12px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:10;pointer-events:none;background:none;';
-  hintOverlay.innerHTML = `
-    <div style="font-size:28px;line-height:1;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(168,180,255,1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</div>
-  `;
-  wrapper.appendChild(hintOverlay);
+  // Hint en bas du canvas
+  const hint = document.createElement('div');
+  hint.id = 'scratchHint';
+  hint.style.cssText = `position:absolute;left:${relLeft}px;top:${relTop + cssH - 58}px;width:${cssW}px;height:58px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:21;pointer-events:none;background:none;transition:opacity .3s;`;
+  hint.innerHTML = `<span style="font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(168,180,255,1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</span>`;
+  ec.appendChild(hint);
 
-  // Mesure après un frame pour avoir les vraies dimensions du wrapper
-  requestAnimationFrame(() => {
-    const dpr = window.devicePixelRatio || 1;
-    const cssW = wrapper.offsetWidth  || 320;
-    const cssH = CANVAS_H;
+  // Dessiner le voile
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const grad = ctx.createLinearGradient(0,0,cssW,cssH);
+  grad.addColorStop(0,   'rgba(14,12,30,0.98)');
+  grad.addColorStop(0.5, 'rgba(20,16,42,0.97)');
+  grad.addColorStop(1,   'rgba(10,10,22,0.98)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,20); ctx.fill();
+  const glow = ctx.createRadialGradient(cssW/2,0,0,cssW/2,cssH*0.5,cssW*0.8);
+  glow.addColorStop(0,'rgba(168,180,255,0.10)'); glow.addColorStop(1,'transparent');
+  ctx.fillStyle = glow;
+  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,20); ctx.fill();
+  ctx.save();
+  ctx.font = `${Math.min(cssW,cssH)*0.55}px serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(168,180,255,0.5)'; ctx.shadowBlur=20;
+  ctx.globalAlpha=0.30; ctx.fillStyle='#d0d8ff';
+  ctx.fillText('👻', cssW/2, cssH/2);
+  ctx.restore();
 
-    // Taille CSS du canvas
-    canvas.style.width  = cssW + 'px';
-    canvas.style.height = cssH + 'px';
-    // Résolution interne x2 pour éviter le flou sur mobile
-    canvas.width  = cssW * dpr;
-    canvas.height = cssH * dpr;
+  // Grattage
+  let isDrawing=false, revealed=false, lastX=0, lastY=0, checkTimer=null;
 
-    const ctx = canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
-
-    // ── Fond du voile ──────────────────────────────────────
-    const grad = ctx.createLinearGradient(0, 0, cssW, cssH);
-    grad.addColorStop(0,   'rgba(14, 12, 30, 0.98)');
-    grad.addColorStop(0.5, 'rgba(20, 16, 42, 0.97)');
-    grad.addColorStop(1,   'rgba(10, 10, 22, 0.98)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.roundRect(0, 0, cssW, cssH, 20);
-    ctx.fill();
-
-    // Reflet haut
-    const glow = ctx.createRadialGradient(cssW/2, 0, 0, cssW/2, cssH*0.4, cssW*0.8);
-    glow.addColorStop(0, 'rgba(168,180,255,0.10)');
-    glow.addColorStop(1, 'transparent');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.roundRect(0, 0, cssW, cssH, 20);
-    ctx.fill();
-
-    // Ghost watermark centré — bien visible sur le fond sombre
-    ctx.save();
-    ctx.font = `${Math.min(cssW, cssH) * 0.62}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    // Ombre lumineuse
-    ctx.shadowColor = 'rgba(168,180,255,0.6)';
-    ctx.shadowBlur = 24;
-    ctx.globalAlpha = 0.35;
-    ctx.fillStyle = '#d0d8ff';
-    ctx.fillText('👻', cssW / 2, cssH / 2);
-    // Deuxième passe pour renforcer
-    ctx.globalAlpha = 0.18;
-    ctx.shadowBlur = 48;
-    ctx.fillText('👻', cssW / 2, cssH / 2);
-    ctx.restore();
-
-    // ── État du grattage ───────────────────────────────────
-    let isDrawing = false;
-    let revealed  = false;
-    let lastX = 0, lastY = 0;
-    let checkTimer = null;
-
-    function getPos(e) {
-      const r = canvas.getBoundingClientRect();
-      const src = e.touches ? e.touches[0] : e;
-      return {
-        x: (src.clientX - r.left) * (cssW / r.width),
-        y: (src.clientY - r.top)  * (cssH / r.height)
-      };
-    }
-
-    function scratchAt(x, y, fromMove) {
-      if (revealed) return;
-      ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = 60;
-      ctx.lineCap  = 'round';
-      ctx.lineJoin = 'round';
-      if (fromMove) {
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(x, y);
-        ctx.stroke();
-      }
-      ctx.beginPath();
-      ctx.arc(x, y, 32, 0, Math.PI * 2);
-      ctx.fill();
-      lastX = x; lastY = y;
-
-      // Vérifier la progression toutes les 150ms max
-      if (!checkTimer) {
-        checkTimer = setTimeout(() => {
-          checkTimer = null;
-          if (!revealed) checkProgress();
-        }, 150);
-      }
-    }
-
-    function checkProgress() {
-      if (revealed) return;
-      const total = canvas.width * canvas.height;
-      const data  = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-      let cleared = 0;
-      for (let i = 3; i < data.length; i += 4) {
-        if (data[i] < 100) cleared++;
-      }
-      if (cleared / total > 0.50) {
-        revealed = true;
-        clearTimeout(checkTimer);
-        _completeReveal(canvas, hintOverlay, wrapper);
-      }
-    }
-
-    // ── Événements souris ──────────────────────────────────
-    canvas.addEventListener('mousedown', e => {
-      e.preventDefault();
-      isDrawing = true;
-      hintOverlay.style.transition = 'opacity .3s';
-      hintOverlay.style.opacity = '0';
-      const {x,y} = getPos(e);
-      lastX = x; lastY = y;
-      scratchAt(x, y, false);
-    });
-    canvas.addEventListener('mousemove', e => {
-      if (!isDrawing) return;
-      e.preventDefault();
-      const {x,y} = getPos(e);
-      scratchAt(x, y, true);
-    });
-    canvas.addEventListener('mouseup',    () => { isDrawing = false; });
-    canvas.addEventListener('mouseleave', () => { isDrawing = false; });
-
-    // ── Événements tactiles ────────────────────────────────
-    canvas.addEventListener('touchstart', e => {
-      e.preventDefault();
-      isDrawing = true;
-      hintOverlay.style.transition = 'opacity .3s';
-      hintOverlay.style.opacity = '0';
-      const {x,y} = getPos(e);
-      lastX = x; lastY = y;
-      scratchAt(x, y, false);
-    }, { passive: false });
-    canvas.addEventListener('touchmove', e => {
-      e.preventDefault();
-      if (!isDrawing) return;
-      const {x,y} = getPos(e);
-      scratchAt(x, y, true);
-    }, { passive: false });
-    canvas.addEventListener('touchend',   () => { isDrawing = false; });
-    canvas.addEventListener('touchcancel',() => { isDrawing = false; });
-  });
+  function getPos(e) {
+    const r=canvas.getBoundingClientRect(), src=e.touches?e.touches[0]:e;
+    return {x:(src.clientX-r.left)*(cssW/r.width), y:(src.clientY-r.top)*(cssH/r.height)};
+  }
+  function scratchAt(x,y,fromMove) {
+    if(revealed) return;
+    ctx.globalCompositeOperation='destination-out';
+    ctx.lineWidth=60; ctx.lineCap='round'; ctx.lineJoin='round';
+    if(fromMove){ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();}
+    ctx.beginPath(); ctx.arc(x,y,32,0,Math.PI*2); ctx.fill();
+    lastX=x; lastY=y;
+    if(!checkTimer) checkTimer=setTimeout(()=>{checkTimer=null;if(!revealed)checkPct();},150);
+  }
+  function checkPct() {
+    if(revealed) return;
+    const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let c=0; for(let i=3;i<d.length;i+=4){if(d[i]<100)c++;} 
+    if(c/(canvas.width*canvas.height)>0.50){revealed=true;clearTimeout(checkTimer);_completeScratchReveal(canvas,hint);}
+  }
+  function onStart(e){e.preventDefault();isDrawing=true;hint.style.opacity='0';const p=getPos(e);lastX=p.x;lastY=p.y;scratchAt(p.x,p.y,false);}
+  function onMove(e){if(!isDrawing)return;e.preventDefault();const p=getPos(e);scratchAt(p.x,p.y,true);}
+  function onEnd(){isDrawing=false;}
+  canvas.addEventListener('mousedown',onStart);
+  canvas.addEventListener('mousemove',onMove);
+  canvas.addEventListener('mouseup',onEnd);
+  canvas.addEventListener('mouseleave',onEnd);
+  canvas.addEventListener('touchstart',onStart,{passive:false});
+  canvas.addEventListener('touchmove',onMove,{passive:false});
+  canvas.addEventListener('touchend',onEnd);
+  canvas.addEventListener('touchcancel',onEnd);
 }
 
-function _completeReveal(canvas, hintOverlay, container) {
-  // Flash violet subtil
-  const flash = document.getElementById('sealBreakFlash');
-  if (flash) {
-    flash.style.animation = 'none';
-    flash.offsetHeight;
-    flash.style.animation = 'sealFlash 0.5s ease-out forwards';
-  }
-  if (navigator.vibrate) navigator.vibrate([15, 30, 15, 60, 120]);
-  canvas.style.transition = 'opacity .5s ease';
-  canvas.style.opacity = '0';
-  hintOverlay.style.opacity = '0';
-
-  setTimeout(() => {
-    canvas.remove();
-    hintOverlay.remove();
-    // Révéler tout le container
-    container.style.visibility = 'visible';
-    container.style.transition = 'opacity .35s ease';
-    container.style.opacity = '0';
-    requestAnimationFrame(() => {
-      container.style.opacity = '1';
-    });
-    // Apparition mot par mot du message
-    const msgEl = container.querySelector('.detail-message') || container.querySelector('#detailMessage');
-    if (msgEl) {
-      const fullText = msgEl.textContent || msgEl.innerText;
-      if (fullText.trim().length > 1) {
-        msgEl.textContent = '';
-        setTimeout(() => {
-          const words = fullText.split(' ').filter(Boolean);
-          let i = 0;
-          const iv = setInterval(() => {
-            if (i < words.length) {
-              msgEl.textContent += (i === 0 ? '' : ' ') + words[i++];
-            } else {
-              clearInterval(iv);
-              if (navigator.vibrate) navigator.vibrate(50);
-            }
-          }, 70);
-        }, 100);
+function _completeScratchReveal(canvas, hint) {
+  const flash=document.getElementById('sealBreakFlash');
+  if(flash){flash.style.animation='none';flash.offsetHeight;flash.style.animation='sealFlash 0.5s ease-out forwards';}
+  if(navigator.vibrate) navigator.vibrate([15,30,15,60,120]);
+  canvas.style.transition='opacity .5s ease'; canvas.style.opacity='0';
+  if(hint){hint.style.opacity='0';}
+  setTimeout(()=>{
+    canvas.remove(); if(hint) hint.remove();
+    // Révéler tous les éléments cachés
+    ['detailMessage','detailAudio','detailPhoto','detailReadCount','detailChain','msgReportBtn'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el&&el.dataset.scratchHidden){
+        el.style.visibility='visible'; el.style.transition='opacity .3s'; el.style.opacity='0';
+        delete el.dataset.scratchHidden;
+        requestAnimationFrame(()=>{ el.style.opacity='1'; });
       }
-    }
-  }, 520);
+    });
+    // Mot par mot sur le message
+    setTimeout(()=>{
+      const m=document.getElementById('detailMessage');
+      if(m){const ft=m.textContent||'';if(ft.trim().length>1){m.textContent='';const w=ft.split(' ').filter(Boolean);let i=0;const iv=setInterval(()=>{if(i<w.length){m.textContent+=(i===0?'':' ')+w[i++];}else{clearInterval(iv);if(navigator.vibrate)navigator.vibrate(50);}},70);}}
+    },120);
+  },520);
 }
 
 
