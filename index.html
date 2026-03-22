@@ -942,6 +942,131 @@ body.light-theme .auth-tab.active{background:rgba(220,218,240,.9);}
 body.light-theme .stat-card{background:rgba(210,208,232,.7);border-color:rgba(80,60,200,.2);}
 body.light-theme .form-input,.body.light-theme .form-textarea{background:rgba(235,233,248,.9);border-color:rgba(80,60,200,.2);color:var(--warm);}
 
+/* ══ RÈGLES MANQUANTES — ob-scene, onboarding, deposit ══ */
+
+/* Onboarding carousel */
+.ob-carousel{width:100%;flex:1;position:relative;overflow:hidden;display:flex;align-items:stretch;}
+.ob-scene{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px 28px;text-align:center;
+  opacity:0;transform:translateX(40px);pointer-events:none;
+  transition:opacity .4s ease,transform .4s ease;
+}
+.ob-scene.active{opacity:1;transform:translateX(0);pointer-events:all;}
+.ob-scene.exit{opacity:0;transform:translateX(-40px);}
+
+/* Onboarding visuels */
+.ob-radar{width:180px;height:180px;border-radius:50%;border:1px solid rgba(122,184,245,.25);position:relative;background:radial-gradient(circle,rgba(61,184,122,.06) 0%,transparent 70%);}
+.ob-radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(122,184,245,.18);top:50%;left:50%;transform:translate(-50%,-50%);}
+.ob-radar-ring:nth-child(1){width:40%;height:40%;}
+.ob-rring2{width:70%;height:70%;border-style:dashed;opacity:.4;}
+.ob-rring3{width:100%;height:100%;}
+.ob-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,rgba(61,184,122,.2) 14%,transparent 16%);animation:sweep 4s linear infinite;}
+.ob-radar-center{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--mist);transform:translate(-50%,-50%);box-shadow:0 0 12px var(--mist);}
+.ob-ghost-dot{position:absolute;font-size:20px;animation:ghostReveal 4s linear infinite;}
+.ob-dot2{animation-delay:1.3s;}
+.ob-dot3{animation-delay:2.6s;}
+/* Enveloppe onboarding */
+.ob-envelope{width:200px;background:linear-gradient(160deg,rgba(16,12,6,.99) 0%,rgba(10,8,4,1) 100%);border:1px solid rgba(232,160,48,.25);border-radius:16px;overflow:hidden;}
+.ob-env-flap{height:50px;background:linear-gradient(180deg,rgba(232,160,48,.15) 0%,rgba(232,160,48,.05) 100%);border-bottom:1px solid rgba(232,160,48,.2);display:flex;align-items:center;justify-content:center;}
+.ob-env-body{padding:16px;display:flex;align-items:center;gap:12px;background:rgba(16,12,8,.98);}
+.ob-env-emoji{font-size:28px;filter:drop-shadow(0 0 10px rgba(232,160,48,.5));}
+.ob-env-lines{flex:1;display:flex;flex-direction:column;gap:6px;}
+.ob-env-line{height:8px;border-radius:4px;background:rgba(232,160,48,.2);}
+.ob-line2{width:75%;}
+.ob-line3{width:50%;}
+/* Résonance onboarding */
+.ob-reso-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+.ob-reso-btn{padding:14px 28px;background:rgba(232,160,48,.12);border:1px solid rgba(232,160,48,.35);border-radius:14px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:14px;position:relative;z-index:2;}
+.ob-reso-particles{position:absolute;inset:-20px;pointer-events:none;}
+/* Dots nav onboarding */
+.ob-dots{display:flex;gap:8px;justify-content:center;padding:12px 0 0;}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(122,184,245,.2);border:none;cursor:pointer;transition:all .2s;padding:0;}
+.ob-dot.active{background:var(--amber);width:18px;border-radius:4px;box-shadow:0 0 8px var(--amber);}
+/* CTA onboarding */
+.ob-cta{width:100%;padding:0 0 8px;transition:opacity .3s;}
+.ob-swipe-hint{font-size:11px;color:rgba(122,184,245,.3);letter-spacing:.5px;padding-bottom:8px;animation:obHintFade 2s ease-in-out infinite;}
+@keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
+.ob-scene-text{margin-top:20px;}
+
+/* ── Ville hantée : fond avec lampadaire ── */
+/* Halo lampadaire simulé en haut du radar screen */
+#screenRadar::before{
+  content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,160,48,.06) 0%,rgba(232,160,48,.02) 40%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+/* Sol mouillé : reflet en bas de chaque écran */
+.screen.active::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:120px;
+  background:linear-gradient(0deg,rgba(232,160,48,.03) 0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
+/* Brouillard de fond */
+.phone::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:35%;
+  background:linear-gradient(0deg,rgba(61,184,122,.03) 0%,rgba(122,184,245,.02) 40%,transparent 100%);
+  pointer-events:none;z-index:0;animation:fogRise 10s ease-in-out infinite;
+}
+
+/* ── wizard-pane (déposer) ─────────────────────────────── */
+.wizard-pane{padding:0;}
+.wizard-pane-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;}
+.wizard-pane-sub{font-size:12px;color:var(--warm-dim);margin-bottom:14px;}
+
+/* ── Reso particles & shockwave ────────────────────────── */
+@keyframes resoBtnPulse{0%{transform:scale(1);}50%{transform:scale(1.04);}100%{transform:scale(1);}}
+.resonance-btn.firing{animation:resoBtnPulse .5s ease-out;}
+.reso-shockwave{position:absolute;border-radius:50%;border:2px solid var(--amber);animation:resoShock .8s ease-out forwards;pointer-events:none;}
+@keyframes resoShock{0%{width:0;height:0;opacity:.9;transform:translate(-50%,-50%) scale(0);}100%{width:200px;height:200px;opacity:0;transform:translate(-50%,-50%) scale(1);}}
+.reso-particle{position:absolute;width:6px;height:6px;border-radius:50%;animation:resoParticle .7s ease-out forwards;pointer-events:none;}
+@keyframes resoParticle{0%{opacity:1;transform:translate(0,0) scale(1);}100%{opacity:0;transform:var(--tx,0) var(--ty,0) scale(0);}}
+
+/* ── Auth tab content transition ───────────────────────── */
+.auth-tab-content{transition:opacity .18s ease;}
+
+/* ── Toast générique ───────────────────────────────────── */
+.toast{
+  position:fixed;top:calc(var(--sat)+16px);left:50%;transform:translateX(-50%) translateY(-10px);
+  background:rgba(4,8,15,.97);backdrop-filter:blur(12px);
+  border:1px solid var(--border-bright);border-radius:16px;
+  padding:10px 18px;font-size:13px;color:var(--warm);
+  z-index:99990;opacity:0;transition:all .25s;white-space:nowrap;
+  box-shadow:0 8px 24px rgba(0,0,0,.6);
+  display:flex;align-items:center;gap:8px;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.success{border-color:rgba(61,184,122,.4);color:rgba(61,184,122,.95);}
+.toast.error{border-color:rgba(255,80,80,.35);color:rgba(255,110,110,.9);}
+.toast.info{border-color:rgba(232,160,48,.35);color:var(--amber);}
+
+/* ── Ghost Whisper ─────────────────────────────────────── */
+.ghost-whisper-toast{
+  position:fixed;bottom:calc(80px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(4,8,15,.97);backdrop-filter:blur(14px);
+  border:1px solid rgba(232,160,48,.3);border-radius:20px;
+  padding:14px 20px;min-width:240px;text-align:center;
+  z-index:9001;opacity:0;pointer-events:none;transition:all .3s;
+  box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 30px rgba(232,160,48,.06);
+}
+.ghost-whisper-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ── Hautnted zone legend ──────────────────────────────── */
+.haunted-legend{
+  position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
+  background:rgba(4,8,15,.88);backdrop-filter:blur(8px);
+  border:1px solid rgba(122,184,245,.15);border-radius:12px;
+  padding:6px 12px;display:flex;gap:10px;align-items:center;
+  font-size:10px;color:rgba(122,184,245,.7);z-index:400;white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.5);
+}
+
+/* ── Biz dashboard ─────────────────────────────────────── */
+.biz-stat{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;margin-bottom:8px;}
+.biz-stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--amber);}
+.biz-stat-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.5px;}
+
 </style>
 </head>
 <body>
