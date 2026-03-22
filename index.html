@@ -46,30 +46,30 @@
 
 /* ── VARIABLES ─────────────────────────────────────────── */
 :root {
-  /* Noirs urbains */
-  --void:   #020408;
-  --deep:   #04080f;
-  --surface:#090d16;
-  --surface2:#0d1220;
-  /* Fantôme bleu froid — lumière de lune sur brume */
-  --ghost:  rgba(110,160,240,0.05);
-  --spirit: #7ab8f5;
-  --spirit-dim: rgba(122,184,245,0.45);
-  --spirit-glow:rgba(122,184,245,0.10);
-  --ether:  #c8daf5;
-  /* Crème lampadaire */
-  --warm:   #e8d4a8;
-  --warm-dim:rgba(232,212,168,0.55);
+  /* Noirs urbains profonds */
+  --void:   #030308;
+  --deep:   #080810;
+  --surface:#0e0e18;
+  --surface2:#141420;
+  /* Fantôme — bleu spectre nocturne */
+  --ghost:  rgba(168,180,255,0.05);
+  --spirit: #a8b4ff;
+  --spirit-dim: rgba(168,180,255,0.50);
+  --spirit-glow:rgba(168,180,255,0.10);
+  --ether:  #c8d4ff;
+  /* Ivoire brumeux */
+  --warm:   #f0e8d8;
+  --warm-dim:rgba(240,232,216,0.60);
   /* Bordures */
-  --border: rgba(122,184,245,0.10);
-  --border-bright:rgba(122,184,245,0.28);
-  /* Ambre — réverbère */
-  --amber:  #e8a030;
-  --amber-dim:rgba(232,160,48,0.30);
-  --amber-glow:rgba(232,160,48,0.12);
-  /* Brume verte — enseigne nocturne */
+  --border: rgba(168,180,255,0.12);
+  --border-bright:rgba(168,180,255,0.30);
+  /* Réverbère — jaune chaud très discret (accent uniquement) */
+  --amber:  #c8a060;
+  --amber-dim:rgba(200,160,96,0.20);
+  --amber-glow:rgba(200,160,96,0.08);
+  /* Brume verte — enseigne lointaine */
   --mist:   #3db87a;
-  --mist-dim:rgba(61,184,122,0.30);
+  --mist-dim:rgba(61,184,122,0.25);
   /* Danger */
   --red:    rgba(255,80,80,0.85);
   /* iOS safe areas */
@@ -135,8 +135,8 @@ button,[role="button"],.nav-item,.auth-tab,.type-btn,.dur-btn,.radius-btn{min-he
   /* Taille explicite pour que l'emoji soit visible */
   line-height:1;
 }
-.emoji-opt:hover{background:rgba(232,160,48,.12);border-color:rgba(232,160,48,.3);}
-.emoji-opt.active{background:rgba(232,160,48,.18);border-color:rgba(232,160,48,.55);box-shadow:0 0 12px rgba(232,160,48,.2);}
+.emoji-opt:hover{background:rgba(168,180,255,.1);border-color:rgba(168,180,255,.3);}
+.emoji-opt.active{background:rgba(168,180,255,.15);border-color:rgba(168,180,255,.5);box-shadow:0 0 12px rgba(168,180,255,.18);}
 .emoji-custom{
   width:44px;height:44px;
   background:rgba(122,184,245,.06);border:1px solid rgba(122,184,245,.15);
@@ -287,17 +287,17 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 /* ── BOUTONS ───────────────────────────────────────────── */
 .btn-primary{
   width:100%;padding:14px;
-  background:linear-gradient(135deg,rgba(232,160,48,.18) 0%,rgba(122,184,245,.12) 100%);
-  border:1px solid rgba(232,160,48,.4);
+  background:linear-gradient(135deg,rgba(168,180,255,.18) 0%,rgba(168,180,255,.08) 100%);
+  border:1px solid rgba(168,180,255,.3);
   border-radius:15px;color:var(--warm);
   font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;
   cursor:pointer;transition:all .2s;touch-action:manipulation;
-  box-shadow:0 0 20px rgba(232,160,48,.06);
+  box-shadow:0 0 20px rgba(168,180,255,.06);
 }
 .btn-primary:hover{
-  background:linear-gradient(135deg,rgba(232,160,48,.26) 0%,rgba(122,184,245,.18) 100%);
-  box-shadow:0 0 28px rgba(232,160,48,.15);
-  border-color:rgba(232,160,48,.6);
+  background:linear-gradient(135deg,rgba(168,180,255,.26) 0%,rgba(168,180,255,.14) 100%);
+  box-shadow:0 0 24px rgba(168,180,255,.14);
+  border-color:rgba(168,180,255,.5);
 }
 .btn-primary:active{transform:scale(.98);}
 .btn-secondary{
@@ -385,7 +385,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .ghost-dot:hover .ghost-dot-emoji,.ghost-dot:focus .ghost-dot-emoji{opacity:.8 !important;}
 .radar-status{font-size:11px;color:var(--spirit-dim);text-align:center;padding:4px 20px 6px;}
 .ghost-count-line{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--warm-dim);text-align:center;margin-bottom:10px;}
-.ghost-count-line span{color:var(--amber);font-size:18px;text-shadow:0 0 12px var(--amber);}
+.ghost-count-line span{color:var(--spirit);font-size:18px;text-shadow:0 0 12px rgba(168,180,255,.4);}
 .section-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--spirit-dim);margin-bottom:10px;}
 
 /* ── GHOST ENVELOPES — pavé mouillé nocturne ───────────── */
@@ -480,7 +480,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 
 /* ── DETAIL ────────────────────────────────────────────── */
 .back-btn{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--spirit-dim);cursor:pointer;padding:12px 20px 0;transition:color .2s;background:none;border:none;font-family:'Instrument Sans',sans-serif;min-height:44px;}
-.back-btn:hover{color:var(--amber);}
+.back-btn:hover{color:var(--spirit);}
 .detail-location{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--spirit-dim);margin-bottom:4px;}
 .detail-distance{font-size:12px;color:var(--spirit-dim);margin-bottom:16px;}
 /* Message — fenêtre éclairée dans la nuit */
@@ -490,7 +490,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   color:var(--warm);line-height:1.7 !important;
   background:linear-gradient(160deg,rgba(14,12,24,.95) 0%,rgba(8,10,18,.98) 100%) !important;
   border:1px solid rgba(232,160,48,.12);
-  border-left:2px solid var(--amber) !important;
+  border-left:3px solid var(--spirit) !important;
   border-radius:0 20px 20px 0 !important;
   padding:26px 22px !important;margin-bottom:20px;letter-spacing:.01em;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.02),0 4px 24px rgba(0,0,0,.4),0 0 40px rgba(232,160,48,.03);
@@ -499,7 +499,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .detail-message::before{
   content:'"';position:absolute;top:6px;left:10px;
   font-family:'Cormorant Garamond',serif;font-size:64px;line-height:1;
-  color:rgba(232,160,48,.1);pointer-events:none;
+  color:rgba(168,180,255,.10);pointer-events:none;
 }
 .detail-info{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
 .detail-badge{display:flex;align-items:center;gap:5px;background:rgba(122,184,245,.04);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--warm-dim);}
@@ -507,11 +507,11 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .resonance-btn{
   width:100%;padding:12px;
   background:linear-gradient(135deg,rgba(232,160,48,.08),rgba(122,184,245,.05));
-  border:1px solid rgba(232,160,48,.25);border-radius:13px;color:var(--amber);
+  border:1px solid rgba(168,180,255,.25);border-radius:13px;color:var(--spirit);
   font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;
   transition:all .2s;margin-bottom:8px;touch-action:manipulation;
 }
-.resonance-btn:hover{background:rgba(232,160,48,.14);box-shadow:0 0 20px rgba(232,160,48,.1);}
+.resonance-btn:hover{background:rgba(168,180,255,.1);box-shadow:0 0 20px rgba(168,180,255,.08);}
 .ghost-card-btn{
   width:100%;padding:12px;
   background:linear-gradient(135deg,rgba(61,184,122,.08),rgba(122,184,245,.05));
@@ -520,7 +520,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   transition:all .25s;margin-bottom:8px;touch-action:manipulation;letter-spacing:.2px;
 }
 .ghost-card-btn:active{transform:scale(.98);}
-.resonance-btn.resonated{color:var(--warm);border-color:var(--amber);background:rgba(232,160,48,.12);}
+.resonance-btn.resonated{color:var(--ether);border-color:var(--spirit);background:rgba(168,180,255,.1);}
 .reply-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;margin-bottom:7px;}
 .reply-text{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--warm-dim);line-height:1.6;}
 .reply-meta{font-size:10px;color:var(--spirit-dim);margin-top:5px;letter-spacing:.5px;}
@@ -556,7 +556,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .media-btn.recording{background:rgba(255,60,60,.08);border-color:rgba(255,80,80,.3);color:rgba(255,140,140,.9);}
 .type-selector{display:flex;gap:6px;margin-bottom:12px;}
 .type-btn,.radius-btn,.dur-btn{flex:1;padding:8px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:11px;cursor:pointer;color:var(--warm-dim);transition:all .2s;touch-action:manipulation;}
-.type-btn.active{border-color:rgba(232,160,48,.4);color:var(--amber);background:rgba(232,160,48,.08);}
+.type-btn.active{border-color:rgba(168,180,255,.4);color:var(--ether);background:rgba(168,180,255,.08);}
 .radius-selector{display:flex;gap:6px;margin-bottom:12px;}
 .radius-btn.active{border-color:var(--spirit-dim);color:var(--spirit);}
 .duration-selector{display:flex;gap:6px;margin-bottom:14px;}
@@ -651,8 +651,8 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   color:rgba(122,184,245,.20);font-size:9px;letter-spacing:.5px;text-transform:uppercase;
   transition:all .2s;touch-action:manipulation;
 }
-.nav-item.active{color:var(--amber);}
-.nav-item.active .nav-icon{filter:drop-shadow(0 0 8px rgba(232,160,48,.6));}
+.nav-item.active{color:var(--spirit);}
+.nav-item.active .nav-icon{filter:drop-shadow(0 0 8px rgba(168,180,255,.5));}
 .nav-icon{font-size:20px;transition:filter .2s;}
 
 /* ── ENVELOPE SCELLÉE — lanterne dans la brume ─────────── */
@@ -736,8 +736,8 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .wizard-sub{font-size:12px;color:var(--warm-dim);margin-bottom:16px;}
 .wizard-next-btn{
   width:100%;padding:14px;
-  background:linear-gradient(135deg,rgba(232,160,48,.18),rgba(122,184,245,.10));
-  border:1px solid rgba(232,160,48,.35);border-radius:15px;color:var(--warm);
+  background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));
+  border:1px solid rgba(168,180,255,.3);border-radius:15px;color:var(--ether);
   font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;
   cursor:pointer;transition:all .2s;touch-action:manipulation;margin-top:8px;
   box-shadow:0 0 20px rgba(232,160,48,.06);
@@ -909,7 +909,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 /* ── BADGES & FILTRES ──────────────────────────────────── */
 .badge-premium{font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.9);border-radius:6px;padding:2px 6px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,200,80,.25);}
 .filter-btn{white-space:nowrap;padding:6px 12px;background:rgba(122,184,245,.04);border:1px solid rgba(122,184,245,.12);border-radius:20px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;flex-shrink:0;touch-action:manipulation;min-height:36px;}
-.filter-btn.active{background:rgba(232,160,48,.12) !important;border-color:rgba(232,160,48,.35) !important;color:var(--warm) !important;}
+.filter-btn.active{background:rgba(168,180,255,.12) !important;border-color:rgba(168,180,255,.35) !important;color:var(--ether) !important;}
 .btn-favorite{width:100%;padding:12px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.2);border-radius:13px;color:rgba(255,200,80,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
 .btn-favorite:hover{border-color:rgba(255,200,80,.4);color:rgba(255,200,80,.8);}
 .btn-favorite.favorited{background:rgba(255,200,80,.12);border-color:rgba(255,200,80,.5);color:rgba(255,200,80,.9);}
@@ -939,9 +939,9 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 
 /* ── GHOST COUNT BADGE ─────────────────────────────────── */
 #ghostCount{
-  background:linear-gradient(135deg,rgba(232,160,48,.15) 0%,rgba(122,184,245,.08) 100%);
-  border:1px solid rgba(232,160,48,.22);border-radius:20px;padding:2px 12px;font-weight:600;
-  box-shadow:0 0 12px rgba(232,160,48,.07);color:var(--warm);
+  background:linear-gradient(135deg,rgba(168,180,255,.12) 0%,rgba(168,180,255,.06) 100%);
+  border:1px solid rgba(168,180,255,.22);border-radius:20px;padding:2px 12px;font-weight:600;
+  box-shadow:0 0 10px rgba(168,180,255,.06);color:var(--ether);
 }
 
 /* ── SCRATCH CANVAS ────────────────────────────────────── */
@@ -1101,6 +1101,179 @@ body.light-theme .form-input,.body.light-theme .form-textarea{background:rgba(23
 .biz-stat{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;margin-bottom:8px;}
 .biz-stat-num{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--amber);}
 .biz-stat-label{font-size:10px;color:var(--spirit-dim);letter-spacing:.5px;}
+
+/* ══════════════════════════════════════════════════════════
+   AMBIANCE VILLE HANTÉE NOCTURNE
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Silhouette de toits en fond ──────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 180px;
+  background:
+    /* Immeubles haussmanniens — silhouettes noires */
+    linear-gradient(to top, #020308 0px, #020308 60px, transparent 61px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='390' height='180'%3E%3Crect x='0' y='80' width='40' height='100' fill='%23010106'/%3E%3Crect x='5' y='60' width='30' height='120' fill='%23010106'/%3E%3Crect x='50' y='70' width='50' height='110' fill='%23010106'/%3E%3Crect x='55' y='50' width='20' height='130' fill='%23010106'/%3E%3Crect x='110' y='90' width='45' height='90' fill='%23010106'/%3E%3Crect x='120' y='65' width='15' height='115' fill='%23010106'/%3E%3Crect x='165' y='75' width='55' height='105' fill='%23010106'/%3E%3Crect x='175' y='55' width='25' height='125' fill='%23010106'/%3E%3Crect x='230' y='85' width='48' height='95' fill='%23010106'/%3E%3Crect x='238' y='68' width='18' height='112' fill='%23010106'/%3E%3Crect x='288' y='78' width='52' height='102' fill='%23010106'/%3E%3Crect x='295' y='58' width='22' height='122' fill='%23010106'/%3E%3Crect x='350' y='88' width='40' height='92' fill='%23010106'/%3E%3C%2Fsvg%3E") bottom/390px 180px no-repeat;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+/* Fenêtres éclairées aléatoires dans les toits */
+body::after {
+  content: '';
+  position: fixed;
+  bottom: 60px; left: 0; right: 0;
+  height: 120px;
+  background:
+    radial-gradient(ellipse 4px 6px at 20px 90px, rgba(255,230,140,.25) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 58px 70px, rgba(255,220,120,.18) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 130px 80px, rgba(200,210,255,.2) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 185px 65px, rgba(255,220,140,.15) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 240px 88px, rgba(200,210,255,.22) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 302px 72px, rgba(255,230,140,.18) 0%, transparent 100%),
+    radial-gradient(ellipse 4px 6px at 358px 90px, rgba(200,210,255,.2) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Halo réverbère — en haut du radar ────────────────── */
+#screenRadar {
+  position: relative;
+}
+#screenRadar::before {
+  content: '';
+  position: absolute;
+  top: -30px; left: 50%; transform: translateX(-50%);
+  width: 320px; height: 240px;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(255, 240, 180, 0.06) 0%,
+    rgba(168, 180, 255, 0.04) 35%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+  animation: lampHalo 6s ease-in-out infinite;
+}
+@keyframes lampHalo {
+  0%,100% { opacity: 0.7; }
+  50%      { opacity: 1; }
+}
+
+/* ── Sol mouillé — reflet en bas de chaque screen ────── */
+.screen.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 100px;
+  background: linear-gradient(
+    0deg,
+    rgba(168, 180, 255, 0.04) 0%,
+    rgba(168, 180, 255, 0.02) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Brouillard flottant en bas du phone ──────────────── */
+.phone::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 45%;
+  background: linear-gradient(
+    0deg,
+    rgba(30, 40, 80, 0.12) 0%,
+    rgba(20, 30, 60, 0.06) 30%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+  animation: fogRise 12s ease-in-out infinite;
+}
+@keyframes fogRise {
+  0%,100% { opacity: 0.6; transform: scaleY(1); }
+  50%      { opacity: 1;   transform: scaleY(1.06); }
+}
+
+/* ── Texture asphalte mouillé sur le phone ────────────── */
+.phone::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+  opacity: 0.6;
+}
+
+/* ── Particules — neige fine / bruine nocturne ────────── */
+.particle:nth-child(odd)   { background: rgba(168,180,255,0.5); width:1px; height:3px; border-radius:1px; }
+.particle:nth-child(even)  { background: rgba(255,240,200,0.3); width:1px; height:1px; }
+.particle:nth-child(3n)    { background: rgba(100,160,255,0.4); width:1px; height:2px; border-radius:1px; }
+@keyframes drift {
+  0%   { opacity:0; transform: translateY(100vh) translateX(0); }
+  5%   { opacity: 0.6; }
+  95%  { opacity: 0.15; }
+  100% { opacity:0; transform: translateY(-5vh) translateX(-8px); }
+}
+
+/* ── Vibe dot — pulsation fantôme ────────────────────── */
+.vibe-dot {
+  background: var(--spirit);
+  box-shadow: 0 0 8px var(--spirit);
+  animation: pd 1.5s ease-in-out infinite;
+}
+@keyframes pd {
+  0%,100% { opacity:.6; box-shadow: 0 0 6px rgba(168,180,255,.4); }
+  50%      { opacity:1;  box-shadow: 0 0 14px rgba(168,180,255,.8), 0 0 28px rgba(168,180,255,.2); }
+}
+
+/* ── Radar sweep spirit ───────────────────────────────── */
+.radar-sweep {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    rgba(168,180,255,.14) 14%,
+    rgba(168,180,255,.06) 18%,
+    transparent 20%
+  );
+}
+.radar-center {
+  background: var(--spirit);
+  box-shadow: 0 0 0 3px rgba(168,180,255,.2), 0 0 20px var(--spirit);
+}
+
+/* ── Nav active spirit ───────────────────────────────── */
+.bottom-nav {
+  background: linear-gradient(0deg, rgba(3,4,10,.98) 0%, rgba(6,6,14,.96) 100%);
+  /* Reflet de flaque sur l'asphalte */
+  box-shadow: 0 -1px 0 rgba(168,180,255,.05), inset 0 1px 0 rgba(168,180,255,.04);
+}
+
+/* ── Ghost envelope : bordure spirit ─────────────────── */
+.ghost-envelope::after {
+  background: linear-gradient(90deg, transparent, rgba(168,180,255,.15), transparent);
+}
+.ghost-envelope:hover {
+  border-color: rgba(168,180,255,.28) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6), 0 0 20px rgba(168,180,255,.06) !important;
+}
+
+/* ── Boutons wizard/deposit spirit ───────────────────── */
+.wizard-next-btn {
+  background: linear-gradient(135deg, rgba(168,180,255,.18), rgba(168,180,255,.08));
+  border: 1px solid rgba(168,180,255,.3);
+  color: var(--ether);
+  box-shadow: 0 0 20px rgba(168,180,255,.06);
+}
+.wizard-next-btn:hover {
+  background: linear-gradient(135deg, rgba(168,180,255,.26), rgba(168,180,255,.14));
+  box-shadow: 0 0 28px rgba(168,180,255,.12);
+}
 
 </style>
 </head>
