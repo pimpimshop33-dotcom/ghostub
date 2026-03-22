@@ -7031,6 +7031,26 @@ function createParticles() {
 }
 createParticles();
 
+// ── Bruine nocturne ─────────────────────────────────────
+(function createRain() {
+  const container = document.getElementById('cityRain');
+  if (!container) return;
+  const COUNT = 28;
+  for (let i = 0; i < COUNT; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'rain-drop';
+    const h = 8 + Math.random() * 18;
+    drop.style.cssText = [
+      'left:' + (Math.random() * 100) + '%',
+      'height:' + h + 'px',
+      'animation-duration:' + (1.2 + Math.random() * 1.8) + 's',
+      'animation-delay:' + (Math.random() * 3) + 's',
+      'opacity:' + (0.15 + Math.random() * 0.35)
+    ].join(';');
+    container.appendChild(drop);
+  }
+})();
+
 // Initialiser les boutons langue
 document.querySelectorAll('.lang-btn').forEach(b => {
   b.classList.toggle('active', b.dataset.lang === _currentLang);
