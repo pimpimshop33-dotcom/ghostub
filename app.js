@@ -5701,17 +5701,35 @@ async function _doOpenEnvelope() {
 
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
 function _initScratchReveal(msgEl) {
-  // Wrap the message element
-  const wrapper = document.createElement('div');
-  wrapper.className = 'scratch-wrapper';
-  msgEl.parentNode.insertBefore(wrapper, msgEl);
-  wrapper.appendChild(msgEl);
+  // On attend que l'animation d'ouverture soit terminée et le DOM stable
+  setTimeout(() => {
+    _buildScratchCanvas(msgEl);
+  }, 500);
+}
 
-  // Force the message to be visible but covered by canvas
+function _buildScratchCanvas(msgEl) {
+  // Nettoyer un éventuel canvas précédent
+  const old = document.getElementById('scratchCanvas');
+  if (old) old.remove();
+  const oldHint = document.querySelector('.scratch-hint-overlay');
+  if (oldHint) oldHint.remove();
+
+  // Wrapper positionné autour du message
+  let wrapper = msgEl.closest('.scratch-wrapper');
+  if (!wrapper) {
+    wrapper = document.createElement('div');
+    wrapper.className = 'scratch-wrapper';
+    msgEl.parentNode.insertBefore(wrapper, msgEl);
+    wrapper.appendChild(msgEl);
+  }
+
+  // Hauteur fixe généreuse — indépendante de la taille du texte
+  const CANVAS_H = 220;
+  wrapper.style.minHeight = CANVAS_H + 'px';
   msgEl.style.opacity = '1';
   msgEl.style.userSelect = 'none';
 
-  // Create canvas
+  // Canvas
   const canvas = document.createElement('canvas');
   canvas.id = 'scratchCanvas';
   wrapper.appendChild(canvas);
@@ -5720,151 +5738,191 @@ function _initScratchReveal(msgEl) {
   const hintOverlay = document.createElement('div');
   hintOverlay.className = 'scratch-hint-overlay';
   hintOverlay.innerHTML = `
-    <div style="font-size:44px;filter:drop-shadow(0 0 20px rgba(168,180,255,.8));animation:scratchHint 2s ease-in-out infinite;">🖐</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:rgba(240,232,216,.7);letter-spacing:.5px;">Frottez pour révéler...</div>
+    <div style="font-size:52px;filter:drop-shadow(0 0 24px rgba(168,180,255,.9));animation:scratchHint 2s ease-in-out infinite;">🖐</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:rgba(240,232,216,.75);letter-spacing:.8px;margin-top:6px;">Frottez pour révéler...</div>
   `;
   wrapper.appendChild(hintOverlay);
 
-  // Size canvas to match wrapper
+  // Mesure après un frame pour avoir les vraies dimensions du wrapper
   requestAnimationFrame(() => {
-    const rect = msgEl.getBoundingClientRect();
-    const w = rect.width || wrapper.offsetWidth || 300;
-    const h = rect.height || wrapper.offsetHeight || 120;
-    canvas.width = w;
-    canvas.height = h;
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = wrapper.offsetWidth  || 320;
+    const cssH = CANVAS_H;
+
+    // Taille CSS du canvas
+    canvas.style.width  = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    // Résolution interne x2 pour éviter le flou sur mobile
+    canvas.width  = cssW * dpr;
+    canvas.height = cssH * dpr;
 
     const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
 
-    // Draw the scratch layer: dark fog with spirit glow
-    const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0,   'rgba(14, 12, 28, 0.97)');
-    grad.addColorStop(0.4, 'rgba(22, 18, 44, 0.96)');
+    // ── Fond du voile ──────────────────────────────────────
+    const grad = ctx.createLinearGradient(0, 0, cssW, cssH);
+    grad.addColorStop(0,   'rgba(14, 12, 30, 0.98)');
+    grad.addColorStop(0.5, 'rgba(20, 16, 42, 0.97)');
     grad.addColorStop(1,   'rgba(10, 10, 22, 0.98)');
     ctx.fillStyle = grad;
-    ctx.roundRect ? ctx.roundRect(0, 0, w, h, [0, 20, 20, 0]) : ctx.fillRect(0, 0, w, h);
+    ctx.beginPath();
+    ctx.roundRect(0, 0, cssW, cssH, 20);
     ctx.fill();
 
-    // Subtle inner glow at top
-    const topGlow = ctx.createRadialGradient(w/2, 0, 0, w/2, 0, w*0.7);
-    topGlow.addColorStop(0, 'rgba(168,180,255,0.12)');
-    topGlow.addColorStop(1, 'transparent');
-    ctx.fillStyle = topGlow;
-    ctx.fillRect(0, 0, w, h);
+    // Reflet haut
+    const glow = ctx.createRadialGradient(cssW/2, 0, 0, cssW/2, cssH*0.4, cssW*0.8);
+    glow.addColorStop(0, 'rgba(168,180,255,0.10)');
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, cssW, cssH, 20);
+    ctx.fill();
 
-    // Ghost watermark
-    ctx.font = `${Math.min(w, h) * 0.55}px serif`;
+    // Ghost watermark centré
+    ctx.save();
+    ctx.globalAlpha = 0.07;
+    ctx.font = `${Math.min(cssW, cssH) * 0.6}px serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.globalAlpha = 0.06;
-    ctx.fillStyle = '#a8b4ff';
-    ctx.fillText('👻', w / 2, h / 2);
-    ctx.globalAlpha = 1;
+    ctx.fillStyle = '#c8d4ff';
+    ctx.fillText('👻', cssW / 2, cssH / 2);
+    ctx.restore();
 
-    // Scratch state
+    // ── État du grattage ───────────────────────────────────
     let isDrawing = false;
-    let totalPixels = 0;
-    let revealed = false;
+    let revealed  = false;
     let lastX = 0, lastY = 0;
+    let checkTimer = null;
 
     function getPos(e) {
       const r = canvas.getBoundingClientRect();
       const src = e.touches ? e.touches[0] : e;
-      return { x: (src.clientX - r.left) * (canvas.width / r.width),
-               y: (src.clientY - r.top)  * (canvas.height / r.height) };
+      return {
+        x: (src.clientX - r.left) * (cssW / r.width),
+        y: (src.clientY - r.top)  * (cssH / r.height)
+      };
     }
 
-    function scratch(x, y) {
+    function scratchAt(x, y, fromMove) {
+      if (revealed) return;
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.beginPath();
-      ctx.arc(x, y, 28, 0, Math.PI * 2);
-      ctx.fill();
-      // Smooth line between points
-      if (isDrawing) {
-        ctx.lineWidth = 52;
-        ctx.lineCap = 'round';
+      ctx.lineWidth = 60;
+      ctx.lineCap  = 'round';
+      ctx.lineJoin = 'round';
+      if (fromMove) {
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
         ctx.lineTo(x, y);
         ctx.stroke();
       }
+      ctx.beginPath();
+      ctx.arc(x, y, 32, 0, Math.PI * 2);
+      ctx.fill();
       lastX = x; lastY = y;
-      checkRevealProgress();
-    }
 
-    function checkRevealProgress() {
-      if (revealed) return;
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      let clearedPixels = 0;
-      for (let i = 3; i < imageData.data.length; i += 4) {
-        if (imageData.data[i] < 128) clearedPixels++;
+      // Vérifier la progression toutes les 150ms max
+      if (!checkTimer) {
+        checkTimer = setTimeout(() => {
+          checkTimer = null;
+          if (!revealed) checkProgress();
+        }, 150);
       }
-      const pct = clearedPixels / (imageData.data.length / 4);
-      if (pct > 0.55) _completeReveal(canvas, hintOverlay, msgEl, ctx);
     }
 
-    // Events
+    function checkProgress() {
+      if (revealed) return;
+      const total = canvas.width * canvas.height;
+      const data  = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let cleared = 0;
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 100) cleared++;
+      }
+      if (cleared / total > 0.50) {
+        revealed = true;
+        clearTimeout(checkTimer);
+        _completeReveal(canvas, hintOverlay, msgEl);
+      }
+    }
+
+    // ── Événements souris ──────────────────────────────────
     canvas.addEventListener('mousedown', e => {
+      e.preventDefault();
       isDrawing = true;
+      hintOverlay.style.transition = 'opacity .3s';
       hintOverlay.style.opacity = '0';
-      hintOverlay.style.pointerEvents = 'none';
       const {x,y} = getPos(e);
-      scratch(x, y);
+      lastX = x; lastY = y;
+      scratchAt(x, y, false);
     });
     canvas.addEventListener('mousemove', e => {
       if (!isDrawing) return;
+      e.preventDefault();
       const {x,y} = getPos(e);
-      scratch(x, y);
+      scratchAt(x, y, true);
     });
-    canvas.addEventListener('mouseup',   () => { isDrawing = false; });
-    canvas.addEventListener('mouseleave',() => { isDrawing = false; });
+    canvas.addEventListener('mouseup',    () => { isDrawing = false; });
+    canvas.addEventListener('mouseleave', () => { isDrawing = false; });
 
+    // ── Événements tactiles ────────────────────────────────
     canvas.addEventListener('touchstart', e => {
       e.preventDefault();
       isDrawing = true;
+      hintOverlay.style.transition = 'opacity .3s';
       hintOverlay.style.opacity = '0';
-      hintOverlay.style.pointerEvents = 'none';
       const {x,y} = getPos(e);
-      scratch(x, y);
+      lastX = x; lastY = y;
+      scratchAt(x, y, false);
     }, { passive: false });
     canvas.addEventListener('touchmove', e => {
       e.preventDefault();
       if (!isDrawing) return;
       const {x,y} = getPos(e);
-      scratch(x, y);
+      scratchAt(x, y, true);
     }, { passive: false });
-    canvas.addEventListener('touchend', () => { isDrawing = false; });
+    canvas.addEventListener('touchend',   () => { isDrawing = false; });
+    canvas.addEventListener('touchcancel',() => { isDrawing = false; });
   });
 }
 
-function _completeReveal(canvas, hintOverlay, msgEl, ctx) {
-  // Fade out canvas with sparkle burst
-  canvas.style.transition = 'opacity .6s ease';
+function _completeReveal(canvas, hintOverlay, msgEl) {
+  // Flash violet subtil
+  const flash = document.getElementById('sealBreakFlash');
+  if (flash) {
+    flash.style.animation = 'none';
+    flash.offsetHeight;
+    flash.style.animation = 'sealFlash 0.5s ease-out forwards';
+  }
+  // Vibration de révélation
+  if (navigator.vibrate) navigator.vibrate([15, 30, 15, 60, 120]);
+  // Fade out du canvas
+  canvas.style.transition = 'opacity .5s ease';
   canvas.style.opacity = '0';
   hintOverlay.style.opacity = '0';
-  if (navigator.vibrate) navigator.vibrate([15, 30, 15, 50, 100]);
+
   setTimeout(() => {
     canvas.remove();
     hintOverlay.remove();
-    // Word-by-word apparition
-    const fullText = msgEl.textContent;
+    // Apparition mot par mot
+    const fullText = msgEl.textContent || msgEl.innerText;
     msgEl.textContent = '';
     msgEl.style.opacity = '0';
+    msgEl.style.transition = 'opacity .25s';
     requestAnimationFrame(() => {
-      msgEl.style.transition = 'opacity .3s';
       msgEl.style.opacity = '1';
-      const words = fullText.split(' ');
+      const words = fullText.split(' ').filter(Boolean);
       let i = 0;
       const iv = setInterval(() => {
         if (i < words.length) {
           msgEl.textContent += (i === 0 ? '' : ' ') + words[i++];
         } else {
           clearInterval(iv);
-          if (navigator.vibrate) navigator.vibrate(40);
+          if (navigator.vibrate) navigator.vibrate(50);
         }
-      }, 75);
+      }, 70);
     });
-  }, 650);
+  }, 520);
 }
+
 
 function showDistanceError(dist) {
   const btn = document.getElementById('envelopeOpenBtn');
