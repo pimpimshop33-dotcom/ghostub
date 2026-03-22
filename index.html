@@ -398,6 +398,23 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   50%{box-shadow:0 3px 24px rgba(0,0,0,.6),0 0 16px rgba(232,160,48,.06);}
 }
 .ghost-list{display:flex;flex-direction:column;gap:8px;}
+
+/* Zone scrollable indépendante pour la liste */
+.ghost-list-scroll{
+  flex:1;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:0; /* important pour que flex:1 fonctionne */
+}
+.ghost-list-scroll::-webkit-scrollbar{width:0;}
+
+/* screenRadar : flex column pour que la liste prenne l'espace restant */
+#screenRadar{
+  display:none;flex-direction:column;
+}
+#screenRadar.active{
+  display:flex;
+}
 .ghost-envelope{
   position:relative;cursor:pointer;border-radius:16px;overflow:hidden;
   background:linear-gradient(160deg,rgba(12,16,26,0.98) 0%,rgba(6,10,18,0.99) 100%);
@@ -1396,16 +1413,18 @@ body.light-theme .form-input,.body.light-theme .form-textarea{background:rgba(23
     </div>
     <div class="radar-status" id="radarStatus" style="display:none;" aria-live="polite"></div>
     <div class="ghost-count-line" aria-live="polite"><span id="ghostCount">0</span> présence(s) détectée(s)</div>
-    <div class="scroll">
-      <div class="section-label" data-i18n="radar_section_label">Traces dans les alentours</div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;" role="group" aria-label="Filtres">
-        <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
-        <button class="filter-btn" onclick="setFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
-        <button class="filter-btn" onclick="setFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>
-        <button class="filter-btn" onclick="setFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
-        <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
-      </div>
-      <div class="ghost-list" id="ghostList" aria-label="Liste des traces proches">
+    <!-- Filtres fixes, pas dans le scroll -->
+    <div style="display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;" role="group" aria-label="Filtres">
+      <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
+      <button class="filter-btn" onclick="setFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
+      <button class="filter-btn" onclick="setFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>
+      <button class="filter-btn" onclick="setFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
+      <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
+    </div>
+    <!-- Liste scrollable avec hauteur max -->
+    <div class="ghost-list-scroll" id="ghostListScroll">
+      <div class="section-label" style="padding:0 20px 8px;flex-shrink:0;" data-i18n="radar_section_label">Traces dans les alentours</div>
+      <div class="ghost-list" id="ghostList" aria-label="Liste des traces proches" style="padding:0 20px 12px;">
         <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;" data-i18n="misc_loading">Invocation en cours…</div>
       </div>
     </div>
