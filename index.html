@@ -367,84 +367,129 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   50%{box-shadow:0 3px 24px rgba(0,0,0,.6),0 0 16px rgba(232,160,48,.06);}
 }
 .ghost-list{display:flex;flex-direction:column;gap:8px;}
+/* ── ENVELOPPES — vraie forme d'enveloppe nocturne ─────── */
+@keyframes envBreath{
+  0%,100%{box-shadow:0 2px 20px rgba(0,0,0,.6),0 0 0 1px rgba(168,180,255,.04);}
+  50%{box-shadow:0 4px 28px rgba(0,0,0,.7),0 0 16px rgba(168,180,255,.06);}
+}
 .ghost-envelope{
-  position:relative;cursor:pointer;border-radius:16px;overflow:hidden;
-  background:linear-gradient(160deg,rgba(12,16,26,0.98) 0%,rgba(6,10,18,0.99) 100%);
-  border:1px solid rgba(122,184,245,.10);
-  box-shadow:0 2px 16px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.02);
+  position:relative;cursor:pointer;
+  border-radius:4px 4px 6px 6px; /* enveloppe = coins peu arrondis */
+  overflow:visible; /* laisser le rabat dépasser */
+  background:linear-gradient(175deg,#1a1e2e 0%,#0e1018 60%,#0a0c14 100%);
+  border:1px solid rgba(168,180,255,.18);
+  border-top:none; /* le rabat remplace la bordure haute */
+  box-shadow:0 3px 20px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.04) inset;
   transition:all .3s cubic-bezier(.25,.8,.25,1);
-  animation:cardBreath 6s ease-in-out infinite;
+  animation:envBreath 5s ease-in-out infinite;
   animation-delay:var(--card-delay,0s);
+  margin-top:14px; /* espace pour le rabat qui dépasse */
 }
 .ghost-envelope:hover,.ghost-envelope:focus{
-  border-color:rgba(232,160,48,.35);
-  transform:translateY(-2px);
-  box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 20px rgba(232,160,48,.08);
+  transform:translateY(-3px);
+  box-shadow:0 10px 36px rgba(0,0,0,.7),0 0 24px rgba(168,180,255,.08);
+  border-color:rgba(168,180,255,.32);
   outline:none;
 }
-.ghost-envelope:active{transform:translateY(0) scale(.99);}
-/* Reflet de sol mouillé au hover */
+.ghost-envelope:active{transform:translateY(0);}
+/* Lignes diagonales de coin (croisillon d'enveloppe) */
 .ghost-envelope::before{
   content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent 0%,rgba(232,160,48,.06) 50%,transparent 100%);
-  transform:translateX(-100%) skewX(-10deg);
-  pointer-events:none;border-radius:inherit;z-index:1;
+  background:
+    linear-gradient(135deg,rgba(168,180,255,.04) 1px,transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(225deg,rgba(168,180,255,.04) 1px,transparent 1px) 0 0 / 24px 24px;
+  border-radius:inherit;pointer-events:none;z-index:0;opacity:0;transition:opacity .3s;
 }
-.ghost-envelope:hover::before{animation:cardShimmerAmber .65s ease forwards;}
-/* Trait lumineux en haut */
-.ghost-envelope::after{
-  content:'';position:absolute;top:0;left:10%;right:10%;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(232,160,48,.3),transparent);
-  opacity:0;transition:opacity .3s;
-}
-.ghost-envelope:hover::after{opacity:1;}
+.ghost-envelope:hover::before{opacity:1;}
+
+/* ── RABAT TRIANGULAIRE (flap) ───────────────────────── */
 .envelope-flap{
-  width:100%;height:22px;
-  background:linear-gradient(180deg,rgba(122,184,245,.08) 0%,rgba(122,184,245,.02) 100%);
-  border-bottom:1px solid rgba(122,184,245,.08);position:relative;overflow:hidden;
+  position:absolute;
+  top:-14px;left:-1px;right:-1px;
+  height:0;
+  border-left:calc(50% + 1px) solid transparent;
+  border-right:calc(50% + 1px) solid transparent;
+  border-bottom:14px solid #1a1e2e;
+  filter:drop-shadow(0 -2px 4px rgba(0,0,0,.4));
+  background:none;
+  z-index:2;
+  transition:border-bottom-color .3s;
 }
+/* Bordure du rabat */
 .envelope-flap::before{
-  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:0;height:0;border-left:60px solid transparent;border-right:60px solid transparent;
-  border-top:22px solid rgba(122,184,245,.06);
+  content:'';position:absolute;
+  top:-1px;left:-1px;right:-1px;
+  height:0;
+  border-left:calc(50% + 1px) solid transparent;
+  border-right:calc(50% + 1px) solid transparent;
+  border-bottom:15px solid rgba(168,180,255,.22);
+  z-index:-1;
 }
+/* Trait central du rabat (pli) */
 .envelope-flap::after{
-  content:'';position:absolute;inset:0;
-  background:linear-gradient(90deg,transparent,rgba(232,160,48,.05),transparent);
-  opacity:0;transition:opacity .3s;
+  content:'';position:absolute;
+  bottom:-14px;left:50%;transform:translateX(-50%);
+  width:1px;height:14px;
+  background:linear-gradient(180deg,rgba(168,180,255,.15),transparent);
 }
-.ghost-envelope:hover .envelope-flap::after{opacity:1;}
-.envelope-body{display:flex;align-items:center;gap:12px;padding:12px 14px 10px;}
+.ghost-envelope:hover .envelope-flap{
+  border-bottom-color:#222840;
+}
+/* Trait de pli horizontal de l'enveloppe */
+.envelope-body{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 14px 10px;
+  position:relative;z-index:1;
+}
+/* Ligne centrale de pliage */
+.envelope-body::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,180,255,.08),transparent);
+}
 .envelope-emoji{
-  font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;
-  background:rgba(232,160,48,.07);border:1px solid rgba(232,160,48,.18);border-radius:12px;
-  flex-shrink:0;filter:drop-shadow(0 0 8px rgba(232,160,48,.3));
+  font-size:26px;width:46px;height:46px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(168,180,255,.07);
+  border-radius:50%; /* cachet de cire circulaire */
+  border:1.5px solid rgba(168,180,255,.2);
+  flex-shrink:0;
+  box-shadow:0 0 12px rgba(168,180,255,.15);
+  -webkit-text-fill-color:initial!important;filter:none!important;
 }
 .envelope-content{flex:1;min-width:0;}
 .envelope-location{font-size:13px;font-weight:500;color:var(--warm);letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
-.envelope-hint{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:rgba(232,212,168,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.envelope-hint{font-family:'Cormorant Garamond',serif;font-size:13px;font-style:italic;color:rgba(240,232,216,.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .envelope-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
 .envelope-dist{font-size:10px;border-radius:20px;padding:2px 8px;font-weight:500;}
-.envelope-dist.dist-near{background:rgba(61,184,122,.15);color:rgba(61,184,122,.95);border:1px solid rgba(61,184,122,.3);}
-.envelope-dist.dist-mid{background:rgba(232,160,48,.12);color:rgba(232,160,48,.9);border:1px solid rgba(232,160,48,.2);}
-.envelope-dist.dist-far{background:rgba(122,184,245,.06);color:rgba(122,184,245,.6);border:1px solid rgba(122,184,245,.12);}
-.envelope-reso{font-size:10px;color:rgba(122,184,245,.45);}
-.envelope-footer{display:flex;gap:5px;padding:0 14px 10px;}
-.envelope-tag{font-size:9px;letter-spacing:.4px;background:rgba(122,184,245,.04);border:1px solid rgba(122,184,245,.1);border-radius:20px;padding:2px 8px;color:rgba(122,184,245,.4);}
-.envelope-views{font-size:9px;color:rgba(122,184,245,.45);margin-top:1px;}
-.secret-badge{font-size:8px;letter-spacing:.8px;background:rgba(232,160,48,.18);border:1px solid rgba(232,160,48,.35);border-radius:6px;padding:1px 5px;color:rgba(255,195,100,.9);vertical-align:middle;}
+.envelope-dist.dist-near{background:rgba(61,184,122,.15);color:rgba(61,184,122,.95);}
+.envelope-dist.dist-mid{background:rgba(200,160,80,.10);color:rgba(200,160,80,.85);}
+.envelope-dist.dist-far{background:rgba(168,180,255,.05);color:rgba(168,180,255,.5);}
+.envelope-reso{font-size:10px;color:rgba(168,180,255,.4);}
+.envelope-footer{
+  display:flex;gap:5px;padding:0 14px 10px;
+  position:relative;z-index:1;
+}
+/* Trait de fermeture bas */
+.envelope-footer::before{
+  content:'';position:absolute;
+  top:0;left:14px;right:14px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,180,255,.06),transparent);
+}
+.envelope-tag{font-size:9px;letter-spacing:.4px;background:rgba(168,180,255,.04);border-radius:20px;padding:2px 8px;color:rgba(168,180,255,.35);}
+.envelope-views{font-size:9px;color:rgba(168,180,255,.38);margin-top:1px;}
+.secret-badge{font-size:8px;letter-spacing:.8px;background:rgba(200,130,255,.15);border-radius:6px;padding:1px 5px;color:rgba(220,160,255,.85);vertical-align:middle;}
+
+/* Enveloppe secrète — teinte violette */
 .ghost-envelope-secret{
-  border-color:rgba(232,160,48,.22) !important;
-  background:linear-gradient(160deg,rgba(20,14,8,0.98) 0%,rgba(14,10,4,0.99) 100%) !important;
+  background:linear-gradient(175deg,#1e1428 0%,#120c1e 60%,#0c0812 100%) !important;
+  border-color:rgba(200,130,255,.22) !important;
 }
-.ghost-envelope-secret .envelope-flap{
-  background:linear-gradient(180deg,rgba(232,160,48,.12) 0%,rgba(232,160,48,.04) 100%);
-  border-bottom-color:rgba(232,160,48,.15);
-}
-.ghost-envelope-secret .envelope-flap::before{border-top-color:rgba(232,160,48,.1);}
+.ghost-envelope-secret .envelope-flap{border-bottom-color:#1e1428 !important;}
+.ghost-envelope-secret .envelope-flap::before{border-bottom-color:rgba(200,130,255,.25) !important;}
 .ghost-envelope-secret .envelope-emoji{
-  background:rgba(232,160,48,.1);border-color:rgba(232,160,48,.25);
-  filter:drop-shadow(0 0 8px rgba(232,160,48,.4));
+  background:rgba(200,130,255,.08);border-color:rgba(200,130,255,.22);
+  box-shadow:0 0 12px rgba(200,130,255,.18);
 }
 
 /* ── DETAIL ────────────────────────────────────────────── */
