@@ -681,66 +681,142 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .nav-icon{font-size:20px;transition:filter .2s;}
 
 /* ── ENVELOPE SCELLÉE — lanterne dans la brume ─────────── */
-.envelope-sealed{border-radius:20px;overflow:visible;margin-bottom:20px;position:relative;}
-.envelope-sealed-flap{
-  width:100%;height:70px;
-  background:linear-gradient(180deg,rgba(232,160,48,.12) 0%,rgba(122,184,245,.05) 100%);
-  border-radius:20px 20px 0 0;border:1px solid rgba(232,160,48,.18);border-bottom:none;
-  position:relative;overflow:hidden;transform-origin:top center;
-  transform:rotateX(0deg);transition:transform .5s cubic-bezier(.4,0,.2,1);
-  z-index:2;backface-visibility:hidden;
+/* ── ENVELOPPE SCELLÉE (screenDetail) ──────────────────── */
+/* Grande enveloppe mystérieuse — ambiance rue nocturne bleue */
+
+.envelope-sealed {
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+  /* Fond sombre bleu nuit — cohérent avec les cartes radar */
+  background: rgba(8, 10, 20, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(168,180,255,.25);
+  box-shadow: 0 8px 40px rgba(0,0,0,.7), 0 0 60px rgba(168,180,255,.04), inset 0 1px 0 rgba(168,180,255,.06);
 }
-.envelope-sealed-triangle{
-  width:0;height:0;border-left:160px solid transparent;border-right:160px solid transparent;
-  border-top:70px solid rgba(232,160,48,.07);position:absolute;top:0;left:50%;transform:translateX(-50%);
+
+/* Rabat du haut — triangle pointant vers le bas */
+.envelope-sealed-flap {
+  width: 100%;
+  height: 64px;
+  background: linear-gradient(180deg, rgba(168,180,255,.12) 0%, rgba(168,180,255,.04) 100%);
+  border-bottom: 1px solid rgba(168,180,255,.15);
+  position: relative;
+  overflow: hidden;
+  transform-origin: top center;
+  transform: rotateX(0deg);
+  transition: transform .5s cubic-bezier(.4,0,.2,1);
+  z-index: 2;
+  backface-visibility: hidden;
 }
-.envelope-sealed-flap::after{content:'✉';font-size:22px;opacity:.2;position:absolute;bottom:8px;left:50%;transform:translateX(-50%);color:var(--amber);}
-.envelope-sealed-body{
-  background:linear-gradient(160deg,rgba(16,12,6,0.99) 0%,rgba(10,8,4,1) 100%);
-  border:1px solid rgba(232,160,48,.18);border-top:none;
-  border-radius:0 0 20px 20px;
-  box-shadow:0 8px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.03);
-  padding:20px 20px 0;display:flex;align-items:center;gap:16px;
+
+/* Triangle CSS du rabat — V vers le bas */
+.envelope-sealed-triangle {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: rgba(168,180,255,.08);
+  /* Annule le triangle CSS border-trick de l'original */
+  width: 100%; height: 100%;
+  border: none;
 }
-/* Emoji scellé */
-.envelope-sealed-emoji{
-  font-size:40px !important;width:64px !important;height:64px !important;
-  display:flex;align-items:center;justify-content:center;
-  background:rgba(232,160,48,.07) !important;
-  border:1px solid rgba(232,160,48,.18) !important;
-  border-radius:18px !important;flex-shrink:0;
-  animation:lampGlow 3s ease-in-out infinite;
+
+/* Cachet ✦ sur le rabat */
+.envelope-sealed-flap::after {
+  content: '✦';
+  font-size: 16px;
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(168,180,255,.5);
+  -webkit-text-fill-color: rgba(168,180,255,.5) !important;
+  filter: none !important;
+  animation: sealPulse 3s ease-in-out infinite;
 }
-@keyframes lampGlow{
-  0%,100%{filter:drop-shadow(0 0 10px rgba(232,160,48,.4)) drop-shadow(0 0 24px rgba(232,160,48,.15));}
-  50%{filter:drop-shadow(0 0 20px rgba(232,160,48,.7)) drop-shadow(0 0 40px rgba(232,160,48,.28));}
+@keyframes sealPulse {
+  0%,100% { opacity: .5; }
+  50%      { opacity: 1; text-shadow: 0 0 12px rgba(168,180,255,.8); }
 }
-.envelope-sealed-text{flex:1;}
-.envelope-sealed-label{font-family:"Cormorant Garamond",serif;font-size:20px !important;font-style:italic;font-weight:300 !important;color:var(--warm);margin-bottom:4px;letter-spacing:.3px;}
-.envelope-sealed-hint{font-size:11px;color:var(--spirit-dim);letter-spacing:.5px;}
-.envelope-sealed.opening .envelope-sealed-flap{transform:rotateX(-180deg);}
-.envelope-sealed.opening .envelope-open-btn{opacity:0;transition:opacity .2s;}
-.envelope-sealed.opened{animation:envelopeFade .35s ease forwards;}
-@keyframes envelopeFade{from{opacity:1;transform:translateY(0);}to{opacity:0;transform:translateY(-16px);}}
+
+/* Corps de l'enveloppe */
+.envelope-sealed-body {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 20px 20px 0;
+  display: flex; align-items: center; gap: 16px;
+}
+
+/* Emoji = cachet de cire — cercle spirit */
+.envelope-sealed-emoji {
+  font-size: 40px !important;
+  width: 64px !important; height: 64px !important;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(168,180,255,.08) !important;
+  border: 1.5px solid rgba(168,180,255,.25) !important;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+  -webkit-text-fill-color: initial !important;
+  filter: none !important;
+  animation: emojiGlow 3s ease-in-out infinite;
+}
+@keyframes emojiGlow {
+  0%,100% { box-shadow: 0 0 12px rgba(168,180,255,.2); }
+  50%      { box-shadow: 0 0 24px rgba(168,180,255,.45), 0 0 40px rgba(168,180,255,.15); }
+}
+
+.envelope-sealed-text { flex: 1; }
+.envelope-sealed-label {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 20px !important; font-style: italic; font-weight: 300 !important;
+  color: rgba(220,230,255,.92);
+  -webkit-text-fill-color: rgba(220,230,255,.92) !important;
+  margin-bottom: 4px; letter-spacing: .3px;
+}
+.envelope-sealed-hint {
+  font-size: 11px;
+  color: rgba(168,180,255,.5);
+  -webkit-text-fill-color: rgba(168,180,255,.5) !important;
+  letter-spacing: .5px;
+}
+
+/* Animation ouverture */
+.envelope-sealed.opening .envelope-sealed-flap { transform: rotateX(-180deg); }
+.envelope-sealed.opening .envelope-open-btn { opacity: 0; transition: opacity .2s; }
+.envelope-sealed.opened { animation: envelopeFade .35s ease forwards; }
+@keyframes envelopeFade { from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-16px);} }
+
 /* Bouton Briser le sceau */
-.envelope-open-btn{
-  width:calc(100% - 32px);margin:16px 16px;padding:16px !important;
-  background:linear-gradient(135deg,rgba(232,160,48,.16) 0%,rgba(122,184,245,.10) 100%) !important;
-  border:1px solid rgba(232,160,48,.4) !important;
-  border-radius:16px !important;color:var(--warm) !important;
-  font-family:"Instrument Sans",sans-serif;font-size:15px !important;font-weight:500;
-  cursor:pointer;transition:all .25s !important;letter-spacing:.5px;
-  display:block;touch-action:manipulation;
-  box-shadow:0 0 24px rgba(232,160,48,.08);
-  position:relative;overflow:hidden;
+.envelope-open-btn {
+  width: calc(100% - 32px); margin: 16px;
+  padding: 16px !important;
+  background: rgba(168,180,255,.12) !important;
+  border: 1px solid rgba(168,180,255,.35) !important;
+  border-radius: 12px !important;
+  color: rgba(220,230,255,.92) !important;
+  -webkit-text-fill-color: rgba(220,230,255,.92) !important;
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 15px !important; font-weight: 500;
+  cursor: pointer; transition: all .25s !important; letter-spacing: .5px;
+  display: block; touch-action: manipulation;
+  backdrop-filter: blur(6px);
+  position: relative; overflow: hidden;
 }
-.envelope-open-btn:hover{
-  background:linear-gradient(135deg,rgba(232,160,48,.26) 0%,rgba(122,184,245,.18) 100%) !important;
-  box-shadow:0 0 36px rgba(232,160,48,.2) !important;
-  border-color:rgba(232,160,48,.65) !important;
+.envelope-open-btn:hover {
+  background: rgba(168,180,255,.22) !important;
+  border-color: rgba(168,180,255,.6) !important;
+  box-shadow: 0 0 28px rgba(168,180,255,.18) !important;
 }
-.envelope-open-btn.holding{border-color:rgba(232,160,48,.8) !important;box-shadow:0 0 40px rgba(232,160,48,.3) !important;transform:scale(.98);}
-#sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(255,220,140,.95) 0%,rgba(232,160,48,.6) 40%,transparent 75%);}
+.envelope-open-btn.holding {
+  border-color: rgba(168,180,255,.8) !important;
+  box-shadow: 0 0 40px rgba(168,180,255,.3) !important;
+  transform: scale(.98);
+}
+#sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(220,228,255,.95) 0%,rgba(168,180,255,.5) 40%,transparent 75%);}
 @keyframes sealFlash{0%{opacity:0;}8%{opacity:1;}40%{opacity:.4;}100%{opacity:0;}}
 #sealParticles{position:fixed;inset:0;z-index:9998;pointer-events:none;}
 .envelope-reveal{animation:revealContent .45s cubic-bezier(.25,.8,.25,1) forwards;}
