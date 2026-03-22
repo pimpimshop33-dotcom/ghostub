@@ -5701,7 +5701,10 @@ async function _doOpenEnvelope() {
 
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
 function _initScratchReveal(msgEl) {
-  // On attend que l'animation d'ouverture soit terminée et le DOM stable
+  // Masquer IMMÉDIATEMENT le texte avant toute animation
+  msgEl.style.opacity = '0';
+  msgEl.style.visibility = 'hidden';
+  // Attendre que l'animation d'ouverture soit terminée et le DOM stable
   setTimeout(() => {
     _buildScratchCanvas(msgEl);
   }, 500);
@@ -5726,8 +5729,8 @@ function _buildScratchCanvas(msgEl) {
   // Hauteur fixe généreuse — indépendante de la taille du texte
   const CANVAS_H = 220;
   wrapper.style.minHeight = CANVAS_H + 'px';
-  // Masquer le texte — il n'est révélé qu'après le grattage
   msgEl.style.opacity = '0';
+  msgEl.style.visibility = 'hidden';
   msgEl.style.userSelect = 'none';
 
   // Canvas
@@ -5916,6 +5919,7 @@ function _completeReveal(canvas, hintOverlay, msgEl) {
     // Apparition mot par mot
     const fullText = msgEl.textContent || msgEl.innerText;
     msgEl.textContent = '';
+    msgEl.style.visibility = 'visible';
     msgEl.style.opacity = '0';
     msgEl.style.transition = 'opacity .25s';
     requestAnimationFrame(() => {
