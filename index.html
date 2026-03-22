@@ -1362,13 +1362,13 @@ button, [role="button"], input, textarea, select,
         <!-- Formulaire normal (message personnel) -->
         <div id="normalDepositForm">
           <div class="emoji-picker" role="group" aria-label="Choisir un emoji">
-            <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Emoji fantôme" aria-pressed="true" style="-webkit-text-fill-color:initial!important;color:initial!important;">👻</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Emoji message" aria-pressed="false">💬</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Emoji cœur" aria-pressed="false">❤️</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Emoji lune" aria-pressed="false">🌙</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false">✨</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false">🔥</button>
-            <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false">🌸</button>
+            <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Emoji fantôme" aria-pressed="true" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">👻</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Emoji message" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">💬</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Emoji cœur" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">❤️</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Emoji lune" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">🌙</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">✨</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">🔥</button>
+            <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false" style="-webkit-text-fill-color:initial!important;color:initial!important;filter:none!important;">🌸</button>
             <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="…" maxlength="2" oninput="pickEmojiCustom(this)">
           </div>
           <textarea class="form-textarea wizard-textarea" id="depositMsg" data-i18n-placeholder="dep_msg_placeholder" placeholder="Une pensée, un souvenir, un secret… quelque chose que vous laissez derrière vous." style="height:130px;margin-bottom:0;" maxlength="280" aria-required="true" aria-describedby="msgCharCount"></textarea>
@@ -1406,11 +1406,10 @@ button, [role="button"], input, textarea, select,
 
         <!-- Bouton toggle Mode Commerce -->
         <div id="businessToggleWrap" style="margin:14px 0 0;">
-          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.35);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
-            <span style="font-size:18px;">🏪</span>
+          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,200,80,.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
             <span style="flex:1;">
-              <div style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;" data-i18n="dep_biz_btn">Mode Commerce <span id="bizPremiumBadge" style="font-size:10px;background:rgba(255,200,80,.25);color:rgba(255,220,100,1);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:700;">✦ Premium</span></div>
-              <div style="font-size:11px;color:rgba(255,235,180,1);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
+              <div style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;" data-i18n="dep_biz_btn">🏪 Mode Commerce <span id="bizPremiumBadge" style="font-size:10px;background:rgba(255,200,80,.25);color:rgba(255,220,100,1);border-radius:6px;padding:1px 5px;margin-left:4px;font-weight:700;">✦ Premium</span></div>
+              <div style="font-size:11px;color:rgba(255,235,180,.8);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
             </span>
             <span id="businessToggleIcon" style="font-size:16px;color:rgba(255,200,80,.6);">○</span>
           </button>
@@ -1580,7 +1579,6 @@ button, [role="button"], input, textarea, select,
           <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
           <div id="photoPreview"></div>
         </div>
-        <!-- VIDÉO PREMIUM — toujours visible -->
         <!-- VIDÉO PREMIUM -->
         <div class="form-group" id="step3VideoWrap" style="margin-bottom:12px;">
           <div id="premSection_video"></div>
