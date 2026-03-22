@@ -112,7 +112,9 @@ body {
 
 /* Cibles tactiles WCAG */
 button,[role="button"],.nav-item,.auth-tab,.type-btn,.dur-btn,.radius-btn{min-height:44px;min-width:44px;}
-.emoji-opt{min-height:44px;min-width:44px;}
+.emoji-opt{min-height:44px;min-width:44px;-webkit-text-fill-color:initial !important;filter:none !important;color:initial !important;}
+.wizard-back-btn{background:none;border:none;font-size:13px;color:var(--spirit-dim);cursor:pointer;padding:8px 0;font-family:'Instrument Sans',sans-serif;-webkit-text-fill-color:var(--spirit-dim) !important;transition:color .2s;touch-action:manipulation;}
+.wizard-back-btn:hover{color:var(--spirit);-webkit-text-fill-color:var(--spirit) !important;}
 input,textarea,select{font-size:16px !important;}
 
 /* ── BANNERS ───────────────────────────────────────────── */
@@ -1200,15 +1202,17 @@ button, [role="button"], input, textarea, select,
     </div>
     <div class="radar-status" id="radarStatus" style="display:none;" aria-live="polite"></div>
     <div class="ghost-count-line" aria-live="polite"><span id="ghostCount">0</span> présence(s) détectée(s)</div>
-    <div class="scroll">
+    <!-- Filtres fixes -->
+    <div style="display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;" role="group" aria-label="Filtres">
+      <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
+      <button class="filter-btn" onclick="setFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
+      <button class="filter-btn" onclick="setFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>
+      <button class="filter-btn" onclick="setFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
+      <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
+    </div>
+    <!-- Liste limitée en hauteur -->
+    <div style="max-height:38vh;overflow-y:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
       <div class="section-label" data-i18n="radar_section_label">Traces dans les alentours</div>
-      <div style="display:flex;gap:6px;margin-bottom:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;" role="group" aria-label="Filtres">
-        <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
-        <button class="filter-btn" onclick="setFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
-        <button class="filter-btn" onclick="setFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>
-        <button class="filter-btn" onclick="setFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
-        <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
-      </div>
       <div class="ghost-list" id="ghostList" aria-label="Liste des traces proches">
         <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;" data-i18n="misc_loading">Invocation en cours…</div>
       </div>
