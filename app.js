@@ -5696,72 +5696,48 @@ async function _doOpenEnvelope() {
 }
 
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
-// Canvas flottant sur envelopeContent — sans déplacer aucun élément DOM.
+// Le canvas est injecté dans #scratchZone (défini dans le HTML).
+// Il ne peut pas déborder sur les boutons.
 
 function _initScratchReveal() {
-  const envelopeContent = document.getElementById('envelopeContent');
-  if (!envelopeContent) return;
-
-  // Masquer immédiatement message + media (pas les boutons)
-  const toHide = ['detailMessage','detailAudio','detailPhoto','detailReadCount','detailChain','msgReportBtn'];
-  toHide.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.dataset.scratchHidden = '1'; el.style.opacity = '0'; el.style.visibility = 'hidden'; }
-  });
-
+  const zone = document.getElementById('scratchZone');
+  if (!zone) return;
+  // Masquer le contenu immédiatement
+  zone.style.opacity = '0';
+  zone.style.visibility = 'hidden';
   setTimeout(_buildScratchCanvas, 400);
 }
 
 function _buildScratchCanvas() {
-  const oldC = document.getElementById('scratchCanvas');   if (oldC) oldC.remove();
-  const oldH = document.getElementById('scratchHint');     if (oldH) oldH.remove();
+  // Nettoyer canvas précédent
+  const oldC = document.getElementById('scratchCanvas'); if (oldC) oldC.remove();
+  const oldH = document.getElementById('scratchHint');   if (oldH) oldH.remove();
 
-  const ec    = document.getElementById('envelopeContent');
-  const msgEl = document.getElementById('detailMessage');
-  if (!ec || !msgEl) return;
+  const zone = document.getElementById('scratchZone');
+  if (!zone) return;
 
-  // Zone à couvrir : de detailMessage jusqu'au dernier média présent
-  const ecRect  = ec.getBoundingClientRect();
-  const scrollTop = ec.scrollTop || 0;
-  const relLeft   = 0;
-  const cssW      = ecRect.width;
+  // Rendre la zone visible pour mesurer sa vraie hauteur
+  zone.style.visibility = 'visible';
+  zone.style.opacity    = '0'; // toujours invisible pour l'utilisateur
 
-  // Calculer relTop = position du message dans le scroll d'envelopeContent
-  // offsetTop est relatif au parent — on remonte jusqu'à ec
-  function offsetTopRelTo(el, ancestor) {
-    let top = 0;
-    while (el && el !== ancestor) { top += el.offsetTop; el = el.offsetParent; }
-    return top;
-  }
-  const relTop = offsetTopRelTo(msgEl, ec) - 8;
+  const dpr  = window.devicePixelRatio || 1;
+  const cssW = zone.offsetWidth  || 320;
+  const cssH = Math.max(160, zone.offsetHeight);
 
-  // S'arrêter AVANT le bouton Résonner (premier bouton après le contenu)
-  const stopEl = document.getElementById('resonanceBtn') || document.querySelector('#envelopeContent .detail-info');
-  let cssH;
-  if (stopEl) {
-    const stopTop = offsetTopRelTo(stopEl, ec);
-    cssH = Math.max(160, stopTop - relTop - 8);
-  } else {
-    cssH = 300;
-  }
-
-  ec.style.position = 'relative';
-
-  // Canvas
+  // Canvas positionné en absolute dans scratchZone — exactement la même taille
   const canvas = document.createElement('canvas');
   canvas.id = 'scratchCanvas';
-  const dpr = window.devicePixelRatio || 1;
-  canvas.style.cssText = `position:absolute;top:${relTop}px;left:${relLeft}px;width:${cssW}px;height:${cssH}px;border-radius:20px;cursor:crosshair;touch-action:none;z-index:20;pointer-events:auto;`;
+  canvas.style.cssText = `position:absolute;inset:0;width:${cssW}px;height:${cssH}px;border-radius:16px;cursor:crosshair;touch-action:none;z-index:10;pointer-events:auto;`;
   canvas.width  = Math.round(cssW * dpr);
   canvas.height = Math.round(cssH * dpr);
-  ec.appendChild(canvas);
+  zone.appendChild(canvas);
 
-  // Hint en bas du canvas
+  // Hint (main + texte) collé en bas du canvas
   const hint = document.createElement('div');
   hint.id = 'scratchHint';
-  hint.style.cssText = `position:absolute;left:${relLeft}px;top:${relTop + cssH - 58}px;width:${cssW}px;height:58px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:21;pointer-events:none;background:none;transition:opacity .3s;`;
+  hint.style.cssText = `position:absolute;bottom:0;left:0;width:100%;height:58px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:11;pointer-events:none;background:none;transition:opacity .3s;`;
   hint.innerHTML = `<span style="font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(168,180,255,1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</span>`;
-  ec.appendChild(hint);
+  zone.appendChild(hint);
 
   // Dessiner le voile
   const ctx = canvas.getContext('2d');
@@ -5771,11 +5747,13 @@ function _buildScratchCanvas() {
   grad.addColorStop(0.5, 'rgba(20,16,42,0.97)');
   grad.addColorStop(1,   'rgba(10,10,22,0.98)');
   ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,20); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
+  // Reflet haut
   const glow = ctx.createRadialGradient(cssW/2,0,0,cssW/2,cssH*0.5,cssW*0.8);
   glow.addColorStop(0,'rgba(168,180,255,0.10)'); glow.addColorStop(1,'transparent');
   ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,20); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
+  // Ghost watermark
   ctx.save();
   ctx.font = `${Math.min(cssW,cssH)*0.55}px serif`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -5803,8 +5781,8 @@ function _buildScratchCanvas() {
   function checkPct() {
     if(revealed) return;
     const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-    let c=0; for(let i=3;i<d.length;i+=4){if(d[i]<100)c++;} 
-    if(c/(canvas.width*canvas.height)>0.50){revealed=true;clearTimeout(checkTimer);_completeScratchReveal(canvas,hint);}
+    let c=0; for(let i=3;i<d.length;i+=4){if(d[i]<100)c++;}
+    if(c/(canvas.width*canvas.height)>0.50){revealed=true;clearTimeout(checkTimer);_completeScratchReveal(canvas,hint,zone);}
   }
   function onStart(e){e.preventDefault();isDrawing=true;hint.style.opacity='0';const p=getPos(e);lastX=p.x;lastY=p.y;scratchAt(p.x,p.y,false);}
   function onMove(e){if(!isDrawing)return;e.preventDefault();const p=getPos(e);scratchAt(p.x,p.y,true);}
@@ -5819,30 +5797,25 @@ function _buildScratchCanvas() {
   canvas.addEventListener('touchcancel',onEnd);
 }
 
-function _completeScratchReveal(canvas, hint) {
+function _completeScratchReveal(canvas, hint, zone) {
   const flash=document.getElementById('sealBreakFlash');
   if(flash){flash.style.animation='none';flash.offsetHeight;flash.style.animation='sealFlash 0.5s ease-out forwards';}
   if(navigator.vibrate) navigator.vibrate([15,30,15,60,120]);
   canvas.style.transition='opacity .5s ease'; canvas.style.opacity='0';
-  if(hint){hint.style.opacity='0';}
+  hint.style.opacity='0';
   setTimeout(()=>{
-    canvas.remove(); if(hint) hint.remove();
-    // Révéler tous les éléments cachés
-    ['detailMessage','detailAudio','detailPhoto','detailReadCount','detailChain','msgReportBtn'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el&&el.dataset.scratchHidden){
-        el.style.visibility='visible'; el.style.transition='opacity .3s'; el.style.opacity='0';
-        delete el.dataset.scratchHidden;
-        requestAnimationFrame(()=>{ el.style.opacity='1'; });
-      }
-    });
-    // Mot par mot sur le message
+    canvas.remove(); hint.remove();
+    // Révéler la zone en fondu
+    zone.style.transition='opacity .35s ease';
+    zone.style.opacity='1';
+    // Apparition mot par mot du message
     setTimeout(()=>{
       const m=document.getElementById('detailMessage');
       if(m){const ft=m.textContent||'';if(ft.trim().length>1){m.textContent='';const w=ft.split(' ').filter(Boolean);let i=0;const iv=setInterval(()=>{if(i<w.length){m.textContent+=(i===0?'':' ')+w[i++];}else{clearInterval(iv);if(navigator.vibrate)navigator.vibrate(50);}},70);}}
     },120);
   },520);
 }
+
 
 
 function showDistanceError(dist) {
