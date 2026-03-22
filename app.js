@@ -2465,7 +2465,13 @@ function _renderStreak() {
   const s = _getStreak();
   const el = document.getElementById('streakDisplay');
   if (!el) return;
-  if (s.count >= 2) {
+  const weekPlaces = _getWeeklyPlaces();
+  // Priorité : lieux de la semaine > jours consécutifs
+  if (weekPlaces >= 3) {
+    el.textContent = '🔥 ' + weekPlaces + ' lieux';
+    el.style.display = 'inline-block';
+    el.title = weekPlaces + ' lieux explorés cette semaine';
+  } else if (s.count >= 2) {
     el.textContent = '🔥 ' + s.count + 'j';
     el.style.display = 'inline-block';
     el.title = s.count + ' jours consécutifs';
@@ -3558,6 +3564,8 @@ function watchMyGhostResonances() {
           const msg = _resoMessage(lieu, curr);
           showNotif(t.notif_reso_title, msg);
           showToast('info', msg, 5000);
+          // Vérifier milestones de résonance collective
+          _checkResoMilestone(id, lieu, prev, curr);
           localStorage.setItem('prev_reso_' + id, curr);
           if (document.getElementById('screenProfile').classList.contains('active')) {
             refreshProfileStats();
@@ -3846,6 +3854,103 @@ function _checkEphemeralWindows() {
   try { localStorage.setItem(_EPHEM_NOTIFIED_KEY, JSON.stringify(arr)); } catch(e) {}
 }
 
+
+// ══════════════════════════════════════════════════════════
+// FEATURE : STREAK DE PRÉSENCE PHYSIQUE
+// Basé sur les lieux distincts visités, pas juste l'ouverture de l'app
+// ══════════════════════════════════════════════════════════
+
+const _PLACE_STREAK_KEY = () => currentUser ? 'ghostub_place_streak_' + currentUser.uid : null;
+
+function _trackPlaceVisit(geohash5) {
+  if (!geohash5 || !currentUser) return;
+  const key = _PLACE_STREAK_KEY();
+  let data;
+  try { data = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) { data = {}; }
+
+  const weekKey = _currentWeekKey();
+  if (!data[weekKey]) data[weekKey] = [];
+
+  // Ajouter le lieu s'il n'est pas déjà visité cette semaine
+  if (!data[weekKey].includes(geohash5)) {
+    data[weekKey].push(geohash5);
+    localStorage.setItem(key, JSON.stringify(data));
+
+    const count = data[weekKey].length;
+    // Toast de progression
+    if (count === 3) {
+      showToast('info', '🔥 3 lieux différents cette semaine — tu explores !', 4000);
+    } else if (count === 5) {
+      showToast('info', '🔥🔥 5 lieux explorés cette semaine — tu hantes la ville !', 5000);
+      showNotif('🔥 Chasseur de fantômes', _currentLang === 'en'
+        ? '5 different places this week — you are haunting the city!'
+        : '5 lieux différents cette semaine — tu hantes la ville !');
+    } else if (count === 10) {
+      showToast('info', '👻 10 lieux ! Tu es une légende de la nuit.', 5000);
+    }
+  }
+}
+
+function _currentWeekKey() {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const week = Math.ceil(((now - startOfYear) / 86400000 + startOfYear.getDay() + 1) / 7);
+  return now.getFullYear() + '-W' + String(week).padStart(2, '0');
+}
+
+function _getWeeklyPlaces() {
+  const key = _PLACE_STREAK_KEY();
+  if (!key) return 0;
+  try {
+    const data = JSON.parse(localStorage.getItem(key) || '{}');
+    return (data[_currentWeekKey()] || []).length;
+  } catch(e) { return 0; }
+}
+
+// ══════════════════════════════════════════════════════════
+// FEATURE : RÉSONANCE COLLECTIVE — milestones 5, 10, 25, 50
+// ══════════════════════════════════════════════════════════
+
+const RESO_MILESTONES = [5, 10, 25, 50, 100];
+
+function _checkResoMilestone(ghostId, lieu, prev, curr) {
+  for (const milestone of RESO_MILESTONES) {
+    if (prev < milestone && curr >= milestone) {
+      const emoji = milestone >= 50 ? '🌟' : milestone >= 25 ? '✨' : '✦';
+      const msg_fr = `${emoji} Ton fantôme à "${lieu}" vient d'atteindre ${milestone} résonances — il touche du monde.`;
+      const msg_en = `${emoji} Your ghost at "${lieu}" just reached ${milestone} resonances — it's touching people.`;
+      const msg = _currentLang === 'en' ? msg_en : msg_fr;
+      showNotif(`${emoji} ${milestone} résonances !`, msg);
+      showToast('info', msg, 6000);
+      if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+      break;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+// FEATURE : BADGE PREMIER DÉPOSANT
+// ══════════════════════════════════════════════════════════
+
+async function _checkFirstDepositor(lat, lng, geohash5) {
+  if (!currentUser || !geohash5) return null;
+  try {
+    // Vérifier si des fantômes existent déjà dans ce geohash5
+    const existing = await getDocs(query(
+      collection(db, COLL.GHOSTS),
+      where('geohash', '==', geohash5),
+      where('expired', '==', false),
+      limit(2)
+    ));
+    // Si aucun autre fantôme → premier déposant !
+    const others = existing.docs.filter(d => d.data().authorUid !== currentUser.uid);
+    if (others.length === 0) {
+      return true;
+    }
+    return false;
+  } catch(e) { return false; }
+}
+
 window.loadNearbyGhosts = async () => {
   // Vérification offline
   if (!navigator.onLine) {
@@ -3904,6 +4009,11 @@ window.loadNearbyGhosts = async () => {
     }
   });
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
+  // Streak de présence physique — tracker le geohash du lieu actuel
+  if (userLat && userLng) {
+    const { geohash5 } = buildGeohashFields(userLat, userLng);
+    if (geohash5) _trackPlaceVisit(geohash5);
+  }
   // Vérifier fenêtres éphémères après chaque chargement
   setTimeout(_checkEphemeralWindows, 500);
 
@@ -5698,6 +5808,20 @@ window.depositGhost = async () => {
     // Particules dorées
     setTimeout(() => _launchDepositParticles(), 80);
     showToast('success', t.dep_success);
+    // Badge premier déposant dans ce lieu
+    if (userLat && userLng) {
+      const _dFields = buildGeohashFields(userLat, userLng);
+      if (_dFields && _dFields.geohash5) {
+        _checkFirstDepositor(userLat, userLng, _dFields.geohash5).then(isFirst => {
+          if (isFirst) setTimeout(() => {
+            showToast('info', '🏅 ' + (_currentLang === 'en' ? 'First ghost in this place!' : 'Premier fantôme de ce lieu !'), 5000);
+            showNotif('🏅 Pionnier !', _currentLang === 'en'
+              ? 'Your ghost is the first in this place. It will be remembered.'
+              : 'Ton fantôme est le premier ici. Il restera.');
+          }, 2200);
+        }).catch(()=>{});
+      }
+    }
     // Notifier les utilisateurs qui ont des fantômes dans ce périmètre
     _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(e => console.warn('notify:', e));
     playDepositSound();
