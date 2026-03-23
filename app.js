@@ -4543,6 +4543,13 @@ window.loadEmpreinteMap = async () => {
 
   // Reset
   if (_empreinteMap) { try { _empreinteMap.remove(); } catch(e){} _empreinteMap = null; }
+  // Détruire et recréer le div Leaflet pour éviter "Map container is already initialized"
+  const oldLeaflet = document.getElementById('empreinteLeaflet');
+  if (oldLeaflet) { oldLeaflet.remove(); }
+  const newLeaflet = document.createElement('div');
+  newLeaflet.id = 'empreinteLeaflet';
+  newLeaflet.style.cssText = 'width:100%;height:100%;border-radius:inherit;';
+  container.appendChild(newLeaflet);
   if (loader) loader.style.display = 'flex';
 
   // Charger Leaflet si pas encore disponible
@@ -4622,7 +4629,6 @@ window.loadEmpreinteMap = async () => {
     // Utiliser le div persistant (pas de innerHTML sur container)
     if (loader) loader.style.display = 'none';
     const leafletDiv = document.getElementById('empreinteLeaflet');
-    leafletDiv.innerHTML = '';
     _empreinteMap = L.map('empreinteLeaflet', { zoomControl: false, attributionControl: false })
       .setView([centerLat, centerLng], deposits.length + discoveries.length > 5 ? 12 : 14);
 
@@ -4656,7 +4662,7 @@ window.loadEmpreinteMap = async () => {
       const bounds = L.latLngBounds(allPoints.map(p => [p.lat, p.lng]));
       _empreinteMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
     }
-    setTimeout(() => _empreinteMap.invalidateSize(), 300);
+    setTimeout(() => { if (_empreinteMap) _empreinteMap.invalidateSize(); }, 300);
 
     // 3b. Ligne de trajet chronologique (dépôts reliés)
     if (deposits.length > 1) {
