@@ -8,6 +8,12 @@ import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
 import GhostService from './services/ghost.service.js';
 import LocationService from './services/location.service.js';
+import AudioService from './services/audio.service.js';
+import HapticsService from './services/haptics.service.js';
+
+// ── Init audio on first user gesture ────────────────────
+document.addEventListener('click', () => { AudioService.init(); AudioService.resume(); }, { once: true });
+document.addEventListener('touchstart', () => { AudioService.init(); AudioService.resume(); }, { once: true });
 
 // ── I18N ─────────────────────────────────────────────────
 const LANGS = {
@@ -2565,26 +2571,132 @@ function _renderStreak() {
 // ── MILESTONES ──────────────────────────────────────────
 const MILESTONES = [1,5,10,25,50,100];
 const RANKS_FR = [
-  {min:0,   label:'Novice',    icon:'🌫️'},
-  {min:5,   label:'Vagabond',  icon:'🚶'},
-  {min:15,  label:'Spectre',   icon:'👻'},
-  {min:40,  label:'Chasseur',  icon:'🔍'},
-  {min:80,  label:'Légende',   icon:'⭐'},
+  {min:0,   label:'Curieux',      icon:'🌫️'},
+  {min:3,   label:'Flâneur',      icon:'🚶'},
+  {min:8,   label:'Explorateur',  icon:'🧭'},
+  {min:15,  label:'Vagabond',     icon:'🌙'},
+  {min:30,  label:'Hanteur',      icon:'👻'},
+  {min:60,  label:'Spectre',      icon:'🔮'},
+  {min:100, label:'Légende',      icon:'⭐'},
 ];
 const RANKS_EN = [
-  {min:0,   label:'Novice',    icon:'🌫️'},
-  {min:5,   label:'Wanderer',  icon:'🚶'},
-  {min:15,  label:'Spectre',   icon:'👻'},
-  {min:40,  label:'Hunter',    icon:'🔍'},
-  {min:80,  label:'Legend',    icon:'⭐'},
+  {min:0,   label:'Curious',      icon:'🌫️'},
+  {min:3,   label:'Wanderer',     icon:'🚶'},
+  {min:8,   label:'Explorer',     icon:'🧭'},
+  {min:15,  label:'Drifter',      icon:'🌙'},
+  {min:30,  label:'Haunter',      icon:'👻'},
+  {min:60,  label:'Spectre',      icon:'🔮'},
+  {min:100, label:'Legend',       icon:'⭐'},
 ];
 const RANKS = () => _currentLang === 'en' ? RANKS_EN : RANKS_FR;
 
 function getRank(n) {
   const ranks = RANKS();
   let rank = ranks[0];
-  for (const r of ranks) { if (n >= r.min) rank = r; }
-  return rank;
+  let rankIdx = 0;
+  for (let i = 0; i < ranks.length; i++) { if (n >= ranks[i].min) { rank = ranks[i]; rankIdx = i; } }
+  return { ...rank, index: rankIdx };
+}
+
+// ── Update rank bar in radar ──────────────────────────────
+function updateRankBar() {
+  const count = getDiscoveryCount();
+  const ranks = RANKS();
+  const { index } = getRank(count);
+  const current = ranks[index];
+  const next = ranks[index + 1] || null;
+  const badge = document.getElementById('rankBadge');
+  const fill = document.getElementById('rankProgressFill');
+  const nextEl = document.getElementById('rankNext');
+  if (!badge) return;
+  badge.textContent = current.icon + ' ' + current.label;
+  if (next) {
+    const progress = ((count - current.min) / (next.min - current.min)) * 100;
+    fill.style.width = Math.min(progress, 100) + '%';
+    nextEl.textContent = '→ ' + next.label + ' (' + next.min + ')';
+    nextEl.style.display = '';
+  } else {
+    fill.style.width = '100%';
+    nextEl.textContent = '★ MAX';
+    nextEl.style.display = '';
+  }
+}
+
+// ── Ghost Tier System (rarity) ────────────────────────────
+// Tier attribué au moment de l'affichage (basé sur un hash déterministe)
+const GHOST_TIERS = [
+  { name: 'common',    weight: 70, label: '' },
+  { name: 'uncommon',  weight: 20, label: 'Écho' },
+  { name: 'rare',      weight: 8,  label: 'Murmure' },
+  { name: 'legendary', weight: 2,  label: 'Spectre' },
+];
+const GHOST_TIERS_EN = { uncommon: 'Echo', rare: 'Whisper', legendary: 'Specter' };
+
+function getGhostTier(ghostId) {
+  // Hash déterministe du ghostId pour un tier stable
+  let hash = 0;
+  for (let i = 0; i < ghostId.length; i++) {
+    hash = ((hash << 5) - hash) + ghostId.charCodeAt(i);
+    hash |= 0;
+  }
+  const roll = Math.abs(hash) % 100;
+  if (roll < 2)  return GHOST_TIERS[3]; // legendary
+  if (roll < 10) return GHOST_TIERS[2]; // rare
+  if (roll < 30) return GHOST_TIERS[1]; // uncommon
+  return GHOST_TIERS[0]; // common
+}
+
+function getTierLabel(tier) {
+  if (tier.name === 'common') return '';
+  if (_currentLang === 'en') return GHOST_TIERS_EN[tier.name] || tier.label;
+  return tier.label;
+}
+
+function getTierBadgeHTML(tier) {
+  if (tier.name === 'common') return '';
+  return '<span class="tier-badge tier-badge-' + tier.name + '">' + getTierLabel(tier) + '</span>';
+}
+
+// ── Audio toggle ──────────────────────────────────────────
+window.toggleAudioEnabled = () => {
+  const btn = document.getElementById('audioToggleBtn');
+  const key = 'ghostub_audio_enabled';
+  const current = localStorage.getItem(key) !== '0';
+  const next = !current;
+  localStorage.setItem(key, next ? '1' : '0');
+  AudioService.setEnabled(next);
+  HapticsService.setEnabled(next);
+  btn.textContent = next ? '🔊' : '🔇';
+  btn.classList.toggle('muted', !next);
+};
+// Restore audio preference
+(function() {
+  const pref = localStorage.getItem('ghostub_audio_enabled');
+  if (pref === '0') {
+    AudioService.setEnabled(false);
+    HapticsService.setEnabled(false);
+    const btn = document.getElementById('audioToggleBtn');
+    if (btn) { btn.textContent = '🔇'; btn.classList.add('muted'); }
+  }
+})();
+
+// ── Advanced deposit toggle ────────────────────────────────
+window.toggleAdvancedDeposit = () => {
+  const toggle = document.getElementById('advancedToggle');
+  if (!toggle) return;
+  const isOpen = toggle.classList.toggle('open');
+  // Show/hide wizard steps 2 and 3
+  if (isOpen) {
+    wizardNext(1);
+  }
+};
+
+// ── Proximity data attribute helper ────────────────────────
+function getProximityClass(distM) {
+  if (distM <= 15) return 'close';
+  if (distM <= 30) return 'near';
+  if (distM <= 50) return 'approaching';
+  return '';
 }
 
 function showDiscoveryToast(count, isNew) {
@@ -2594,7 +2706,22 @@ function showDiscoveryToast(count, isNew) {
   if (!toast) return;
   const rank = getRank(count);
   const isMilestone = MILESTONES.includes(count) && isNew;
-  if (isNew) { _updateStreak(); _renderStreak(); }
+  if (isNew) { _updateStreak(); _renderStreak(); updateRankBar(); }
+  // Play chime on new discovery
+  if (isNew) {
+    AudioService.playChime();
+    // Check if this ghost has a special tier
+    if (selectedGhost) {
+      const tier = getGhostTier(selectedGhost.id);
+      if (tier.name === 'legendary') {
+        setTimeout(() => AudioService.playRareGhost(), 800);
+        HapticsService.rareGhost();
+      } else if (tier.name === 'rare') {
+        setTimeout(() => AudioService.playChime(1046), 600);
+        HapticsService.milestone();
+      }
+    }
+  }
   if (isMilestone) {
     icon.textContent = rank.icon;
     text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
@@ -2650,9 +2777,8 @@ async function refreshProfileStats() {
       animateStatNumber('statResonances', totalReso);
     }
   } catch(e) { console.warn('refreshProfileStats:', e); }
+  updateRankBar();
 }
-
-// ── TABLEAU DE BORD COMMERÇANT ──────────────────────────
 async function loadBizDashboard() {
   if (!currentUser) return;
   const section  = document.getElementById('bizDashboardSection');
@@ -4004,7 +4130,7 @@ function _checkResoMilestone(ghostId, lieu, prev, curr) {
       const msg = _currentLang === 'en' ? msg_en : msg_fr;
       _smartNotif(`${emoji} ${milestone} résonances !`, msg);
       showToast('info', msg, 6000);
-      if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 100]);
+      HapticsService.milestone();
       break;
     }
   }
@@ -4107,7 +4233,8 @@ window.loadNearbyGhosts = async () => {
       const key = 'secret_revealed_' + g.id;
       if (!sessionStorage.getItem(key)) {
         sessionStorage.setItem(key, '1');
-        if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+        HapticsService.secretRevealed();
+        AudioService.playChime(660);
         showNotif(
           `🔮 Fantôme secret de ${g.anonymous ? getPoeticName(g.id) : escapeHTML(g.author || 'quelqu\'un')}`,
           `"${(g.message || '').substring(0, 80)}" — à ${formatDistance(g.distance)}`
@@ -4171,6 +4298,7 @@ window.loadNearbyGhosts = async () => {
     }
   }
   Analytics.track('ghosts_loaded', { count });
+  updateRankBar();
   checkForNewGhosts(count);
   // Notification fantôme jamais ouvert (3s après le chargement)
   setTimeout(() => checkVirginGhostNearby(), 3000);
@@ -5165,13 +5293,18 @@ function renderGhostList() {
     const _cardIdx = filtered.indexOf(g);
     const _cardDelay = ((_cardIdx % 5) * 0.8).toFixed(1);
     const _distClass = g.distance <= 80 ? 'dist-near' : g.distance <= 300 ? 'dist-mid' : 'dist-far';
+    const _tier = getGhostTier(g.id);
+    const _tierAttr = _tier.name !== 'common' ? ` data-tier="${_tier.name}"` : '';
+    const _tierBadge = getTierBadgeHTML(_tier);
+    const _proxClass = getProximityClass(g.distance);
+    const _proxAttr = _proxClass ? ` data-proximity="${_proxClass}"` : '';
     return `
-    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}" style="${ageStyle};--card-delay:${_cardDelay}s" onclick="openGhost('${escapeHTML(g.id)}')" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || t.detail_location_unknown)}, ${formatDistance(g.distance)}" onkeydown="if(event.key==='Enter'||event.key===' ')openGhost('${escapeHTML(g.id)}')">
+    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}" style="${ageStyle};--card-delay:${_cardDelay}s"${_tierAttr}${_proxAttr} onclick="openGhost('${escapeHTML(g.id)}')" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || t.detail_location_unknown)}, ${formatDistance(g.distance)}" onkeydown="if(event.key==='Enter'||event.key===' ')openGhost('${escapeHTML(g.id)}')">
       <div class="envelope-flap" aria-hidden="true"><div class="envelope-flap-inner"></div></div>
       <div class="envelope-body">
         <div class="envelope-emoji" aria-hidden="true">${emoji}</div>
         <div class="envelope-content">
-          <div class="envelope-location">📍 ${escapeHTML(g.location || t.detail_location_unknown)}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${ageBadge}${virginBadge}</div>
+          <div class="envelope-location">📍 ${escapeHTML(g.location || t.detail_location_unknown)}${g.secret ? ' <span class="secret-badge" aria-label="Secret">SECRET</span>' : ''}${_tierBadge}${ageBadge}${virginBadge}</div>
           <div class="envelope-hint">${hintText}</div>
         </div>
         <div class="envelope-meta">
@@ -5672,10 +5805,9 @@ function _startWhisperListener() {
       if (_firstSnapshot) { _firstSnapshot = false; return; } // ignorer l'état initial
       if (!snap.exists()) return;
       const data = snap.data();
-      // Vibration mystérieuse — pattern distinctif
-      if (navigator.vibrate) {
-        navigator.vibrate([80, 60, 80, 60, 300]);
-      }
+      // Vibration mystérieuse + son de chuchotement
+      HapticsService.whisper();
+      AudioService.playWhisper();
       // Toast discret avec l'emoji du ghost
       const emoji = data.ghostEmoji || '👻';
       const loc = data.ghostLocation || '';
@@ -5709,6 +5841,8 @@ window.resonate = async () => {
     return;
   }
   fireResonanceParticles(btn);
+  AudioService.playResonance();
+  HapticsService.resonance();
   btn.classList.add('resonated');
   btn.textContent = t.detail_reso_sent;
   markResonatedToday(selectedGhost.id);
@@ -5894,8 +6028,7 @@ window.depositGhost = async () => {
     // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
     const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
     localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
-    // Haptic ancrage : impact court + long vibration
-    if (navigator.vibrate) navigator.vibrate([15, 40, 15, 40, 300]);
+    // Haptic handled by HapticsService.deposit() above
     // Particules dorées
     setTimeout(() => _launchDepositParticles(), 80);
     showToast('success', t.dep_success);
@@ -5916,6 +6049,7 @@ window.depositGhost = async () => {
     // Notifier les utilisateurs qui ont des fantômes dans ce périmètre
     _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(e => console.warn('notify:', e));
     playDepositSound();
+    HapticsService.deposit();
     Analytics.track('ghost_deposited', { anonymous: anon, secret, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
     // Clic pour fermer manuellement si le timer bloque
     const successEl = document.getElementById('depositSuccess');
@@ -6057,7 +6191,7 @@ async function _doOpenEnvelope() {
   const sealed = document.getElementById('envelopeSealed');
   const revealed = document.getElementById('envelopeContent');
   // ── HAPTIC dramatique ───────────────────────────────────
-  if (navigator.vibrate) navigator.vibrate([10, 30, 20, 40, 10, 30, 250]);
+  HapticsService.sealBreak();
   // ── FLASH plein écran ───────────────────────────────────
   const flash = document.getElementById('sealBreakFlash');
   if (flash) {
@@ -6077,7 +6211,7 @@ async function _doOpenEnvelope() {
       revealed.classList.add('envelope-reveal');
       playRevealSound();
       // Vibration finale douce
-      setTimeout(() => { if (navigator.vibrate) navigator.vibrate([20, 60, 20]); }, 200);
+      setTimeout(() => { HapticsService.reveal(); }, 200);
       // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
       _initScratchReveal();
       const firstFocusable = revealed.querySelector('button, [tabindex]');
