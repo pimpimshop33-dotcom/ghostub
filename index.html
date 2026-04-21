@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=83"></script>
+<script type="module" src="app.js?v=84"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -923,9 +923,11 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .deposit-error{color:var(--red);font-size:12px;min-height:16px;margin-bottom:8px;}
 
 /* ── MINI-CARTE LEAFLET DU WIZARD DE DÉPÔT ────────────── */
-/* Tuiles légèrement désaturées pour harmoniser avec l'ambiance — mais lisibles */
+/* Filtre pour transformer OSM France clair en version sombre bleu nuit
+   invert → sombre ; hue-rotate 180deg → retrouve les bonnes couleurs ;
+   saturate 0.8 → moins agressif ; brightness 1.1 → lisibilité des labels */
 #depositMiniMap .leaflet-tile-pane{
-  filter:saturate(.9);
+  filter:invert(1) hue-rotate(180deg) saturate(.8) brightness(1.05) contrast(.9);
 }
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
