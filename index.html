@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=72"></script>
+<script type="module" src="app.js?v=73"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -614,17 +614,26 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   font-size:28px !important;font-style:italic;font-weight:400;
   color:var(--warm);line-height:1.7 !important;
   background:linear-gradient(160deg,rgba(14,12,24,.95) 0%,rgba(8,10,18,.98) 100%) !important;
-  border:1px solid rgba(232,160,48,.12);
+  border:1px solid rgba(232,160,48,.14);
   border-left:2px solid var(--amber) !important;
   border-radius:0 20px 20px 0 !important;
-  padding:26px 22px !important;margin-bottom:20px;letter-spacing:.01em;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.02),0 4px 24px rgba(0,0,0,.4),0 0 40px rgba(232,160,48,.03);
+  padding:30px 26px 34px !important;margin-bottom:20px;letter-spacing:.01em;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 4px 24px rgba(0,0,0,.4),0 0 50px rgba(232,160,48,.05);
   position:relative;
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
 }
+/* Guillemets français ouvrant — haut-gauche */
 .detail-message::before{
-  content:'"';position:absolute;top:6px;left:10px;
-  font-family:'Cormorant Garamond',serif;font-size:64px;line-height:1;
-  color:rgba(232,160,48,.1);pointer-events:none;
+  content:'«';position:absolute;top:4px;left:10px;
+  font-family:'Cormorant Garamond',serif;font-size:56px;line-height:1;font-style:normal;
+  color:rgba(232,160,48,.14);pointer-events:none;
+}
+/* Guillemets français fermant — bas-droite, symétrie */
+.detail-message::after{
+  content:'»';position:absolute;bottom:-18px;right:14px;
+  font-family:'Cormorant Garamond',serif;font-size:56px;line-height:1;font-style:normal;
+  color:rgba(232,160,48,.14);pointer-events:none;
 }
 .detail-info{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
 .detail-badge{display:flex;align-items:center;gap:5px;background:rgba(122,184,245,.04);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--warm-dim);}
@@ -646,9 +655,28 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 }
 .ghost-card-btn:active{transform:scale(.98);}
 .resonance-btn.resonated{color:var(--warm);border-color:var(--amber);background:rgba(232,160,48,.12);}
-.reply-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:11px;margin-bottom:7px;}
+/* Résonances — cartes-lettres avec barre latérale spirit */
+.reply-item{
+  background:rgba(8,10,18,.6);
+  border:1px solid var(--border);
+  border-left:3px solid var(--spirit-dim) !important;
+  border-radius:4px 14px 14px 4px;
+  padding:12px 14px;
+  margin-bottom:8px;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  transition:border-color .25s,background .25s,transform .25s;
+}
+.reply-item:hover{
+  border-left-color:var(--spirit) !important;
+  background:rgba(14,18,30,.7);
+  transform:translateX(2px);
+}
 .reply-text{font-family:'Cormorant Garamond',serif;font-size:14px;font-style:italic;color:var(--warm-dim);line-height:1.6;}
-.reply-meta{font-size:10px;color:var(--spirit-dim);margin-top:5px;letter-spacing:.5px;}
+.reply-meta{
+  font-size:9px;color:var(--spirit-dim);margin-top:7px;
+  letter-spacing:1.2px;text-transform:uppercase;font-weight:500;
+}
 
 /* ── DEPOSIT WIZARD ────────────────────────────────────── */
 .deposit-map{
