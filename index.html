@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=76"></script>
+<script type="module" src="app.js?v=77"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -480,7 +480,14 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   }
 }
 #radarDots{position:absolute;inset:0;}
-.ghost-dot{position:absolute;cursor:pointer;transform:translate(-50%,-50%);transition:transform .2s;}
+.ghost-dot{
+  position:absolute;cursor:pointer;
+  transform:translate(-50%,-50%);
+  /* Zone tactile généreuse (WCAG 44px) — le point visuel est plus petit */
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s;
+}
 .ghost-dot-inner{display:none;}
 .ghost-dot-label{
   position:absolute;top:-22px;left:50%;transform:translateX(-50%);
@@ -492,27 +499,45 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 /* Apparition fantôme — synchronisée avec le passage du sweep
    Le sweep a son pic à 17% de la circonférence et son halo 12-22%.
    Le JS injecte un animation-delay négatif = angle du dot / 2π × 4s.
-   Résultat : chaque dot s'illumine UNIQUEMENT quand le sweep le balaie. */
+   Résultat : chaque dot n'est visible QUE quand le sweep le balaie.
+   Fenêtre visible : ~18% du cycle (0.7s), le reste invisible. */
 .ghost-dot-emoji{
-  position:absolute;top:-28px;left:50%;transform:translateX(-50%) scale(.5);
-  font-size:18px;pointer-events:none;opacity:0;
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(1);
+  /* Point lumineux minimal — plus d'emoji surchargé */
+  width:10px;height:10px;
+  font-size:0;       /* masque le contenu emoji */
+  line-height:0;
+  background:var(--spirit);
+  border-radius:50%;
+  box-shadow:0 0 8px var(--spirit);
+  pointer-events:none;
+  opacity:0;
   animation:ghostReveal 4s linear infinite;
 }
 @keyframes ghostReveal{
-  /* Sweep arrive — fantôme invisible */
-  0%,10%{opacity:0;transform:translateX(-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
-  /* Sweep balaie le dot — flash de lumière (pic à 17% = pic du sweep) */
-  14%{opacity:.8;transform:translateX(-50%) scale(1.1);filter:drop-shadow(0 0 10px rgba(122,184,245,.9));}
-  17%{opacity:1;transform:translateX(-50%) scale(1.2);filter:drop-shadow(0 0 14px rgba(122,184,245,1)) drop-shadow(0 0 6px rgba(232,160,48,.6));}
-  22%{opacity:.85;transform:translateX(-50%) scale(1);filter:drop-shadow(0 0 8px rgba(122,184,245,.6));}
-  /* Sweep s'éloigne — traînée de braise ambre qui s'éteint */
-  30%{opacity:.5;filter:drop-shadow(0 0 5px rgba(232,160,48,.4));}
-  45%{opacity:.15;filter:drop-shadow(0 0 3px rgba(232,160,48,.2));}
-  /* Le reste du cycle : totalement invisible, jusqu'au prochain passage */
-  60%,100%{opacity:0;transform:translateX(-50%) scale(.4);}
+  /* Tout le cycle : invisible */
+  0%,11%{opacity:0;transform:translate(-50%,-50%) scale(.4);box-shadow:0 0 0 transparent;}
+  /* Sweep s'approche (12-14%) : montée rapide */
+  13%{opacity:.9;transform:translate(-50%,-50%) scale(1.3);background:var(--spirit);box-shadow:0 0 14px var(--spirit),0 0 28px rgba(122,184,245,.6);}
+  /* Pic exact (17%) : flash spectral bleu + touche ambre */
+  17%{opacity:1;transform:translate(-50%,-50%) scale(1.5);background:#cfe4ff;box-shadow:0 0 18px var(--spirit),0 0 36px rgba(122,184,245,.8),0 0 52px rgba(232,160,48,.35);}
+  /* Sweep s'éloigne (19-22%) : retombée */
+  21%{opacity:.75;transform:translate(-50%,-50%) scale(1.1);background:var(--spirit);box-shadow:0 0 10px var(--spirit),0 0 20px rgba(232,160,48,.25);}
+  /* Traînée de braise ambre qui s'éteint très vite */
+  27%{opacity:.25;transform:translate(-50%,-50%) scale(.9);background:var(--amber);box-shadow:0 0 6px rgba(232,160,48,.4);}
+  /* Reste du cycle : complètement invisible, zone morte */
+  33%,100%{opacity:0;transform:translate(-50%,-50%) scale(.4);box-shadow:0 0 0 transparent;}
 }
+/* Hover : emoji révélé en lieu et place du point, le dot est interactif */
 .ghost-dot:hover .ghost-dot-label,.ghost-dot:focus .ghost-dot-label{opacity:1;}
-.ghost-dot:hover .ghost-dot-emoji,.ghost-dot:focus .ghost-dot-emoji{opacity:.85 !important;animation:none;transform:translateX(-50%) scale(1.05);filter:drop-shadow(0 0 10px rgba(232,160,48,.7));}
+.ghost-dot:hover .ghost-dot-emoji,.ghost-dot:focus .ghost-dot-emoji{
+  opacity:1 !important;animation:none;
+  width:auto;height:auto;font-size:18px;line-height:1;
+  background:transparent;box-shadow:none;
+  transform:translate(-50%,-50%) scale(1.1);
+  filter:drop-shadow(0 0 10px rgba(232,160,48,.8));
+}
 .radar-status{font-size:11px;color:var(--spirit-dim);text-align:center;padding:4px 20px 6px;}
 .ghost-count-line{font-family:'Cormorant Garamond',serif;font-size:13px;color:var(--warm-dim);text-align:center;margin-bottom:10px;}
 .ghost-count-line span{color:var(--amber);font-size:18px;text-shadow:0 0 12px var(--amber);}
