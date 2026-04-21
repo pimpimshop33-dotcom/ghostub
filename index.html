@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=85"></script>
+<script type="module" src="app.js?v=86"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -922,10 +922,19 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 }
 .deposit-error{color:var(--red);font-size:12px;min-height:16px;margin-bottom:8px;}
 
-/* ── MINI-CARTE LEAFLET DU WIZARD DE DÉPÔT ────────────── */
-/* Désaturation légère pour harmoniser avec l'ambiance nocturne */
-#depositMiniMap .leaflet-tile-pane{
-  filter:saturate(.9) brightness(.95);
+/* ── FILTRE UNIVERSEL POUR TOUTES LES CARTES LEAFLET ─── */
+/* OSM France → ambiance sombre bleu nuit via filtre CSS
+   L'image d'origine est claire/colorée. On la transforme sans l'inverser :
+   - hue-rotate(180deg) : tire les couleurs vers le bleu/violet
+   - saturate(0.3) : désature fortement pour l'ambiance nocturne
+   - brightness(0.55) : assombrit tout en gardant les labels lisibles
+   - contrast(1.2) : maintient le contraste des rues */
+#depositMiniMap .leaflet-tile-pane,
+#leafletMap .leaflet-tile-pane,
+#empreinteLeaflet .leaflet-tile-pane,
+#publicEmpreinteMap .leaflet-tile-pane,
+#chainMiniMap .leaflet-tile-pane{
+  filter:hue-rotate(180deg) saturate(.3) brightness(.55) contrast(1.2);
 }
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
