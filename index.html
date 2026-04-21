@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=82"></script>
+<script type="module" src="app.js?v=83"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -923,14 +923,9 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .deposit-error{color:var(--red);font-size:12px;min-height:16px;margin-bottom:8px;}
 
 /* ── MINI-CARTE LEAFLET DU WIZARD DE DÉPÔT ────────────── */
-/* Désature légèrement les tuiles sombres pour mieux coller à l'ambiance */
 /* Tuiles légèrement désaturées pour harmoniser avec l'ambiance — mais lisibles */
 #depositMiniMap .leaflet-tile-pane{
   filter:saturate(.9);
-}
-/* Container avec bordure ambrée qui respire */
-#depositMiniMap{
-  box-shadow:inset 0 0 40px rgba(6,9,16,.6);
 }
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
@@ -2189,7 +2184,7 @@ button, [role="button"], input, textarea, select,
         <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
           <div id="depositMiniMap"></div>
           <div class="dep-map-scan" aria-hidden="true"></div>
-          <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.88);font-size:12px;color:rgba(168,180,255,.6);letter-spacing:.5px;backdrop-filter:blur(6px);">📡 Localisation…</div>
+          <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(168,180,255,.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
         </div>
         <div class="form-group" style="margin-bottom:12px;">
           <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
