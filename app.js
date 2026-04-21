@@ -1129,7 +1129,14 @@ window.setLang = (lang) => {
 
 // Appliquer la langue au démarrage
 document.documentElement.lang = _currentLang;
-document.addEventListener("DOMContentLoaded", () => { setLang(_currentLang); });
+document.addEventListener("DOMContentLoaded", () => {
+  setLang(_currentLang);
+  // Synchroniser l'état des boutons de rayon avec la valeur localStorage
+  const savedRadius = window._radarRadius || 200;
+  document.querySelectorAll('.radar-radius-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.r, 10) === savedRadius);
+  });
+});
 
 
 const firebaseConfig = {
@@ -5323,38 +5330,91 @@ function renderGhostList() {
   }).join('');
 }
 
+// Rayon de détection du radar, réglable par l'utilisateur (50/200/1000 m)
+window._radarRadius = parseInt(localStorage.getItem('ghostub_radar_radius') || '200', 10);
+
+function setRadarRadius(meters) {
+  window._radarRadius = meters;
+  localStorage.setItem('ghostub_radar_radius', String(meters));
+  // Met à jour l'état visuel des boutons
+  document.querySelectorAll('.radar-radius-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.r, 10) === meters);
+  });
+  // Ré-affiche les dots
+  renderRadarDots();
+  // Haptic feedback si dispo
+  try { if (window.HapticsService?.tap) window.HapticsService.tap(); } catch(_){}
+}
+
 function renderRadarDots() {
   const radar = document.getElementById('radarDots');
+  if (!radar) return;
   radar.innerHTML = '';
-  const maxDist = nearbyGhosts.length > 0 ? Math.max(...nearbyGhosts.slice(0,8).map(g => g.distance), 100) : 100;
-  nearbyGhosts.slice(0,8).forEach((g, i) => {
-    const angle = (i / Math.min(nearbyGhosts.length, 8)) * 2 * Math.PI - Math.PI / 2;
-    const r = 15 + (g.distance / maxDist) * 29;
-    const x = 50 + r * Math.cos(angle);
-    const y = 50 + r * Math.sin(angle);
+
+  const radius = window._radarRadius || 200;
+
+  // Filtrer : uniquement les fantômes à portée du radar
+  const inRange = nearbyGhosts.filter(g =>
+    typeof g.distance === 'number' && g.distance <= radius && g.lat && g.lng
+  );
+
+  // Compteur visuel (ex. "3/12 à portée")
+  const counter = document.getElementById('radarInRangeCount');
+  if (counter) {
+    counter.textContent = inRange.length > 0
+      ? `${inRange.length}/${nearbyGhosts.length} à portée`
+      : (nearbyGhosts.length > 0 ? 'Aucun à portée — rapproche-toi' : '');
+  }
+
+  if (inRange.length === 0) return;
+
+  inRange.forEach((g) => {
+    // Angle géographique réel basé sur le cap (bearing) entre l'utilisateur et le fantôme
+    // Utilise les coords GPS pour un vrai radar directionnel
+    const lat1 = userLat * Math.PI / 180;
+    const lat2 = g.lat * Math.PI / 180;
+    const deltaLng = (g.lng - userLng) * Math.PI / 180;
+    const y = Math.sin(deltaLng) * Math.cos(lat2);
+    const x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+    let bearing = Math.atan2(y, x); // 0 = Nord, π/2 = Est
+    // On veut 0 = haut du radar = Nord, donc on soustrait π/2
+    const angle = bearing - Math.PI / 2;
+
+    // Distance radiale sur le radar : proportionnelle au rayon de détection
+    // 15% minimum pour ne pas chevaucher le centre, 44% maximum pour rester dans le cercle
+    const r = 15 + (g.distance / radius) * 29;
+    const cx = 50 + r * Math.cos(angle);
+    const cy = 50 + r * Math.sin(angle);
+
     const dot = document.createElement('div');
     dot.className = 'ghost-dot';
-    dot.style.left = x + '%';
-    dot.style.top = y + '%';
-    dot.style.animationDelay = (i * 0.2) + 's';
+    dot.style.left = cx + '%';
+    dot.style.top = cy + '%';
+
     // Accessibilité : focusable + label
     dot.setAttribute('tabindex', '0');
     dot.setAttribute('role', 'button');
     dot.setAttribute('aria-label', `${escapeHTML(g.location || 'Fantôme')} — ${formatDistance(g.distance)}`);
+
     if (g.businessMode) {
       const bizBadge = document.createElement('div');
       bizBadge.textContent = '🏪';
       bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(255,200,80,.6));';
-      dot.style.position = 'relative';
+      dot.style.position = 'absolute';
       dot.appendChild(bizBadge);
     }
+
     dot.onclick = () => openGhost(g.id);
     dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGhost(g.id); } };
+
     const emoji = g.secret ? '🔮' : (g.businessMode ? '🏪' : (g.emoji || '👻'));
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
+
+    // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
     const sweepDuration = 4;
     const angleNorm = ((angle + Math.PI / 2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
     const delay = -(angleNorm / (2 * Math.PI)) * sweepDuration;
+
     dot.innerHTML = `
       <div class="ghost-dot-emoji" style="animation-delay:${delay.toFixed(2)}s" aria-hidden="true">${emoji}</div>
       <div class="ghost-dot-inner" aria-hidden="true"></div>
@@ -5363,6 +5423,9 @@ function renderRadarDots() {
     radar.appendChild(dot);
   });
 }
+
+// Expose setRadarRadius globalement pour les onclick inline
+window.setRadarRadius = setRadarRadius;
 
 let currentGhostIndex = 0;
 
