@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=86"></script>
+<script type="module" src="app.js?v=87"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -923,18 +923,24 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 .deposit-error{color:var(--red);font-size:12px;min-height:16px;margin-bottom:8px;}
 
 /* ── FILTRE UNIVERSEL POUR TOUTES LES CARTES LEAFLET ─── */
-/* OSM France → ambiance sombre bleu nuit via filtre CSS
-   L'image d'origine est claire/colorée. On la transforme sans l'inverser :
-   - hue-rotate(180deg) : tire les couleurs vers le bleu/violet
-   - saturate(0.3) : désature fortement pour l'ambiance nocturne
-   - brightness(0.55) : assombrit tout en gardant les labels lisibles
-   - contrast(1.2) : maintient le contraste des rues */
+/* OSM France clair → ambiance sombre bleu nuit
+   invert(1) : inverse clair→sombre
+   hue-rotate(180deg) : remet les couleurs dans le bon sens après invert
+   saturate(.6) : adoucit l'aspect "trop bleu"
+   brightness(.95) : ajuste la luminosité finale
+   contrast(.85) : doux rendu nocturne
+   !important : indispensable pour battre les styles internes de Leaflet */
 #depositMiniMap .leaflet-tile-pane,
 #leafletMap .leaflet-tile-pane,
 #empreinteLeaflet .leaflet-tile-pane,
 #publicEmpreinteMap .leaflet-tile-pane,
-#chainMiniMap .leaflet-tile-pane{
-  filter:hue-rotate(180deg) saturate(.3) brightness(.55) contrast(1.2);
+#chainMiniMap .leaflet-tile-pane,
+#depositMiniMap .leaflet-tile,
+#leafletMap .leaflet-tile,
+#empreinteLeaflet .leaflet-tile,
+#publicEmpreinteMap .leaflet-tile,
+#chainMiniMap .leaflet-tile{
+  filter:invert(1) hue-rotate(180deg) saturate(.6) brightness(.95) contrast(.85) !important;
 }
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
