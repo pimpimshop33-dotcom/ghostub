@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=89"></script>
+<script type="module" src="app.js?v=90"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1122,8 +1122,12 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   position:relative;z-index:2;
 }
 
-/* ── BOTTOM NAV — asphalte avec reflet (refonte v89) ────── */
+/* ── BOTTOM NAV — asphalte avec reflet (refonte v89, fixed v90) ────── */
 .bottom-nav{
+  /* TOUJOURS visible : position fixed en bas du viewport */
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:390px;
+  z-index:50;
   display:flex;justify-content:space-around;
   padding:10px 0 6px;padding-bottom:calc(6px + var(--sab));
   border-top:1px solid rgba(232,160,48,.10);
@@ -1137,6 +1141,13 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
     0 -1px 0 rgba(232,160,48,.08),
     inset 0 1px 0 rgba(122,184,245,.04);
 }
+/* Compensation : padding bas sur tous les screens scrollables pour ne pas
+   que le contenu soit masqué par la nav fixe (~70px de hauteur + safe area) */
+.scroll{padding-bottom:calc(80px + var(--sab)) !important;}
+/* Pour les screens sans .scroll, on padding direct le screen
+   Note : géré aussi en JS pour compat anciens Safari sans :has() */
+body.has-bottom-nav .screen{padding-bottom:calc(80px + var(--sab));}
+body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !important;}
 .nav-item{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   cursor:pointer;padding:6px 14px 4px;border-radius:12px;
