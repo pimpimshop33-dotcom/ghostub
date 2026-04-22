@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=88"></script>
+<script type="module" src="app.js?v=89"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1122,25 +1122,93 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   position:relative;z-index:2;
 }
 
-/* ── BOTTOM NAV — asphalte avec reflet ─────────────────── */
+/* ── BOTTOM NAV — asphalte avec reflet (refonte v89) ────── */
 .bottom-nav{
   display:flex;justify-content:space-around;
-  padding:10px 0;padding-bottom:calc(6px + var(--sab));
-  border-top:1px solid rgba(122,184,245,.07);
-  background:linear-gradient(0deg,rgba(4,6,10,.98) 0%,rgba(6,9,16,.96) 100%);
+  padding:10px 0 6px;padding-bottom:calc(6px + var(--sab));
+  border-top:1px solid rgba(232,160,48,.10);
+  background:linear-gradient(0deg,rgba(4,6,10,.92) 0%,rgba(8,11,20,.88) 100%);
+  backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
   flex-shrink:0;
-  /* Reflet de sol mouillé */
-  box-shadow:0 -1px 0 rgba(232,160,48,.05),inset 0 1px 0 rgba(122,184,245,.06);
+  /* Reflet de sol mouillé + ombre haute pour décollement */
+  box-shadow:
+    0 -8px 24px rgba(0,0,0,.35),
+    0 -1px 0 rgba(232,160,48,.08),
+    inset 0 1px 0 rgba(122,184,245,.04);
 }
 .nav-item{
   display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;padding:4px 16px;border-radius:12px;
-  color:rgba(122,184,245,.20);font-size:9px;letter-spacing:.5px;text-transform:uppercase;
-  transition:all .2s;touch-action:manipulation;
+  cursor:pointer;padding:6px 14px 4px;border-radius:12px;
+  color:rgba(122,184,245,.32);
+  font-size:9px;letter-spacing:.6px;text-transform:uppercase;font-weight:500;
+  transition:color .25s,transform .25s cubic-bezier(.34,1.56,.64,1);
+  touch-action:manipulation;
+  position:relative;
 }
-.nav-item.active{color:var(--amber);}
-.nav-item.active .nav-icon{filter:drop-shadow(0 0 8px rgba(232,160,48,.6));}
-.nav-icon{font-size:20px;transition:filter .2s;}
+.nav-item:hover{color:rgba(122,184,245,.55);}
+.nav-item:active{transform:scale(.92);}
+/* Indicateur barre lumineuse sous l'icône — apparaît à l'activation */
+.nav-item::before{
+  content:'';position:absolute;top:0;left:50%;
+  width:0;height:2px;border-radius:0 0 3px 3px;
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+  transform:translateX(-50%);
+  transition:width .35s cubic-bezier(.34,1.56,.64,1),opacity .25s;
+  opacity:0;
+  box-shadow:0 0 8px rgba(232,160,48,.5);
+}
+.nav-item.active::before{
+  width:32px;opacity:1;
+}
+/* Halo au-dessous de l'icône active — comme une lanterne posée */
+.nav-item::after{
+  content:'';position:absolute;bottom:0;left:50%;
+  width:40px;height:24px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse 50% 100% at center top,rgba(232,160,48,.18) 0%,transparent 70%);
+  opacity:0;
+  transition:opacity .35s;
+  pointer-events:none;
+}
+.nav-item.active::after{opacity:1;}
+.nav-item.active{
+  color:var(--amber);
+  transform:translateY(-2px);
+}
+.nav-item.active .nav-icon{
+  filter:drop-shadow(0 0 10px rgba(232,160,48,.7)) drop-shadow(0 0 4px rgba(232,160,48,1));
+  animation:navIconPop .4s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes navIconPop{
+  0%{transform:scale(1);}
+  50%{transform:scale(1.18);}
+  100%{transform:scale(1);}
+}
+.nav-icon{
+  font-size:22px;
+  transition:filter .25s,transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+/* Badge de notification — pulsation ambre */
+.nav-badge{
+  position:absolute;top:-4px;right:-8px;
+  min-width:14px;height:14px;padding:0 4px;
+  background:linear-gradient(135deg,#ff6b8a,#e8a030);
+  color:#1a1208;font-weight:700;font-size:9px;line-height:14px;
+  border-radius:8px;text-align:center;
+  border:1.5px solid rgba(8,11,20,.95);
+  box-shadow:0 0 10px rgba(255,107,138,.6),0 0 20px rgba(255,107,138,.3);
+  animation:navBadgePulse 2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes navBadgePulse{
+  0%,100%{box-shadow:0 0 8px rgba(255,107,138,.5),0 0 14px rgba(255,107,138,.2);}
+  50%{box-shadow:0 0 14px rgba(255,107,138,.85),0 0 28px rgba(255,107,138,.45);}
+}
+@media (prefers-reduced-motion:reduce){
+  .nav-item.active .nav-icon{animation:none !important;}
+  .nav-badge{animation:none !important;}
+}
 
 /* ── ENVELOPE SCELLÉE — lanterne dans la brume ─────────── */
 /* ── ENVELOPPE SCELLÉE (screenDetail) ──────────────────── */
