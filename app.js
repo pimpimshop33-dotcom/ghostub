@@ -7363,10 +7363,26 @@ let _depositMiniMapAttempts = 0;
 function _initDepositMiniMap() {
   const loader = document.getElementById('depositMiniLoader');
   const container = document.getElementById('depositMiniMap');
-  if (!container) return;
+
+  // ── DIAGNOSTIC v98 — visible dans console F12 ──
+  console.log('[MiniMap] init appelé', {
+    container: !!container,
+    containerSize: container ? `${container.offsetWidth}x${container.offsetHeight}` : 'no-container',
+    userLat,
+    userLng,
+    leafletLoaded: typeof L !== 'undefined',
+    alreadyInit: !!_depositMiniMap,
+    loader: !!loader
+  });
+
+  if (!container) {
+    console.warn('[MiniMap] ❌ container #depositMiniMap absent du DOM');
+    return;
+  }
 
   // Si pas de GPS encore, on attend ou on demande
   if (!userLat || !userLng) {
+    console.warn('[MiniMap] ⚠️ Pas de GPS — userLat/Lng vides');
     _depositMiniMapAttempts = (_depositMiniMapAttempts || 0) + 1;
     if (loader) loader.textContent = '📡 Localisation…';
     // Tenter de récupérer la position si on ne l'a pas
@@ -7444,14 +7460,30 @@ function _initDepositMiniMap() {
   }).addTo(_depositMiniMap);
 
   // Cacher le loader dès qu'une tuile charge
+  let _tileLoaded = false;
   tileLayer.on('tileload', () => {
+    _tileLoaded = true;
+    console.log('[MiniMap] ✅ Tuile chargée');
     if (loader) loader.style.display = 'none';
   });
-  tileLayer.on('tileerror', () => {
+  tileLayer.on('tileerror', (e) => {
+    console.warn('[MiniMap] ❌ Erreur chargement tuile', e?.tile?.src || '');
     if (loader) loader.style.display = 'none';
   });
   // Fallback ultime : cacher le loader après 2s quoi qu'il arrive
   setTimeout(() => { if (loader) loader.style.display = 'none'; }, 2000);
+  // Si vraiment AUCUNE tuile chargée après 4s → afficher message d'erreur clair
+  setTimeout(() => {
+    if (!_tileLoaded && loader) {
+      console.error('[MiniMap] ❌ AUCUNE tuile chargée après 4s — vérifier réseau/CSP/adblocker');
+      loader.style.display = 'flex';
+      loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
+        ? '⚠️ Map unavailable (network blocked?)'
+        : '⚠️ Carte indisponible (réseau bloqué ?)';
+      loader.style.background = 'rgba(40,10,10,.85)';
+      loader.style.color = 'rgba(255,150,150,.9)';
+    }
+  }, 4000);
 
   // Marqueur position — version originale, simple et fiable
   L.marker([userLat, userLng], {
