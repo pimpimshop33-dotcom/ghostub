@@ -152,8 +152,6 @@ const LANGS = {
     dep_photo_btn_short: 'Ajouter une photo',
     dep_photo_camera: 'Appareil photo',
     dep_photo_gallery: 'Galerie',
-    dep_express_btn: 'Déposer ici · maintenant',
-    dep_express_hint: 'Maintiens 1 seconde pour ancrer ton fantôme à ta position actuelle',
     dep_video_btn_short: 'Ajouter une vidéo',
     premium_feature: 'Fonctionnalité Premium',
     premium_activate: 'Activer un code →',
@@ -673,8 +671,6 @@ const LANGS = {
     dep_photo_btn_short: 'Add a photo',
     dep_photo_camera: 'Camera',
     dep_photo_gallery: 'Gallery',
-    dep_express_btn: 'Drop here · now',
-    dep_express_hint: 'Hold for 1 second to anchor your ghost at your current location',
     dep_video_btn_short: 'Add a video',
     premium_feature: 'Premium feature',
     premium_activate: 'Activate a code →',
@@ -7013,154 +7009,6 @@ window.showScreen = (id, fromPopstate = false) => {
     }
   }
 };
-
-// ── DÉPÔT EXPRESS (v95) ──────────────────────────────────
-// Compteur de qualité du message + bouton long-press de dépôt rapide
-const _MSG_THRESHOLD = 100; // caractères minimum pour activer le bouton Express
-const _MSG_RICH = 200;       // seuil "message riche" pour bonus visuel
-
-window.updateMsgQuality = (el) => {
-  const len = el.value.length;
-  const counter = document.getElementById('msgCharCount');
-  const fill = document.getElementById('msgQualityFill');
-  const label = document.getElementById('msgQualityLabel');
-  const target = document.querySelector('.msg-quality-target');
-  const expressBtn = document.getElementById('expressDepositBtn');
-  if (counter) counter.textContent = String(len);
-
-  // Calcul du remplissage de la barre (capé à 100% au seuil _MSG_RICH)
-  const pct = Math.min(100, (len / _MSG_RICH) * 100);
-  if (fill) fill.style.width = pct + '%';
-
-  // États visuels selon le seuil atteint
-  if (fill && label) {
-    fill.classList.remove('threshold-reached', 'threshold-rich');
-    label.classList.remove('ok', 'rich');
-    if (len >= _MSG_RICH) {
-      fill.classList.add('threshold-rich');
-      label.classList.add('rich');
-    } else if (len >= _MSG_THRESHOLD) {
-      fill.classList.add('threshold-reached');
-      label.classList.add('ok');
-    }
-  }
-
-  // Cible adaptative : montre 100 d'abord, puis 200 quand atteint
-  if (target) {
-    target.textContent = len >= _MSG_THRESHOLD ? String(_MSG_RICH) : String(_MSG_THRESHOLD);
-  }
-
-  // Activation/visibilité du bouton Express
-  if (expressBtn) {
-    const hasGps = !!(typeof userLat !== 'undefined' && userLat);
-    const canExpress = len >= _MSG_THRESHOLD && hasGps;
-    expressBtn.classList.toggle('visible', len >= _MSG_THRESHOLD);
-    expressBtn.disabled = !canExpress;
-    // Si pas de GPS, on garde le bouton visible mais grisé avec hint adapté
-    const hint = document.getElementById('expressBtnHint');
-    if (hint && len >= _MSG_THRESHOLD && !hasGps) {
-      hint.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
-        ? 'Waiting for GPS…'
-        : 'En attente du GPS…';
-    } else if (hint) {
-      hint.textContent = (typeof t !== 'undefined' && t.dep_express_hint)
-        ? t.dep_express_hint
-        : 'Maintiens 1 seconde pour ancrer ton fantôme à ta position actuelle';
-    }
-  }
-};
-
-// État du long-press
-let _expressHoldTimer = null;
-let _expressHoldStart = 0;
-
-window.startExpressDeposit = (e) => {
-  // On veut le long-press, donc on intercepte le click classique
-  // Le déclenchement se fait via mousedown/touchstart, pas le onclick.
-  // Cette fonction onclick ne fait rien (c'est juste pour ne pas déclencher).
-  if (e) e.preventDefault();
-};
-
-window._beginExpressHold = (e) => {
-  if (e) e.preventDefault();
-  const btn = document.getElementById('expressDepositBtn');
-  if (!btn || btn.disabled) return;
-  _expressHoldStart = Date.now();
-  btn.classList.add('pressing');
-  // Léger haptic au début pour signaler que le hold commence
-  try { window.HapticsService?.tap?.(); } catch(_) {}
-  _expressHoldTimer = setTimeout(() => {
-    // 1 seconde tenue : on déclenche le dépôt
-    btn.classList.remove('pressing');
-    btn.classList.add('firing');
-    try { window.HapticsService?.deposit?.() || window.HapticsService?.tap?.(); } catch(_) {}
-    setTimeout(() => btn.classList.remove('firing'), 600);
-    _executeExpressDeposit();
-  }, 1000);
-};
-
-window._cancelExpressHold = () => {
-  if (_expressHoldTimer) {
-    clearTimeout(_expressHoldTimer);
-    _expressHoldTimer = null;
-  }
-  const btn = document.getElementById('expressDepositBtn');
-  if (btn) btn.classList.remove('pressing');
-};
-
-// Exécute le dépôt avec les valeurs par défaut (sélection programmatique des boutons)
-function _executeExpressDeposit() {
-  // 1. Réinitialiser le mode (au cas où Commerce était activé)
-  const businessForm = document.getElementById('businessDepositForm');
-  if (businessForm) businessForm.style.display = 'none';
-  const normalForm = document.getElementById('depositMsg');
-  if (normalForm && normalForm.parentElement) normalForm.parentElement.style.display = 'block';
-
-  // 2. Forcer les valeurs par défaut
-  // Durée : 7 jours (sélectionner le bouton .dur-btn avec data-i18n="dep_dur_7d")
-  document.querySelectorAll('.dur-btn').forEach(b => {
-    b.classList.remove('active');
-    b.setAttribute('aria-pressed', 'false');
-  });
-  const sevenDay = document.querySelector('.dur-btn[data-i18n="dep_dur_7d"]')
-    || document.querySelectorAll('.dur-btn')[1];
-  if (sevenDay) {
-    sevenDay.classList.add('active');
-    sevenDay.setAttribute('aria-pressed', 'true');
-  }
-
-  // Rayon : 10m par défaut
-  document.querySelectorAll('.radius-btn').forEach(b => b.classList.remove('active'));
-  const tenM = Array.from(document.querySelectorAll('.radius-btn')).find(b => b.textContent.trim().includes('10'))
-    || document.querySelectorAll('.radius-btn')[1];
-  if (tenM) tenM.classList.add('active');
-
-  // Type : par défaut (premier bouton de chaque type-selector)
-  const typeSelectors = document.querySelectorAll('#screenDeposit .type-selector');
-  typeSelectors.forEach(sel => {
-    sel.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-    const first = sel.querySelector('.type-btn');
-    if (first) first.classList.add('active');
-  });
-
-  // Condition d'ouverture : "always" (toujours)
-  const condAlways = document.querySelector('[data-cond="always"]')
-    || document.querySelector('.cond-btn');
-  if (condAlways && typeof selectCond === 'function') {
-    try { selectCond(condAlways, 'always'); } catch(_) {}
-  }
-
-  // Lieu : si vide, mettre "Ma position"
-  const locInput = document.getElementById('depositLocation');
-  if (locInput && !locInput.value.trim()) {
-    locInput.value = (typeof _currentLang !== 'undefined' && _currentLang === 'en') ? 'My location' : 'Ma position';
-  }
-
-  // 3. Appeler le dépôt normal
-  if (typeof window.depositGhost === 'function') {
-    window.depositGhost();
-  }
-}
 
 // ── REPLY CHAR COUNTER ───────────────────────────────────
 window.updateReplyCount = (el) => {
