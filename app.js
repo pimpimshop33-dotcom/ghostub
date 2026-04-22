@@ -2408,6 +2408,8 @@ window.clearAudio = () => {
 };
 
 window.triggerPhoto = () => { document.getElementById('photoInput').click(); };
+window.triggerPhotoCamera = () => { document.getElementById('photoInputCamera').click(); };
+window.triggerPhotoGallery = () => { document.getElementById('photoInputGallery').click(); };
 
 window.handlePhoto = (input) => {
   const file = input.files[0];
