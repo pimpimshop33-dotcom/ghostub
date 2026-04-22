@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=91"></script>
+<script type="module" src="app.js?v=92"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1720,12 +1720,67 @@ body.light-theme .form-input,.body.light-theme .form-textarea{background:rgba(23
 .audio-toggle.muted{opacity:.3;}
 
 /* ── DEPOSIT EXPRESS — collapsed options ──────────────── */
-.deposit-advanced-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(122,184,245,.04);border:1px solid rgba(122,184,245,.1);border-radius:12px;cursor:pointer;font-size:12px;color:var(--spirit-dim);transition:all .2s;touch-action:manipulation;margin-top:10px;}
-.deposit-advanced-toggle:hover{border-color:rgba(122,184,245,.25);}
-.deposit-advanced-toggle .toggle-arrow{transition:transform .3s;font-size:10px;}
+/* Bouton "Personnaliser" — refonte v92 : appel à l'action désirable */
+.deposit-advanced-toggle{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(232,160,48,.10) 0%,rgba(232,160,48,.04) 50%,rgba(122,184,245,.05) 100%);
+  border:1px solid rgba(232,160,48,.28);
+  border-radius:14px;
+  cursor:pointer;
+  font-family:'Instrument Sans',sans-serif;
+  font-size:13px;font-weight:500;
+  color:var(--amber);
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
+  touch-action:manipulation;
+  margin-top:14px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 0 0 rgba(232,160,48,0),inset 0 1px 0 rgba(255,255,255,.04);
+  animation:advBtnBreathe 4s ease-in-out infinite;
+}
+@keyframes advBtnBreathe{
+  0%,100%{box-shadow:0 0 14px rgba(232,160,48,.08),inset 0 1px 0 rgba(255,255,255,.04);}
+  50%{box-shadow:0 0 24px rgba(232,160,48,.18),inset 0 1px 0 rgba(255,255,255,.06);}
+}
+.deposit-advanced-toggle:hover{
+  border-color:rgba(232,160,48,.5);
+  background:linear-gradient(135deg,rgba(232,160,48,.16),rgba(232,160,48,.08),rgba(122,184,245,.08));
+  transform:translateY(-1px);
+}
+.deposit-advanced-toggle:active{transform:scale(.98);}
+.deposit-advanced-toggle .toggle-arrow{
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  font-size:14px;color:var(--amber);
+  filter:drop-shadow(0 0 4px rgba(232,160,48,.5));
+}
+.deposit-advanced-toggle.open{
+  background:linear-gradient(135deg,rgba(232,160,48,.06),rgba(122,184,245,.04));
+  animation:none;
+}
 .deposit-advanced-toggle.open .toggle-arrow{transform:rotate(180deg);}
 .deposit-advanced-content{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.25,.46,.45,.94);opacity:0;}
 .deposit-advanced-content.open{max-height:2000px;opacity:1;transition:max-height .5s cubic-bezier(.25,.46,.45,.94),opacity .3s ease .1s;}
+
+/* Photo : 2 boutons côte à côte (Appareil / Galerie) */
+.photo-choice{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.photo-choice-btn{
+  flex-direction:column;
+  text-align:center;
+  padding:14px 10px;
+  gap:6px;
+}
+.photo-choice-btn .media-icon{
+  width:40px;height:40px;font-size:18px;
+}
+.photo-choice-btn span:not(.media-icon){
+  font-size:12px;
+}
+@media (max-width:340px){
+  .photo-choice{grid-template-columns:1fr;}
+}
 
 /* ── Photo de rue : écrans et conteneurs transparents ── */
 .screen.active { background: transparent !important; }
@@ -2245,7 +2300,7 @@ button, [role="button"], input, textarea, select,
 
         <button class="quick-deposit-btn" onclick="depositGhost()" id="quickDepositBtn">⚡ Déposer ici</button>
         <div class="deposit-advanced-toggle" id="advancedToggle" onclick="toggleAdvancedDeposit()">
-          <span>⚙️ Personnaliser (lieu, durée, conditions…)</span>
+          <span>✨ Personnaliser ton fantôme</span>
           <span class="toggle-arrow">▼</span>
         </div>
         <div style="font-size:10px;color:rgba(168,180,255,.3);text-align:center;margin-top:6px;">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
@@ -2404,11 +2459,19 @@ button, [role="button"], input, textarea, select,
         <!-- Photo — toujours visible -->
         <div class="form-group" style="margin-bottom:12px;">
           <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
-          <button class="media-btn" onclick="triggerPhoto()" type="button" aria-label="Ajouter une photo depuis la galerie ou l'appareil photo">
-            <span class="media-icon" aria-hidden="true">📷</span>
-            <span data-i18n="dep_photo_btn_short">Ajouter une photo</span>
-          </button>
-          <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <div class="photo-choice">
+            <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
+              <span class="media-icon" aria-hidden="true">📷</span>
+              <span data-i18n="dep_photo_camera">Appareil photo</span>
+            </button>
+            <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
+              <span class="media-icon" aria-hidden="true">🖼️</span>
+              <span data-i18n="dep_photo_gallery">Galerie</span>
+            </button>
+          </div>
+          <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
           <div id="photoPreview"></div>
         </div>
         <!-- VIDÉO PREMIUM -->
