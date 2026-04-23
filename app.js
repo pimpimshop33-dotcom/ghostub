@@ -129,6 +129,13 @@ const LANGS = {
     // Deposit
     dep_title: 'Déposer',
     dep_msg_placeholder: 'Laissez un message à cet endroit…',
+    // Phase 1 v100 — La Lettre
+    dep_lettre_salutation: 'À qui passera par ici,',
+    dep_lettre_stamp_label: 'Sceau :',
+    dep_lettre_placeholder: 'Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver.',
+    dep_lettre_signature: '— ancré ici, à jamais',
+    dep_seal_btn: 'Sceller le fantôme',
+    dep_seal_hint: 'ancré à ta position actuelle, en un geste',
     dep_loc_placeholder: 'Nom du lieu (rue, café, parc…)',
     dep_loc_searching: 'Recherche du lieu…',
     dep_emoji_placeholder: 'Emoji (👻)',
@@ -648,6 +655,13 @@ const LANGS = {
     // Deposit
     dep_title: 'Drop',
     dep_msg_placeholder: 'Leave a message at this spot…',
+    // Phase 1 v100 — La Lettre
+    dep_lettre_salutation: 'To whoever passes through,',
+    dep_lettre_stamp_label: 'Seal:',
+    dep_lettre_placeholder: 'A thought, a memory, a secret… for whoever may find it.',
+    dep_lettre_signature: '— anchored here, forever',
+    dep_seal_btn: 'Seal the ghost',
+    dep_seal_hint: 'anchored to your current spot, in one tap',
     dep_loc_placeholder: 'Place name (street, café, park…)',
     dep_loc_searching: 'Looking up place…',
     dep_emoji_placeholder: 'Emoji (👻)',
