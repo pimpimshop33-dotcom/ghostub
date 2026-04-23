@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=102"></script>
+<script type="module" src="app.js?v=103"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2359,6 +2359,87 @@ button, [role="button"], input, textarea, select,
 #lettreSheet.biz-mode .lettre-sheet-biz-hint{display:block;}
 /* Onglet "Lieu" en mode commerce : badge subtil "1 mois fixe" sous le label peut être ajouté plus tard */
 
+/* ═════════════════════════════════════════════════════════
+   PHASE 1d v103 — Galerie de fichiers (PDF, images) Premium
+   ═════════════════════════════════════════════════════════ */
+.attachments-list{
+  margin-top:10px;
+  display:flex;flex-direction:column;
+  gap:8px;
+}
+.attachment-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 12px;
+  background:rgba(168,180,255,.05);
+  border:1px solid rgba(168,180,255,.14);
+  border-radius:12px;
+  transition:border-color .2s;
+}
+.attachment-item:hover{border-color:rgba(168,180,255,.28);}
+.attachment-thumb{
+  width:38px;height:38px;
+  border-radius:8px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  background:rgba(232,200,150,.10);
+  border:1px solid rgba(232,200,150,.22);
+  overflow:hidden;
+  color:var(--warm);
+  -webkit-text-fill-color:var(--warm) !important;
+}
+.attachment-thumb img{
+  width:100%;height:100%;object-fit:cover;display:block;
+}
+.attachment-info{
+  flex:1;min-width:0;
+  display:flex;flex-direction:column;gap:2px;
+}
+.attachment-name{
+  font-family:'Instrument Sans',sans-serif;
+  font-size:13px;
+  color:var(--ether);
+  -webkit-text-fill-color:var(--ether) !important;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.2px;
+}
+.attachment-meta{
+  font-family:'Instrument Sans',sans-serif;
+  font-size:10px;
+  color:rgba(168,180,255,.55);
+  -webkit-text-fill-color:rgba(168,180,255,.55) !important;
+  letter-spacing:.4px;text-transform:uppercase;
+}
+.attachment-remove{
+  background:rgba(255,100,100,.10);
+  border:1px solid rgba(255,100,100,.25);
+  color:rgba(255,140,140,.85);
+  -webkit-text-fill-color:rgba(255,140,140,.85) !important;
+  border-radius:50%;
+  width:30px;height:30px;min-width:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  font-size:12px;
+  flex-shrink:0;
+  transition:all .2s;
+}
+.attachment-remove:hover{
+  background:rgba(255,100,100,.20);
+  border-color:rgba(255,100,100,.45);
+}
+.attachments-count-hint{
+  font-family:'Instrument Sans',sans-serif;
+  font-size:10px;
+  color:rgba(168,180,255,.45);
+  -webkit-text-fill-color:rgba(168,180,255,.45) !important;
+  margin-top:6px;
+  letter-spacing:.4px;
+}
+/* Quand 3 fichiers atteints, on grise le bouton ajout */
+.attachments-full .media-btn{
+  opacity:.5;pointer-events:none;
+}
+
 </style>
 </head>
 <body>
@@ -2984,10 +3065,19 @@ button, [role="button"], input, textarea, select,
               <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
               <div id="photoPreview"></div>
             </div>
-            <div class="form-group" id="step3VideoWrap" style="margin-bottom:0;">
+            <div class="form-group" id="step3VideoWrap" style="margin-bottom:14px;">
               <div id="premSection_video"></div>
               <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
               <div id="videoPreview"></div>
+            </div>
+            <!-- Phase 1d v103 — Galerie de fichiers Premium -->
+            <div class="form-group" id="step3AttachmentsWrap" style="margin-bottom:0;">
+              <div id="premSection_attachments"></div>
+              <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
+              <div id="attachmentsContent" style="display:none;">
+                <div class="attachments-list" id="attachmentsList"></div>
+                <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
+              </div>
             </div>
           </div>
 
