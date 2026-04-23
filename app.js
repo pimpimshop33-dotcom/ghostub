@@ -143,6 +143,10 @@ const LANGS = {
     dep_tool_identity: 'Identité',
     dep_sheet_title: 'Réglages du fantôme',
     dep_sheet_done: 'Terminer',
+    // Phase 1c v102 — Mode Commerce dans la nappe
+    dep_sheet_biz_title: "Réglages de l'offre",
+    dep_sheet_biz_badge: '✦ Commerce',
+    dep_sheet_biz_hint: 'Visible 50m max · 1 mois · réglages auto',
     dep_loc_placeholder: 'Nom du lieu (rue, café, parc…)',
     dep_loc_searching: 'Recherche du lieu…',
     dep_emoji_placeholder: 'Emoji (👻)',
@@ -676,6 +680,10 @@ const LANGS = {
     dep_tool_identity: 'Identity',
     dep_sheet_title: 'Ghost settings',
     dep_sheet_done: 'Done',
+    // Phase 1c v102 — Commerce mode in the sheet
+    dep_sheet_biz_title: 'Offer settings',
+    dep_sheet_biz_badge: '✦ Commerce',
+    dep_sheet_biz_hint: 'Visible within 50m · 1 month · auto-set',
     dep_loc_placeholder: 'Place name (street, café, park…)',
     dep_loc_searching: 'Looking up place…',
     dep_emoji_placeholder: 'Emoji (👻)',
@@ -6799,6 +6807,8 @@ window.toggleBusinessMode = () => {
       });
     }, 100);
     showToast('success', t.dep_biz_toast);
+    // Phase 1c : synchroniser la nappe (masque tabs Règles/Identité, badge ✦ Commerce)
+    _applyLettreBizMode(true);
   } else {
     // Retour au formulaire normal
     normalForm.style.display = 'block';
@@ -6825,6 +6835,8 @@ window.toggleBusinessMode = () => {
     if (s3b) s3b.textContent = t.dep_pane3_sub;
     const depBtnB = document.getElementById('depositBtn');
     if (depBtnB) depBtnB.textContent = t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme';
+    // Phase 1c : restaurer la nappe en mode normal
+    _applyLettreBizMode(false);
   }
 };
 
@@ -7677,6 +7689,29 @@ document.addEventListener('keydown', (e) => {
     if (sheet && sheet.classList.contains('open')) window.closeLettreSheet();
   }
 });
+
+// Phase 1c v102 — Sync de la nappe avec le mode Commerce
+function _applyLettreBizMode(isOn) {
+  const screen = document.getElementById('screenDeposit');
+  const sheet  = document.getElementById('lettreSheet');
+  const title  = document.getElementById('lettreSheetTitle');
+  if (screen) screen.classList.toggle('biz-mode', !!isOn);
+  if (sheet)  sheet.classList.toggle('biz-mode', !!isOn);
+  if (title) {
+    title.textContent = isOn
+      ? (t.dep_sheet_biz_title || "Réglages de l'offre")
+      : (t.dep_sheet_title || 'Réglages du fantôme');
+  }
+  // Si l'utilisateur était sur un onglet désormais masqué, basculer sur Lieu
+  if (isOn) {
+    const activeTab = document.querySelector('.lettre-sheet-tab.active');
+    const activeName = activeTab ? activeTab.dataset.tab : null;
+    if (activeName === 'rules' || activeName === 'identity') {
+      try { window.switchLettreTab('lieu'); } catch (_) {}
+    }
+  }
+}
+window._applyLettreBizMode = _applyLettreBizMode;
 
 window.pickEmoji = (el, emoji) => {
   document.querySelectorAll('.emoji-opt').forEach(e => {
