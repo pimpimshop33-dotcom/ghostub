@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=101"></script>
+<script type="module" src="app.js?v=102"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2312,6 +2312,53 @@ button, [role="button"], input, textarea, select,
   line-height:1.6;
 }
 
+/* ── Phase 1c v102 : Mode Commerce dans la nappe ─────────── */
+/* Tools row : passe de 4 à 2 colonnes, masque Règles + Identité */
+#screenDeposit.biz-mode .lettre-tools{
+  grid-template-columns:repeat(2,1fr);
+}
+#screenDeposit.biz-mode #toolBtnRules,
+#screenDeposit.biz-mode #toolBtnIdentity{
+  display:none !important;
+}
+/* Tabs de la nappe : masque Règles + Identité */
+#lettreSheet.biz-mode .lettre-sheet-tab[data-tab="rules"],
+#lettreSheet.biz-mode .lettre-sheet-tab[data-tab="identity"]{
+  display:none !important;
+}
+/* Badge "Commerce" à côté du titre */
+.lettre-sheet-biz-badge{
+  display:none;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:11px;
+  color:rgba(255,220,120,.92);
+  -webkit-text-fill-color:rgba(255,220,120,.92) !important;
+  margin-left:8px;
+  padding:2px 9px 3px;
+  background:rgba(255,200,80,.14);
+  border:1px solid rgba(255,200,80,.32);
+  border-radius:8px;
+  letter-spacing:.5px;
+  vertical-align:middle;
+  align-items:center;
+}
+#lettreSheet.biz-mode .lettre-sheet-biz-badge{display:inline-flex;}
+/* Hint sous le titre, visible uniquement en mode commerce */
+.lettre-sheet-biz-hint{
+  display:none;
+  padding:4px 18px 2px;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;
+  font-size:12px;
+  color:rgba(255,220,150,.55);
+  -webkit-text-fill-color:rgba(255,220,150,.55) !important;
+  letter-spacing:.3px;
+  flex-shrink:0;
+}
+#lettreSheet.biz-mode .lettre-sheet-biz-hint{display:block;}
+/* Onglet "Lieu" en mode commerce : badge subtil "1 mois fixe" sous le label peut être ajouté plus tard */
+
 </style>
 </head>
 <body>
@@ -2782,9 +2829,13 @@ button, [role="button"], input, textarea, select,
       <div class="lettre-sheet" id="lettreSheet" role="dialog" aria-modal="true" aria-labelledby="lettreSheetTitle" aria-hidden="true">
         <div class="lettre-sheet-handle" aria-hidden="true"></div>
         <div class="lettre-sheet-head">
-          <div class="lettre-sheet-title" id="lettreSheetTitle" data-i18n="dep_sheet_title">Réglages du fantôme</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;">
+            <span class="lettre-sheet-title" id="lettreSheetTitle" data-i18n="dep_sheet_title">Réglages du fantôme</span>
+            <span class="lettre-sheet-biz-badge" data-i18n="dep_sheet_biz_badge">✦ Commerce</span>
+          </div>
           <button class="lettre-sheet-close" onclick="closeLettreSheet()" aria-label="Fermer" type="button">×</button>
         </div>
+        <div class="lettre-sheet-biz-hint" data-i18n="dep_sheet_biz_hint">Visible 50m max · 1 mois · réglages auto</div>
         <div class="lettre-sheet-tabs" role="tablist">
           <button class="lettre-sheet-tab active" data-tab="lieu" role="tab" aria-selected="true" type="button" onclick="switchLettreTab('lieu')">
             <span class="tab-icon" aria-hidden="true">📍</span>
