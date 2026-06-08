@@ -3414,7 +3414,7 @@ window.activatePremium = async () => {
       if (codeSnap.data().used) throw { code: 'already-used' };
       const userRef = doc(db, COLL.USERS, currentUser.uid);
       txn.update(codeRef, { used: true, usedBy: currentUser.uid, usedAt: serverTimestamp() });
-      txn.set(userRef, { premium: true, premiumSince: serverTimestamp() }, { merge: true });
+      txn.set(userRef, { premium: true, premiumSince: serverTimestamp(), premiumCodeUsed: code }, { merge: true });
     });
     isPremium = true;
     updatePremiumUI();
@@ -3472,16 +3472,13 @@ window.submitReport = async (reason) => {
     });
     localStorage.setItem(key, '1');
     showToast('success', t.toast_report_sent);
-    await updateDoc(doc(db, COLL.GHOSTS, ghostId), { reportCount: increment(1) });
-    const ghostDoc = await getDocs(query(collection(db, COLL.REPORTS), where('ghostId', '==', ghostId)));
-    if (ghostDoc.size >= REPORT_THRESHOLD) {
-      await deleteDoc(doc(db, COLL.GHOSTS, ghostId));
-      showScreen('screenRadar');
-      setNav('nav-radar');
-      await loadNearbyGhosts();
-      showReportFeedback(t.toast_report_del);
-      return;
-    }
+    // reportCount incrémenté pour la modération SERVEUR (Cloud Function autoModerateGhost).
+    // La suppression au seuil de signalements est gérée côté serveur, PAS côté client :
+    // les Firestore Rules interdisent à un non-auteur de lire /reports (read:false)
+    // ou de supprimer le ghost d'autrui (delete réservé à l'auteur).
+    // L'ancien bloc getDocs(reports)+deleteDoc levait donc une erreur visible alors
+    // que le signalement avait bien été enregistré.
+    await updateDoc(doc(db, COLL.GHOSTS, ghostId), { reportCount: increment(1) }).catch(() => {});
     const btn = document.getElementById('reportBtn');
     if (btn) { btn.classList.add('reported'); btn.innerHTML = '✓ Signalement envoyé'; }
     showReportFeedback(t.toast_report_saved);
@@ -6388,7 +6385,9 @@ window.sendReply = async () => {
       ghostId: selectedGhost.id,
       message: msg,
       anonymous: anon,
-      author: currentUser.displayName || currentUser.email,
+      // FIX confidentialité : une réponse anonyme ne doit JAMAIS stocker le pseudo/email
+      // en clair (le doc /replies est lisible par tout utilisateur connecté).
+      author: anon ? null : (currentUser.displayName || currentUser.email),
       authorUid: currentUser.uid,
       createdAt: serverTimestamp()
     });
