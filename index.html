@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=107"></script>
+<script type="module" src="app.js?v=108"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2709,11 +2709,8 @@ button, [role="button"], input, textarea, select,
           </div>
         </div>
         <button class="envelope-open-btn" id="envelopeOpenBtn"
-          onmousedown="startSealHold(event)" ontouchstart="startSealHold(event)"
-          onmouseup="cancelSealHold()" ontouchend="cancelSealHold()"
-          onmouseleave="cancelSealHold()" ontouchcancel="cancelSealHold()"
+          onclick="openEnvelope()"
           data-i18n-aria-label="detail_open_aria" style="position:relative;overflow:hidden;">
-          <div id="sealHoldBar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:rgba(168,180,255,.18);border-radius:inherit;transition:opacity .25s;pointer-events:none;z-index:0;"></div>
           <span data-i18n="detail_open_btn" style="position:relative;z-index:1;">✉ Briser le sceau</span>
         </button>
       </div>
