@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v26';
+const CACHE_NAME = 'ghostub-v27';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 self.addEventListener('install', e => {
@@ -19,18 +19,46 @@ self.addEventListener('activate', e => {
   );
 });
 
-// ── FETCH — Network first TOUJOURS pour JS/HTML ─────────
+// ── FETCH ────────────────────────────────────────────────
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  if (e.request.url.includes('firestore') || e.request.url.includes('googleapis')) return;
 
   const url = e.request.url;
-  // JS et HTML : réseau en priorité, pas de cache (toujours frais)
-  const isAppFile = url.includes('app.js') || url.includes('index.html') || url.endsWith('/ghostub/') || url.includes('style.css');
+  // Ne jamais intercepter Firestore / APIs Google
+  if (url.includes('firestore') || url.includes('googleapis')) return;
 
-  if (isAppFile) {
+  // 1) ASSETS VERSIONNÉS (app.js?v=, style.css?v=) → CACHE-FIRST
+  //    L'URL change à chaque bump de version (?v=108, 109…), donc une nouvelle
+  //    version = nouvelle URL = re-téléchargée UNE SEULE FOIS, puis servie
+  //    instantanément depuis le cache. Fini les 383 Ko re-téléchargés à chaque
+  //    ouverture. Les anciennes versions sont purgées au prochain bump de CACHE_NAME.
+  const isVersionedAsset = /\/(app\.js|style\.css)\?v=/.test(url);
+  if (isVersionedAsset) {
     e.respondWith(
-      fetch(e.request, { cache: 'no-store' })
+      caches.match(e.request).then(cached => {
+        if (cached) return cached;
+        return fetch(e.request).then(res => {
+          if (res && res.status === 200) {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          }
+          return res;
+        });
+      })
+    );
+    return;
+  }
+
+  // 2) DOCUMENT HTML / NAVIGATION → NETWORK-FIRST (toujours frais en ligne)
+  //    Garde tes déploiements visibles immédiatement ; repli sur le cache
+  //    si hors-ligne. C'est lui qui référence app.js?v=… donc on le veut à jour.
+  const isNavigation =
+    e.request.mode === 'navigate' ||
+    url.endsWith('/ghostub/') ||
+    url.includes('index.html');
+  if (isNavigation) {
+    e.respondWith(
+      fetch(e.request)
         .then(res => {
           if (res && res.status === 200) {
             const clone = res.clone();
@@ -38,12 +66,14 @@ self.addEventListener('fetch', e => {
           }
           return res;
         })
-        .catch(() => caches.match(e.request))
+        .catch(() =>
+          caches.match(e.request).then(c => c || caches.match('/ghostub/'))
+        )
     );
     return;
   }
 
-  // Autres ressources : cache-first
+  // 3) AUTRES RESSOURCES → CACHE-FIRST
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
