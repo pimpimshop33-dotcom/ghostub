@@ -5699,12 +5699,15 @@ window.swipeGhost = (dir) => {
   let startX = 0, startY = 0, dragging = false;
   document.addEventListener('touchstart', e => {
     if (!document.getElementById('screenDetail').classList.contains('active')) return;
+    // Ne pas naviguer entre fantomes pendant le grattage (un grattage horizontal
+    // rapide faisait sauter au message suivant).
+    if (window._scratchActive || (e.target && e.target.closest && e.target.closest('#scratchZone'))) { dragging = false; return; }
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     dragging = true;
   }, { passive: true });
   document.addEventListener('touchend', e => {
-    if (!dragging) return;
+    if (!dragging || window._scratchActive) { dragging = false; return; }
     dragging = false;
     const dx = e.changedTouches[0].clientX - startX;
     const dy = e.changedTouches[0].clientY - startY;
@@ -6501,33 +6504,19 @@ async function _doOpenEnvelope() {
   const sealed = document.getElementById('envelopeSealed');
   const revealed = document.getElementById('envelopeContent');
   // ── HAPTIC dramatique ───────────────────────────────────
-  HapticsService.sealBreak();
-  // ── FLASH plein écran ───────────────────────────────────
-  const flash = document.getElementById('sealBreakFlash');
-  if (flash) {
-    flash.style.animation = 'none';
-    flash.offsetHeight; // reflow
-    flash.style.animation = 'sealFlash 0.9s ease-out forwards';
-  }
-  // ── PARTICULES ──────────────────────────────────────────
-  _launchSealParticles();
-  // ── ANIMATION ENVELOPPE ─────────────────────────────────
-  sealed.classList.add('opening');
+  // Plus de rupture de sceau : on enchaine directement sur le grattage.
+  // Le moment fort (flash + particules + vibration) est declenche a la FIN
+  // du grattage, dans _completeScratchReveal — la ou la revelation est meritee.
+  HapticsService.reveal();
+  if (sealed) { sealed.style.transition = 'opacity .18s ease'; sealed.style.opacity = '0'; }
   setTimeout(() => {
-    sealed.classList.add('opened');
-    setTimeout(() => {
-      sealed.style.display = 'none';
-      revealed.style.display = 'block';
-      revealed.classList.add('envelope-reveal');
-      playRevealSound();
-      // Vibration finale douce
-      setTimeout(() => { HapticsService.reveal(); }, 200);
-      // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
-      _initScratchReveal();
-      const firstFocusable = revealed.querySelector('button, [tabindex]');
-      if (firstFocusable) firstFocusable.focus();
-    }, 350);
-  }, 600);
+    if (sealed) { sealed.style.display = 'none'; sealed.style.opacity = ''; }
+    revealed.style.display = 'block';
+    revealed.classList.add('envelope-reveal');
+    _initScratchReveal();
+    const firstFocusable = revealed.querySelector('button, [tabindex]');
+    if (firstFocusable) firstFocusable.focus();
+  }, 180);
   Analytics.track('envelope_opened');
 }
 
@@ -6543,7 +6532,7 @@ function _initScratchReveal() {
     const el = document.getElementById(id);
     if (el) { el.style.opacity = '0'; el.style.visibility = 'hidden'; }
   });
-  setTimeout(_buildScratchCanvas, 400);
+  setTimeout(_buildScratchCanvas, 250);
 }
 
 function _buildScratchCanvas() {
@@ -6553,6 +6542,7 @@ function _buildScratchCanvas() {
 
   const zone = document.getElementById('scratchZone');
   if (!zone) return;
+  window._scratchActive = true;
 
   const dpr  = window.devicePixelRatio || 1;
   const cssW = zone.offsetWidth  || 320;
@@ -6615,11 +6605,11 @@ function _buildScratchCanvas() {
   function checkPct() {
     if(revealed) return;
     const d=ctx.getImageData(0,0,canvas.width,canvas.height).data;
-    let c=0; for(let i=3;i<d.length;i+=4){if(d[i]<100)c++;}
-    if(c/(canvas.width*canvas.height)>0.50){revealed=true;clearTimeout(checkTimer);_completeScratchReveal(canvas,hint,zone);}
+    let cleared=0,total=0; for(let i=3;i<d.length;i+=4*16){total++;if(d[i]<100)cleared++;}
+    if(total>0 && cleared/total>0.50){revealed=true;clearTimeout(checkTimer);_completeScratchReveal(canvas,hint,zone);}
   }
-  function onStart(e){e.preventDefault();isDrawing=true;hint.style.opacity='0';const p=getPos(e);lastX=p.x;lastY=p.y;scratchAt(p.x,p.y,false);}
-  function onMove(e){if(!isDrawing)return;e.preventDefault();const p=getPos(e);scratchAt(p.x,p.y,true);}
+  function onStart(e){e.preventDefault();e.stopPropagation();isDrawing=true;hint.style.opacity='0';const p=getPos(e);lastX=p.x;lastY=p.y;scratchAt(p.x,p.y,false);}
+  function onMove(e){if(!isDrawing)return;e.preventDefault();e.stopPropagation();const p=getPos(e);scratchAt(p.x,p.y,true);}
   function onEnd(){isDrawing=false;}
   canvas.addEventListener('mousedown',onStart);
   canvas.addEventListener('mousemove',onMove);
@@ -6632,6 +6622,7 @@ function _buildScratchCanvas() {
 }
 
 function _completeScratchReveal(canvas, hint, zone) {
+  window._scratchActive = false;
   const flash=document.getElementById('sealBreakFlash');
   if(flash){flash.style.animation='none';flash.offsetHeight;flash.style.animation='sealFlash 0.5s ease-out forwards';}
   if(navigator.vibrate) navigator.vibrate([15,30,15,60,120]);
