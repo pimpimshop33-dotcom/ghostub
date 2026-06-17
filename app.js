@@ -1219,12 +1219,18 @@ const firebaseConfig = {
   appId: "1:62498675696:web:9df717cdcda47a84d1db35"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-// Région europe-west9 : doit correspondre à la région de déploiement de la Cloud Function
-const functionsInstance = getFunctions(app, 'europe-west9');
-const _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
+let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable;
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  // Région europe-west9 : doit correspondre à la région de déploiement de la Cloud Function
+  functionsInstance = getFunctions(app, 'europe-west9');
+  _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
+} catch (e) {
+  console.error('[ghostub:init]', e);
+  document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#ddd;background:#0a0a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"><div style="font-size:40px;">😶</div><div style="font-size:17px;">Ghostub n\'a pas pu démarrer.</div><div style="font-size:14px;opacity:.7;">Vérifie ta connexion internet et réessaie.</div></div>';
+}
 
 const CLOUDINARY_CLOUD = 'dcarogsye';
 const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
@@ -5983,11 +5989,11 @@ async function consumeOpenQuota() {
 
 async function remainingOpensToday() {
   if (isPremium) return Infinity;
-  if (currentUser?.uid === '5xeDyHqkFRelXjKQstm2TJVQQOo2') return Infinity; // bypass dev
   if (!currentUser) return Math.max(0, DAILY_OPEN_LIMIT - getDailyOpenCountLocal());
   try {
     const ref = doc(db, 'userStats', currentUser.uid);
     const snap = await getDoc(ref);
+    if (snap.exists() && snap.data().isDevAccount === true) return Infinity; // compte dev (flag Firestore, pas d'UID en dur côté client)
     const count = snap.exists() ? (snap.data().dailyOpens?.[_todayKey()] || 0) : 0;
     return Math.max(0, DAILY_OPEN_LIMIT - count);
   } catch(e) {
