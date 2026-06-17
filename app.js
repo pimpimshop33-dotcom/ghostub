@@ -5220,7 +5220,7 @@ window.generateYearCard = async () => {
     stats.forEach(({ num, label, icon, y }) => {
       // Halo derrière le chiffre
       const sh = ctx.createRadialGradient(W/2,y-40,0,W/2,y-40,120);
-      sh.addColorStop(0,'rgba(var(--ghost-blue-rgb),0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+      sh.addColorStop(0,'rgba(168,180,255,0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle = sh; ctx.fillRect(0,0,W,H);
 
       ctx.fillStyle = 'rgba(230,225,255,0.95)';
@@ -6587,7 +6587,7 @@ function _buildScratchCanvas() {
   ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
   // Reflet haut
   const glow = ctx.createRadialGradient(cssW/2,0,0,cssW/2,cssH*0.5,cssW*0.8);
-  glow.addColorStop(0,'rgba(var(--ghost-blue-rgb),0.10)'); glow.addColorStop(1,'transparent');
+  glow.addColorStop(0,'rgba(168,180,255,0.10)'); glow.addColorStop(1,'transparent');
   ctx.fillStyle = glow;
   ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
   // Ghost watermark
