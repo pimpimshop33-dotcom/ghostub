@@ -142,6 +142,7 @@ const LANGS = {
     dep_tool_media: 'Média',
     dep_tool_identity: 'Identité',
     dep_sheet_title: 'Réglages du fantôme',
+    dep_sheet_back: 'Retour au message',
     dep_sheet_done: 'Terminer',
     // Phase 1c v102 — Mode Commerce dans la nappe
     dep_sheet_biz_title: "Réglages de l'offre",
@@ -690,6 +691,7 @@ const LANGS = {
     dep_tool_media: 'Media',
     dep_tool_identity: 'Identity',
     dep_sheet_title: 'Ghost settings',
+    dep_sheet_back: 'Back to message',
     dep_sheet_done: 'Done',
     // Phase 1c v102 — Commerce mode in the sheet
     dep_sheet_biz_title: 'Offer settings',
