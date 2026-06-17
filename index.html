@@ -85,6 +85,8 @@
   --amber-glow:rgba(232,160,48,0.12);
   /* Or Premium — utilisé en rgba(var(--premium-rgb), X) partout dans l'app */
   --premium-rgb: 255,200,80;
+  /* Or rareté (enveloppes rare/légendaire du radar) */
+  --tier-gold-rgb: 245,223,160;
   /* Brume verte — enseigne nocturne */
   --mist:   #3db87a;
   --mist-dim:rgba(61,184,122,0.30);
@@ -1686,15 +1688,16 @@ body.light-theme{
   background:#e8e6f0;color:#1a1530;
   background-image:none;
 }
-body.light-theme .phone{background:#f0eef8;border-color:rgba(80,60,200,.22);box-shadow:0 40px 80px rgba(80,60,200,.12);}
+body.light-theme .phone{background:#d8d2ec;border-color:rgba(80,60,200,.22);box-shadow:0 40px 80px rgba(80,60,200,.12);}
 body.light-theme .phone::after{display:none;}
 body.light-theme :root,body.light-theme{
-  --void:#e8e6f0;--deep:#f0eef8;--surface:rgba(210,208,232,.7);--surface2:rgba(220,218,240,.85);
+  --void:#cac4e2;--deep:#d2cce8;--surface:rgba(190,184,222,.75);--surface2:rgba(200,194,228,.88);
   --ghost:rgba(80,60,200,.05);--spirit:#5040b4;--spirit-dim:rgba(58,42,148,.78);
   --spirit-glow:rgba(80,60,200,.1);--ether:#3a2e8c;--warm:#1a1530;
   --warm-dim:rgba(26,21,48,.78);--border:rgba(80,60,200,.32);--border-bright:rgba(80,60,200,.55);
   --amber:#9c6418;--amber-dim:rgba(156,100,24,.55);--mist:#1f6b40;
   --premium-rgb:140,95,10;
+  --tier-gold-rgb:150,108,12;
 }
 body.light-theme .ghost-envelope{background:linear-gradient(160deg,rgba(220,218,240,.98) 0%,rgba(210,208,232,.99) 100%) !important;}
 body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
@@ -1732,23 +1735,23 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
 .ghost-envelope[data-tier="uncommon"] .envelope-flap::after{color:rgba(168,212,245,.7) !important;-webkit-text-fill-color:rgba(168,212,245,.7)!important;}
 .ghost-envelope[data-tier="uncommon"] .envelope-emoji{box-shadow:0 0 14px rgba(168,212,245,.25) !important;border-color:rgba(168,212,245,.35) !important;}
 
-.ghost-envelope[data-tier="rare"]{border-color:rgba(245,223,160,.45) !important;box-shadow:0 4px 20px rgba(0,0,0,.6),0 0 16px rgba(245,223,160,.08) !important;}
-.ghost-envelope[data-tier="rare"] .envelope-flap{background:linear-gradient(180deg,rgba(245,223,160,.12) 0%,rgba(245,223,160,.03) 100%) !important;}
-.ghost-envelope[data-tier="rare"] .envelope-flap::after{content:'✦';color:rgba(245,223,160,.8) !important;-webkit-text-fill-color:rgba(245,223,160,.8)!important;text-shadow:0 0 6px rgba(245,223,160,.5);}
-.ghost-envelope[data-tier="rare"] .envelope-emoji{box-shadow:0 0 18px rgba(245,223,160,.3) !important;border-color:rgba(245,223,160,.5) !important;background:rgba(245,223,160,.1) !important;}
+.ghost-envelope[data-tier="rare"]{border-color:rgba(var(--tier-gold-rgb),.45) !important;box-shadow:0 4px 20px rgba(0,0,0,.6),0 0 16px rgba(var(--tier-gold-rgb),.08) !important;}
+.ghost-envelope[data-tier="rare"] .envelope-flap{background:linear-gradient(180deg,rgba(var(--tier-gold-rgb),.12) 0%,rgba(var(--tier-gold-rgb),.03) 100%) !important;}
+.ghost-envelope[data-tier="rare"] .envelope-flap::after{content:'✦';color:rgba(var(--tier-gold-rgb),.8) !important;-webkit-text-fill-color:rgba(var(--tier-gold-rgb),.8)!important;text-shadow:0 0 6px rgba(var(--tier-gold-rgb),.5);}
+.ghost-envelope[data-tier="rare"] .envelope-emoji{box-shadow:0 0 18px rgba(var(--tier-gold-rgb),.3) !important;border-color:rgba(var(--tier-gold-rgb),.5) !important;background:rgba(var(--tier-gold-rgb),.1) !important;}
 
-.ghost-envelope[data-tier="legendary"]{border-color:rgba(245,223,160,.6) !important;box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 24px rgba(245,223,160,.12),0 0 48px rgba(168,212,245,.06) !important;animation:legendaryGlow 3s ease-in-out infinite !important;}
-.ghost-envelope[data-tier="legendary"] .envelope-flap{background:linear-gradient(180deg,rgba(245,223,160,.18) 0%,rgba(168,212,245,.06) 100%) !important;}
-.ghost-envelope[data-tier="legendary"] .envelope-flap::after{content:'★';color:rgba(245,223,160,1) !important;-webkit-text-fill-color:rgba(245,223,160,1)!important;text-shadow:0 0 10px rgba(245,223,160,.8);font-size:12px !important;}
-.ghost-envelope[data-tier="legendary"] .envelope-emoji{box-shadow:0 0 24px rgba(245,223,160,.45) !important;border-color:rgba(245,223,160,.7) !important;background:rgba(245,223,160,.12) !important;}
-@keyframes legendaryGlow{0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 24px rgba(245,223,160,.12),0 0 48px rgba(168,212,245,.06);}50%{box-shadow:0 4px 28px rgba(0,0,0,.6),0 0 36px rgba(245,223,160,.2),0 0 60px rgba(168,212,245,.1);}}
+.ghost-envelope[data-tier="legendary"]{border-color:rgba(var(--tier-gold-rgb),.6) !important;box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 24px rgba(var(--tier-gold-rgb),.12),0 0 48px rgba(168,212,245,.06) !important;animation:legendaryGlow 3s ease-in-out infinite !important;}
+.ghost-envelope[data-tier="legendary"] .envelope-flap{background:linear-gradient(180deg,rgba(var(--tier-gold-rgb),.18) 0%,rgba(168,212,245,.06) 100%) !important;}
+.ghost-envelope[data-tier="legendary"] .envelope-flap::after{content:'★';color:rgba(var(--tier-gold-rgb),1) !important;-webkit-text-fill-color:rgba(var(--tier-gold-rgb),1)!important;text-shadow:0 0 10px rgba(var(--tier-gold-rgb),.8);font-size:12px !important;}
+.ghost-envelope[data-tier="legendary"] .envelope-emoji{box-shadow:0 0 24px rgba(var(--tier-gold-rgb),.45) !important;border-color:rgba(var(--tier-gold-rgb),.7) !important;background:rgba(var(--tier-gold-rgb),.12) !important;}
+@keyframes legendaryGlow{0%,100%{box-shadow:0 4px 24px rgba(0,0,0,.6),0 0 24px rgba(var(--tier-gold-rgb),.12),0 0 48px rgba(168,212,245,.06);}50%{box-shadow:0 4px 28px rgba(0,0,0,.6),0 0 36px rgba(var(--tier-gold-rgb),.2),0 0 60px rgba(168,212,245,.1);}}
 
 /* Tier badge dans l'enveloppe */
 .tier-badge{font-size:8px;letter-spacing:.6px;border-radius:6px;padding:1px 6px;font-weight:600;text-transform:uppercase;}
 .tier-badge-uncommon{background:rgba(168,212,245,.12);color:rgba(168,212,245,.8);-webkit-text-fill-color:rgba(168,212,245,.8)!important;border:1px solid rgba(168,212,245,.2);}
-.tier-badge-rare{background:rgba(245,223,160,.12);color:rgba(245,223,160,.9);-webkit-text-fill-color:rgba(245,223,160,.9)!important;border:1px solid rgba(245,223,160,.3);}
-.tier-badge-legendary{background:linear-gradient(135deg,rgba(245,223,160,.15),rgba(168,212,245,.1));color:rgba(245,223,160,1);-webkit-text-fill-color:rgba(245,223,160,1)!important;border:1px solid rgba(245,223,160,.4);animation:legendaryBadge 2s ease-in-out infinite;}
-@keyframes legendaryBadge{0%,100%{opacity:.9;}50%{opacity:1;text-shadow:0 0 4px rgba(245,223,160,.5);}}
+.tier-badge-rare{background:rgba(var(--tier-gold-rgb),.12);color:rgba(var(--tier-gold-rgb),.9);-webkit-text-fill-color:rgba(var(--tier-gold-rgb),.9)!important;border:1px solid rgba(var(--tier-gold-rgb),.3);}
+.tier-badge-legendary{background:linear-gradient(135deg,rgba(var(--tier-gold-rgb),.15),rgba(168,212,245,.1));color:rgba(var(--tier-gold-rgb),1);-webkit-text-fill-color:rgba(var(--tier-gold-rgb),1)!important;border:1px solid rgba(var(--tier-gold-rgb),.4);animation:legendaryBadge 2s ease-in-out infinite;}
+@keyframes legendaryBadge{0%,100%{opacity:.9;}50%{opacity:1;text-shadow:0 0 4px rgba(var(--tier-gold-rgb),.5);}}
 
 /* ── PROXIMITY BREATHING — respiration proportionnelle ─── */
 .ghost-envelope[data-proximity="close"]{animation:proximityPulse 0.9s ease-in-out infinite !important;}
