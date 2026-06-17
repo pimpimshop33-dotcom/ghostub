@@ -83,6 +83,8 @@
   --amber:  #e8a030;
   --amber-dim:rgba(232,160,48,0.30);
   --amber-glow:rgba(232,160,48,0.12);
+  /* Or Premium — utilisé en rgba(var(--premium-rgb), X) partout dans l'app */
+  --premium-rgb: 255,200,80;
   /* Brume verte — enseigne nocturne */
   --mist:   #3db87a;
   --mist-dim:rgba(61,184,122,0.30);
@@ -1546,7 +1548,7 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .open-limit-counter{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0;}
 .open-limit-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);}
 .open-limit-dot.used{background:rgba(122,184,245,.12);box-shadow:none;}
-.open-limit-premium{margin:10px 0 14px;padding:14px;background:linear-gradient(135deg,rgba(255,200,80,.1),rgba(255,200,80,.04));border:1px solid rgba(255,200,80,.3);border-radius:14px;font-size:12px;color:rgba(255,210,100,.85);text-align:center;line-height:1.6;}
+.open-limit-premium{margin:10px 0 14px;padding:14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.1),rgba(var(--premium-rgb),.04));border:1px solid rgba(var(--premium-rgb),.3);border-radius:14px;font-size:12px;color:rgba(var(--premium-rgb),.85);text-align:center;line-height:1.6;}
 .open-limit-actions{display:flex;flex-direction:column;gap:8px;}
 .open-limit-ok{padding:14px;background:linear-gradient(135deg,rgba(232,160,48,.18),rgba(122,184,245,.10));border:1px solid rgba(232,160,48,.35);border-radius:15px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;transition:all .2s;}
 .open-limit-ok:hover{background:rgba(232,160,48,.26);}
@@ -1573,7 +1575,7 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .cond-btn-label{font-size:13px;color:var(--warm-dim);display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
 .cond-btn-sub{font-size:10px;color:var(--spirit-dim);margin-top:1px;}
 .cond-btn.active .cond-btn-label{color:var(--warm);}
-.cond-premium-tag{font-size:9px;padding:2px 6px;background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:8px;color:rgba(255,210,100,.8);flex-shrink:0;}
+.cond-premium-tag{font-size:9px;padding:2px 6px;background:rgba(var(--premium-rgb),.1);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;color:rgba(var(--premium-rgb),.8);flex-shrink:0;}
 .cond-extra{margin-top:10px;padding:12px;background:rgba(122,184,245,.04);border:1px solid var(--border);border-radius:12px;display:none;}
 .cond-extra.show{display:block;}
 .cond-time-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:16px;cursor:pointer;}
@@ -1635,13 +1637,12 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 }
 
 /* ── BADGES & FILTRES ──────────────────────────────────── */
-.badge-premium{font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.9);border-radius:6px;padding:2px 6px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,200,80,.25);}
-body.light-theme .badge-premium{background:rgba(180,130,20,.16);color:rgba(130,88,8,.95) !important;-webkit-text-fill-color:rgba(130,88,8,.95) !important;border-color:rgba(130,88,8,.35);}
+.badge-premium{font-size:10px;background:rgba(var(--premium-rgb),.15);color:rgba(var(--premium-rgb),.9);border-radius:6px;padding:2px 6px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid rgba(var(--premium-rgb),.25);}
 .filter-btn{white-space:nowrap;padding:6px 12px;background:rgba(122,184,245,.04);border:1px solid rgba(122,184,245,.12);border-radius:20px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;flex-shrink:0;touch-action:manipulation;min-height:36px;}
 .filter-btn.active{background:rgba(232,160,48,.12) !important;border-color:rgba(232,160,48,.35) !important;color:var(--warm) !important;}
-.btn-favorite{width:100%;padding:12px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.2);border-radius:13px;color:rgba(255,200,80,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
-.btn-favorite:hover{border-color:rgba(255,200,80,.4);color:rgba(255,200,80,.8);}
-.btn-favorite.favorited{background:rgba(255,200,80,.12);border-color:rgba(255,200,80,.5);color:rgba(255,200,80,.9);}
+.btn-favorite{width:100%;padding:12px;background:rgba(var(--premium-rgb),.05);border:1px solid rgba(var(--premium-rgb),.2);border-radius:13px;color:rgba(var(--premium-rgb),.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
+.btn-favorite:hover{border-color:rgba(var(--premium-rgb),.4);color:rgba(var(--premium-rgb),.8);}
+.btn-favorite.favorited{background:rgba(var(--premium-rgb),.12);border-color:rgba(var(--premium-rgb),.5);color:rgba(var(--premium-rgb),.9);}
 .map-header-btn{background:rgba(122,184,245,.07);border:1px solid rgba(122,184,245,.2);color:rgba(122,184,245,.7);border-radius:20px;padding:6px 12px;font-size:11px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'Instrument Sans',sans-serif;min-height:36px;touch-action:manipulation;}
 .map-header-btn:hover{background:rgba(232,160,48,.1);border-color:rgba(232,160,48,.3);color:var(--amber);}
 .settings-row-btn{display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;background:none;border:none;border-bottom:1px solid var(--border);cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--warm);text-align:left;touch-action:manipulation;transition:background .15s;}
@@ -1692,6 +1693,7 @@ body.light-theme :root,body.light-theme{
   --spirit-glow:rgba(80,60,200,.1);--ether:#3a2e8c;--warm:#1a1530;
   --warm-dim:rgba(26,21,48,.78);--border:rgba(80,60,200,.32);--border-bright:rgba(80,60,200,.55);
   --amber:#9c6418;--amber-dim:rgba(156,100,24,.55);--mist:#1f6b40;
+  --premium-rgb:140,95,10;
 }
 body.light-theme .ghost-envelope{background:linear-gradient(160deg,rgba(220,218,240,.98) 0%,rgba(210,208,232,.99) 100%) !important;}
 body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
@@ -2387,12 +2389,12 @@ button, [role="button"], input, textarea, select,
   font-family:'Cormorant Garamond',serif;
   font-style:italic;
   font-size:11px;
-  color:rgba(255,220,120,.92);
-  -webkit-text-fill-color:rgba(255,220,120,.92) !important;
+  color:rgba(var(--premium-rgb),.92);
+  -webkit-text-fill-color:rgba(var(--premium-rgb),.92) !important;
   margin-left:8px;
   padding:2px 9px 3px;
-  background:rgba(255,200,80,.14);
-  border:1px solid rgba(255,200,80,.32);
+  background:rgba(var(--premium-rgb),.14);
+  border:1px solid rgba(var(--premium-rgb),.32);
   border-radius:8px;
   letter-spacing:.5px;
   vertical-align:middle;
@@ -2406,8 +2408,8 @@ button, [role="button"], input, textarea, select,
   font-family:'Cormorant Garamond',serif;
   font-style:italic;
   font-size:12px;
-  color:rgba(255,220,150,.55);
-  -webkit-text-fill-color:rgba(255,220,150,.55) !important;
+  color:rgba(var(--premium-rgb),.55);
+  -webkit-text-fill-color:rgba(var(--premium-rgb),.55) !important;
   letter-spacing:.3px;
   flex-shrink:0;
 }
@@ -2876,8 +2878,8 @@ button, [role="button"], input, textarea, select,
 
         <!-- Formulaire Commerce (formulaire dédié) -->
         <div id="businessDepositForm" style="display:none;">
-          <div style="background:rgba(255,200,80,.07);border:1px solid rgba(255,200,80,.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:10px;">🏪 Type d'offre</div>
+          <div style="background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:10px;">🏪 Type d'offre</div>
             <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
               <button class="type-btn active" data-val="Promo" onclick="selectType(this)" aria-pressed="true" style="flex:1;min-width:70px;">🏷 Promo</button>
               <button class="type-btn" data-val="Événement" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🎉 Événement</button>
@@ -2897,24 +2899,24 @@ button, [role="button"], input, textarea, select,
             <label class="form-label" for="promoCode">Code promo <span style="color:var(--spirit-dim);font-weight:400;">(optionnel)</span></label>
             <input class="form-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40" style="font-size:13px !important;letter-spacing:.5px;">
           </div>
-          <div style="display:flex;align-items:center;gap:8px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.15);border-radius:10px;padding:10px 12px;margin-top:6px;">
+          <div style="display:flex;align-items:center;gap:8px;background:rgba(var(--premium-rgb),.05);border:1px solid rgba(var(--premium-rgb),.15);border-radius:10px;padding:10px 12px;margin-top:6px;">
             <span style="font-size:16px;">📡</span>
-            <span style="font-size:11px;color:rgba(255,200,80,.7);line-height:1.5;">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+            <span style="font-size:11px;color:rgba(var(--premium-rgb),.7);line-height:1.5;">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
           </div>
         </div>
 
         <!-- Bouton toggle Mode Commerce -->
         <div id="businessToggleWrap" style="margin:14px 0 0;">
-          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(255,200,80,.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
+          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
             <span style="flex:1;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="font-size:20px;-webkit-text-fill-color:initial!important;filter:none!important;flex-shrink:0;">🏪</span>
                 <span style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;-webkit-text-fill-color:rgba(255,230,150,1)!important;" data-i18n="dep_biz_btn">Mode Commerce</span>
-                <span id="bizPremiumBadge" style="font-size:10px;background:rgba(255,200,80,.25);color:rgba(255,220,100,1);-webkit-text-fill-color:rgba(255,220,100,1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(255,200,80,.3);">✦ Premium</span>
+                <span id="bizPremiumBadge" style="font-size:10px;background:rgba(var(--premium-rgb),.25);color:rgba(var(--premium-rgb),1);-webkit-text-fill-color:rgba(var(--premium-rgb),1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(var(--premium-rgb),.3);">✦ Premium</span>
               </div>
               <div style="font-size:11px;color:rgba(255,235,180,.8);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
             </span>
-            <span id="businessToggleIcon" style="font-size:16px;color:rgba(255,200,80,.6);">○</span>
+            <span id="businessToggleIcon" style="font-size:16px;color:rgba(var(--premium-rgb),.6);">○</span>
           </button>
         </div>
         <!-- Champ caché businessExtra pour compatibilité depositGhost -->
@@ -3188,7 +3190,7 @@ button, [role="button"], input, textarea, select,
         <div class="profile-name-big" id="profileName">…</div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
           <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
-          <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(255,200,80,.8);background:rgba(255,200,80,.07);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_year_btn">✦ Mon année</button>
+          <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(var(--premium-rgb),.8);background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_year_btn">✦ Mon année</button>
         </div>
       </div>
       <!-- ── RANG sous le nom ─────────────────────────── -->
@@ -3228,14 +3230,14 @@ button, [role="button"], input, textarea, select,
           <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(100,220,160,.9);">0</span>
           <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);" data-i18n="empreinte_premier">🥇 Premier lecteur</span>
         </div>
-        <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(255,200,80,.25);background:rgba(255,200,80,.04);" aria-label="Classement">
+        <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);" aria-label="Classement">
           <span style="font-size:16px;">🏆</span>
-          <span class="empreinte-pill-label" style="color:rgba(255,200,80,.7);" data-i18n="empreinte_classement">Classement</span>
+          <span class="empreinte-pill-label" style="color:rgba(var(--premium-rgb),.7);" data-i18n="empreinte_classement">Classement</span>
         </div>
       </div>
       <!-- Panel classement inline -->
-      <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(255,200,80,.2);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.6);margin-bottom:10px;" data-i18n="profile_top_hunters">🏆 Top chasseurs</div>
+      <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:10px;" data-i18n="profile_top_hunters">🏆 Top chasseurs</div>
         <div id="leaderboardContent"><div style="font-size:12px;color:var(--spirit-dim);opacity:.6;" data-i18n="loading">Chargement…</div></div>
       </div>
 
@@ -3258,7 +3260,7 @@ button, [role="button"], input, textarea, select,
       </div>
       <!-- ── TABLEAU DE BORD COMMERÇANT (Premium) ──────── -->
       <div id="bizDashboardSection" style="display:none;margin-bottom:16px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.6);margin-bottom:8px;" data-i18n="profile_biz_section">🏪 Mes offres Commerce</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:8px;" data-i18n="profile_biz_section">🏪 Mes offres Commerce</div>
         <div id="bizDashboardContent">
           <div style="font-size:12px;color:var(--spirit-dim);font-style:italic;opacity:.6;text-align:center;padding:12px 0;" data-i18n="loading">Chargement…</div>
         </div>
@@ -3281,7 +3283,7 @@ button, [role="button"], input, textarea, select,
 
       <!-- ── PLAN ACTUEL ─────────────────────────────────── -->
       <div id="planInfo" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;" data-i18n="profile_free_plan">Plan gratuit</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;" data-i18n="profile_free_plan">Plan gratuit</div>
         <div style="font-size:13px;color:var(--warm-dim);" data-i18n="profile_free_sub">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
       </div>
 
@@ -3308,21 +3310,21 @@ button, [role="button"], input, textarea, select,
         </div>
 
         <!-- Commerce -->
-        <div style="background:linear-gradient(160deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:16px;padding:16px;margin-bottom:10px;">
+        <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:2px;">🏪 Plan Commerce</div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 Plan Commerce</div>
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">4,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
             </div>
-            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(255,200,80,.4));">🏪</div>
+            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));">🏪</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> Tout Premium inclus</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> Ghosts Commerce</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> Code promo intégré</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> Dashboard ouvertures</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Tout Premium inclus</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Ghosts Commerce</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Code promo intégré</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Dashboard ouvertures</div>
           </div>
-          <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(255,200,80,.2),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:13px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">🏪 Activer le Plan Commerce</button>
+          <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.2),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:13px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">🏪 Activer le Plan Commerce</button>
         </div>
 
         <!-- Code promo discret en bas -->
@@ -3331,7 +3333,7 @@ button, [role="button"], input, textarea, select,
             <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
             <div style="display:flex;gap:8px;margin-top:8px;">
               <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
-              <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,200,80,.15),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:12px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;" data-i18n="profile_activate_btn">Activer</button>
+              <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;" data-i18n="profile_activate_btn">Activer</button>
             </div>
             <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
           </details>
@@ -3452,8 +3454,8 @@ button, [role="button"], input, textarea, select,
       </div>
 
       <!-- Premium -->
-      <div style="background:rgba(255,200,80,.06);border:1px solid rgba(255,200,80,.2);border-radius:14px;padding:16px;margin-bottom:12px;">
-        <div style="font-size:13px;font-weight:700;color:rgba(255,200,80,.9);margin-bottom:10px;" data-i18n="help_premium_title">✦ Spectre Premium</div>
+      <div style="background:rgba(var(--premium-rgb),.06);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:rgba(var(--premium-rgb),.9);margin-bottom:10px;" data-i18n="help_premium_title">✦ Spectre Premium</div>
         <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;" data-i18n="help_premium_sub">Le Premium débloque des fonctionnalités exclusives :</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.8;" data-i18n="help_premium_list">
           🎥 Vidéos dans vos fantômes<br>
