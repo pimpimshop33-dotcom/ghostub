@@ -5,6 +5,7 @@ function _isGuestUser() {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
 import GhostService from './services/ghost.service.js';
 import LocationService from './services/location.service.js';
@@ -1221,6 +1222,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+// Région europe-west9 : doit correspondre à la région de déploiement de la Cloud Function
+const functionsInstance = getFunctions(app, 'europe-west9');
+const _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
 
 const CLOUDINARY_CLOUD = 'dcarogsye';
 const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
@@ -5958,29 +5962,23 @@ function _todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-async function canOpenToday() {
-  if (isPremium) return true;
-  if (!currentUser) return getDailyOpenCountLocal() < DAILY_OPEN_LIMIT; // fallback offline
-  try {
-    const ref = doc(db, 'userStats', currentUser.uid);
-    const snap = await getDoc(ref);
-    const count = snap.exists() ? (snap.data().dailyOpens?.[_todayKey()] || 0) : 0;
-    return count < DAILY_OPEN_LIMIT;
-  } catch(e) {
-    // Si Firestore inaccessible, tomber sur le localStorage
-    return getDailyOpenCountLocal() < DAILY_OPEN_LIMIT;
+// ── Vérification + incrémentation FIABLE de la limite, via Cloud Function ──
+// (le client ne peut plus écrire directement dailyOpens — voir firestore.rules)
+async function consumeOpenQuota() {
+  if (!currentUser) {
+    // Pas de session auth du tout (cas limite) : on ne peut rien vérifier côté serveur
+    _incrementLocal();
+    return { allowed: getDailyOpenCountLocal() <= DAILY_OPEN_LIMIT, remaining: Math.max(0, DAILY_OPEN_LIMIT - getDailyOpenCountLocal()) };
   }
-}
-
-async function incrementDailyOpenCount() {
-  if (currentUser?.uid === '5xeDyHqkFRelXjKQstm2TJVQQOo2') return; // bypass dev
-  if (!currentUser) { _incrementLocal(); return; }
-  const today = _todayKey();
-  const ref = doc(db, 'userStats', currentUser.uid);
   try {
-    await setDoc(ref, { dailyOpens: { [today]: increment(1) } }, { merge: true });
-  } catch(e) {}
-  _incrementLocal(); // toujours mettre à jour localement aussi
+    const res = await _checkAndConsumeOpenCallable();
+    return res.data; // { allowed, remaining }
+  } catch (e) {
+    // Cloud Function indisponible (offline, erreur réseau...) : dégradation douce,
+    // on ne bloque pas l'expérience plutôt que de pénaliser un souci technique.
+    console.error('checkAndConsumeOpen error', e);
+    return { allowed: true, remaining: null };
+  }
 }
 
 async function remainingOpensToday() {
@@ -5997,7 +5995,7 @@ async function remainingOpensToday() {
   }
 }
 
-// Helpers localStorage (cache local rapide)
+// Helpers localStorage (cache local rapide + aperçu avant vérif serveur)
 function _getDailyOpenLocalKey() {
   const uid = currentUser ? currentUser.uid : 'anon';
   return `daily_opens_${uid}_${_todayKey()}`;
@@ -6423,8 +6421,13 @@ window.sendReply = async () => {
 };
 
 async function _doOpenEnvelope() {
-  // Incrémenter le compteur journalier (Firestore)
-  if (!isPremium) await incrementDailyOpenCount();
+  // Vérification + incrémentation FIABLE (serveur) — bloque réellement si la limite est atteinte,
+  // même si le client a été manipulé (variable isPremium locale falsifiée, etc.)
+  const _quota = await consumeOpenQuota();
+  if (!_quota.allowed) {
+    showOpenLimitWarning(0, () => {});
+    return;
+  }
   // FIX: Enregistrer la découverte ICI, seulement quand l'enveloppe est vraiment ouverte
   if (selectedGhost) {
     const isNewDisc = addDiscovery(selectedGhost.id);
