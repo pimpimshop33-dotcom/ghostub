@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=109"></script>
+<script type="module" src="app.js?v=110"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -89,6 +89,10 @@
   --tier-gold-rgb: 245,223,160;
   /* Brume verte — utilisée en rgba(var(--mist-rgb), X) */
   --mist-rgb: 61,184,122;
+  /* Bleu-lavande fantôme (hints, liens secondaires) */
+  --ghost-blue-rgb: 168,180,255;
+  /* Vert accent (badges succès type "Premier lecteur") */
+  --accent-green-rgb: 100,220,160;
   /* Brume verte — enseigne nocturne */
   --mist:   #3db87a;
   --mist-dim:rgba(var(--mist-rgb),0.30);
@@ -323,7 +327,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   display:block !important;
   margin:0 auto !important;
   animation:floatG 3.5s ease-in-out infinite !important;
-  filter:drop-shadow(0 0 30px rgba(168,180,255,.6)) drop-shadow(0 0 60px rgba(168,180,255,.2)) !important;
+  filter:drop-shadow(0 0 30px rgba(var(--ghost-blue-rgb),.6)) drop-shadow(0 0 60px rgba(var(--ghost-blue-rgb),.2)) !important;
   border-radius:50% !important;
 }
 .ob-glow-ring{
@@ -610,14 +614,14 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   background: rgba(10, 12, 22, 0.82);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(168,180,255,.22);
-  box-shadow: 0 4px 20px rgba(0,0,0,.6), inset 0 1px 0 rgba(168,180,255,.06);
+  border: 1px solid rgba(var(--ghost-blue-rgb),.22);
+  box-shadow: 0 4px 20px rgba(0,0,0,.6), inset 0 1px 0 rgba(var(--ghost-blue-rgb),.06);
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 .ghost-envelope:hover, .ghost-envelope:focus {
   transform: translateY(-3px) !important;
-  border-color: rgba(168,180,255,.45) !important;
-  box-shadow: 0 10px 32px rgba(0,0,0,.7), 0 0 20px rgba(168,180,255,.1) !important;
+  border-color: rgba(var(--ghost-blue-rgb),.45) !important;
+  box-shadow: 0 10px 32px rgba(0,0,0,.7), 0 0 20px rgba(var(--ghost-blue-rgb),.1) !important;
   outline: none;
 }
 .ghost-envelope:active { transform: translateY(0) !important; }
@@ -633,8 +637,8 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   position: relative;
   width: 100%;
   height: 38px;
-  background: linear-gradient(180deg, rgba(168,180,255,.10) 0%, rgba(168,180,255,.03) 100%);
-  border-bottom: 1px solid rgba(168,180,255,.15);
+  background: linear-gradient(180deg, rgba(var(--ghost-blue-rgb),.10) 0%, rgba(var(--ghost-blue-rgb),.03) 100%);
+  border-bottom: 1px solid rgba(var(--ghost-blue-rgb),.15);
   overflow: hidden;
   display: block;
 }
@@ -647,7 +651,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   height: 38px;
   /* Triangle CSS : bords gauche et droit transparents, bas = couleur */
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  background: rgba(168,180,255,.08);
+  background: rgba(var(--ghost-blue-rgb),.08);
   border-bottom: none;
 }
 
@@ -659,8 +663,8 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   left: 50%;
   transform: translateX(-50%);
   font-size: 10px;
-  color: rgba(168,180,255,.45);
-  -webkit-text-fill-color: rgba(168,180,255,.45) !important;
+  color: rgba(var(--ghost-blue-rgb),.45);
+  -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),.45) !important;
   filter: none !important;
   line-height: 1;
 }
@@ -675,11 +679,11 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .envelope-emoji {
   font-size: 24px; width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(168,180,255,.08);
+  background: rgba(var(--ghost-blue-rgb),.08);
   border-radius: 50%;
-  border: 1.5px solid rgba(168,180,255,.20);
+  border: 1.5px solid rgba(var(--ghost-blue-rgb),.20);
   flex-shrink: 0;
-  box-shadow: 0 0 10px rgba(168,180,255,.12);
+  box-shadow: 0 0 10px rgba(var(--ghost-blue-rgb),.12);
   -webkit-text-fill-color: initial !important;
   filter: none !important;
 }
@@ -693,20 +697,20 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 .envelope-hint {
   font-family: 'Cormorant Garamond', serif; font-size: 13px; font-style: italic;
-  color: rgba(168,180,255,.42);
-  -webkit-text-fill-color: rgba(168,180,255,.42) !important;
+  color: rgba(var(--ghost-blue-rgb),.42);
+  -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),.42) !important;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .envelope-meta { display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; }
 .envelope-dist { font-size:10px; border-radius:20px; padding:2px 8px; font-weight:600; }
 .envelope-dist.dist-near { background:rgba(var(--mist-rgb),.18); color:rgba(80,220,140,.95); -webkit-text-fill-color:rgba(80,220,140,.95)!important; }
-.envelope-dist.dist-mid  { background:rgba(168,180,255,.12); color:rgba(180,200,255,.85); -webkit-text-fill-color:rgba(180,200,255,.85)!important; }
-.envelope-dist.dist-far  { background:rgba(168,180,255,.05); color:rgba(168,180,255,.50); -webkit-text-fill-color:rgba(168,180,255,.50)!important; }
-.envelope-reso  { font-size:10px; color:rgba(168,180,255,.40); -webkit-text-fill-color:rgba(168,180,255,.40)!important; }
+.envelope-dist.dist-mid  { background:rgba(var(--ghost-blue-rgb),.12); color:rgba(180,200,255,.85); -webkit-text-fill-color:rgba(180,200,255,.85)!important; }
+.envelope-dist.dist-far  { background:rgba(var(--ghost-blue-rgb),.05); color:rgba(var(--ghost-blue-rgb),.50); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.50)!important; }
+.envelope-reso  { font-size:10px; color:rgba(var(--ghost-blue-rgb),.40); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.40)!important; }
 
-.envelope-footer { display:flex; gap:5px; padding:0 14px 8px; border-top:1px solid rgba(168,180,255,.06); margin-top:2px; }
-.envelope-tag   { font-size:9px; letter-spacing:.4px; border-radius:20px; padding:2px 8px; color:rgba(168,180,255,.35); -webkit-text-fill-color:rgba(168,180,255,.35)!important; }
-.envelope-views { font-size:9px; color:rgba(168,180,255,.30); margin-top:1px; -webkit-text-fill-color:rgba(168,180,255,.30)!important; }
+.envelope-footer { display:flex; gap:5px; padding:0 14px 8px; border-top:1px solid rgba(var(--ghost-blue-rgb),.06); margin-top:2px; }
+.envelope-tag   { font-size:9px; letter-spacing:.4px; border-radius:20px; padding:2px 8px; color:rgba(var(--ghost-blue-rgb),.35); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.35)!important; }
+.envelope-views { font-size:9px; color:rgba(var(--ghost-blue-rgb),.30); margin-top:1px; -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.30)!important; }
 
 .secret-badge { font-size:8px; letter-spacing:.8px; background:rgba(200,130,255,.15); border-radius:6px; padding:1px 5px; color:rgba(220,160,255,.85); -webkit-text-fill-color:rgba(220,160,255,.85)!important; vertical-align:middle; }
 
@@ -1256,29 +1260,29 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   background: rgba(8, 10, 20, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(168,180,255,.25);
+  border: 1px solid rgba(var(--ghost-blue-rgb),.25);
   /* Halo glow animé — box-shadow externe passe outre overflow:hidden */
   box-shadow:
     0 8px 40px rgba(0,0,0,.7),
-    0 0 60px rgba(168,180,255,.04),
+    0 0 60px rgba(var(--ghost-blue-rgb),.04),
     0 0 80px rgba(232,160,48,.04),
-    inset 0 1px 0 rgba(168,180,255,.06);
+    inset 0 1px 0 rgba(var(--ghost-blue-rgb),.06);
   animation: envelopeGlow 5s ease-in-out infinite;
 }
 @keyframes envelopeGlow {
   0%, 100% {
     box-shadow:
       0 8px 40px rgba(0,0,0,.7),
-      0 0 60px rgba(168,180,255,.06),
+      0 0 60px rgba(var(--ghost-blue-rgb),.06),
       0 0 80px rgba(232,160,48,.05),
-      inset 0 1px 0 rgba(168,180,255,.06);
+      inset 0 1px 0 rgba(var(--ghost-blue-rgb),.06);
   }
   50% {
     box-shadow:
       0 8px 40px rgba(0,0,0,.7),
-      0 0 100px rgba(168,180,255,.14),
+      0 0 100px rgba(var(--ghost-blue-rgb),.14),
       0 0 120px rgba(232,160,48,.10),
-      inset 0 1px 0 rgba(168,180,255,.12);
+      inset 0 1px 0 rgba(var(--ghost-blue-rgb),.12);
   }
 }
 
@@ -1286,8 +1290,8 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
 .envelope-sealed-flap {
   width: 100%;
   height: 64px;
-  background: linear-gradient(180deg, rgba(168,180,255,.12) 0%, rgba(168,180,255,.04) 100%);
-  border-bottom: 1px solid rgba(168,180,255,.15);
+  background: linear-gradient(180deg, rgba(var(--ghost-blue-rgb),.12) 0%, rgba(var(--ghost-blue-rgb),.04) 100%);
+  border-bottom: 1px solid rgba(var(--ghost-blue-rgb),.15);
   position: relative;
   overflow: hidden;
   transform-origin: top center;
@@ -1302,7 +1306,7 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
-  background: rgba(168,180,255,.08);
+  background: rgba(var(--ghost-blue-rgb),.08);
   /* Annule le triangle CSS border-trick de l'original */
   width: 100%; height: 100%;
   border: none;
@@ -1366,8 +1370,8 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   font-size: 40px !important;
   width: 64px !important; height: 64px !important;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(168,180,255,.08) !important;
-  border: 1.5px solid rgba(168,180,255,.25) !important;
+  background: rgba(var(--ghost-blue-rgb),.08) !important;
+  border: 1.5px solid rgba(var(--ghost-blue-rgb),.25) !important;
   border-radius: 50% !important;
   flex-shrink: 0;
   -webkit-text-fill-color: initial !important;
@@ -1375,8 +1379,8 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   animation: emojiGlow 3s ease-in-out infinite;
 }
 @keyframes emojiGlow {
-  0%,100% { box-shadow: 0 0 12px rgba(168,180,255,.2); }
-  50%      { box-shadow: 0 0 24px rgba(168,180,255,.45), 0 0 40px rgba(168,180,255,.15); }
+  0%,100% { box-shadow: 0 0 12px rgba(var(--ghost-blue-rgb),.2); }
+  50%      { box-shadow: 0 0 24px rgba(var(--ghost-blue-rgb),.45), 0 0 40px rgba(var(--ghost-blue-rgb),.15); }
 }
 
 .envelope-sealed-text { flex: 1; }
@@ -1389,8 +1393,8 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
 }
 .envelope-sealed-hint {
   font-size: 11px;
-  color: rgba(168,180,255,.5);
-  -webkit-text-fill-color: rgba(168,180,255,.5) !important;
+  color: rgba(var(--ghost-blue-rgb),.5);
+  -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),.5) !important;
   letter-spacing: .5px;
 }
 
@@ -1412,8 +1416,8 @@ body.light-theme .envelope-sealed-hint{color:rgba(70,50,150,.65) !important;-web
 .envelope-open-btn {
   width: calc(100% - 32px); margin: 16px;
   padding: 16px !important;
-  background: rgba(168,180,255,.12) !important;
-  border: 1px solid rgba(168,180,255,.35) !important;
+  background: rgba(var(--ghost-blue-rgb),.12) !important;
+  border: 1px solid rgba(var(--ghost-blue-rgb),.35) !important;
   border-radius: 12px !important;
   color: rgba(220,230,255,.92) !important;
   -webkit-text-fill-color: rgba(220,230,255,.92) !important;
@@ -1425,13 +1429,13 @@ body.light-theme .envelope-sealed-hint{color:rgba(70,50,150,.65) !important;-web
   position: relative; overflow: hidden;
 }
 .envelope-open-btn:hover {
-  background: rgba(168,180,255,.22) !important;
-  border-color: rgba(168,180,255,.6) !important;
-  box-shadow: 0 0 28px rgba(168,180,255,.18) !important;
+  background: rgba(var(--ghost-blue-rgb),.22) !important;
+  border-color: rgba(var(--ghost-blue-rgb),.6) !important;
+  box-shadow: 0 0 28px rgba(var(--ghost-blue-rgb),.18) !important;
 }
 .envelope-open-btn.holding {
-  border-color: rgba(168,180,255,.8) !important;
-  box-shadow: 0 0 40px rgba(168,180,255,.3) !important;
+  border-color: rgba(var(--ghost-blue-rgb),.8) !important;
+  box-shadow: 0 0 40px rgba(var(--ghost-blue-rgb),.3) !important;
   transform: scale(.98);
 }
 body.light-theme .envelope-open-btn{
@@ -1444,7 +1448,7 @@ body.light-theme .envelope-open-btn:hover{
   background: rgba(80,60,200,.18) !important;
   border-color: rgba(80,60,200,.5) !important;
 }
-#sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(220,228,255,.95) 0%,rgba(168,180,255,.5) 40%,transparent 75%);}
+#sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(220,228,255,.95) 0%,rgba(var(--ghost-blue-rgb),.5) 40%,transparent 75%);}
 @keyframes sealFlash{0%{opacity:0;}8%{opacity:1;}40%{opacity:.4;}100%{opacity:0;}}
 #sealParticles{position:fixed;inset:0;z-index:9998;pointer-events:none;}
 .envelope-reveal{animation:revealContent .45s cubic-bezier(.25,.8,.25,1) forwards;}
@@ -1702,6 +1706,8 @@ body.light-theme :root,body.light-theme{
   --premium-rgb:140,95,10;
   --tier-gold-rgb:150,108,12;
   --mist-rgb:31,107,64;
+  --ghost-blue-rgb:65,50,170;
+  --accent-green-rgb:20,130,80;
 }
 body.light-theme .ghost-envelope{background:linear-gradient(160deg,rgba(220,218,240,.98) 0%,rgba(210,208,232,.99) 100%) !important;}
 body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
@@ -1776,8 +1782,8 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
 .quick-deposit-btn:active{transform:scale(.98);}
 
 /* ── AUDIO TOGGLE ──────────────────────────────────────── */
-.audio-toggle{background:none;border:1px solid rgba(168,180,255,.12);border-radius:8px;padding:4px 8px;font-size:14px;cursor:pointer;color:var(--spirit-dim);transition:all .2s;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
-.audio-toggle:hover{border-color:rgba(168,180,255,.3);}
+.audio-toggle{background:none;border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:8px;padding:4px 8px;font-size:14px;cursor:pointer;color:var(--spirit-dim);transition:all .2s;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
+.audio-toggle:hover{border-color:rgba(var(--ghost-blue-rgb),.3);}
 .audio-toggle.muted{opacity:.3;}
 
 .deposit-advanced-toggle{
@@ -1873,25 +1879,25 @@ button, [role="button"], input, textarea, select,
   justify-content: center;
   font-size: 22px;
   width: 44px; height: 44px;
-  background: rgba(168,180,255,.07);
+  background: rgba(var(--ghost-blue-rgb),.07);
   border-radius: 12px;
   cursor: pointer;
   -webkit-text-fill-color: initial !important;
   filter: none !important;
 }
-.emoji-opt.active { background: rgba(168,180,255,.20); }
+.emoji-opt.active { background: rgba(var(--ghost-blue-rgb),.20); }
 .emoji-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 
 /* ── ONBOARDING COMPLET ─────────────────────────────────── */
 
 /* Dots de navigation */
 .ob-dots{display:flex;gap:8px;justify-content:center;padding:12px 0 0;flex-shrink:0;}
-.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(168,180,255,.25);border:none;cursor:pointer;transition:all .2s;padding:0;flex-shrink:0;}
-.ob-dot.active{background:rgba(168,180,255,.9);width:18px;border-radius:4px;}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(var(--ghost-blue-rgb),.25);border:none;cursor:pointer;transition:all .2s;padding:0;flex-shrink:0;}
+.ob-dot.active{background:rgba(var(--ghost-blue-rgb),.9);width:18px;border-radius:4px;}
 
 /* CTA bouton final */
 .ob-cta{width:100%;padding:0 0 12px;flex-shrink:0;}
-.ob-swipe-hint{font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.5px;padding-bottom:8px;text-align:center;animation:obHintFade 2s ease-in-out infinite;flex-shrink:0;}
+.ob-swipe-hint{font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.5px;padding-bottom:8px;text-align:center;animation:obHintFade 2s ease-in-out infinite;flex-shrink:0;}
 body.light-theme .ob-swipe-hint{color:rgba(58,42,148,.45) !important;}
 body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 @keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
@@ -1900,28 +1906,28 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 .ob-scene-text{margin-top:20px;flex-shrink:0;}
 
 /* Radar animé */
-.ob-radar{width:180px;height:180px;border-radius:50%;border:1px solid rgba(168,180,255,.2);position:relative;background:radial-gradient(circle,rgba(168,180,255,.06) 0%,transparent 70%);}
-.ob-radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(168,180,255,.15);top:50%;left:50%;transform:translate(-50%,-50%);}
+.ob-radar{width:180px;height:180px;border-radius:50%;border:1px solid rgba(var(--ghost-blue-rgb),.2);position:relative;background:radial-gradient(circle,rgba(var(--ghost-blue-rgb),.06) 0%,transparent 70%);}
+.ob-radar-ring{position:absolute;border-radius:50%;border:1px solid rgba(var(--ghost-blue-rgb),.15);top:50%;left:50%;transform:translate(-50%,-50%);}
 .ob-radar-ring:nth-child(1){width:40%;height:40%;}
 .ob-rring2{width:70%;height:70%;border-style:dashed;opacity:.35;}
 .ob-rring3{width:100%;height:100%;}
-.ob-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,rgba(168,180,255,.14) 14%,transparent 16%);animation:sweep 4s linear infinite;}
+.ob-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,rgba(var(--ghost-blue-rgb),.14) 14%,transparent 16%);animation:sweep 4s linear infinite;}
 .ob-radar-center{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--spirit);transform:translate(-50%,-50%);box-shadow:0 0 12px var(--spirit);}
 .ob-ghost-dot{position:absolute;font-size:20px;animation:ghostReveal 4s linear infinite;}
 .ob-dot2{animation-delay:1.3s;}.ob-dot3{animation-delay:2.6s;}
 
 /* Enveloppe */
-.ob-envelope{width:200px;background:rgba(8,8,20,.85);border:1px solid rgba(168,180,255,.2);border-radius:16px;overflow:hidden;}
-.ob-env-flap{height:50px;background:linear-gradient(180deg,rgba(168,180,255,.12) 0%,rgba(168,180,255,.04) 100%);border-bottom:1px solid rgba(168,180,255,.15);display:flex;align-items:center;justify-content:center;}
+.ob-envelope{width:200px;background:rgba(8,8,20,.85);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;overflow:hidden;}
+.ob-env-flap{height:50px;background:linear-gradient(180deg,rgba(var(--ghost-blue-rgb),.12) 0%,rgba(var(--ghost-blue-rgb),.04) 100%);border-bottom:1px solid rgba(var(--ghost-blue-rgb),.15);display:flex;align-items:center;justify-content:center;}
 .ob-env-body{padding:16px;display:flex;align-items:center;gap:12px;}
 .ob-env-emoji{font-size:28px;}
 .ob-env-lines{flex:1;display:flex;flex-direction:column;gap:6px;}
-.ob-env-line{height:8px;border-radius:4px;background:rgba(168,180,255,.18);}
+.ob-env-line{height:8px;border-radius:4px;background:rgba(var(--ghost-blue-rgb),.18);}
 .ob-line2{width:75%;}.ob-line3{width:50%;}
 
 /* Résonance */
 .ob-reso-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
-.ob-reso-btn{padding:14px 28px;background:rgba(168,180,255,.12);border:1px solid rgba(168,180,255,.3);border-radius:14px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;position:relative;z-index:2;-webkit-text-fill-color:var(--ether) !important;}
+.ob-reso-btn{padding:14px 28px;background:rgba(var(--ghost-blue-rgb),.12);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:14px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;position:relative;z-index:2;-webkit-text-fill-color:var(--ether) !important;}
 .ob-reso-particles{position:absolute;inset:-20px;pointer-events:none;}
 
 /* Force emoji natural rendering — bypass ALL inheritance */
@@ -1933,8 +1939,8 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   filter: none !important;
 }
 .wizard-back-btn {
-  color: rgba(168,180,255,0.5) !important;
-  -webkit-text-fill-color: rgba(168,180,255,0.5) !important;
+  color: rgba(var(--ghost-blue-rgb),0.5) !important;
+  -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),0.5) !important;
 }
 
 /* ═════════════════════════════════════════════════════════
@@ -2028,7 +2034,7 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 .lettre-stamp-strip .emoji-custom{
   width:36px !important;height:36px !important;
   background:transparent !important;
-  border:1px dashed rgba(168,180,255,.22) !important;
+  border:1px dashed rgba(var(--ghost-blue-rgb),.22) !important;
   border-radius:8px !important;
   font-size:14px !important;
   text-align:center;
@@ -2055,7 +2061,7 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   border-radius:0 !important;
 }
 .lettre-textarea::placeholder{
-  color:rgba(168,180,255,.32) !important;
+  color:rgba(var(--ghost-blue-rgb),.32) !important;
   font-style:italic !important;
 }
 
@@ -2163,8 +2169,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .lettre-seal-hint{
   font-family:'Cormorant Garamond',serif;
   font-style:italic;font-size:11px;
-  color:rgba(168,180,255,.40);
-  -webkit-text-fill-color:rgba(168,180,255,.40) !important;
+  color:rgba(var(--ghost-blue-rgb),.40);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.40) !important;
   text-align:center;
   margin-top:8px;letter-spacing:.3px;
 }
@@ -2188,7 +2194,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 }
 .lettre-tool{
   background:rgba(14,12,28,.55);
-  border:1px solid rgba(168,180,255,.14);
+  border:1px solid rgba(var(--ghost-blue-rgb),.14);
   border-radius:12px;
   padding:11px 4px 9px;
   cursor:pointer;touch-action:manipulation;
@@ -2196,13 +2202,13 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   transition:all .2s;
   font-family:'Instrument Sans',sans-serif;
   font-size:10px;
-  color:rgba(168,180,255,.62);
-  -webkit-text-fill-color:rgba(168,180,255,.62) !important;
+  color:rgba(var(--ghost-blue-rgb),.62);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.62) !important;
   letter-spacing:.5px;text-transform:uppercase;
 }
 .lettre-tool:hover{
-  background:rgba(168,180,255,.08);
-  border-color:rgba(168,180,255,.28);
+  background:rgba(var(--ghost-blue-rgb),.08);
+  border-color:rgba(var(--ghost-blue-rgb),.28);
   color:var(--ether);
   -webkit-text-fill-color:var(--ether) !important;
 }
@@ -2254,7 +2260,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 
 .lettre-sheet-handle{
   width:38px;height:4px;
-  background:rgba(168,180,255,.28);
+  background:rgba(var(--ghost-blue-rgb),.28);
   border-radius:2px;
   margin:8px auto 4px;flex-shrink:0;
 }
@@ -2273,8 +2279,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .lettre-sheet-back{
   width:100%;
   display:flex;align-items:center;justify-content:center;gap:8px;
-  background:rgba(168,180,255,.05);
-  border:1px solid rgba(168,180,255,.18);
+  background:rgba(var(--ghost-blue-rgb),.05);
+  border:1px solid rgba(var(--ghost-blue-rgb),.18);
   border-radius:12px;
   padding:11px 14px;
   font-family:'Cormorant Garamond',serif;
@@ -2288,8 +2294,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   letter-spacing:.3px;
 }
 .lettre-sheet-back:hover,.lettre-sheet-back:active{
-  background:rgba(168,180,255,.1);
-  border-color:rgba(168,180,255,.3);
+  background:rgba(var(--ghost-blue-rgb),.1);
+  border-color:rgba(var(--ghost-blue-rgb),.3);
 }
 
 /* Onglets */
@@ -2298,7 +2304,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   padding:14px 12px 0;
   gap:2px;
   flex-shrink:0;
-  border-bottom:1px solid rgba(168,180,255,.06);
+  border-bottom:1px solid rgba(var(--ghost-blue-rgb),.06);
   margin-bottom:0;
 }
 .lettre-sheet-tab{
@@ -2308,8 +2314,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   padding:8px 2px 12px;
   font-family:'Instrument Sans',sans-serif;
   font-size:10px;
-  color:rgba(168,180,255,.45);
-  -webkit-text-fill-color:rgba(168,180,255,.45) !important;
+  color:rgba(var(--ghost-blue-rgb),.45);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.45) !important;
   cursor:pointer;touch-action:manipulation;
   border-radius:8px 8px 0 0;
   display:flex;flex-direction:column;align-items:center;gap:4px;
@@ -2351,8 +2357,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   position:absolute;
   bottom:16px;left:18px;right:18px;
   padding:13px;
-  background:linear-gradient(135deg,rgba(168,180,255,.20),rgba(168,180,255,.08));
-  border:1px solid rgba(168,180,255,.32);
+  background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.20),rgba(var(--ghost-blue-rgb),.08));
+  border:1px solid rgba(var(--ghost-blue-rgb),.32);
   border-radius:14px;
   color:var(--ether);
   -webkit-text-fill-color:var(--ether) !important;
@@ -2365,7 +2371,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   box-shadow:0 4px 14px rgba(0,0,0,.3);
 }
 .lettre-sheet-done:hover{
-  background:linear-gradient(135deg,rgba(168,180,255,.28),rgba(168,180,255,.12));
+  background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.28),rgba(var(--ghost-blue-rgb),.12));
 }
 .lettre-sheet-done:active{transform:scale(.98);}
 
@@ -2375,8 +2381,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   padding:40px 20px;
   font-family:'Cormorant Garamond',serif;
   font-style:italic;font-size:14px;
-  color:rgba(168,180,255,.45);
-  -webkit-text-fill-color:rgba(168,180,255,.45) !important;
+  color:rgba(var(--ghost-blue-rgb),.45);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.45) !important;
   line-height:1.6;
 }
 
@@ -2438,12 +2444,12 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .attachment-item{
   display:flex;align-items:center;gap:10px;
   padding:10px 12px;
-  background:rgba(168,180,255,.05);
-  border:1px solid rgba(168,180,255,.14);
+  background:rgba(var(--ghost-blue-rgb),.05);
+  border:1px solid rgba(var(--ghost-blue-rgb),.14);
   border-radius:12px;
   transition:border-color .2s;
 }
-.attachment-item:hover{border-color:rgba(168,180,255,.28);}
+.attachment-item:hover{border-color:rgba(var(--ghost-blue-rgb),.28);}
 .attachment-thumb{
   width:38px;height:38px;
   border-radius:8px;
@@ -2474,8 +2480,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .attachment-meta{
   font-family:'Instrument Sans',sans-serif;
   font-size:10px;
-  color:rgba(168,180,255,.55);
-  -webkit-text-fill-color:rgba(168,180,255,.55) !important;
+  color:rgba(var(--ghost-blue-rgb),.55);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.55) !important;
   letter-spacing:.4px;text-transform:uppercase;
 }
 .attachment-remove{
@@ -2498,8 +2504,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .attachments-count-hint{
   font-family:'Instrument Sans',sans-serif;
   font-size:10px;
-  color:rgba(168,180,255,.45);
-  -webkit-text-fill-color:rgba(168,180,255,.45) !important;
+  color:rgba(var(--ghost-blue-rgb),.45);
+  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.45) !important;
   margin-top:6px;
   letter-spacing:.4px;
 }
@@ -2555,7 +2561,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   <!-- ONBOARDING -->
   <div class="screen active" id="screenOnboard" aria-label="Introduction à Ghostub">
     <button class="back-btn" id="obBackBtn" aria-label="Retour au radar" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')" data-i18n="help_back">← retour</button>
-    <button class="ob-skip" onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
+    <button class="ob-skip" onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
@@ -2619,7 +2625,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
     </div>
     <div class="ob-cta" id="obCta" style="opacity:0;pointer-events:none;">
       <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;" data-i18n="ob_cta">Entrer dans les lieux ›</button>
-      <div style="font-size:11px;color:rgba(168,180,255,.3);text-align:center;margin-top:6px;" data-i18n="ob_free">Gratuit · Sans pub</div>
+      <div style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;" data-i18n="ob_free">Gratuit · Sans pub</div>
     </div>
     <div class="ob-swipe-hint" id="obSwipeHint" aria-hidden="true" data-i18n="ob_swipe_hint">Glissez pour découvrir →</div>
   </div>
@@ -2668,12 +2674,12 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       </div>
       <!-- Séparateur -->
       <div style="display:flex;align-items:center;gap:12px;margin:16px 0 4px;">
-        <div style="flex:1;height:1px;background:rgba(168,180,255,.1);"></div>
-        <span style="font-size:11px;color:rgba(168,180,255,.3);letter-spacing:.5px;">ou</span>
-        <div style="flex:1;height:1px;background:rgba(168,180,255,.1);"></div>
+        <div style="flex:1;height:1px;background:rgba(var(--ghost-blue-rgb),.1);"></div>
+        <span style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);letter-spacing:.5px;">ou</span>
+        <div style="flex:1;height:1px;background:rgba(var(--ghost-blue-rgb),.1);"></div>
       </div>
       <!-- Explorer sans compte -->
-      <button onclick="window.guestExplore()" style="width:100%;padding:11px;background:transparent;border-radius:13px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;letter-spacing:.2px;">
+      <button onclick="window.guestExplore()" style="width:100%;padding:11px;background:transparent;border-radius:13px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;letter-spacing:.2px;">
         🌫️ Explorer sans compte <span style="opacity:.6;font-size:11px;">(lecture seule)</span>
       </button>
     </div>
@@ -2705,7 +2711,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
     <div class="vibe-bar" aria-live="polite" aria-atomic="false">
       <div style="font-size:15px;" aria-hidden="true">📳</div>
       <div style="font-size:12px;color:var(--warm-dim);flex:1;" data-i18n="radar_vibe_label">Détection active · présences en attente</div>
-      <div id="resoStatus" title="Résonance quotidienne disponible" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(168,180,255,.15);color:rgba(168,180,255,.5);cursor:default;" aria-label="Résonance quotidienne">✦ 1</div>
+      <div id="resoStatus" title="Résonance quotidienne disponible" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(var(--ghost-blue-rgb),.15);color:rgba(var(--ghost-blue-rgb),.5);cursor:default;" aria-label="Résonance quotidienne">✦ 1</div>
       <div id="streakDisplay" style="display:none;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,150,50,.25);color:rgba(255,150,50,.8);cursor:default;" aria-label="Streak de découvertes"></div>
       <div class="vibe-dot" aria-hidden="true"></div>
     </div>
@@ -2808,7 +2814,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           <span>👻 Créer une Ghost Card</span>
         </button>
         <button class="btn-secondary" id="secretBtn" onclick="toggleSecret()" aria-label="Passer ce fantôme en mode secret" style="display:none;margin-bottom:8px;font-size:13px;padding:11px;">🔮 Passer en secret</button>
-        <button class="share-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.08));border:1px solid rgba(168,180,255,.4);color:rgba(168,180,255,.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
+        <button class="share-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.18),rgba(var(--ghost-blue-rgb),.08));border:1px solid rgba(var(--ghost-blue-rgb),.4);color:rgba(var(--ghost-blue-rgb),.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
         <button class="btn-secondary" id="ghostReplyBtn" onclick="showScreen('screenReply')" style="margin-bottom:8px;" data-i18n="detail_reply_ghost_btn">↩ Laisser une réponse ici</button>
         <button id="favoriteBtn" onclick="toggleFavorite()" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
         <button class="report-btn" id="reportBtn" onclick="openReportModal()" data-i18n="detail_report_btn">⚑ Signaler ce fantôme</button>
@@ -2961,7 +2967,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           <span>✨ Personnaliser ton fantôme</span>
           <span class="toggle-arrow">▼</span>
         </div>
-        <div style="font-size:10px;color:rgba(168,180,255,.3);text-align:center;margin-top:6px;display:none;">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
+        <div style="font-size:10px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;display:none;">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
       </div>
 
       <!-- ÉTAPE 2 (vidée — contenu déplacé dans la nappe en bas) -->
@@ -3011,7 +3017,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
             <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
               <div id="depositMiniMap"></div>
               <div class="dep-map-scan" aria-hidden="true"></div>
-              <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(168,180,255,.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
+              <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
             </div>
             <div class="form-group" style="margin-bottom:14px;">
               <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
@@ -3079,16 +3085,16 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
                   </span>
                 </button>
                 <div id="premSection_chain"></div>
-                <div id="chainContent" style="display:none;background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;flex-direction:column;gap:10px;">
+                <div id="chainContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;flex-direction:column;gap:10px;">
                   <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
                   <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
                     <span class="media-icon" aria-hidden="true">🗺</span>
                     <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
                   </button>
-                  <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);"></div>
+                  <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);"></div>
                 </div>
                 <div id="premSection_dedicated"></div>
-                <div id="dedicatedContent" style="display:none;background:rgba(168,180,255,.04);border:1px solid rgba(168,180,255,.1);border-radius:14px;padding:12px;">
+                <div id="dedicatedContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;">
                   <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
                   <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
                   <div style="font-size:10px;color:var(--spirit-dim);" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
@@ -3200,7 +3206,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true">?</div>
         <div class="profile-name-big" id="profileName">…</div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
-          <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
+          <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
           <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(var(--premium-rgb),.8);background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_year_btn">✦ Mon année</button>
         </div>
       </div>
@@ -3237,9 +3243,9 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           <span class="empreinte-pill-num" id="statFavorites">0</span>
           <span class="empreinte-pill-label" data-i18n="empreinte_favoris">★ Favoris</span>
         </div>
-        <div class="empreinte-pill" style="border-color:rgba(100,220,160,.25);background:rgba(100,220,160,.04);">
-          <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(100,220,160,.9);">0</span>
-          <span class="empreinte-pill-label" style="color:rgba(100,220,160,.55);" data-i18n="empreinte_premier">🥇 Premier lecteur</span>
+        <div class="empreinte-pill" style="border-color:rgba(var(--accent-green-rgb),.25);background:rgba(var(--accent-green-rgb),.04);">
+          <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(var(--accent-green-rgb),.9);">0</span>
+          <span class="empreinte-pill-label" style="color:rgba(var(--accent-green-rgb),.55);" data-i18n="empreinte_premier">🥇 Premier lecteur</span>
         </div>
         <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);" aria-label="Classement">
           <span style="font-size:16px;">🏆</span>
@@ -3256,9 +3262,9 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       <div id="empreinteSection" style="margin-bottom:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);" data-i18n="profile_map_section">🗺 Mon empreinte fantôme</div>
-          <button id="empreinteShareBtn" onclick="shareEmpreinte()" style="font-size:11px;color:rgba(168,180,255,.7);background:rgba(168,180,255,.07);border:1px solid rgba(168,180,255,.2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:none;" data-i18n="profile_share_map_btn">↗ Partager</button>
+          <button id="empreinteShareBtn" onclick="shareEmpreinte()" style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:none;" data-i18n="profile_share_map_btn">↗ Partager</button>
         </div>
-        <div id="empreinteMap" style="width:100%;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(168,180,255,.15);background:rgba(10,10,20,.8);position:relative;">
+        <div id="empreinteMap" style="width:100%;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);position:relative;">
           <!-- Div leaflet persistant — ne pas écraser avec innerHTML -->
           <div id="empreinteLeaflet" style="position:absolute;inset:0;z-index:1;"></div>
           <div id="empreinteLoader" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2;">
@@ -3301,23 +3307,23 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       <!-- ── CARDS PLANS (visibles si Free) ─────────────────── -->
       <div id="pricingSection" style="margin-bottom:10px;">
         <!-- Premium -->
-        <div style="background:linear-gradient(160deg,rgba(168,180,255,.07),rgba(168,180,255,.02));border:1px solid rgba(168,180,255,.3);border-radius:16px;padding:16px;margin-bottom:10px;">
+        <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(168,180,255,.7);margin-bottom:2px;">👑 Chasseur Premium</div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 Chasseur Premium</div>
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
             </div>
-            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(168,180,255,.4));">👻</div>
+            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">👻</div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Ouvertures illimitées</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Dépôt immédiat</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Vidéo + vocal 🎥</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Ghost dédié 💌</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Chaîne fantômes 🔗</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> Message futur 📅</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ouvertures illimitées</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Dépôt immédiat</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Vidéo + vocal 🎥</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ghost dédié 💌</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Chaîne fantômes 🔗</div>
+            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Message futur 📅</div>
           </div>
-          <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(168,180,255,.25),rgba(168,180,255,.1));border:1px solid rgba(168,180,255,.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">✦ Devenir Chasseur Premium</button>
+          <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">✦ Devenir Chasseur Premium</button>
         </div>
 
         <!-- Commerce -->
@@ -3341,7 +3347,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <!-- Code promo discret en bas -->
         <div id="codeSection" style="padding:4px 0;">
           <details style="cursor:pointer;">
-            <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
+            <summary style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.3px;list-style:none;padding:6px 0;" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
             <div style="display:flex;gap:8px;margin-top:8px;">
               <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
               <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;" data-i18n="profile_activate_btn">Activer</button>
@@ -3381,7 +3387,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       </div>
       <!-- Actions danger -->
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding-bottom:8px;">
-        <button onclick="exportMyData()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(168,180,255,.45);padding:6px 12px;border-radius:8px;" data-i18n="profile_export_btn">⬇ Exporter mes données</button>
+        <button onclick="exportMyData()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);padding:6px 12px;border-radius:8px;" data-i18n="profile_export_btn">⬇ Exporter mes données</button>
       </div>
       <div style="display:flex;gap:12px;justify-content:center;padding-bottom:24px;">
         <button onclick="logout()" id="logoutBtn" data-i18n="profile_logout" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;">🚪 Déconnexion</button>
@@ -3420,8 +3426,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <div style="font-size:13px;font-weight:700;color:var(--ether);margin-bottom:10px;" data-i18n="help_haunted_title">👻 Zones hantées</div>
         <div style="font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;" data-i18n="help_haunted_body">Quand plusieurs fantômes se concentrent dans un même endroit, une zone hantée apparaît sur la carte.</div>
         <div style="display:flex;flex-direction:column;gap:6px;">
-          <div style="font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;"><span style="background:rgba(168,180,255,.15);border:1px solid rgba(168,180,255,.4);border-radius:20px;padding:1px 8px;font-size:10px;color:rgba(168,180,255,.9);">✦ Ghost Spot</span><span data-i18n="help_haunted_spot">3–4 fantômes proches</span></div>
-          <div style="font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;"><span style="background:rgba(168,180,255,.2);border:1px solid rgba(168,180,255,.5);border-radius:20px;padding:1px 8px;font-size:10px;color:rgba(168,180,255,1);">👻 Hanté</span><span data-i18n="help_haunted_zone">5–7 fantômes — zone hantée</span></div>
+          <div style="font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;"><span style="background:rgba(var(--ghost-blue-rgb),.15);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:20px;padding:1px 8px;font-size:10px;color:rgba(var(--ghost-blue-rgb),.9);">✦ Ghost Spot</span><span data-i18n="help_haunted_spot">3–4 fantômes proches</span></div>
+          <div style="font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;"><span style="background:rgba(var(--ghost-blue-rgb),.2);border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:20px;padding:1px 8px;font-size:10px;color:rgba(var(--ghost-blue-rgb),1);">👻 Hanté</span><span data-i18n="help_haunted_zone">5–7 fantômes — zone hantée</span></div>
           <div style="font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;"><span style="background:rgba(255,100,80,.15);border:1px solid rgba(255,100,80,.5);border-radius:20px;padding:1px 8px;font-size:10px;color:rgba(255,120,100,.9);">🔥 Infesté</span><span data-i18n="help_haunted_hot">8+ fantômes — infestation totale</span></div>
         </div>
       </div>
@@ -3481,11 +3487,11 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       <!-- FAQ -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;">
         <div style="font-size:13px;font-weight:700;color:var(--ether);margin-bottom:12px;" data-i18n="help_faq_title">❓ Questions fréquentes</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q1">Pourquoi je ne vois pas de fantômes ?</div>
+        <div style="font-size:13px;color:rgba(var(--ghost-blue-rgb),.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q1">Pourquoi je ne vois pas de fantômes ?</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;" data-i18n="help_faq_a1">Les fantômes n'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q2">Mon fantôme a disparu ?</div>
+        <div style="font-size:13px;color:rgba(var(--ghost-blue-rgb),.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q2">Mon fantôme a disparu ?</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;" data-i18n="help_faq_a2">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.</div>
-        <div style="font-size:13px;color:rgba(168,180,255,.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q3">Comment signaler un message inapproprié ?</div>
+        <div style="font-size:13px;color:rgba(var(--ghost-blue-rgb),.8);font-weight:600;margin-bottom:4px;" data-i18n="help_faq_q3">Comment signaler un message inapproprié ?</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.6;" data-i18n="help_faq_a3">Appuyez sur l'icône ⚑ dans le détail d'un fantôme pour le signaler. Notre équipe examine chaque signalement.</div>
       </div>
 
@@ -3494,7 +3500,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;" data-i18n="help_legal_title">📋 Mentions légales & RGPD</div>
         <div style="font-size:12px;color:var(--warm-dim);line-height:1.7;" data-i18n="help_legal_body">
           <strong>Éditeur :</strong> Ghostub — application indépendante<br>
-          <strong>Contact :</strong> <a href="mailto:pimpimshop33@gmail.com" style="color:rgba(168,180,255,.8);text-decoration:underline;">pimpimshop33@gmail.com</a><br><br>
+          <strong>Contact :</strong> <a href="mailto:pimpimshop33@gmail.com" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">pimpimshop33@gmail.com</a><br><br>
           <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
           <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
           <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
