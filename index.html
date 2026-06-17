@@ -312,6 +312,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   letter-spacing:-.3px;
 }
 .ob-sub{font-size:16px !important;line-height:1.65 !important;color:rgba(232,212,168,.55) !important;}
+body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ob-ghost-big{
   width:110px !important;
   height:110px !important;
@@ -1884,6 +1885,8 @@ button, [role="button"], input, textarea, select,
 /* CTA bouton final */
 .ob-cta{width:100%;padding:0 0 12px;flex-shrink:0;}
 .ob-swipe-hint{font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.5px;padding-bottom:8px;text-align:center;animation:obHintFade 2s ease-in-out infinite;flex-shrink:0;}
+body.light-theme .ob-swipe-hint{color:rgba(58,42,148,.45) !important;}
+body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 @keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
 
 /* Texte des slides */
@@ -2544,7 +2547,7 @@ button, [role="button"], input, textarea, select,
   <!-- ONBOARDING -->
   <div class="screen active" id="screenOnboard" aria-label="Introduction à Ghostub">
     <button class="back-btn" id="obBackBtn" aria-label="Retour au radar" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')" data-i18n="help_back">← retour</button>
-    <button onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
+    <button class="ob-skip" onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(168,180,255,.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
