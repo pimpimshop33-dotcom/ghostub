@@ -1391,6 +1391,14 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
 .envelope-sealed.opening .envelope-sealed-flap { transform: rotateX(-180deg); }
 .envelope-sealed.opening .envelope-open-btn { opacity: 0; transition: opacity .2s; }
 .envelope-sealed.opened { animation: envelopeFade .35s ease forwards; }
+
+/* ── Variante thème clair — le fond bleu-nuit codé en dur ne s'adaptait jamais ── */
+body.light-theme .envelope-sealed{background:rgba(222,219,240,.92);border-color:rgba(80,60,200,.25);}
+body.light-theme .envelope-sealed-flap{background:linear-gradient(180deg,rgba(80,60,200,.14) 0%,rgba(80,60,200,.05) 100%);border-bottom-color:rgba(80,60,200,.18);}
+body.light-theme .envelope-sealed-triangle{background:rgba(80,60,200,.1);}
+body.light-theme .envelope-sealed-emoji{background:rgba(80,60,200,.08) !important;border-color:rgba(80,60,200,.3) !important;}
+body.light-theme .envelope-sealed-label{color:rgba(40,28,90,.92) !important;-webkit-text-fill-color:rgba(40,28,90,.92) !important;}
+body.light-theme .envelope-sealed-hint{color:rgba(70,50,150,.65) !important;-webkit-text-fill-color:rgba(70,50,150,.65) !important;}
 @keyframes envelopeFade { from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-16px);} }
 
 /* Bouton Briser le sceau */
@@ -1418,6 +1426,16 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   border-color: rgba(168,180,255,.8) !important;
   box-shadow: 0 0 40px rgba(168,180,255,.3) !important;
   transform: scale(.98);
+}
+body.light-theme .envelope-open-btn{
+  background: rgba(80,60,200,.1) !important;
+  border-color: rgba(80,60,200,.32) !important;
+  color: rgba(40,28,90,.92) !important;
+  -webkit-text-fill-color: rgba(40,28,90,.92) !important;
+}
+body.light-theme .envelope-open-btn:hover{
+  background: rgba(80,60,200,.18) !important;
+  border-color: rgba(80,60,200,.5) !important;
 }
 #sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(220,228,255,.95) 0%,rgba(168,180,255,.5) 40%,transparent 75%);}
 @keyframes sealFlash{0%{opacity:0;}8%{opacity:1;}40%{opacity:.4;}100%{opacity:0;}}
@@ -1618,6 +1636,7 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 
 /* ── BADGES & FILTRES ──────────────────────────────────── */
 .badge-premium{font-size:10px;background:rgba(255,200,80,.15);color:rgba(255,200,80,.9);border-radius:6px;padding:2px 6px;font-weight:600;white-space:nowrap;flex-shrink:0;border:1px solid rgba(255,200,80,.25);}
+body.light-theme .badge-premium{background:rgba(180,130,20,.16);color:rgba(130,88,8,.95) !important;-webkit-text-fill-color:rgba(130,88,8,.95) !important;border-color:rgba(130,88,8,.35);}
 .filter-btn{white-space:nowrap;padding:6px 12px;background:rgba(122,184,245,.04);border:1px solid rgba(122,184,245,.12);border-radius:20px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;flex-shrink:0;touch-action:manipulation;min-height:36px;}
 .filter-btn.active{background:rgba(232,160,48,.12) !important;border-color:rgba(232,160,48,.35) !important;color:var(--warm) !important;}
 .btn-favorite{width:100%;padding:12px;background:rgba(255,200,80,.05);border:1px solid rgba(255,200,80,.2);border-radius:13px;color:rgba(255,200,80,.5);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:6px;touch-action:manipulation;}
