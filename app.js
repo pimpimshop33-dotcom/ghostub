@@ -88,6 +88,10 @@ const LANGS = {
     dep_cond_future_sub: 'S\'ouvre à une date précise',
     detail_replies_title: 'Réponses dans ce lieu',
     detail_no_replies_html: 'Aucune réponse — soyez le premier.',
+    micro_reply_placeholder: 'Réagir en un mot…',
+    micro_reply_aria: 'Réagir en quelques mots, 3 maximum',
+    micro_reply_send_aria: 'Envoyer la réaction',
+    micro_reply_max_words: '3 mots maximum',
     detail_share_ghost_btn: '↗ Partager ce fantôme',
     detail_reply_ghost_btn: '↩ Laisser une réponse ici',
     dep_back: '← Retour',
@@ -636,6 +640,10 @@ const LANGS = {
     dep_cond_future_sub: 'Opens on a specific date',
     detail_replies_title: 'Replies at this location',
     detail_no_replies_html: 'No replies yet — be the first.',
+    micro_reply_placeholder: 'React in a word…',
+    micro_reply_aria: 'React in a few words, 3 maximum',
+    micro_reply_send_aria: 'Send reaction',
+    micro_reply_max_words: '3 words maximum',
     detail_share_ghost_btn: '↗ Share this ghost',
     detail_reply_ghost_btn: '↩ Leave a reply here',
     dep_back: '← Back',
@@ -1152,6 +1160,11 @@ window.setLang = (lang) => {
     const key = el.getAttribute('data-i18n-placeholder');
     const val = t[key];
     if (val !== undefined) el.placeholder = val;
+  });
+  document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria-label');
+    const val = t[key];
+    if (val !== undefined) el.setAttribute('aria-label', val);
   });
 
   // 2. Boutons langue
@@ -5840,14 +5853,14 @@ window.openGhost = async (id) => {
     document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
     document.getElementById('detailRadius').textContent = '📡 ' + escapeHTML(selectedGhost.radius || '10m');
 
-    // ── Mode Commerce : masquer Partager et Répondre ──
+    // ── Mode Commerce : masquer Partager et la réaction courte ──
     const isBizGhost = !!selectedGhost.businessMode;
     const shareBtn2 = document.getElementById('ghostShareBtn');
-    const replyBtn2 = document.getElementById('ghostReplyBtn');
     const resoBtn2  = document.getElementById('resonanceBtn');
+    const microRow2 = document.querySelector('.micro-reply-row');
     if (shareBtn2) shareBtn2.style.display = isBizGhost ? 'none' : '';
-    if (replyBtn2) replyBtn2.style.display = isBizGhost ? 'none' : '';
     if (resoBtn2)  resoBtn2.style.display  = isBizGhost ? 'none' : '';
+    if (microRow2) microRow2.style.display = isBizGhost ? 'none' : '';
 
     const chainDiv = document.getElementById('detailChain');
     if (selectedGhost.chainHint || selectedGhost.chainLat) {
@@ -5932,16 +5945,14 @@ window.openGhost = async (id) => {
   ));
   const repliesList = document.getElementById('repliesList');
   repliesList.innerHTML = '';
-  if (repliesSnap.empty) {
-    repliesList.innerHTML = '<div style="font-size:12px;color:var(--spirit-dim);padding:10px 0;">' + t.detail_no_replies_html + '</div>';
-  } else {
+  if (!repliesSnap.empty) {
     repliesSnap.forEach(d => {
       const r = d.data();
-      repliesList.innerHTML += `
-        <div class="reply-item">
-          <div class="reply-text">"${escapeHTML(r.message)}"</div>
-          <div class="reply-meta">${r.anonymous ? '👻 Anonyme' : escapeHTML(r.author)} · ${timeAgo(r.createdAt)}</div>
-        </div>`;
+      // Tronquer les anciennes réponses longues (avant le passage aux réactions courtes)
+      // pour qu'elles restent lisibles sous forme de capsule.
+      let txt = (r.message || '').trim();
+      if (txt.length > 28) txt = txt.slice(0, 26).trim() + '…';
+      repliesList.innerHTML += `<span class="micro-reply-pill">✦ ${escapeHTML(txt)}</span>`;
     });
   }
 
@@ -6423,6 +6434,54 @@ window.sendReply = async () => {
     showToast('error', t.toast_delete_err);
   } finally {
     if (btn) setLoading(btn, false, t.detail_reply_ghost_btn);
+  }
+};
+
+// ── RÉACTION COURTE (juin 2026) ──────────────────────────
+// Remplace l'ancien système de réponse libre par une réaction de 3 mots
+// maximum, toujours anonyme (pas de sélecteur d'identité — on garde ça léger).
+window.sendMicroReply = async () => {
+  const input = document.getElementById('microReplyInput');
+  if (!input || !selectedGhost || !currentUser) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  const wordCount = msg.split(/\s+/).filter(Boolean).length;
+  if (wordCount > 3) {
+    input.style.borderColor = 'rgba(255,100,100,.5)';
+    showToast('warning', t.micro_reply_max_words);
+    setTimeout(() => { input.style.borderColor = ''; }, 1500);
+    return;
+  }
+  const sendBtn = document.getElementById('microReplySend');
+  if (sendBtn) sendBtn.disabled = true;
+  try {
+    await addDoc(collection(db, COLL.REPLIES), {
+      ghostId: selectedGhost.id,
+      message: msg,
+      anonymous: true,
+      author: null,
+      authorUid: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+    if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser.uid) {
+      addDoc(collection(db, COLL.NOTIFS), {
+        type: 'reply',
+        toUid: selectedGhost.authorUid,
+        ghostId: selectedGhost.id,
+        ghostLocation: selectedGhost.location || t.detail_location_unknown,
+        fromAuthor: '👻 Anonyme',
+        notified: false,
+        createdAt: serverTimestamp()
+      }).catch(() => {});
+    }
+    input.value = '';
+    openGhost(selectedGhost.id);
+    Analytics.track('micro_reply_sent');
+  } catch(e) {
+    console.warn('[ghostub:sendMicroReply]', e);
+    showToast('error', t.toast_delete_err);
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
   }
 };
 
