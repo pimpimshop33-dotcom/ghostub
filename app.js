@@ -5778,9 +5778,11 @@ window.openGhost = async (id) => {
       return;
     }
   }
-  // ── Vérifier la condition d'ouverture (sauf pour le propriétaire) ──
+  // ── Vérifier la condition d'ouverture (sauf pour le propriétaire, SAUF capsule temporelle) ──
   resetBlockedOverlay();
-  if (!isOwner) {
+  // La date future doit s'appliquer même au créateur : sinon l'effet "lettre au futur" n'a plus de sens.
+  const _forceCondCheck = selectedGhost.openCondition === 'future';
+  if (!isOwner || _forceCondCheck) {
     const condCheck = isConditionMet(selectedGhost);
     if (!condCheck.ok) {
       showScreen('screenDetail');
