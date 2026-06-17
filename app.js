@@ -5503,7 +5503,7 @@ function renderGhostList() {
     const isOld = ageDays > 30;
     const ageStyle = isAncient ? 'filter:sepia(.6) opacity(.85);' : isOld ? 'filter:sepia(.25) opacity(.92);' : '';
     const ageBadge = isAncient ? `<span style="font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;">${t.ghost_badge_archive}</span>`
-                   : isOld ? `<span style="font-size:9px;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.15);border-radius:20px;padding:1px 6px;color:rgba(168,180,255,.4);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
+                   : isOld ? `<span style="font-size:9px;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
     // Résonances visuelles (étoiles)
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
