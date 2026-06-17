@@ -1260,7 +1260,7 @@ const Analytics = {
     this.events.push(entry);
     // Garde seulement les 200 derniers événements
     if (this.events.length > 200) this.events.shift();
-    try { localStorage.setItem('ghostub_analytics', JSON.stringify(this.events)); } catch(e) {}
+    try { localStorage.setItem('ghostub_analytics', JSON.stringify(this.events)); } catch(e) { console.warn('[ghostub:Analytics.track]', e); }
     // Si Firebase Analytics était activé, on enverrait ici
     console.debug('[Analytics]', event, params);
   },
@@ -1541,12 +1541,12 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
   // Si la carte existe déjà — réinitialiser pour redessiner marqueurs et zones
   if (map && document.getElementById('leafletMap')) {
-    try { map.remove(); } catch(e) {}
+    try { map.remove(); } catch(e) { console.warn('[ghostub:buildLeafletMap]', e); }
     map = null;
   }
 
   container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
-  if (map) { try { map.remove(); } catch(e){} map = null; }
+  if (map) { try { map.remove(); } catch(e){ console.warn('[ghostub:buildLeafletMap]', e); } map = null; }
 
   map = L.map('leafletMap', { zoomControl: true, attributionControl: false })
           .setView([centerLat, centerLng], 16);
@@ -2102,7 +2102,7 @@ async function checkDiscoveries() {
       );
       updateDoc(doc(db, COLL.DISCOVERIES, d.id), { notified: true }).catch(() => {});
     }
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:checkDiscoveries]', e); }
 }
 
 // ── NOTIFICATION RÉTENTION — FANTÔME JAMAIS OUVERT ───────
@@ -2178,7 +2178,7 @@ function _trackFrequentPlace(geohash5) {
     }
   }
 
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) { console.warn('[ghostub:_trackFrequentPlace]', e); }
 }
 
 function checkVirginGhostNearby() {
@@ -2288,7 +2288,7 @@ async function checkReplyNotifications() {
       showToast('info', msg, 5000);
       updateDoc(doc(db, COLL.NOTIFS, d.id), { notified: true }).catch(() => {});
     }
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:checkReplyNotifications]', e); }
 }
 
 // ── NOTIFICATION PUSH VIA SW (app en arrière-plan) ───────
@@ -2674,7 +2674,7 @@ window.removeAttachment = (index) => {
   const items = window._pendingAttachments || [];
   const item = items[index];
   if (!item) return;
-  if (item.blobUrl) { try { URL.revokeObjectURL(item.blobUrl); } catch(_) {} }
+  if (item.blobUrl) { try { URL.revokeObjectURL(item.blobUrl); } catch(_) { console.warn('[ghostub:revokeObjectURL]', _); } }
   items.splice(index, 1);
   window._pendingAttachments = items;
   _renderAttachmentsList();
@@ -2683,7 +2683,7 @@ window.removeAttachment = (index) => {
 window.clearAttachments = () => {
   const items = window._pendingAttachments || [];
   for (const a of items) {
-    if (a.blobUrl) { try { URL.revokeObjectURL(a.blobUrl); } catch(_) {} }
+    if (a.blobUrl) { try { URL.revokeObjectURL(a.blobUrl); } catch(_) { console.warn('[ghostub:revokeObjectURL]', _); } }
   }
   window._pendingAttachments = [];
   const list = document.getElementById('attachmentsList');
@@ -3035,7 +3035,7 @@ async function loadBizDashboard() {
       where('authorUid', '==', currentUser.uid)
     ));
     statsSnap.forEach(d => { statsMap[d.id] = d.data().openCount || 0; });
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:loadBizDashboard:ghostStats]', e); }
 
   let html = '';
   bizDocs.forEach(d => {
@@ -3125,7 +3125,7 @@ window.toggleDiscoveryHistory = async () => {
             </div>
           </div>`);
         }
-      } catch(e) {}
+      } catch(e) { console.warn('[ghostub:toggleDiscoveryHistory]', e); }
     }
     list.innerHTML = results.length ? results.join('') : '<div style="opacity:.5;font-style:italic;">Données indisponibles</div>';
   } catch(e) { list.innerHTML = '<div style="opacity:.5;">Erreur de chargement</div>'; }
@@ -3644,7 +3644,7 @@ window.shareMapLocation = async () => {
         try {
           const _refParam = currentUser ? '?ref=' + currentUser.uid.slice(0,8) : '';
           await navigator.share({ title: '👻 Ghostub', text: shareText, url: 'https://pimpimshop33-dotcom.github.io/ghostub/' + _refParam });
-        } catch(e) {}
+        } catch(e) { if (e.name !== 'AbortError') console.warn('[ghostub:shareMap]', e); }
       } else {
         _downloadCanvas(canvas, 'ghostub-lieu.png');
       }
@@ -3924,7 +3924,7 @@ window.nativeShare = async () => {
       });
       closeModal('shareModal');
       Analytics.track('share_native');
-    } catch(e) {}
+    } catch(e) { if (e.name !== 'AbortError') console.warn('[ghostub:nativeShare]', e); }
   } else {
     window.copyShareLink();
   }
@@ -4112,7 +4112,7 @@ window.deleteMyGhosts = async () => {
       try {
         const r = await getDocs(query(collection(db, COLL.REPLIES), where('ghostId', '==', gid)));
         r.docs.forEach(d => replyDelsOnMyGhosts.push(deleteDoc(doc(db, COLL.REPLIES, d.id))));
-      } catch(e) {}
+      } catch(e) { console.warn('[ghostub:deleteMyGhosts:replies]', e); }
     }
 
     await Promise.all([...dels, ...rDels, ...replyDelsOnMyGhosts]);
@@ -4266,7 +4266,7 @@ function _checkEphemeralWindows() {
   const now = Date.now();
   const TWO_H = 7200000;
   let notified = [];
-  try { notified = JSON.parse(localStorage.getItem(_EPHEM_NOTIFIED_KEY) || '[]'); } catch(e) {}
+  try { notified = JSON.parse(localStorage.getItem(_EPHEM_NOTIFIED_KEY) || '[]'); } catch(e) { console.warn('[ghostub:_checkEphemeralWindows]', e); }
   const notifiedSet = new Set(notified);
 
   nearbyGhosts.forEach(g => {
@@ -4303,7 +4303,7 @@ function _checkEphemeralWindows() {
 
   // Sauvegarder les notifiés (garder les 50 derniers max)
   const arr = [...notifiedSet].slice(-50);
-  try { localStorage.setItem(_EPHEM_NOTIFIED_KEY, JSON.stringify(arr)); } catch(e) {}
+  try { localStorage.setItem(_EPHEM_NOTIFIED_KEY, JSON.stringify(arr)); } catch(e) { console.warn('[ghostub:_checkEphemeralWindows]', e); }
 }
 
 
@@ -4605,7 +4605,7 @@ function getPoeticName(ghostId) {
 let _audioCtx = null;
 function _getAudioCtx() {
   if (!_audioCtx) {
-    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { console.warn('[ghostub:_getAudioCtx]', e); }
   }
   return _audioCtx;
 }
@@ -4645,7 +4645,7 @@ function playRevealSound() {
     subG.gain.setValueAtTime(0.18, now); subG.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
     sub.connect(subG); subG.connect(ctx.destination);
     sub.start(now); sub.stop(now + 0.3);
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:playRevealSound]', e); }
 }
 function _launchSealParticles() {
   const canvas = document.getElementById('sealParticles');
@@ -4745,7 +4745,7 @@ function playDepositSound() {
     subg.gain.setValueAtTime(0.15, now); subg.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
     sub.connect(subg); subg.connect(ctx.destination);
     sub.start(now); sub.stop(now + 0.35);
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:playDepositSound]', e); }
 }
 
 function _launchDepositParticles() {
@@ -4914,7 +4914,7 @@ window.loadEmpreinteMap = async () => {
   if (!container) return;
 
   // Reset
-  if (_empreinteMap) { try { _empreinteMap.remove(); } catch(e){} _empreinteMap = null; }
+  if (_empreinteMap) { try { _empreinteMap.remove(); } catch(e){ console.warn('[ghostub:loadEmpreinteMap:reset]', e); } _empreinteMap = null; }
   // Détruire et recréer le div Leaflet pour éviter "Map container is already initialized"
   const oldLeaflet = document.getElementById('empreinteLeaflet');
   if (oldLeaflet) { oldLeaflet.remove(); }
@@ -4981,7 +4981,7 @@ window.loadEmpreinteMap = async () => {
             const g = d.data();
             if (g.lat && g.lng) discoveries.push({ lat: g.lat, lng: g.lng, emoji: g.emoji || '👁', location: g.location || '?', id });
           }
-        } catch(e) {}
+        } catch(e) { console.warn('[ghostub:loadEmpreinteMap:discoveries]', e); }
       }));
     }
 
@@ -5151,7 +5151,7 @@ window.generateYearCard = async () => {
         limit(1)
       ));
       if (!snap.empty) topLocation = snap.docs[0].data().location || '';
-    } catch(e) {}
+    } catch(e) { console.warn('[ghostub:generateYearCard:topLocation]', e); }
 
     const W = 1080, H = 1920;
     const canvas = document.createElement('canvas');
@@ -5581,7 +5581,7 @@ function setRadarRadius(meters) {
   // Ré-affiche les dots
   renderRadarDots();
   // Haptic feedback si dispo
-  try { if (window.HapticsService?.tap) window.HapticsService.tap(); } catch(_){}
+  try { if (window.HapticsService?.tap) window.HapticsService.tap(); } catch(_){ console.warn('[ghostub:setRadarRadius:haptic]', _); }
 }
 
 function renderRadarDots() {
@@ -6048,7 +6048,7 @@ async function syncDiscoveriesFromFirestore() {
       const merged = [...new Set([...local, ...remote])];
       localStorage.setItem(getDiscoveryKey(), JSON.stringify(merged));
     }
-  } catch(e) {}
+  } catch(e) { console.warn('[ghostub:syncDiscoveriesFromFirestore]', e); }
 }
 
 function markResonatedToday(ghostId) { localStorage.setItem(getDailyResoKey(), ghostId); }
@@ -6120,7 +6120,7 @@ function _startWhisperListener() {
 }
 // v105 : helper de cleanup exposé pour le logout
 window._stopWhisperListener = () => {
-  if (_whisperUnsub) { try { _whisperUnsub(); } catch(_){} _whisperUnsub = null; }
+  if (_whisperUnsub) { try { _whisperUnsub(); } catch(_){ console.warn('[ghostub:_stopWhisperListener]', _); } _whisperUnsub = null; }
 };
 
 window.resonate = async () => {
@@ -6244,7 +6244,7 @@ window.depositGhost = async () => {
   if (message.length > 280) { err.textContent = t.dep_err_long; return; }
   if (!userLat) {
     // Tenter une dernière fois
-    try { await getLocation(); } catch(e) {}
+    try { await getLocation(); } catch(e) { console.warn('[ghostub:depositGhost:gps]', e); }
     if (!userLat) { err.textContent = t.dep_err_gps; return; }
   }
   if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
@@ -7444,7 +7444,7 @@ window.setNav = (id) => {
   const current = document.querySelector('.nav-item.active');
   const isSwitch = current && current.id !== id;
   if (isSwitch) {
-    try { window.HapticsService?.tap?.(); } catch(_) {}
+    try { window.HapticsService?.tap?.(); } catch(_) { console.warn('[ghostub:setNav:haptic]', _); }
   }
   document.querySelectorAll('.nav-item').forEach(n => {
     n.classList.remove('active');
@@ -7650,12 +7650,12 @@ function _initDepositMiniMap() {
       if (loader) loader.style.display = 'none';
       // Re-invalidation après transitions CSS pour cas où le container a été masqué/affiché
       setTimeout(() => {
-        if (_depositMiniMap) try { _depositMiniMap.invalidateSize(); } catch(_) {}
+        if (_depositMiniMap) try { _depositMiniMap.invalidateSize(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:invalidate]', _); }
       }, 350);
       return;
     } else {
       // Container changé ou détaché → on détruit pour recréer proprement
-      try { _depositMiniMap.remove(); } catch(_) {}
+      try { _depositMiniMap.remove(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:reset]', _); }
       _depositMiniMap = null;
       _depositRadiusCircle = null;
       // Vider le container au cas où Leaflet a laissé des résidus
@@ -7755,7 +7755,7 @@ function _initDepositMiniMap() {
   // Re-invalidation après transitions CSS (le container peut avoir été redimensionné)
   setTimeout(() => {
     if (_depositMiniMap) {
-      try { _depositMiniMap.invalidateSize(); } catch(_) {}
+      try { _depositMiniMap.invalidateSize(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:invalidate]', _); }
     }
   }, 350);
 }
@@ -7820,12 +7820,12 @@ window.openLettreSheet = (tab = 'lieu') => {
   // Init the mini map when opening on 'lieu' (deferred so layout settles)
   if (tab === 'lieu') {
     setTimeout(() => {
-      try { _initDepositMiniMap(); } catch (_) {}
+      try { _initDepositMiniMap(); } catch (_) { console.warn('[ghostub:openLettreSheet:initMiniMap]', _); }
     }, 120);
   }
   // Update Premium gating UI when opening rules/media (chain, dedicated, future, video)
   if (tab === 'rules' || tab === 'media') {
-    try { if (typeof updatePremiumUI === 'function') updatePremiumUI(); } catch (_) {}
+    try { if (typeof updatePremiumUI === 'function') updatePremiumUI(); } catch (_) { console.warn('[ghostub:openLettreSheet:updatePremiumUI]', _); }
   }
 };
 
@@ -7859,7 +7859,7 @@ window.switchLettreTab = (tab) => {
         if (_depositMiniMap && typeof _depositMiniMap.invalidateSize === 'function') {
           _depositMiniMap.invalidateSize();
         } else { _initDepositMiniMap(); }
-      } catch (_) {}
+      } catch (_) { console.warn('[ghostub:switchLettreTab:miniMap]', _); }
     }, 80);
   }
 };
@@ -7889,7 +7889,7 @@ function _applyLettreBizMode(isOn) {
     const activeTab = document.querySelector('.lettre-sheet-tab.active');
     const activeName = activeTab ? activeTab.dataset.tab : null;
     if (activeName === 'rules' || activeName === 'identity') {
-      try { window.switchLettreTab('lieu'); } catch (_) {}
+      try { window.switchLettreTab('lieu'); } catch (_) { console.warn('[ghostub:_applyLettreBizMode]', _); }
     }
   }
 }
@@ -8054,7 +8054,7 @@ window.startSealHold = (e) => {
       _holdGain.gain.linearRampToValueAtTime(0.07, actx.currentTime + HOLD_DURATION / 1000);
       _holdOsc.connect(_holdGain); _holdGain.connect(actx.destination);
       _holdOsc.start();
-    } catch(e) {}
+    } catch(e) { console.warn('[ghostub:startSealHold:audio]', e); }
   }
 
   const tick = () => {
@@ -8063,7 +8063,7 @@ window.startSealHold = (e) => {
     if (bar) bar.style.width = pct + '%';
     if (elapsed >= HOLD_DURATION) {
       _clearHold();
-      if (_holdOsc) { try { _holdOsc.stop(); } catch(e){} }
+      if (_holdOsc) { try { _holdOsc.stop(); } catch(e){ console.warn('[ghostub:sealHold:stopOsc]', e); } }
       if (bar) { bar.style.opacity = '0'; bar.style.width = '100%'; }
       openEnvelope();
     } else {
@@ -8081,7 +8081,7 @@ window.cancelSealHold = () => {
   const btn = document.getElementById('envelopeOpenBtn');
   const bar = document.getElementById('sealHoldBar');
   if (btn) {
-    if (btn._holdOsc) { try { btn._holdOsc.stop(); } catch(e){} btn._holdOsc = null; }
+    if (btn._holdOsc) { try { btn._holdOsc.stop(); } catch(e){ console.warn('[ghostub:cancelSealHold:stopOsc]', e); } btn._holdOsc = null; }
     btn.classList.remove('holding');
   }
   if (bar) { bar.style.opacity = '0'; bar.style.width = '0%'; }
