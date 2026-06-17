@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=113"></script>
+<script type="module" src="app.js?v=115"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -751,8 +751,9 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   line-height:1.7 !important;
   background:linear-gradient(180deg,rgba(232,225,210,.06) 0%,rgba(232,225,210,.025) 100%) !important;
   border:1px solid rgba(var(--lettre-ink-rgb),.16);
-  border-radius:16px !important;
-  padding:26px 22px !important;margin-bottom:20px;letter-spacing:.01em;
+  border-radius:16px 16px 0 0 !important;
+  min-height:150px;
+  padding:36px 26px !important;margin-bottom:0;letter-spacing:.01em;
   box-shadow:inset 0 1px 0 rgba(255,235,200,.05),0 4px 22px rgba(0,0,0,.18);
   position:relative;
   backdrop-filter:blur(4px);
@@ -793,6 +794,52 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 .ghost-card-btn:active{transform:scale(.98);}
 .resonance-btn.resonated{color:var(--warm);border-color:var(--amber);background:rgba(232,160,48,.12);}
+/* Résonner fusionné au bas du cadre-lettre (juin 2026) */
+.resonance-btn--fused{
+  border-top:none !important;
+  border-radius:0 0 16px 16px !important;
+  margin-top:0 !important;margin-bottom:18px !important;
+  background:linear-gradient(180deg,rgba(232,160,48,.05),rgba(232,160,48,.11)) !important;
+}
+/* Ligne d'actions secondaires — 2 colonnes (juin 2026) */
+.detail-actions-row{display:flex;gap:8px;margin-bottom:14px;}
+.detail-actions-row .btn-favorite,
+.detail-actions-row .ghost-card-btn{width:auto;flex:1;margin-bottom:0;}
+/* Liens discrets (partager / secret / signaler) — juin 2026 */
+.detail-links-row{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;margin-bottom:18px;padding-top:4px;}
+.detail-link-btn{
+  background:none;border:none;padding:6px 2px;
+  color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;
+  font-size:12.5px;cursor:pointer;letter-spacing:.02em;
+  touch-action:manipulation;transition:color .2s;
+}
+.detail-link-btn:hover{color:var(--ghost-blue);}
+.detail-link-btn--danger{color:rgba(255,120,100,.55);}
+.detail-link-btn--danger:hover{color:rgba(255,120,100,.85);}
+/* Réaction courte — 3 mots max (juin 2026, remplace l'ancien fil de réponses) */
+.micro-reply-row{display:flex;gap:8px;margin-bottom:10px;}
+.micro-reply-input{
+  flex:1;background:rgba(var(--spirit-rgb),.05);
+  border:1px solid var(--border);border-radius:13px;
+  padding:11px 14px;color:var(--ether);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  -webkit-text-fill-color:var(--ether);
+}
+.micro-reply-input::placeholder{color:var(--spirit-dim);opacity:.7;}
+.micro-reply-send{
+  flex-shrink:0;width:42px;height:42px;border-radius:13px;
+  background:rgba(232,160,48,.1);border:1px solid rgba(232,160,48,.3);
+  color:var(--amber);font-size:16px;cursor:pointer;touch-action:manipulation;
+  transition:all .2s;
+}
+.micro-reply-send:hover{background:rgba(232,160,48,.18);}
+.micro-reply-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.micro-reply-pill{
+  background:rgba(var(--spirit-rgb),.06);border:1px solid var(--border);
+  border-radius:20px;padding:6px 13px;font-size:12.5px;
+  font-family:'Cormorant Garamond',serif;font-style:italic;
+  color:var(--warm-dim);
+}
 /* Résonances — cartes-lettres avec barre latérale spirit */
 .reply-item{
   background:rgba(8,10,18,.6);
@@ -2814,25 +2861,33 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <div id="detailReadCount" style="display:none;text-align:center;font-size:12px;padding:8px 0 4px;font-family:'Instrument Sans',sans-serif;letter-spacing:.3px;"></div>
         </div>
         <div id="detailChain" style="display:none;"></div>
+        <!-- Résonner — fusionné visuellement au bas du cadre-lettre -->
+        <button class="resonance-btn resonance-btn--fused" id="resonanceBtn" onclick="resonate()">
+          <span id="resonanceCount">✦ Résonner</span>
+        </button>
         <div class="detail-info">
           <div class="detail-badge" id="detailAuthor"></div>
           <div class="detail-badge" id="detailTime"></div>
           <div class="detail-badge" id="detailDuration"></div>
           <div class="detail-badge" id="detailRadius"></div>
         </div>
-        <button class="resonance-btn" id="resonanceBtn" onclick="resonate()">
-          <span id="resonanceCount">✦ Résonner</span>
-        </button>
-        <button class="ghost-card-btn" id="ghostCardBtn" onclick="generateGhostCard()" aria-label="Créer une Ghost Card partageable">
-          <span>👻 Créer une Ghost Card</span>
-        </button>
-        <button class="btn-secondary" id="secretBtn" onclick="toggleSecret()" aria-label="Passer ce fantôme en mode secret" style="display:none;margin-bottom:8px;font-size:13px;padding:11px;">🔮 Passer en secret</button>
-        <button class="share-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.18),rgba(var(--ghost-blue-rgb),.08));border:1px solid rgba(var(--ghost-blue-rgb),.4);color:rgba(var(--ghost-blue-rgb),.95);font-size:14px;padding:13px;border-radius:14px;width:100%;cursor:pointer;margin-bottom:8px;letter-spacing:0.02em;" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
-        <button class="btn-secondary" id="ghostReplyBtn" onclick="showScreen('screenReply')" style="margin-bottom:8px;" data-i18n="detail_reply_ghost_btn">↩ Laisser une réponse ici</button>
-        <button id="favoriteBtn" onclick="toggleFavorite()" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
-        <button class="report-btn" id="reportBtn" onclick="openReportModal()" data-i18n="detail_report_btn">⚑ Signaler ce fantôme</button>
-        <div class="section-label" data-i18n="detail_replies_title">Réponses dans ce lieu</div>
-        <div id="repliesList"></div>
+        <!-- Réaction courte (3 mots max) — remplace l'ancien système de réponse libre -->
+        <div class="micro-reply-row">
+          <input type="text" id="microReplyInput" class="micro-reply-input" data-i18n-placeholder="micro_reply_placeholder" placeholder="Réagir en un mot…" maxlength="30" data-i18n-aria-label="micro_reply_aria" aria-label="Réagir en quelques mots, 3 maximum" onkeydown="if(event.key==='Enter')sendMicroReply()">
+          <button type="button" id="microReplySend" onclick="sendMicroReply()" data-i18n-aria-label="micro_reply_send_aria" aria-label="Envoyer la réaction" class="micro-reply-send">✦</button>
+        </div>
+        <div id="repliesList" class="micro-reply-list"></div>
+        <div class="detail-actions-row">
+          <button id="favoriteBtn" onclick="toggleFavorite()" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
+          <button class="ghost-card-btn" id="ghostCardBtn" onclick="generateGhostCard()" aria-label="Créer une Ghost Card partageable">
+            <span>👻 Créer une Ghost Card</span>
+          </button>
+        </div>
+        <div class="detail-links-row">
+          <button class="detail-link-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
+          <button class="detail-link-btn" id="secretBtn" onclick="toggleSecret()" aria-label="Passer ce fantôme en mode secret" style="display:none;">🔮 Passer en secret</button>
+          <button class="detail-link-btn detail-link-btn--danger" id="reportBtn" onclick="openReportModal()" data-i18n="detail_report_btn">⚑ Signaler ce fantôme</button>
+        </div>
       </div>
     </div>
   </div>
