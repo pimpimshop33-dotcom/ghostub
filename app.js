@@ -1516,15 +1516,15 @@ window.toggleHuntMode = () => {
   huntMode = !huntMode;
   const btn = document.getElementById('huntModeBtn');
   if (huntMode) {
-    btn.style.background = 'rgba(168,180,255,.25)';
+    btn.style.background = 'rgba(var(--ghost-blue-rgb),.25)';
     btn.style.color = 'rgba(200,210,255,1)';
-    btn.style.borderColor = 'rgba(168,180,255,.7)';
+    btn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.7)';
     btn.textContent = t.map_hunt_on;
     showToast('info', t.map_hunt_toast);
   } else {
-    btn.style.background = 'rgba(168,180,255,.08)';
-    btn.style.color = 'rgba(168,180,255,.7)';
-    btn.style.borderColor = 'rgba(168,180,255,.25)';
+    btn.style.background = 'rgba(var(--ghost-blue-rgb),.08)';
+    btn.style.color = 'rgba(var(--ghost-blue-rgb),.7)';
+    btn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.25)';
     btn.textContent = t.map_hunt_off;
   }
   if (window.map) renderStaticMap();
@@ -1557,8 +1557,8 @@ function buildLeafletMap(centerLat, centerLng, h) {
   if (huntMode) {
     L.circle([centerLat, centerLng], {
       radius: 50,
-      color: 'rgba(168,180,255,0.6)',
-      fillColor: 'rgba(168,180,255,0.08)',
+      color: 'rgba(var(--ghost-blue-rgb),0.6)',
+      fillColor: 'rgba(var(--ghost-blue-rgb),0.08)',
       fillOpacity: 1,
       weight: 1.5,
       dashArray: '4 4'
@@ -1583,7 +1583,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
           ? `<div style="font-size:28px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emoji}</div>`
           : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;">
                <div style="font-size:26px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emoji}</div>
-               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(168,180,255,.4);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">🔒</div>
+               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">🔒</div>
              </div>`,
         iconSize: [44, 44], iconAnchor: [22, 22], className: ''
       });
@@ -1592,7 +1592,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
       if (!alreadyOpened) {
         L.circle([g.lat, g.lng], {
           radius: ghostRadius,
-          color: isInRange ? 'rgba(100,255,180,0.5)' : 'rgba(168,180,255,0.2)',
+          color: isInRange ? 'rgba(100,255,180,0.5)' : 'rgba(var(--ghost-blue-rgb),0.2)',
           fillColor: isInRange ? 'rgba(100,255,180,0.05)' : 'transparent',
           fillOpacity: 1,
           weight: 1,
@@ -1620,14 +1620,14 @@ function buildLeafletMap(centerLat, centerLng, h) {
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="font-size:30px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(168,180,255,1)) drop-shadow(0 0 28px rgba(168,180,255,0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;opacity:1;">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:30px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;opacity:1;">${emoji}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="font-size:27px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(168,180,255,0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;opacity:0.85;">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:27px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;opacity:0.85;">${emoji}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="font-size:24px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(168,180,255,0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;opacity:${farOpacity.toFixed(2)};">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:24px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;opacity:${farOpacity.toFixed(2)};">${emoji}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
@@ -1674,9 +1674,9 @@ function buildLeafletMap(centerLat, centerLng, h) {
     } else {
       level = 'spot';
       labelFr = `✦ Ghost Spot · ${n}`; labelEn = `✦ Ghost Spot · ${n}`;
-      color = 'rgba(255,200,80,0.5)'; fillColor = 'rgba(255,200,80,0.07)';
+      color = 'rgba(var(--premium-rgb),0.5)'; fillColor = 'rgba(var(--premium-rgb),0.07)';
       fillOpacity = 1; radius = 150;
-      pulseColor = 'rgba(255,200,80,'; borderColor = 'rgba(255,200,80,.6)';
+      pulseColor = 'rgba(var(--premium-rgb),'; borderColor = 'rgba(var(--premium-rgb),.6)';
     }
 
     // Cercle de chaleur extérieur (glow large)
@@ -1706,7 +1706,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
   if (!legendEl) {
     legendEl = document.createElement('div');
     legendEl.id = 'mapHauntedLegend';
-    legendEl.style.cssText = 'display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;align-items:center;gap:6px;padding:5px 12px;background:rgba(8,6,18,.85);backdrop-filter:blur(8px);border:1px solid rgba(168,180,255,.2);border-radius:20px;flex-wrap:wrap;white-space:nowrap;pointer-events:none;';
+    legendEl.style.cssText = 'display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;align-items:center;gap:6px;padding:5px 12px;background:rgba(8,6,18,.85);backdrop-filter:blur(8px);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;flex-wrap:wrap;white-space:nowrap;pointer-events:none;';
     document.getElementById('leafletMap').appendChild(legendEl);
   }
   const zones = { spot: 0, haunted: 0, infest: 0 };
@@ -1726,10 +1726,10 @@ function buildLeafletMap(centerLat, centerLng, h) {
     const hasAny = zones.spot || zones.haunted || zones.infest;
     if (hasAny) {
       const items = [];
-      if (zones.spot)    items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(255,200,80,0.5);border:1.5px solid rgba(255,200,80,.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(255,210,80,.9);">Ghost Spot · ${zoneGhosts.spot}👻</span></span>`);
+      if (zones.spot)    items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(var(--premium-rgb),0.5);border:1.5px solid rgba(var(--premium-rgb),.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(255,210,80,.9);">Ghost Spot · ${zoneGhosts.spot}👻</span></span>`);
       if (zones.haunted) items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(168,100,255,0.5);border:1.5px solid rgba(168,100,255,.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(200,140,255,.9);">${_currentLang==='en'?'Haunted':'Hantée'} · ${zoneGhosts.haunted}👻</span></span>`);
       if (zones.infest)  items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(255,80,60,0.5);border:1.5px solid rgba(255,80,60,.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(255,120,100,.9);">Infestation · ${zoneGhosts.infest}👻</span></span>`);
-      legendEl.innerHTML = items.join('<span style="color:rgba(168,180,255,.2);margin:0 6px;">·</span>');
+      legendEl.innerHTML = items.join('<span style="color:rgba(var(--ghost-blue-rgb),.2);margin:0 6px;">·</span>');
       legendEl.style.display = 'flex';
     } else {
       legendEl.style.display = 'none';
@@ -1822,25 +1822,25 @@ onAuthStateChanged(auth, async user => {
         if (distEl) {
           distEl.textContent = formatDistance(dist);
           if (dist <= 50) {
-            distEl.style.cssText = 'background:rgba(100,220,160,.1);border:1px solid rgba(100,220,160,.25);color:rgba(100,220,160,.9);';
+            distEl.style.cssText = 'background:rgba(var(--accent-green-rgb),.1);border:1px solid rgba(var(--accent-green-rgb),.25);color:rgba(var(--accent-green-rgb),.9);';
           } else if (dist <= 200) {
-            distEl.style.cssText = 'background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.2);color:rgba(255,200,80,.8);';
+            distEl.style.cssText = 'background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.2);color:rgba(var(--premium-rgb),.8);';
           } else {
-            distEl.style.cssText = 'background:rgba(168,180,255,.08);border:1px solid rgba(168,180,255,.12);color:rgba(168,180,255,.6);';
+            distEl.style.cssText = 'background:rgba(var(--ghost-blue-rgb),.08);border:1px solid rgba(var(--ghost-blue-rgb),.12);color:rgba(var(--ghost-blue-rgb),.6);';
           }
         }
         if (dist <= 10) {
-          card.style.boxShadow = '0 0 24px rgba(168,180,255,.45)';
-          card.style.borderColor = 'rgba(168,180,255,.7)';
+          card.style.boxShadow = '0 0 24px rgba(var(--ghost-blue-rgb),.45)';
+          card.style.borderColor = 'rgba(var(--ghost-blue-rgb),.7)';
           card.classList.add('ghost-envelope-close');
           if (navigator.vibrate && !g._buzzed10) { navigator.vibrate([20, 40, 20]); g._buzzed10 = true; }
         } else if (dist <= 30) {
-          card.style.boxShadow = '0 0 14px rgba(168,180,255,.25)';
-          card.style.borderColor = 'rgba(168,180,255,.45)';
+          card.style.boxShadow = '0 0 14px rgba(var(--ghost-blue-rgb),.25)';
+          card.style.borderColor = 'rgba(var(--ghost-blue-rgb),.45)';
           card.classList.remove('ghost-envelope-close');
           g._buzzed10 = false;
         } else if (dist <= 100) {
-          card.style.boxShadow = '0 0 6px rgba(168,180,255,.1)';
+          card.style.boxShadow = '0 0 6px rgba(var(--ghost-blue-rgb),.1)';
           card.style.borderColor = '';
           card.classList.remove('ghost-envelope-close');
         } else {
@@ -2360,7 +2360,7 @@ function _setNotifBtnState(active) {
   const span = btn.querySelector('span:nth-child(2)');
   if (active) {
     if (span) span.textContent = t.profile_notif_on;
-    btn.style.color = 'rgba(100,220,160,.9)';
+    btn.style.color = 'rgba(var(--accent-green-rgb),.9)';
   } else {
     if (span) span.textContent = t.profile_notif_off;
     btn.style.color = 'var(--text)';
@@ -2393,7 +2393,7 @@ window.enableNotifications = async () => {
   const granted = alreadyGranted ? true : await requestNotifPermission();
   if (granted) {
     _setNotifBtnState(true);
-    btn.style.borderColor = 'rgba(100,220,160,.4)';
+    btn.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
     localStorage.setItem('notif_enabled', '1');
     showToast('success', t.profile_notif_enabled);
     _startNotifIntervals();
@@ -2412,7 +2412,7 @@ registerServiceWorker().then(reg => {
     const btn = document.getElementById('notifBtn');
     if (btn) {
       _setNotifBtnState(true);
-      btn.style.borderColor = 'rgba(100,220,160,.4)';
+      btn.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
     }
   }
 });
@@ -2472,7 +2472,7 @@ function showAudioPreview(blob) {
   window._pendingAudioBlobUrl = url;
   const preview = document.getElementById('audioPreview');
   preview.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,rgba(168,180,255,.08),rgba(168,180,255,.03));border:1px solid rgba(168,180,255,.2);border-radius:14px;padding:10px 12px;margin-top:8px;">
+    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:14px;padding:10px 12px;margin-top:8px;">
       <span style="font-size:18px;" aria-hidden="true">🎙</span>
       <audio controls src="${url}" style="flex:1;height:32px;" aria-label="Aperçu de l'enregistrement vocal"></audio>
       <button onclick="clearAudio()" aria-label="Supprimer l'enregistrement" style="background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.3);color:rgba(255,120,120,.8);cursor:pointer;font-size:13px;border-radius:8px;width:32px;height:32px;min-width:32px;">✕</button>
@@ -2524,9 +2524,9 @@ window.handlePhoto = (input) => {
         window._pendingPhotoFile = new File([blob], file.name, { type: 'image/jpeg' });
         document.getElementById('photoPreview').innerHTML = `
           <div style="position:relative;margin-top:8px;">
-            <img src="${url}" alt="Aperçu de la photo" style="width:100%;border-radius:14px;border:1px solid rgba(168,180,255,.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);" loading="lazy">
+            <img src="${url}" alt="Aperçu de la photo" style="width:100%;border-radius:14px;border:1px solid rgba(var(--ghost-blue-rgb),.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);" loading="lazy">
             <button onclick="clearPhoto()" aria-label="Supprimer la photo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
-            <div style="position:absolute;bottom:8px;left:8px;font-size:10px;background:rgba(0,0,0,.6);color:rgba(100,220,160,.8);border-radius:8px;padding:2px 7px;">${(blob.size/1024).toFixed(0)}ko</div>
+            <div style="position:absolute;bottom:8px;left:8px;font-size:10px;background:rgba(0,0,0,.6);color:rgba(var(--accent-green-rgb),.8);border-radius:8px;padding:2px 7px;">${(blob.size/1024).toFixed(0)}ko</div>
           </div>`;
         document.getElementById('depositError').textContent = '';
       }, 'image/jpeg', 0.82);
@@ -2566,7 +2566,7 @@ window.handleVideo = (input) => {
   window._pendingVideoFile = file;
   const preview = document.getElementById('videoPreview');
   preview.innerHTML = `
-    <div style="position:relative;margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(168,180,255,.2);">
+    <div style="position:relative;margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);">
       <video src="${url}" controls playsinline style="width:100%;max-height:200px;display:block;background:#000;"></video>
       <button onclick="clearVideo()" aria-label="Supprimer la vidéo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>`;
@@ -3056,10 +3056,10 @@ async function loadBizDashboard() {
     }
 
     // Badge ouvertures
-    const opensColor = opens >= 10 ? 'rgba(100,220,160,.9)' : opens >= 3 ? 'rgba(255,200,80,.8)' : 'var(--spirit-dim)';
+    const opensColor = opens >= 10 ? 'rgba(var(--accent-green-rgb),.9)' : opens >= 3 ? 'rgba(var(--premium-rgb),.8)' : 'var(--spirit-dim)';
 
     html += `
-      <div style="background:rgba(255,200,80,.04);border:1px solid rgba(255,200,80,.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+      <div style="background:rgba(var(--premium-rgb),.04);border:1px solid rgba(var(--premium-rgb),.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
         <div style="display:flex;align-items:flex-start;gap:10px;">
           <span style="font-size:22px;flex-shrink:0;">🏪</span>
           <div style="flex:1;min-width:0;">
@@ -3072,7 +3072,7 @@ async function loadBizDashboard() {
             </div>
           </div>
         </div>
-        ${!expired ? `<button onclick="renewBusinessGhost('${escapeHTML(id)}')" style="width:100%;margin-top:10px;padding:8px;background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.3);border-radius:10px;color:rgba(255,200,80,.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;">${_currentLang === 'fr' ? '↻ Renouveler pour 1 mois' : '↻ Renew for 1 month'}</button>` : ''}
+        ${!expired ? `<button onclick="renewBusinessGhost('${escapeHTML(id)}')" style="width:100%;margin-top:10px;padding:8px;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.3);border-radius:10px;color:rgba(var(--premium-rgb),.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;">${_currentLang === 'fr' ? '↻ Renouveler pour 1 mois' : '↻ Renew for 1 month'}</button>` : ''}
       </div>`;
   });
   content.innerHTML = html || `<div style="opacity:.5;font-style:italic;text-align:center;padding:12px 0;">${_currentLang === 'fr' ? 'Aucune offre commerce active' : 'No active commerce offers'}</div>`;
@@ -3213,14 +3213,14 @@ function updatePremiumUI() {
   // Sections Premium — injection directe dans les wrappers
   const _premSections = [
     { id: 'premSection_video',     icon: '🎥', label: t.prem_video_label || 'Vidéo', sub: t.prem_video_sub || 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
+      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
     { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
     // Phase 1d v103 — Galerie de fichiers
     { id: 'premSection_attachments', icon: '📎', label: t.prem_attach_label || 'Documents', sub: t.prem_attach_sub || 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span style="font-size:9px;background:rgba(255,200,80,.15);border:1px solid rgba(255,200,80,.3);border-radius:8px;padding:2px 6px;color:rgba(255,200,80,.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerAttachments()" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">PDF, JPG, PNG</span></button>` },
+      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerAttachments()" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">PDF, JPG, PNG</span></button>` },
   ];
 
   const _badge = (txt) => `<span class="badge-premium">✦ Premium</span>`;
@@ -3247,16 +3247,16 @@ function updatePremiumUI() {
   const avatar = document.getElementById('profileAvatar');
   if (avatar) {
     avatar.style.border = isPremium
-      ? '1.5px solid rgba(255,200,80,.6)'
+      ? '1.5px solid rgba(var(--premium-rgb),.6)'
       : '1px solid var(--border-bright)';
-    avatar.style.boxShadow = isPremium ? '0 0 14px rgba(255,200,80,.2)' : '';
+    avatar.style.boxShadow = isPremium ? '0 0 14px rgba(var(--premium-rgb),.2)' : '';
     // Badge ✦ Premium sous l'avatar
     const existingBadge = document.getElementById('premiumAvatarBadge');
     if (isPremium && !existingBadge) {
       const badge = document.createElement('div');
       badge.id = 'premiumAvatarBadge';
       badge.textContent = '✦ Premium';
-      badge.style.cssText = 'font-size:10px;color:rgba(255,200,80,.85);background:rgba(255,200,80,.1);border:1px solid rgba(255,200,80,.3);border-radius:20px;padding:2px 10px;margin-top:4px;letter-spacing:.5px;display:inline-block;';
+      badge.style.cssText = 'font-size:10px;color:rgba(var(--premium-rgb),.85);background:rgba(var(--premium-rgb),.1);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:2px 10px;margin-top:4px;letter-spacing:.5px;display:inline-block;';
       avatar.parentNode.insertBefore(badge, avatar.nextSibling);
     } else if (!isPremium && existingBadge) {
       existingBadge.remove();
@@ -3265,7 +3265,7 @@ function updatePremiumUI() {
   const pricingSection = document.getElementById('pricingSection');
   if (isPremium) {
     planEl.style.display = 'block';
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
+    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
     if (pricingSection) pricingSection.style.display = 'none';
   } else {
@@ -3282,9 +3282,9 @@ function updatePremiumUI() {
     rb.id = 'radarPremiumBadge';
     rb.textContent = '✦';
     rb.setAttribute('aria-label', 'Compte Premium');
-    rb.style.cssText = 'margin-left:7px;font-size:13px;color:rgba(255,200,80,.85);' +
+    rb.style.cssText = 'margin-left:7px;font-size:13px;color:rgba(var(--premium-rgb),.85);' +
       'animation:ghostFloat 2.8s ease-in-out infinite;display:inline-block;' +
-      '-webkit-text-fill-color:rgba(255,200,80,.85)!important;vertical-align:middle;';
+      '-webkit-text-fill-color:rgba(var(--premium-rgb),.85)!important;vertical-align:middle;';
     radarTitle.appendChild(rb);
   } else if (!isPremium && existingRadarBadge) {
     existingRadarBadge.remove();
@@ -3320,48 +3320,48 @@ function _renderPricingCards() {
   const isEn = _currentLang === 'en';
   section.innerHTML = `
     <!-- Premium -->
-    <div style="background:linear-gradient(160deg,rgba(168,180,255,.07),rgba(168,180,255,.02));border:1px solid rgba(168,180,255,.3);border-radius:16px;padding:16px;margin-bottom:10px;">
+    <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(168,180,255,.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(168,180,255,.4));">👻</div>
+        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">👻</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Instant drop' : 'Dépôt immédiat'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Video + audio 🎥' : 'Vidéo + vocal 🎥'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Dedicated ghost 💌' : 'Ghost dédié 💌'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Ghost chain 🔗' : 'Chaîne fantômes 🔗'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(100,220,160,.8);">✓</span> ${isEn ? 'Future message 📅' : 'Message futur 📅'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Instant drop' : 'Dépôt immédiat'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Video + audio 🎥' : 'Vidéo + vocal 🎥'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Dedicated ghost 💌' : 'Ghost dédié 💌'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Ghost chain 🔗' : 'Chaîne fantômes 🔗'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Future message 📅' : 'Message futur 📅'}</div>
       </div>
-      <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(168,180,255,.25),rgba(168,180,255,.1));border:1px solid rgba(168,180,255,.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_premium || '✦ Become Premium Hunter'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(255,200,80,.2);color:rgba(255,220,140,.95);border:1px solid rgba(255,200,80,.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
+      <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_premium || '✦ Become Premium Hunter'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
     </div>
     <!-- Commerce -->
-    <div style="background:linear-gradient(160deg,rgba(255,200,80,.06),rgba(255,200,80,.02));border:1px solid rgba(255,200,80,.25);border-radius:16px;padding:16px;margin-bottom:10px;">
+    <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:2px;">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">4,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(255,200,80,.4));">🏪</div>
+        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));">🏪</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'All Premium included' : 'Tout Premium inclus'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Commerce ghosts' : 'Ghosts Commerce'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Promo code built-in' : 'Code promo intégré'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(255,200,80,.8);">✓</span> ${isEn ? 'Openings dashboard' : 'Dashboard ouvertures'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'All Premium included' : 'Tout Premium inclus'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Commerce ghosts' : 'Ghosts Commerce'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Promo code built-in' : 'Code promo intégré'}</div>
+        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Openings dashboard' : 'Dashboard ouvertures'}</div>
       </div>
-      <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(255,200,80,.2),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:13px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_commerce || '🏪 Activate Commerce Plan'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(255,200,80,.2);color:rgba(255,220,140,.95);border:1px solid rgba(255,200,80,.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
+      <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.2),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:13px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_commerce || '🏪 Activate Commerce Plan'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
     </div>
     <!-- Code promo discret -->
     <div id="codeSection" style="padding:4px 0;">
       <details style="cursor:pointer;">
-        <summary style="font-size:11px;color:rgba(168,180,255,.35);letter-spacing:.3px;list-style:none;padding:6px 0;">${isEn ? 'Have an activation code?' : 'Vous avez un code d\'activation ?'}</summary>
+        <summary style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.3px;list-style:none;padding:6px 0;">${isEn ? 'Have an activation code?' : 'Vous avez un code d\'activation ?'}</summary>
         <div style="display:flex;gap:8px;margin-top:8px;">
           <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
-          <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(255,200,80,.15),rgba(255,200,80,.06));border:1px solid rgba(255,200,80,.4);border-radius:12px;color:rgba(255,200,80,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;">${t.profile_activate_btn || 'Activer'}</button>
+          <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;">${t.profile_activate_btn || 'Activer'}</button>
         </div>
         <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
       </details>
@@ -3516,8 +3516,8 @@ function showToast(type, msg, duration = 3200) {
   if (!toast || !icon || !text) return;
   icon.textContent = icons[type] || '👻';
   text.innerHTML = sanitizeToastMsg(msg);
-  toast.style.borderColor = 'rgba(168,180,255,.25)';
-  if (type === 'success') toast.style.borderColor = 'rgba(100,220,160,.3)';
+  toast.style.borderColor = 'rgba(var(--ghost-blue-rgb),.25)';
+  if (type === 'success') toast.style.borderColor = 'rgba(var(--accent-green-rgb),.3)';
   if (type === 'error') toast.style.borderColor = 'rgba(255,100,100,.3)';
   if (type === 'warning') toast.style.borderColor = 'rgba(255,180,50,.3)';
   clearTimeout(_toastTimer);
@@ -3586,13 +3586,13 @@ window.shareMapLocation = async () => {
     ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
 
     // Lignes déco
-    ctx.strokeStyle = 'rgba(168,180,255,0.12)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(80, 130); ctx.lineTo(W-80, 130); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(80, H-130); ctx.lineTo(W-80, H-130); ctx.stroke();
 
     // App name
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(168,180,255,0.45)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.45)';
     ctx.font = '500 36px "Instrument Sans", sans-serif';
     ctx.fillText('GHOSTUB', W/2, 100);
 
@@ -3602,7 +3602,7 @@ window.shareMapLocation = async () => {
     ctx.fillText(String(count), W/2, H/2 - 20);
 
     // Label sous le chiffre
-    ctx.fillStyle = 'rgba(168,180,255,0.7)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.7)';
     ctx.font = 'italic 52px "Cormorant Garamond", Georgia, serif';
     ctx.fillText(_currentLang === 'en' ? (count > 1 ? 'presences detected' : 'presence detected') : (count > 1 ? 'présences détectées' : 'présence détectée'), W/2, H/2 + 60);
 
@@ -3614,10 +3614,10 @@ window.shareMapLocation = async () => {
     }
 
     // CTA
-    ctx.fillStyle = 'rgba(168,180,255,0.4)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
     ctx.font = '34px "Instrument Sans", sans-serif';
     ctx.fillText(_currentLang === 'en' ? 'Come closer to discover what awaits you' : 'Approche-toi pour découvrir ce qui t’attend', W/2, H - 170);
-    ctx.fillStyle = 'rgba(168,180,255,0.2)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.2)';
     ctx.font = '28px "Instrument Sans", sans-serif';
     ctx.fillText('ghostub.app', W/2, H - 110);
 
@@ -3753,18 +3753,18 @@ window.generateGhostCard = async () => {
     // ── Header app ────────────────────────────────────────
     ctx.textAlign = 'center';
     ctx.letterSpacing = '8px';
-    ctx.fillStyle = 'rgba(168,180,255,0.45)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.45)';
     ctx.font = '400 36px "Instrument Sans", sans-serif';
     ctx.fillText('GHOSTUB', W/2, 100);
     ctx.letterSpacing = '0px';
 
     // Séparateur haut
-    ctx.strokeStyle = 'rgba(168,180,255,0.12)';
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(100, 128); ctx.lineTo(W-100, 128); ctx.stroke();
 
     // ── Ghost emoji avec glow ─────────────────────────────
-    ctx.shadowColor = 'rgba(168,180,255,0.7)';
+    ctx.shadowColor = 'rgba(var(--ghost-blue-rgb),0.7)';
     ctx.shadowBlur = 80;
     ctx.font = '220px serif';
     ctx.fillText(selectedGhost.emoji || '👻', W/2, H*0.38);
@@ -3785,7 +3785,7 @@ window.generateGhostCard = async () => {
       ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
       ctx.fillText(_currentLang === 'en' ? `Only ${remaining} can still open it` : `Plus que ${remaining} personne${remaining > 1 ? 's' : ''} peut l'ouvrir`, W/2, H*0.52 + 80);
     } else {
-      ctx.fillStyle = 'rgba(168,180,255,0.55)';
+      ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.55)';
       ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
       ctx.fillText(_currentLang === 'en' ? '…but only if you are close enough' : '…mais seulement si tu t’en approches', W/2, H*0.52 + 80);
     }
@@ -3800,18 +3800,18 @@ window.generateGhostCard = async () => {
     // Distance et résonances
     const resoCount = selectedGhost.resonances || 0;
     if (resoCount > 0) {
-      ctx.fillStyle = 'rgba(255,200,80,0.65)';
+      ctx.fillStyle = 'rgba(var(--premium-rgb),0.65)';
       ctx.font = '38px "Instrument Sans", sans-serif';
       ctx.fillText('✦'.repeat(Math.min(resoCount, 5)) + ` — ${resoCount} résonance${resoCount > 1 ? 's' : ''}`, W/2, H*0.69);
     }
 
     // ── CTA viral ─────────────────────────────────────────
     // Fond pill pour le CTA
-    ctx.fillStyle = 'rgba(168,180,255,0.12)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
     const pillY = H*0.78;
     _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(168,180,255,0.25)';
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.25)';
     ctx.lineWidth = 1.5;
     _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
     ctx.stroke();
@@ -3821,12 +3821,12 @@ window.generateGhostCard = async () => {
     ctx.fillText(_currentLang === 'en' ? 'Come and open it on Ghostub' : 'Viens l’ouvrir sur Ghostub', W/2, pillY + 15);
 
     // Séparateur bas
-    ctx.strokeStyle = 'rgba(168,180,255,0.10)';
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.10)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(100, H - 130); ctx.lineTo(W-100, H - 130); ctx.stroke();
 
     // URL
-    ctx.fillStyle = 'rgba(168,180,255,0.3)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.3)';
     ctx.font = '28px "Instrument Sans", sans-serif';
     ctx.letterSpacing = '1px';
     ctx.fillText('ghostub.app', W/2, H - 80);
@@ -3897,7 +3897,7 @@ window.copyShareLink = () => {
   const link = document.getElementById('shareLinkBox').textContent;
   const btn = document.querySelector('.share-copy-btn');
   navigator.clipboard.writeText(link).then(() => {
-    if (btn) { btn.textContent = t.toast_copied; btn.style.borderColor = 'rgba(100,220,160,.4)'; setTimeout(() => { btn.textContent = t.share_copy_btn; btn.style.borderColor = ''; }, 2000); }
+    if (btn) { btn.textContent = t.toast_copied; btn.style.borderColor = 'rgba(var(--accent-green-rgb),.4)'; setTimeout(() => { btn.textContent = t.share_copy_btn; btn.style.borderColor = ''; }, 2000); }
     showToast('link', t.toast_link_copied);
     closeModal('shareModal');
     Analytics.track('share_copied');
@@ -4112,8 +4112,8 @@ window.deleteMyGhosts = async () => {
     await Promise.all([...dels, ...rDels, ...replyDelsOnMyGhosts]);
     const totalDel = snap.size + myReplies.size + replyDelsOnMyGhosts.length;
     btn.textContent = '✓ ' + snap.size + ' ' + (_currentLang === 'fr' ? 'fantômes supprimés' : 'ghosts deleted');
-    btn.style.borderColor = 'rgba(100,220,160,.4)';
-    btn.style.color = 'rgba(100,220,160,.9)';
+    btn.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
+    btn.style.color = 'rgba(var(--accent-green-rgb),.9)';
     nearbyGhosts = [];
     renderGhostList();
     Analytics.track('delete_all_ghosts', { count: snap.size });
@@ -4527,12 +4527,12 @@ window.loadNearbyGhosts = async () => {
   if (resoEl) {
     if (hasResonatedToday()) {
       resoEl.textContent = '✦ 0';
-      resoEl.style.color = 'rgba(168,180,255,.25)';
-      resoEl.style.borderColor = 'rgba(168,180,255,.08)';
+      resoEl.style.color = 'rgba(var(--ghost-blue-rgb),.25)';
+      resoEl.style.borderColor = 'rgba(var(--ghost-blue-rgb),.08)';
     } else {
       resoEl.textContent = '✦ 1';
-      resoEl.style.color = 'rgba(168,180,255,.7)';
-      resoEl.style.borderColor = 'rgba(168,180,255,.3)';
+      resoEl.style.color = 'rgba(var(--ghost-blue-rgb),.7)';
+      resoEl.style.borderColor = 'rgba(var(--ghost-blue-rgb),.3)';
     }
   }
   Analytics.track('ghosts_loaded', { count });
@@ -4648,7 +4648,7 @@ function _launchSealParticles() {
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext('2d');
   const CX = W / 2, CY = H * 0.42;
-  const COLORS = ['rgba(200,190,255,', 'rgba(168,180,255,', 'rgba(255,240,200,', 'rgba(220,200,255,', 'rgba(255,255,255,'];
+  const COLORS = ['rgba(200,190,255,', 'rgba(var(--ghost-blue-rgb),', 'rgba(255,240,200,', 'rgba(220,200,255,', 'rgba(255,255,255,'];
   const particles = [];
   const COUNT = 68;
   for (let i = 0; i < COUNT; i++) {
@@ -4750,7 +4750,7 @@ function _launchDepositParticles() {
   const ctx = canvas.getContext('2d');
   const CX = W / 2, CY = H / 2;
   // Couleurs dorées/vertes — ancrage, création
-  const COLORS = ['rgba(255,210,80,', 'rgba(100,220,160,', 'rgba(255,240,150,', 'rgba(168,255,180,', 'rgba(255,255,200,'];
+  const COLORS = ['rgba(255,210,80,', 'rgba(var(--accent-green-rgb),', 'rgba(255,240,150,', 'rgba(168,255,180,', 'rgba(255,255,200,'];
   const particles = [];
   for (let i = 0; i < 55; i++) {
     const angle = (Math.random() * Math.PI * 2);
@@ -4840,9 +4840,9 @@ function updateFavoriteBtn() {
   if (!btn || !selectedGhost) return;
   const fav = isFavorite(selectedGhost.id);
   btn.textContent = fav ? t.detail_fav_added : t.detail_fav_add;
-  btn.style.color = fav ? 'rgba(255,200,80,.9)' : 'rgba(255,200,80,.5)';
-  btn.style.borderColor = fav ? 'rgba(255,200,80,.5)' : 'rgba(255,200,80,.2)';
-  btn.style.background = fav ? 'rgba(255,200,80,.1)' : 'rgba(255,200,80,.05)';
+  btn.style.color = fav ? 'rgba(var(--premium-rgb),.9)' : 'rgba(var(--premium-rgb),.5)';
+  btn.style.borderColor = fav ? 'rgba(var(--premium-rgb),.5)' : 'rgba(var(--premium-rgb),.2)';
+  btn.style.background = fav ? 'rgba(var(--premium-rgb),.1)' : 'rgba(var(--premium-rgb),.05)';
 }
 
 function updateFavoritesCount() {
@@ -4869,7 +4869,7 @@ window.toggleFavoritesList = async () => {
         <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
         <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
       </div>
-      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(255,200,80,.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
+      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(var(--premium-rgb),.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
     </div>`).join('');
 };
 
@@ -4890,7 +4890,7 @@ window.removeFavorite = (ghostId) => {
         <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
         <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
       </div>
-      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(255,200,80,.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
+      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(var(--premium-rgb),.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
     </div>`).join('');
   }
 };
@@ -5003,7 +5003,7 @@ window.loadEmpreinteMap = async () => {
     // 4. Marqueurs dépôts — violet lumineux
     deposits.forEach(p => {
       const icon = L.divIcon({
-        html: `<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(168,180,255,1));animation:ghostFloat 2.5s ease-in-out infinite;">${p.emoji}</div>`,
+        html: `<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),1));animation:ghostFloat 2.5s ease-in-out infinite;">${p.emoji}</div>`,
         iconSize: [28, 28], iconAnchor: [14, 14], className: ''
       });
       L.marker([p.lat, p.lng], { icon })
@@ -5014,7 +5014,7 @@ window.loadEmpreinteMap = async () => {
     // 5. Marqueurs découvertes — doré
     discoveries.forEach(p => {
       const icon = L.divIcon({
-        html: `<div style="width:10px;height:10px;background:rgba(255,200,80,.9);border-radius:50%;border:2px solid rgba(255,220,120,.8);box-shadow:0 0 8px rgba(255,200,80,.7);"></div>`,
+        html: `<div style="width:10px;height:10px;background:rgba(var(--premium-rgb),.9);border-radius:50%;border:2px solid rgba(255,220,120,.8);box-shadow:0 0 8px rgba(var(--premium-rgb),.7);"></div>`,
         iconSize: [10, 10], iconAnchor: [5, 5], className: ''
       });
       L.marker([p.lat, p.lng], { icon })
@@ -5033,7 +5033,7 @@ window.loadEmpreinteMap = async () => {
     if (deposits.length > 1) {
       const trailCoords = deposits.map(p => [p.lat, p.lng]);
       L.polyline(trailCoords, {
-        color: 'rgba(168,180,255,0.35)',
+        color: 'rgba(var(--ghost-blue-rgb),0.35)',
         weight: 1.5,
         dashArray: '4, 6',
         lineCap: 'round'
@@ -5047,8 +5047,8 @@ window.loadEmpreinteMap = async () => {
         radius: 60,
         color: 'transparent',
         fillColor: p === deposits.find(d => d.id === p.id)
-          ? 'rgba(168,180,255,0.08)'
-          : 'rgba(255,200,80,0.06)',
+          ? 'rgba(var(--ghost-blue-rgb),0.08)'
+          : 'rgba(var(--premium-rgb),0.06)',
         fillOpacity: 1,
         interactive: false
       }).addTo(_empreinteMap);
@@ -5065,20 +5065,20 @@ window.loadEmpreinteMap = async () => {
 
     if (loader) loader.style.display = 'none';
     statsEl.innerHTML = `
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
         <div style="font-size:16px;color:var(--ether);font-weight:600;">${deposits.length}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_deposits || 'Dépôts'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
-        <div style="font-size:16px;color:rgba(255,200,80,.9);font-weight:600;">${discoveries.length}</div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
+        <div style="font-size:16px;color:rgba(var(--premium-rgb),.9);font-weight:600;">${discoveries.length}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_discoveries || 'Découvertes'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(168,180,255,.1);">
-        <div style="font-size:16px;color:rgba(100,220,160,.9);font-weight:600;">${cities}</div>
+      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
+        <div style="font-size:16px;color:rgba(var(--accent-green-rgb),.9);font-weight:600;">${cities}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_places || 'Lieux'}</div>
       </div>
       <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;">
-        <div style="font-size:16px;color:rgba(168,180,255,.9);font-weight:600;">✦${score}</div>
+        <div style="font-size:16px;color:rgba(var(--ghost-blue-rgb),.9);font-weight:600;">✦${score}</div>
         <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_score || 'Score'}</div>
       </div>`;
 
@@ -5179,16 +5179,16 @@ window.generateYearCard = async () => {
     ctx.textAlign = 'center';
 
     // App name
-    ctx.fillStyle = 'rgba(168,180,255,0.4)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
     ctx.font = '500 34px "Instrument Sans", sans-serif';
     ctx.fillText('GHOSTUB', W/2, 110);
 
     // Ligne déco
-    ctx.strokeStyle = 'rgba(168,180,255,0.12)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(80,140); ctx.lineTo(W-80,140); ctx.stroke();
 
     // Titre
-    ctx.fillStyle = 'rgba(255,200,80,0.85)';
+    ctx.fillStyle = 'rgba(var(--premium-rgb),0.85)';
     ctx.font = 'italic 62px "Cormorant Garamond", Georgia, serif';
     ctx.fillText(_currentLang === 'en' ? 'My year in ghosts' : 'Mon année en fantômes', W/2, 230);
 
@@ -5196,12 +5196,12 @@ window.generateYearCard = async () => {
     ctx.fillStyle = 'rgba(230,225,255,0.9)';
     ctx.font = '500 44px "Instrument Sans", sans-serif';
     ctx.fillText(name, W/2, 310);
-    ctx.fillStyle = 'rgba(168,180,255,0.5)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.5)';
     ctx.font = '34px "Instrument Sans", sans-serif';
     ctx.fillText(rank.icon + ' ' + rank.label, W/2, 370);
 
     // Ligne déco milieu
-    ctx.strokeStyle = 'rgba(255,200,80,0.15)';
+    ctx.strokeStyle = 'rgba(var(--premium-rgb),0.15)';
     ctx.beginPath(); ctx.moveTo(120,420); ctx.lineTo(W-120,420); ctx.stroke();
 
     // Stats grandes
@@ -5214,20 +5214,20 @@ window.generateYearCard = async () => {
     stats.forEach(({ num, label, icon, y }) => {
       // Halo derrière le chiffre
       const sh = ctx.createRadialGradient(W/2,y-40,0,W/2,y-40,120);
-      sh.addColorStop(0,'rgba(168,180,255,0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+      sh.addColorStop(0,'rgba(var(--ghost-blue-rgb),0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
       ctx.fillStyle = sh; ctx.fillRect(0,0,W,H);
 
       ctx.fillStyle = 'rgba(230,225,255,0.95)';
       ctx.font = `bold ${num >= 100 ? 110 : 130}px "Cormorant Garamond", Georgia, serif`;
       ctx.fillText(String(num), W/2, y);
 
-      ctx.fillStyle = 'rgba(168,180,255,0.65)';
+      ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.65)';
       ctx.font = 'italic 40px "Cormorant Garamond", Georgia, serif';
       ctx.fillText(icon + '  ' + label, W/2, y+60);
     });
 
     // Extras
-    ctx.strokeStyle = 'rgba(168,180,255,0.1)';
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.1)';
     ctx.beginPath(); ctx.moveTo(120,1080); ctx.lineTo(W-120,1080); ctx.stroke();
 
     const extras = [];
@@ -5235,19 +5235,19 @@ window.generateYearCard = async () => {
     if (firstReads > 0) extras.push(`🥇 ${firstReads} premier${firstReads>1?'s':''} lecteur${firstReads>1?'s':''}`);
     if (topLocation) extras.push(`📍 ${topLocation.substring(0,30)}`);
 
-    ctx.fillStyle = 'rgba(255,200,80,0.6)';
+    ctx.fillStyle = 'rgba(var(--premium-rgb),0.6)';
     ctx.font = '36px "Instrument Sans", sans-serif';
     extras.forEach((e, i) => ctx.fillText(e, W/2, 1160 + i*70));
 
     // Ligne bas
-    ctx.strokeStyle = 'rgba(168,180,255,0.12)';
+    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
     ctx.beginPath(); ctx.moveTo(80,H-150); ctx.lineTo(W-80,H-150); ctx.stroke();
 
     // CTA
-    ctx.fillStyle = 'rgba(168,180,255,0.35)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.35)';
     ctx.font = '32px "Instrument Sans", sans-serif';
     ctx.fillText(_currentLang === 'en' ? 'And you, what did you leave this year?' : 'Et toi, qu’est-ce que tu as laissé cette année ?', W/2, H-100);
-    ctx.fillStyle = 'rgba(168,180,255,0.2)';
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.2)';
     ctx.font = '28px "Instrument Sans", sans-serif';
     ctx.fillText('ghostub.app', W/2, H-55);
 
@@ -5315,30 +5315,30 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs) =
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(6,6,14,.95);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;padding:32px 20px;overflow-y:auto;';
   const initial = name.charAt(0).toUpperCase();
   modal.innerHTML = `
-    <button onclick="document.getElementById('publicProfileModal').remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:rgba(168,180,255,.5);cursor:pointer;">✕</button>
+    <button onclick="document.getElementById('publicProfileModal').remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:rgba(var(--ghost-blue-rgb),.5);cursor:pointer;">✕</button>
     <div style="font-size:52px;margin-bottom:12px;">${initial}</div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);margin-bottom:4px;">${escapeHTML(name)}</div>
     <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:28px;">Chasseur de fantômes</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:340px;margin-bottom:24px;">
-      <div style="background:var(--surface);border:1px solid rgba(168,180,255,.12);border-radius:14px;padding:16px;text-align:center;">
+      <div style="background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:14px;padding:16px;text-align:center;">
         <div style="font-size:28px;font-weight:700;color:var(--ether);">${ghostCount}</div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-top:4px;">${t.profile_stat_deposited_label || 'Fantômes déposés'}</div>
       </div>
-      <div style="background:var(--surface);border:1px solid rgba(168,180,255,.12);border-radius:14px;padding:16px;text-align:center;">
+      <div style="background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:14px;padding:16px;text-align:center;">
         <div style="font-size:28px;font-weight:700;color:var(--ether);">${totalOpens}</div>
         <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-top:4px;">${t.profile_stat_opens_label || 'Ouvertures totales'}</div>
       </div>
     </div>
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:12px;align-self:flex-start;max-width:340px;width:100%;">${t.profile_public_footprint || '🗺 Empreinte publique'}</div>
-    <div id="publicEmpreinteMap" style="width:100%;max-width:340px;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(168,180,255,.15);background:rgba(10,10,20,.8);margin-bottom:24px;"></div>
-    <button onclick="window.location.href='https://pimpimshop33-dotcom.github.io/ghostub/'" style="background:linear-gradient(135deg,rgba(168,180,255,.18),rgba(168,180,255,.06));border:1px solid rgba(168,180,255,.35);border-radius:14px;color:rgba(168,180,255,.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;">${t.profile_join_ghostub || '👻 Rejoindre Ghostub'}</button>
+    <div id="publicEmpreinteMap" style="width:100%;max-width:340px;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);margin-bottom:24px;"></div>
+    <button onclick="window.location.href='https://pimpimshop33-dotcom.github.io/ghostub/'" style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.18),rgba(var(--ghost-blue-rgb),.06));border:1px solid rgba(var(--ghost-blue-rgb),.35);border-radius:14px;color:rgba(var(--ghost-blue-rgb),.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;">${t.profile_join_ghostub || '👻 Rejoindre Ghostub'}</button>
   `;
   document.body.appendChild(modal);
   setTimeout(() => {
     const mapEl = document.getElementById('publicEmpreinteMap');
     if (!mapEl || !ghostDocs.length) return;
     const coords = ghostDocs.filter(d => d.data().lat && d.data().lng).map(d => [d.data().lat, d.data().lng]);
-    if (!coords.length) { mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:height:100%;font-size:12px;color:rgba(168,180,255,.4);">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
+    if (!coords.length) { mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:height:100%;font-size:12px;color:rgba(var(--ghost-blue-rgb),.4);">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
     const pubMap = L.map('publicEmpreinteMap', { zoomControl: false, attributionControl: false }).setView(coords[0], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM France' }).addTo(pubMap);
     coords.forEach(([lat, lng], i) => {
@@ -5390,13 +5390,13 @@ window.loadLeaderboard = async () => {
     const medals = ['🥇','🥈','🥉'];
     el.innerHTML = sorted.map((s, i) => {
       const isMe = currentUser && s.name === (currentUser.displayName || currentUser.email);
-      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);${isMe ? 'background:rgba(168,180,255,.05);border-radius:8px;padding:7px 8px;margin:0 -8px;' : ''}">
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);${isMe ? 'background:rgba(var(--ghost-blue-rgb),.05);border-radius:8px;padding:7px 8px;margin:0 -8px;' : ''}">
         <span style="font-size:16px;width:22px;text-align:center;flex-shrink:0;">${medals[i] || (i+1)+'.'}</span>
         <div style="flex:1;min-width:0;">
           <div style="font-size:13px;color:${isMe ? 'var(--ether)' : 'var(--warm-dim)'};font-weight:${isMe ? '600' : '400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(s.name)}${isMe ? ' (' + (t.profile_you || 'vous') + ')' : ''}</div>
           <div style="font-size:11px;color:var(--spirit-dim);">${s.ghosts} ${_currentLang === 'fr' ? 'fantôme' + (s.ghosts > 1 ? 's' : '') : 'ghost' + (s.ghosts > 1 ? 's' : '')}</div>
         </div>
-        <div style="font-size:13px;color:rgba(168,180,255,.7);flex-shrink:0;">✦ ${s.resonances}</div>
+        <div style="font-size:13px;color:rgba(var(--ghost-blue-rgb),.7);flex-shrink:0;">✦ ${s.resonances}</div>
       </div>`;
     }).join('');
   } catch(e) {
@@ -5444,14 +5444,14 @@ function _renderDistantGhostsTeaser() {
   ];
   const label = _currentLang === 'en' ? 'Presences exist nearby — get closer' : 'Des présences existent aux alentours — approche-toi';
   const items = directions.map(d => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(168,180,255,.04);border-radius:12px;opacity:.45;filter:blur(0.4px);">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(var(--ghost-blue-rgb),.04);border-radius:12px;opacity:.45;filter:blur(0.4px);">
       <span style="font-size:20px;">${d.emoji}</span>
       <span style="flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">??? — ${d.dir}</span>
       <span style="font-size:11px;color:var(--spirit-dim);">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : d.dist+'m'}</span>
     </div>`).join('');
   return `
     <div style="margin-top:4px;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(168,180,255,.3);margin-bottom:8px;">${label}</div>
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.3);margin-bottom:8px;">${label}</div>
       <div style="display:flex;flex-direction:column;gap:5px;">${items}</div>
     </div>`;
 }
@@ -5480,15 +5480,15 @@ function renderGhostList() {
             </div>
           </div>
         </div>
-        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(168,180,255,.2),rgba(168,180,255,.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">${t.radar_first_btn}</button>
+        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.2),rgba(var(--ghost-blue-rgb),.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">${t.radar_first_btn}</button>
       </div>` : `
       <div style="text-align:center;padding:20px 16px 12px;">
         <div style="font-size:40px;margin-bottom:10px;opacity:.4;filter:blur(1px);animation:ghostFloat 3.5s ease-in-out infinite;">👻</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;">${t.radar_empty_title}</div>
         <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:14px;">${t.radar_empty_sub}</div>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
-          <button onclick="loadNearbyGhosts()" style="padding:8px 16px;background:rgba(168,180,255,.06);border-radius:20px;color:rgba(168,180,255,.6);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">↻ ${_currentLang === 'en' ? 'Refresh' : 'Actualiser'}</button>
-          <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:8px 18px;background:rgba(168,180,255,.14);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">👻 ${_currentLang === 'en' ? 'Be first to haunt' : 'Hanter en premier'}</button>
+          <button onclick="loadNearbyGhosts()" style="padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.06);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.6);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">↻ ${_currentLang === 'en' ? 'Refresh' : 'Actualiser'}</button>
+          <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:8px 18px;background:rgba(var(--ghost-blue-rgb),.14);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">👻 ${_currentLang === 'en' ? 'Be first to haunt' : 'Hanter en premier'}</button>
         </div>
         ${_renderDistantGhostsTeaser()}
       </div>`;
@@ -5507,11 +5507,11 @@ function renderGhostList() {
     const isOld = ageDays > 30;
     const ageStyle = isAncient ? 'filter:sepia(.6) opacity(.85);' : isOld ? 'filter:sepia(.25) opacity(.92);' : '';
     const ageBadge = isAncient ? `<span style="font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;">${t.ghost_badge_archive}</span>`
-                   : isOld ? `<span style="font-size:9px;background:rgba(168,180,255,.06);border:1px solid rgba(168,180,255,.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
+                   : isOld ? `<span style="font-size:9px;background:rgba(var(--ghost-blue-rgb),.06);border:1px solid rgba(var(--ghost-blue-rgb),.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
     // Résonances visuelles (étoiles)
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
-    const resoStyle = resoCount >= 5 ? 'color:rgba(255,200,80,.9);text-shadow:0 0 8px rgba(255,200,80,.4);' : resoCount >= 2 ? 'color:rgba(168,180,255,.8);' : '';
+    const resoStyle = resoCount >= 5 ? 'color:rgba(var(--premium-rgb),.9);text-shadow:0 0 8px rgba(var(--premium-rgb),.4);' : resoCount >= 2 ? 'color:rgba(var(--ghost-blue-rgb),.8);' : '';
     // Badge "jamais ouvert" — uniquement si déjà lu (pour ne pas doubler avec le hintText)
     const neverOpened = !g.openCount || g.openCount === 0;
     const virginBadge = ''; // supprimé — info déjà dans hintText
@@ -5545,9 +5545,9 @@ function renderGhostList() {
         </div>
         <div class="envelope-meta">
           <div class="envelope-dist ${_distClass}" style="${
-            g.distance <= 50  ? 'background:rgba(100,220,160,.1);border:1px solid rgba(100,220,160,.25);color:rgba(100,220,160,.9);' :
-            g.distance <= 200 ? 'background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.2);color:rgba(255,200,80,.8);' :
-                                'background:rgba(168,180,255,.08);border:1px solid rgba(168,180,255,.12);color:rgba(168,180,255,.6);'
+            g.distance <= 50  ? 'background:rgba(var(--accent-green-rgb),.1);border:1px solid rgba(var(--accent-green-rgb),.25);color:rgba(var(--accent-green-rgb),.9);' :
+            g.distance <= 200 ? 'background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.2);color:rgba(var(--premium-rgb),.8);' :
+                                'background:rgba(var(--ghost-blue-rgb),.08);border:1px solid rgba(var(--ghost-blue-rgb),.12);color:rgba(var(--ghost-blue-rgb),.6);'
           }">${formatDistance(g.distance)}</div>
           <div class="envelope-reso" style="${resoStyle}" aria-label="${resoCount} résonances">${resoStars}</div>
           ${g.openCount > 0 ? `<div class="envelope-views" aria-label="${g.openCount} vues">👁 ${g.openCount}</div>` : ''}
@@ -5631,7 +5631,7 @@ function renderRadarDots() {
     if (g.businessMode) {
       const bizBadge = document.createElement('div');
       bizBadge.textContent = '🏪';
-      bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(255,200,80,.6));';
+      bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(var(--premium-rgb),.6));';
       dot.style.position = 'absolute';
       dot.appendChild(bizBadge);
     }
@@ -5823,10 +5823,10 @@ window.openGhost = async (id) => {
     if (selectedGhost.businessMode && selectedGhost.promoCode) {
       const promoBlock = document.createElement('div');
       promoBlock.id = 'detailPromoBlock';
-      promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(255,200,80,.08);border:1px solid rgba(255,200,80,.35);border-radius:14px;padding:14px 16px;text-align:center;';
+      promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.35);border-radius:14px;padding:14px 16px;text-align:center;';
       promoBlock.innerHTML =
-        '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,200,80,.7);margin-bottom:8px;">&#x1F3EA; Offre exclusive</div>' +
-        '<div style="font-size:20px;font-weight:700;color:rgba(255,200,80,.95);letter-spacing:1px;">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
+        '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:8px;">&#x1F3EA; Offre exclusive</div>' +
+        '<div style="font-size:20px;font-weight:700;color:rgba(var(--premium-rgb),.95);letter-spacing:1px;">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
         '<div style="font-size:11px;color:var(--spirit-dim);margin-top:6px;">Présentez ce message en caisse pour en bénéficier</div>';
       document.getElementById('detailMessage').after(promoBlock);
     }
@@ -5847,10 +5847,10 @@ window.openGhost = async (id) => {
     if (selectedGhost.chainHint || selectedGhost.chainLat) {
       chainDiv.style.display = 'block';
       chainDiv.innerHTML = `
-        <div style="background:linear-gradient(135deg,rgba(168,180,255,.08),rgba(168,180,255,.03));border:1px solid rgba(168,180,255,.2);border-radius:16px;padding:14px 16px;margin-bottom:14px;">
-          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(168,180,255,.5);margin-bottom:8px;">🔗 La piste continue…</div>
+        <div style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;padding:14px 16px;margin-bottom:14px;">
+          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(var(--ghost-blue-rgb),.5);margin-bottom:8px;">🔗 La piste continue…</div>
           ${selectedGhost.chainHint ? `<div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--ether);margin-bottom:10px;">"${escapeHTML(selectedGhost.chainHint)}"</div>` : ''}
-          ${selectedGhost.chainLat ? `<button onclick="followChain()" style="width:100%;padding:10px;background:rgba(168,180,255,.1);border:1px solid rgba(168,180,255,.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">🗺 Suivre la piste →</button>` : ''}
+          ${selectedGhost.chainLat ? `<button onclick="followChain()" style="width:100%;padding:10px;background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">🗺 Suivre la piste →</button>` : ''}
         </div>`;
     } else {
       chainDiv.style.display = 'none';
@@ -5861,8 +5861,8 @@ window.openGhost = async (id) => {
     if (alreadyToday) {
       resoBtn.classList.add('resonated');
       resoBtn.textContent = t.detail_reso_used;
-      resoBtn.style.borderColor = 'rgba(168,180,255,.2)';
-      resoBtn.style.color = 'rgba(168,180,255,.4)';
+      resoBtn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.2)';
+      resoBtn.style.color = 'rgba(var(--ghost-blue-rgb),.4)';
       resoBtn.style.cursor = 'default';
     } else {
       resoBtn.classList.remove('resonated');
@@ -6073,7 +6073,7 @@ function fireResonanceParticles(btn) {
     const delay = (Math.random() * 0.15).toFixed(2) + 's';
     const sym = symbols[Math.floor(Math.random() * symbols.length)];
     const alpha = 0.5 + Math.random() * 0.5;
-    p.style.cssText = ['left:'+cx+'px','top:'+cy+'px','--px:'+px.toFixed(0)+'px','--py:'+py.toFixed(0)+'px','--dur:'+dur,'animation-delay:'+delay,'font-size:'+size+'px','color:rgba(168,180,255,'+alpha+')','filter:drop-shadow(0 0 4px rgba(168,180,255,.6))','line-height:1'].join(';');
+    p.style.cssText = ['left:'+cx+'px','top:'+cy+'px','--px:'+px.toFixed(0)+'px','--py:'+py.toFixed(0)+'px','--dur:'+dur,'animation-delay:'+delay,'font-size:'+size+'px','color:rgba(var(--ghost-blue-rgb),'+alpha+')','filter:drop-shadow(0 0 4px rgba(var(--ghost-blue-rgb),.6))','line-height:1'].join(';');
     p.textContent = sym;
     document.body.appendChild(p);
     setTimeout(() => p.remove(), 800);
@@ -6122,7 +6122,7 @@ window.resonate = async () => {
   if (btn.classList.contains('resonated') || !selectedGhost) return;
   if (hasResonatedToday()) {
     btn.style.borderColor = 'rgba(255,180,50,.4)';
-    btn.style.color = 'rgba(255,200,80,.8)';
+    btn.style.color = 'rgba(var(--premium-rgb),.8)';
     const now = new Date();
     const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
     const h = Math.floor(msUntilMidnight / 3600000);
@@ -6172,7 +6172,7 @@ window.setChainMarker = () => {
     let nextMarker = null;
     cmap.on('click', e => {
       if (nextMarker) cmap.removeLayer(nextMarker);
-      nextMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: L.divIcon({ html: '<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(168,180,255,.9));">🔗</div>', iconSize:[24,24], iconAnchor:[12,12], className:'' }) }).addTo(cmap);
+      nextMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: L.divIcon({ html: '<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),.9));">🔗</div>', iconSize:[24,24], iconAnchor:[12,12], className:'' }) }).addTo(cmap);
       window._chainNextCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
       document.getElementById('chainMapLabel').textContent = '✓ Point placé — retap pour déplacer';
     });
@@ -6197,7 +6197,7 @@ window.followChain = () => {
   setTimeout(() => {
     if (window.map) {
       window.map.setView([selectedGhost.chainLat, selectedGhost.chainLng], 18);
-      L.marker([selectedGhost.chainLat, selectedGhost.chainLng], { icon: L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 0 12px rgba(168,180,255,.9));animation:floatG 2s ease-in-out infinite;">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' }) }).addTo(window.map);
+      L.marker([selectedGhost.chainLat, selectedGhost.chainLng], { icon: L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.9));animation:floatG 2s ease-in-out infinite;">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' }) }).addTo(window.map);
     }
   }, 800);
 };
@@ -6307,7 +6307,7 @@ window.depositGhost = async () => {
     const bizIcon = document.getElementById('businessToggleIcon');
     if (bizIcon) bizIcon.textContent = '○';
     const bizBtn = document.getElementById('businessToggleBtn');
-    if (bizBtn) bizBtn.style.borderColor = 'rgba(255,200,80,.2)';
+    if (bizBtn) bizBtn.style.borderColor = 'rgba(var(--premium-rgb),.2)';
     document.getElementById('chainMapLabel').textContent = 'Placer le prochain point sur la carte';
     document.getElementById('chainMapPreview').style.display = 'none';
     window._chainNextCoords = null;
@@ -6321,7 +6321,7 @@ window.depositGhost = async () => {
       if (_dedEl && ghostId) {
         const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
         window._lastDedicatedLink = _link;
-        _dedEl.innerHTML = 'Ton ghost est ancr\u00e9.<br><span style="font-size:11px;opacity:.7;">Partage ce lien pour le d\u00e9dier :</span><br><button onclick="navigator.clipboard.writeText(window._lastDedicatedLink).then(()=>showToast(\'link\',\'Lien copi\u00e9 !\'))" style="font-size:10px;color:rgba(168,180,255,.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;">' + _link + '</button>';
+        _dedEl.innerHTML = 'Ton ghost est ancr\u00e9.<br><span style="font-size:11px;opacity:.7;">Partage ce lien pour le d\u00e9dier :</span><br><button onclick="navigator.clipboard.writeText(window._lastDedicatedLink).then(()=>showToast(\'link\',\'Lien copi\u00e9 !\'))" style="font-size:10px;color:rgba(var(--ghost-blue-rgb),.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;">' + _link + '</button>';
       }
     }
     // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
@@ -6459,7 +6459,7 @@ async function _doOpenEnvelope() {
       const readCountEl = document.getElementById('detailReadCount');
       if (readCountEl) {
         if (wasFirst) {
-          readCountEl.innerHTML = `<span style="color:rgba(100,220,160,.9);">${t.detail_first_reader || t.detail_first_reader}</span>`;
+          readCountEl.innerHTML = `<span style="color:rgba(var(--accent-green-rgb),.9);">${t.detail_first_reader || t.detail_first_reader}</span>`;
         } else {
           const prev = selectedGhost.openCount || 0;
           readCountEl.innerHTML = `<span style="color:var(--spirit-dim);">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;
@@ -6567,7 +6567,7 @@ function _buildScratchCanvas() {
   const hint = document.createElement('div');
   hint.id = 'scratchHint';
   hint.style.cssText = `position:absolute;bottom:0;left:0;width:100%;height:58px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:11;pointer-events:none;background:none;transition:opacity .3s;`;
-  hint.innerHTML = `<span style="font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(168,180,255,1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</span>`;
+  hint.innerHTML = `<span style="font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(var(--ghost-blue-rgb),1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</span>`;
   zone.appendChild(hint);
 
   // Dessiner le voile
@@ -6581,14 +6581,14 @@ function _buildScratchCanvas() {
   ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
   // Reflet haut
   const glow = ctx.createRadialGradient(cssW/2,0,0,cssW/2,cssH*0.5,cssW*0.8);
-  glow.addColorStop(0,'rgba(168,180,255,0.10)'); glow.addColorStop(1,'transparent');
+  glow.addColorStop(0,'rgba(var(--ghost-blue-rgb),0.10)'); glow.addColorStop(1,'transparent');
   ctx.fillStyle = glow;
   ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
   // Ghost watermark
   ctx.save();
   ctx.font = `${Math.min(cssW,cssH)*0.55}px serif`;
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.shadowColor='rgba(168,180,255,0.5)'; ctx.shadowBlur=20;
+  ctx.shadowColor='rgba(var(--ghost-blue-rgb),0.5)'; ctx.shadowBlur=20;
   ctx.globalAlpha=0.30; ctx.fillStyle='#d0d8ff';
   ctx.fillText('👻', cssW/2, cssH/2);
   ctx.restore();
@@ -6862,7 +6862,7 @@ window.showScreen = (id, fromPopstate = false) => {
     if (bizForm)    bizForm.style.display    = 'none';
     if (extra)      extra.style.display      = 'none';
     if (icon)       icon.textContent         = '○';
-    if (btn2)       { btn2.style.borderColor = 'rgba(255,200,80,.2)'; btn2.style.background = 'rgba(255,200,80,.06)'; }
+    if (btn2)       { btn2.style.borderColor = 'rgba(var(--premium-rgb),.2)'; btn2.style.background = 'rgba(var(--premium-rgb),.06)'; }
     if (subLabel)   { subLabel.textContent = t.dep_biz_sub; subLabel.style.color = 'rgba(255,235,180,1)'; }
     // Reset step 2 sections
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id2 => {
@@ -6954,10 +6954,10 @@ window.toggleBusinessMode = () => {
     bizForm.style.display    = 'block';
     extra.style.display      = 'block'; // pour compatibilité depositGhost
     icon.textContent         = '●';
-    btn.style.borderColor    = 'rgba(255,200,80,.6)';
-    btn.style.background     = 'rgba(255,200,80,.1)';
+    btn.style.borderColor    = 'rgba(var(--premium-rgb),.6)';
+    btn.style.background     = 'rgba(var(--premium-rgb),.1)';
     subLabel.textContent     = t.dep_biz_active;
-    subLabel.style.color     = 'rgba(255,200,80,.7)';
+    subLabel.style.color     = 'rgba(var(--premium-rgb),.7)';
     document.getElementById('depositEmoji').value = '🏪';
     // Masquer durée/disparaît/rayon/condition dans step 2
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id => {
@@ -7005,8 +7005,8 @@ window.toggleBusinessMode = () => {
     bizForm.style.display    = 'none';
     extra.style.display      = 'none';
     icon.textContent         = '○';
-    btn.style.borderColor    = 'rgba(255,200,80,.2)';
-    btn.style.background     = 'rgba(255,200,80,.06)';
+    btn.style.borderColor    = 'rgba(var(--premium-rgb),.2)';
+    btn.style.background     = 'rgba(var(--premium-rgb),.06)';
     subLabel.textContent     = t.dep_biz_sub;
     subLabel.style.color     = 'rgba(255,235,180,1)';
     // Réafficher les sections step 2
@@ -7533,7 +7533,7 @@ window.wizardNext = (step) => {
         const msgLower = msg.toLowerCase();
         if (spamWords.some(w => msgLower.includes(w))) {
           showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
-          document.getElementById('depositMsg').style.borderColor = 'rgba(255,200,80,.5)';
+          document.getElementById('depositMsg').style.borderColor = 'rgba(var(--premium-rgb),.5)';
           setTimeout(() => document.getElementById('depositMsg').style.borderColor = '', 2000);
           return;
         }
@@ -7547,7 +7547,7 @@ window.wizardNext = (step) => {
       reverseGeocode(userLat, userLng).then(name => {
         if (name && !locInput.value) {
           locInput.value = name;
-          locInput.style.borderColor = 'rgba(100,220,160,.4)';
+          locInput.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
           setTimeout(() => locInput.style.borderColor = '', 1500);
         }
         locInput.placeholder = 'ex: Banc du parc, Café du coin…';
@@ -7763,8 +7763,8 @@ function _updateRadiusCircle() {
   if (_depositRadiusCircle) _depositMiniMap.removeLayer(_depositRadiusCircle);
   _depositRadiusCircle = L.circle([userLat, userLng], {
     radius: radiusM,
-    color: 'rgba(168,180,255,.8)',
-    fillColor: 'rgba(168,180,255,.12)',
+    color: 'rgba(var(--ghost-blue-rgb),.8)',
+    fillColor: 'rgba(var(--ghost-blue-rgb),.12)',
     fillOpacity: 1,
     weight: 1.5
   }).addTo(_depositMiniMap);
@@ -7999,7 +7999,7 @@ function spawnObParticles() {
     p.style.setProperty('--ty', Math.sin(angle) * dist - 20 + 'px');
     p.style.setProperty('--d', (1 + Math.random()).toFixed(1) + 's');
     p.style.setProperty('--delay', (i * 0.15).toFixed(2) + 's');
-    p.style.color = 'rgba(168,180,255,' + (0.4 + Math.random() * 0.6).toFixed(2) + ')';
+    p.style.color = 'rgba(var(--ghost-blue-rgb),' + (0.4 + Math.random() * 0.6).toFixed(2) + ')';
     p.textContent = syms[i % syms.length];
     wrap.appendChild(p);
   }
