@@ -1884,6 +1884,7 @@ onAuthStateChanged(auth, async user => {
     await loadNearbyGhosts();
     // Vérifier les notifications de réponses au démarrage
     setTimeout(() => checkReplyNotifications(), 2000);
+    setTimeout(() => checkMemoryAnniversaries(), 3000);
     // Vérifier si un profil public est demandé dans l'URL
     setTimeout(() => checkPublicProfileParam(), 1000);
     // Synchroniser les découvertes depuis Firestore (multi-appareils)
@@ -2277,6 +2278,60 @@ function _reactionVerb(rc) {
   const entry = _REACTION_VERBS[(rc || '').trim()];
   if (!entry) return null;
   return _currentLang === 'en' ? entry.en : entry.fr;
+}
+
+// ══════════════════════════════════════════════════════════
+// ANNIVERSAIRE / NOSTALGIE — un fantôme déposé refait surface
+// ══════════════════════════════════════════════════════════
+// Paliers volontairement rapprochés (1 mois / 3 mois / 6 mois / 1 an) car le
+// projet est encore jeune — inutile d'attendre 365 jours pour que ça ait un effet.
+const ANNIV_MILESTONES = [
+  { days: 30,  fr: 'Il y a 1 mois',  en: '1 month ago' },
+  { days: 90,  fr: 'Il y a 3 mois',  en: '3 months ago' },
+  { days: 180, fr: 'Il y a 6 mois',  en: '6 months ago' },
+  { days: 365, fr: 'Il y a 1 an',    en: '1 year ago' },
+];
+const _ANNIV_CHECK_KEY = () => 'ghostub_anniv_checked_' + new Date().toISOString().slice(0,10) + (currentUser ? '_' + currentUser.uid : '');
+const _ANNIV_NOTIFIED_KEY = () => currentUser ? 'ghostub_anniv_notified_' + currentUser.uid : null;
+
+async function checkMemoryAnniversaries() {
+  if (!currentUser) return;
+  if (localStorage.getItem(_ANNIV_CHECK_KEY())) return; // déjà vérifié aujourd'hui
+  localStorage.setItem(_ANNIV_CHECK_KEY(), '1');
+  const key = _ANNIV_NOTIFIED_KEY();
+  if (!key) return;
+  try {
+    let notified;
+    try { notified = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { notified = []; }
+
+    const snap = await getDocs(query(
+      collection(db, COLL.GHOSTS),
+      where('authorUid', '==', currentUser.uid),
+      limit(100)
+    ));
+    const now = Date.now();
+    for (const d of snap.docs) {
+      const g = d.data();
+      if (!g.createdAt) continue;
+      const daysSince = Math.floor((now - g.createdAt.seconds * 1000) / 86400000);
+      // Prendre le plus grand palier atteint et pas encore notifié pour ce fantôme
+      const eligible = ANNIV_MILESTONES.filter(m => daysSince >= m.days && !notified.includes(d.id + '_' + m.days));
+      if (eligible.length === 0) continue;
+      const milestone = eligible[eligible.length - 1];
+      const lieu = escapeHTML(g.location || t.detail_location_unknown);
+      const when = _currentLang === 'en' ? milestone.en : milestone.fr;
+      const title = _currentLang === 'en' ? '🕯️ A memory resurfaces' : '🕯️ Un souvenir refait surface';
+      const msg = _currentLang === 'en'
+        ? `${when}, you left a trace at ${lieu}. It's still there.`
+        : `${when}, tu laissais une trace à ${lieu}. Elle est toujours là.`;
+      _smartNotif(title, msg);
+      showToast('info', msg, 6000);
+      // Marquer ce palier ET les paliers plus petits comme notifiés (pas de redite plus tard)
+      ANNIV_MILESTONES.forEach(m => { if (m.days <= milestone.days) notified.push(d.id + '_' + m.days); });
+      break; // une seule resurgence par vérification, pour rester discret
+    }
+    localStorage.setItem(key, JSON.stringify(notified));
+  } catch(e) { console.warn('[ghostub:checkMemoryAnniversaries]', e); }
 }
 
 async function checkReplyNotifications() {
