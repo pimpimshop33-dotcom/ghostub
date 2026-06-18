@@ -4626,6 +4626,9 @@ window.loadNearbyGhosts = async () => {
     renderGhostList(); renderRadarDots(); return;
   }
   nearbyGhosts = [];
+  // Fantômes réels mais hors du rayon "proche" (5-15km) — gardés uniquement pour
+  // le teaser de présence (direction + distance), jamais leur contenu ni position exacte.
+  window._distantGhostsCache = [];
   snap.forEach(d => {
     const g = { id: d.id, ...d.data() };
     if (g.expired) return;
@@ -4643,7 +4646,15 @@ window.loadNearbyGhosts = async () => {
     }
     if (g.lat && g.lng) {
       g.distance = window._gpsIsFallback ? 0 : distanceMeters(userLat, userLng, g.lat, g.lng);
-      if (window._gpsIsFallback || g.distance <= 5000) nearbyGhosts.push(g);
+      if (window._gpsIsFallback || g.distance <= 5000) {
+        nearbyGhosts.push(g);
+      } else if (!window._gpsIsFallback) {
+        window._distantGhostsCache.push({
+          dist: g.distance,
+          bearing: _bearingDeg(userLat, userLng, g.lat, g.lng),
+          emoji: g.secret ? '🔮' : (g.businessMode ? '🏪' : (g.emoji || '👻')),
+        });
+      }
     }
   });
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
@@ -5624,22 +5635,33 @@ function getFilteredGhosts() {
 
 
 // ── Fantômes grisés à 5km — teaser quand liste vide ──────
+// Cap réel (0-360°) entre deux points GPS — utilisé pour le teaser de présence honnête.
+function _bearingDeg(lat1, lng1, lat2, lng2) {
+  const toRad = d => d * Math.PI / 180;
+  const y = Math.sin(toRad(lng2 - lng1)) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(toRad(lng2 - lng1));
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+function _bearingToCardinal(deg) {
+  const dirs = _currentLang === 'en'
+    ? ['North','North-East','East','South-East','South','South-West','West','North-West']
+    : ['Nord','Nord-Est','Est','Sud-Est','Sud','Sud-Ouest','Ouest','Nord-Ouest'];
+  return dirs[Math.round(deg / 45) % 8];
+}
+
 function _renderDistantGhostsTeaser() {
-  // Utiliser les ghosts en cache WorldService si dispo, sinon skip
+  // Honnête : on ne montre que des fantômes réellement présents en base (5-15km),
+  // jamais leur contenu ni position exacte — juste direction + distance réelles.
+  // S'il n'y en a vraiment aucun, on ne montre rien plutôt que d'en inventer.
   if (!userLat || !userLng) return '';
-  // Générer des fantômes fantômes fictifs dans les directions cardinales
-  // pour montrer que l'app est vivante (pas de données réelles — juste UI)
-  const directions = [
-    { dir: _currentLang === 'en' ? 'North' : 'Nord',      dist: Math.floor(Math.random()*2000)+800,  emoji: '👻' },
-    { dir: _currentLang === 'en' ? 'South-West' : 'Sud',  dist: Math.floor(Math.random()*3000)+1200, emoji: '🌙' },
-    { dir: _currentLang === 'en' ? 'East' : 'Est',        dist: Math.floor(Math.random()*4000)+1500, emoji: '✨' },
-  ];
-  const label = _currentLang === 'en' ? 'Presences exist nearby — get closer' : 'Des présences existent aux alentours — approche-toi';
-  const items = directions.map(d => `
+  const real = (window._distantGhostsCache || []).slice().sort((a,b) => a.dist - b.dist).slice(0, 3);
+  if (real.length === 0) return '';
+  const label = _currentLang === 'en' ? 'Real presences exist nearby — get closer' : 'De vraies présences existent aux alentours — approche-toi';
+  const items = real.map(d => `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(var(--ghost-blue-rgb),.04);border-radius:12px;opacity:.45;filter:blur(0.4px);">
-      <span style="font-size:20px;">${d.emoji}</span>
-      <span style="flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">??? — ${d.dir}</span>
-      <span style="font-size:11px;color:var(--spirit-dim);">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : d.dist+'m'}</span>
+      <span style="font-size:20px;">${escapeHTML(d.emoji)}</span>
+      <span style="flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">??? — ${_bearingToCardinal(d.bearing)}</span>
+      <span style="font-size:11px;color:var(--spirit-dim);">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : Math.round(d.dist)+'m'}</span>
     </div>`).join('');
   return `
     <div style="margin-top:4px;">
