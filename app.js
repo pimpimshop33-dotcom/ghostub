@@ -508,6 +508,7 @@ const LANGS = {
     empreinte_favoris: '★ Favoris',
     empreinte_premier: '🥇 Premier lecteur',
     empreinte_classement: 'Classement',
+    streak_freeze_used: '🧊 Jour de grâce utilisé — ta série continue.',
     profile_stats_label: 'Mes stats',
     profile_top_hunters: '🏆 Top chasseurs',
     profile_map_section: '🗺 Mon empreinte fantôme',
@@ -1061,6 +1062,7 @@ const LANGS = {
     empreinte_favoris: '★ Favorites',
     empreinte_premier: '🥇 First reader',
     empreinte_classement: 'Leaderboard',
+    streak_freeze_used: '🧊 Grace day used — your streak continues.',
     profile_stats_label: 'My stats',
     profile_top_hunters: '🏆 Top hunters',
     profile_map_section: '🗺 My ghost footprint',
@@ -2809,16 +2811,30 @@ async function uploadMedia(uid) {
 // ── STREAK DE DÉCOUVERTE ─────────────────────────────────
 function _getStreakKey() { return currentUser ? 'ghostub_streak_' + currentUser.uid : 'ghostub_streak_anon'; }
 function _getStreak() {
-  try { return JSON.parse(localStorage.getItem(_getStreakKey()) || '{"count":0,"lastDate":""}'); } catch(e) { return {count:0,lastDate:''}; }
+  try { return JSON.parse(localStorage.getItem(_getStreakKey()) || '{"count":0,"lastDate":"","freezeAt":""}'); } catch(e) { return {count:0,lastDate:'',freezeAt:''}; }
 }
+// Gel de streak (juin 2026) : 1 jour de grâce, utilisable au plus une fois tous les
+// 7 jours, pour que rater une seule journée ne casse pas la série — logique Duolingo,
+// pensée pour rester encourageante plutôt que punitive.
 function _updateStreak() {
   const today = new Date().toISOString().slice(0,10);
   const s = _getStreak();
   if (s.lastDate === today) return s; // déjà mis à jour aujourd'hui
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0,10);
-  const newCount = s.lastDate === yesterday ? s.count + 1 : 1; // continuité ou reset
-  const updated = { count: newCount, lastDate: today };
+  const yesterday  = new Date(Date.now() - 86400000).toISOString().slice(0,10);
+  const dayBefore  = new Date(Date.now() - 2 * 86400000).toISOString().slice(0,10);
+  const weekAgo    = new Date(Date.now() - 7 * 86400000).toISOString().slice(0,10);
+  let newCount, freezeJustUsed = false;
+  if (s.lastDate === yesterday || s.lastDate === '') {
+    newCount = s.count + 1; // continuité normale (ou toute première action)
+  } else if (s.lastDate === dayBefore && (s.freezeAt || '') < weekAgo) {
+    newCount = s.count + 1; // 1 jour sauté, gel disponible → la série continue
+    freezeJustUsed = true;
+  } else {
+    newCount = 1; // trop de jours sautés, ou gel déjà utilisé récemment
+  }
+  const updated = { count: newCount, lastDate: today, freezeAt: freezeJustUsed ? today : (s.freezeAt || '') };
   localStorage.setItem(_getStreakKey(), JSON.stringify(updated));
+  updated.freezeJustUsed = freezeJustUsed;
   return updated;
 }
 function _renderStreak() {
@@ -2978,7 +2994,12 @@ function showDiscoveryToast(count, isNew) {
   if (!toast) return;
   const rank = getRank(count);
   const isMilestone = MILESTONES.includes(count) && isNew;
-  if (isNew) { _updateStreak(); _renderStreak(); updateRankBar(); }
+  if (isNew) {
+    const _su = _updateStreak();
+    _renderStreak();
+    updateRankBar();
+    if (_su.freezeJustUsed) showToast('info', t.streak_freeze_used);
+  }
   // Play chime on new discovery
   if (isNew) {
     AudioService.playChime();
@@ -6345,6 +6366,10 @@ window.depositGhost = async () => {
     // Compteur dénormalisé ghostCount
     setDoc(doc(db, COLL.USERS, currentUser.uid), { ghostCount: increment(1) }, { merge: true })
       .catch(e => console.warn('ghostCount increment:', e));
+    // Déposer un fantôme compte aussi comme une action significative pour le streak
+    const _suDep = _updateStreak();
+    _renderStreak();
+    if (_suDep.freezeJustUsed) showToast('info', t.streak_freeze_used);
     document.getElementById('depositMsg').value = '';
     document.getElementById('depositLocation').value = '';
     document.getElementById('chainHint').value = '';
