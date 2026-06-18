@@ -6485,6 +6485,40 @@ window.sendMicroReply = async () => {
   }
 };
 
+// Réaction rapide en un tap (emoji) — même mécanisme que sendMicroReply, sans saisie texte
+window.sendQuickReaction = async (emoji, btn) => {
+  if (!selectedGhost || !currentUser) return;
+  if (btn) btn.disabled = true;
+  try {
+    await addDoc(collection(db, COLL.REPLIES), {
+      ghostId: selectedGhost.id,
+      message: emoji,
+      anonymous: true,
+      author: null,
+      authorUid: currentUser.uid,
+      createdAt: serverTimestamp()
+    });
+    if (selectedGhost.authorUid && selectedGhost.authorUid !== currentUser.uid) {
+      addDoc(collection(db, COLL.NOTIFS), {
+        type: 'reply',
+        toUid: selectedGhost.authorUid,
+        ghostId: selectedGhost.id,
+        ghostLocation: selectedGhost.location || t.detail_location_unknown,
+        fromAuthor: '👻 Anonyme',
+        notified: false,
+        createdAt: serverTimestamp()
+      }).catch(() => {});
+    }
+    openGhost(selectedGhost.id);
+    Analytics.track('quick_reaction_sent', { emoji });
+  } catch(e) {
+    console.warn('[ghostub:sendQuickReaction]', e);
+    showToast('error', t.toast_delete_err);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
 async function _doOpenEnvelope() {
   // Vérification + incrémentation FIABLE (serveur) — bloque réellement si la limite est atteinte,
   // même si le client a été manipulé (variable isPremium locale falsifiée, etc.)
