@@ -508,6 +508,11 @@ const LANGS = {
     empreinte_favoris: '★ Favoris',
     empreinte_premier: '🥇 Premier lecteur',
     empreinte_classement: 'Classement',
+    profile_seal_color_title: '🎨 Couleur de cire',
+    toast_seal_color_applied: '✦ Couleur de cire appliquée.',
+    carnet_no_reactions: 'Pas encore de réaction.',
+    carnet_read_btn: '📖 Lire',
+    carnet_close_btn: '📖 Refermer',
     streak_freeze_used: '🧊 Jour de grâce utilisé — ta série continue.',
     profile_stats_label: 'Mes stats',
     profile_top_hunters: '🏆 Top chasseurs',
@@ -1062,6 +1067,11 @@ const LANGS = {
     empreinte_favoris: '★ Favorites',
     empreinte_premier: '🥇 First reader',
     empreinte_classement: 'Leaderboard',
+    profile_seal_color_title: '🎨 Wax seal color',
+    toast_seal_color_applied: '✦ Wax seal color applied.',
+    carnet_no_reactions: 'No reactions yet.',
+    carnet_read_btn: '📖 Read',
+    carnet_close_btn: '📖 Close',
     streak_freeze_used: '🧊 Grace day used — your streak continues.',
     profile_stats_label: 'My stats',
     profile_top_hunters: '🏆 Top hunters',
@@ -1186,6 +1196,7 @@ window.setLang = (lang) => {
   if (typeof updatePremiumUI === 'function') updatePremiumUI();
   if (typeof _renderPricingCards === 'function') _renderPricingCards();
   if (typeof _renderStreak === 'function') _renderStreak();
+  if (typeof _applySealColor === 'function') _applySealColor();
   if (typeof loadBizDashboard === 'function') loadBizDashboard();
 
   // Empreinte map — re-render seulement si déjà initialisée (évite appel Firestore inutile)
@@ -2913,25 +2924,83 @@ function _renderStreak() {
 
 // ── MILESTONES ──────────────────────────────────────────
 const MILESTONES = [1,5,10,25,50,100];
+// Chaque rang porte aussi une couleur de cire (juin 2026) — débloquée en
+// progressant, applicable au bouton "Sceller le fantôme" (voir _applySealColor).
 const RANKS_FR = [
-  {min:0,   label:'Curieux',      icon:'🌫️'},
-  {min:3,   label:'Flâneur',      icon:'🚶'},
-  {min:8,   label:'Explorateur',  icon:'🧭'},
-  {min:15,  label:'Vagabond',     icon:'🌙'},
-  {min:30,  label:'Hanteur',      icon:'👻'},
-  {min:60,  label:'Spectre',      icon:'🔮'},
-  {min:100, label:'Légende',      icon:'⭐'},
+  {min:0,   label:'Curieux',      icon:'🌫️', color:'180,55,55'},
+  {min:3,   label:'Flâneur',      icon:'🚶', color:'200,120,40'},
+  {min:8,   label:'Explorateur',  icon:'🧭', color:'60,140,110'},
+  {min:15,  label:'Vagabond',     icon:'🌙', color:'60,95,175'},
+  {min:30,  label:'Hanteur',      icon:'👻', color:'130,70,180'},
+  {min:60,  label:'Spectre',      icon:'🔮', color:'150,155,175'},
+  {min:100, label:'Légende',      icon:'⭐', color:'200,165,60'},
 ];
 const RANKS_EN = [
-  {min:0,   label:'Curious',      icon:'🌫️'},
-  {min:3,   label:'Wanderer',     icon:'🚶'},
-  {min:8,   label:'Explorer',     icon:'🧭'},
-  {min:15,  label:'Drifter',      icon:'🌙'},
-  {min:30,  label:'Haunter',      icon:'👻'},
-  {min:60,  label:'Spectre',      icon:'🔮'},
-  {min:100, label:'Legend',       icon:'⭐'},
+  {min:0,   label:'Curious',      icon:'🌫️', color:'180,55,55'},
+  {min:3,   label:'Wanderer',     icon:'🚶', color:'200,120,40'},
+  {min:8,   label:'Explorer',     icon:'🧭', color:'60,140,110'},
+  {min:15,  label:'Drifter',      icon:'🌙', color:'60,95,175'},
+  {min:30,  label:'Haunter',      icon:'👻', color:'130,70,180'},
+  {min:60,  label:'Spectre',      icon:'🔮', color:'150,155,175'},
+  {min:100, label:'Legend',       icon:'⭐', color:'200,165,60'},
 ];
 const RANKS = () => _currentLang === 'en' ? RANKS_EN : RANKS_FR;
+
+// ── COULEUR DE CIRE — personnalisation par rang (juin 2026) ──────
+// Chaque rang débloque une couleur pour le bouton "Sceller le fantôme".
+// L'utilisateur peut choisir n'importe quelle couleur déjà débloquée,
+// pas forcément la plus récente — d'où le stockage séparé du rang réel.
+function _getSealRankKey() { return currentUser ? 'ghostub_seal_rank_' + currentUser.uid : 'ghostub_seal_rank_anon'; }
+
+function _getSealRankIndex(currentRankIdx) {
+  const stored = localStorage.getItem(_getSealRankKey());
+  if (stored !== null && stored !== '') {
+    const idx = parseInt(stored);
+    if (!isNaN(idx) && idx <= currentRankIdx) return idx;
+  }
+  return currentRankIdx; // par défaut : couleur du rang actuel
+}
+
+function _applySealColor() {
+  const count = getDiscoveryCount();
+  const { index: currentRankIdx } = getRank(count);
+  const idx = _getSealRankIndex(currentRankIdx);
+  const ranks = RANKS();
+  const color = (ranks[idx] || ranks[0]).color || '180,55,55';
+  document.documentElement.style.setProperty('--seal-rgb', color);
+}
+
+window.chooseSealColor = (idx) => {
+  const count = getDiscoveryCount();
+  const { index: currentRankIdx } = getRank(count);
+  if (idx > currentRankIdx) return; // pas encore débloqué
+  localStorage.setItem(_getSealRankKey(), String(idx));
+  _applySealColor();
+  renderSealColorPicker();
+  showToast('success', t.toast_seal_color_applied);
+};
+
+function renderSealColorPicker() {
+  const el = document.getElementById('sealColorPicker');
+  if (!el || !currentUser) return;
+  const count = getDiscoveryCount();
+  const { index: currentRankIdx } = getRank(count);
+  const selectedIdx = _getSealRankIndex(currentRankIdx);
+  const ranks = RANKS();
+  el.innerHTML = ranks.map((r, i) => {
+    const locked = i > currentRankIdx;
+    const selected = i === selectedIdx;
+    const lockTitle = _currentLang === 'en' ? `Unlock at rank: ${r.label}` : `À débloquer au rang : ${r.label}`;
+    return `<button onclick="chooseSealColor(${i})" ${locked ? 'disabled' : ''}
+      aria-label="${escapeHTML(r.label)}" title="${locked ? lockTitle : escapeHTML(r.label)}"
+      style="width:34px;height:34px;border-radius:50%;padding:0;flex-shrink:0;
+        cursor:${locked ? 'not-allowed' : 'pointer'};
+        background:${locked ? 'rgba(120,120,130,.10)' : `rgba(${r.color},.55)`};
+        border:2px solid ${selected ? 'rgba(255,255,255,.85)' : (locked ? 'rgba(120,120,130,.18)' : `rgba(${r.color},.35)`)};
+        opacity:${locked ? '.45' : '1'};transition:all .2s;
+        display:inline-flex;align-items:center;justify-content:center;font-size:13px;">${locked ? '🔒' : (selected ? '✓' : '')}</button>`;
+  }).join('');
+}
 
 function getRank(n) {
   const ranks = RANKS();
@@ -3223,6 +3292,42 @@ window.renewBusinessGhost = async (ghostId) => {
   }
 };
 
+// ── LE CARNET — lecture complète + résumé des réactions (juin 2026) ────
+// Étend les listes existantes (déposés / découverts) avec une vraie lecture
+// du texte intégral, et — pour tes propres fantômes — un résumé des réactions
+// reçues (chargé à la demande, pas en masse, pour ne pas multiplier les lectures Firestore).
+const _carnetReactionsCache = {};
+window.toggleCarnetEntry = async (id, withReactions, btn) => {
+  const el = document.getElementById('carnet-' + id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.textContent = isOpen ? t.carnet_read_btn : t.carnet_close_btn;
+  if (isOpen) return;
+  if (!withReactions) return;
+  const reactEl = document.getElementById('carnet-reactions-' + id);
+  if (!reactEl) return;
+  if (_carnetReactionsCache[id]) { reactEl.innerHTML = _carnetReactionsCache[id]; return; }
+  reactEl.innerHTML = `<span style="opacity:.4;font-size:11px;">${t.loading || 'Chargement…'}</span>`;
+  try {
+    const snap = await getDocs(query(collection(db, COLL.REPLIES), where('ghostId', '==', id)));
+    const counts = {};
+    snap.forEach(d => {
+      const txt = (d.data().message || '').trim();
+      if (txt) counts[txt] = (counts[txt] || 0) + 1;
+    });
+    const entries = Object.entries(counts);
+    const html = entries.length
+      ? entries.map(([txt, n]) => `<span class="carnet-reaction-pill">✦ ${escapeHTML(txt)}${n > 1 ? ' ×' + n : ''}</span>`).join('')
+      : `<span style="opacity:.4;font-size:11px;">${t.carnet_no_reactions}</span>`;
+    _carnetReactionsCache[id] = html;
+    reactEl.innerHTML = html;
+  } catch(e) {
+    console.warn('[ghostub:toggleCarnetEntry]', e);
+    reactEl.innerHTML = '';
+  }
+};
+
 window.toggleDiscoveryHistory = async () => {
   const panel = document.getElementById('discoveryHistory');
   const list = document.getElementById('discoveryHistoryList');
@@ -3240,12 +3345,16 @@ window.toggleDiscoveryHistory = async () => {
         const d = await getDoc(doc(db, COLL.GHOSTS, id));
         if (d.exists()) {
           const g = d.data();
-          results.push(`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
-            <span style="font-size:20px;">${escapeHTML(g.emoji||'👻')}</span>
-            <div>
-              <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||t.detail_location_unknown)}</div>
-              <div style="font-size:11px;opacity:.5;">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB') : ''}</div>
+          results.push(`<div style="padding:6px 0;border-bottom:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:20px;">${escapeHTML(g.emoji||'👻')}</span>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||t.detail_location_unknown)}</div>
+                <div style="font-size:11px;opacity:.5;">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB') : ''}</div>
+              </div>
+              <button class="carnet-toggle" onclick="toggleCarnetEntry('${escapeHTML(id)}', false, this)">${t.carnet_read_btn}</button>
             </div>
+            <div class="carnet-reading" id="carnet-${escapeHTML(id)}" style="display:none;">${escapeHTML(g.message || '')}</div>
           </div>`);
         }
       } catch(e) { console.warn('[ghostub:toggleDiscoveryHistory]', e); }
@@ -3283,19 +3392,28 @@ window.toggleDepositedList = async () => {
       const resonances = g.resonances || 0;
       const expired = isExpired(g);
       html += `
-        <div id="deposited-item-${escapeHTML(id)}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-          <span style="font-size:22px;flex-shrink:0;">${escapeHTML(g.emoji||'👻')}</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||t.detail_location_unknown)}</div>
-            <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
-              <span>${date}</span>
-              <span>✦ ${resonances} résonance${resonances > 1 ? 's' : ''}</span>
-              <span>👁 ${g.openCount || 0} ${_currentLang === 'fr' ? 'ouverture' + ((g.openCount || 0) > 1 ? 's' : '') : 'open' + ((g.openCount || 0) > 1 ? 's' : '')}</span>
-              ${expired ? '<span style="color:rgba(255,100,100,.6);">⏳ Expiré</span>' : ''}
-              ${g.secret ? '<span style="color:rgba(168,100,255,.7);">🔮 Secret</span>' : ''}
+        <div id="deposited-item-${escapeHTML(id)}" style="padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;flex-shrink:0;">${escapeHTML(g.emoji||'👻')}</span>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||t.detail_location_unknown)}</div>
+              <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
+                <span>${date}</span>
+                <span>✦ ${resonances} résonance${resonances > 1 ? 's' : ''}</span>
+                <span>👁 ${g.openCount || 0} ${_currentLang === 'fr' ? 'ouverture' + ((g.openCount || 0) > 1 ? 's' : '') : 'open' + ((g.openCount || 0) > 1 ? 's' : '')}</span>
+                ${expired ? '<span style="color:rgba(255,100,100,.6);">⏳ Expiré</span>' : ''}
+                ${g.secret ? '<span style="color:rgba(168,100,255,.7);">🔮 Secret</span>' : ''}
+              </div>
             </div>
+            <button onclick="deleteOneGhost('${escapeHTML(id)}')" aria-label="Supprimer ce fantôme" style="background:rgba(255,80,80,.07);border:1px solid rgba(255,100,100,.25);border-radius:10px;color:rgba(255,100,100,.6);font-size:13px;padding:6px 10px;cursor:pointer;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,80,80,.15)'" onmouseout="this.style.background='rgba(255,80,80,.07)'">🗑</button>
           </div>
-          <button onclick="deleteOneGhost('${escapeHTML(id)}')" aria-label="Supprimer ce fantôme" style="background:rgba(255,80,80,.07);border:1px solid rgba(255,100,100,.25);border-radius:10px;color:rgba(255,100,100,.6);font-size:13px;padding:6px 10px;cursor:pointer;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,80,80,.15)'" onmouseout="this.style.background='rgba(255,80,80,.07)'">🗑</button>
+          <div style="text-align:right;margin-top:4px;">
+            <button class="carnet-toggle" onclick="toggleCarnetEntry('${escapeHTML(id)}', true, this)">${t.carnet_read_btn}</button>
+          </div>
+          <div class="carnet-reading" id="carnet-${escapeHTML(id)}" style="display:none;">
+            ${escapeHTML(g.message || '')}
+            <div class="carnet-reactions" id="carnet-reactions-${escapeHTML(id)}"></div>
+          </div>
         </div>`;
     });
     content.innerHTML = html;
@@ -7048,7 +7166,7 @@ window.showScreen = (id, fromPopstate = false) => {
   }
   if (id === 'screenMap') setTimeout(() => renderStaticMap(), 50);
   if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false;
-    _setNotifBtnState(localStorage.getItem('notif_enabled') === '1'); const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
+    _setNotifBtnState(localStorage.getItem('notif_enabled') === '1'); const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); renderSealColorPicker(); }
   if (id === 'screenOnboard') {
     const btn = document.getElementById('obBackBtn');
     if (btn) btn.style.display = currentUser ? 'flex' : 'none';
