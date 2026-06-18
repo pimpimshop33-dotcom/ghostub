@@ -2849,6 +2849,13 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         </button>
       </div>
       <div id="envelopeContent" style="display:none;">
+        <!-- Infos du fantôme — déplacées AU-DESSUS du message (juin 2026) pour éviter l'encombrement sous le cadre-lettre -->
+        <div class="detail-info">
+          <div class="detail-badge" id="detailAuthor"></div>
+          <div class="detail-badge" id="detailTime"></div>
+          <div class="detail-badge" id="detailDuration"></div>
+          <div class="detail-badge" id="detailRadius"></div>
+        </div>
         <!-- scratchZone : le canvas de grattage est injecté ICI, borné à ce div -->
         <div id="scratchZone" style="position:relative;min-height:160px;">
           <div style="position:relative;">
@@ -2865,18 +2872,12 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <button class="resonance-btn resonance-btn--fused" id="resonanceBtn" onclick="resonate()">
           <span id="resonanceCount">✦ Résonner</span>
         </button>
-        <div class="detail-info">
-          <div class="detail-badge" id="detailAuthor"></div>
-          <div class="detail-badge" id="detailTime"></div>
-          <div class="detail-badge" id="detailDuration"></div>
-          <div class="detail-badge" id="detailRadius"></div>
-        </div>
-        <!-- Réaction courte (3 mots max) — remplace l'ancien système de réponse libre -->
+        <!-- Réactions des autres — affichées AVANT la barre de saisie (juin 2026) -->
+        <div id="repliesList" class="micro-reply-list"></div>
         <div class="micro-reply-row">
           <input type="text" id="microReplyInput" class="micro-reply-input" data-i18n-placeholder="micro_reply_placeholder" placeholder="Réagir en un mot…" maxlength="30" data-i18n-aria-label="micro_reply_aria" aria-label="Réagir en quelques mots, 3 maximum" onkeydown="if(event.key==='Enter')sendMicroReply()">
           <button type="button" id="microReplySend" onclick="sendMicroReply()" data-i18n-aria-label="micro_reply_send_aria" aria-label="Envoyer la réaction" class="micro-reply-send">✦</button>
         </div>
-        <div id="repliesList" class="micro-reply-list"></div>
         <div class="detail-actions-row">
           <button id="favoriteBtn" onclick="toggleFavorite()" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
           <button class="ghost-card-btn" id="ghostCardBtn" onclick="generateGhostCard()" aria-label="Créer une Ghost Card partageable">
@@ -2955,8 +2956,8 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
               <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false">🌸</button>
               <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" oninput="pickEmojiCustom(this)">
             </div>
-            <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="280" aria-required="true" aria-describedby="msgCharCount"></textarea>
-            <div class="lettre-counter"><span id="msgCharCount">0</span>/280</div>
+            <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="600" aria-required="true" aria-describedby="msgCharCount"></textarea>
+            <div class="lettre-counter"><span id="msgCharCount">0</span>/600</div>
             <div class="lettre-signature" data-i18n="dep_lettre_signature">— ancré ici, à jamais</div>
           </div>
         </div>
