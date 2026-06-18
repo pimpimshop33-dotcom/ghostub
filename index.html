@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=122"></script>
+<script type="module" src="app.js?v=123"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -834,6 +834,27 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 .micro-reply-send:hover{background:rgba(232,160,48,.18);}
 .micro-reply-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+/* Le Carnet — lecture complète des messages dans le profil (juin 2026) */
+.carnet-reading{
+  margin:6px 0 2px;padding:13px 15px;
+  background:linear-gradient(180deg,rgba(232,225,210,.05) 0%,rgba(232,225,210,.02) 100%);
+  border:1px solid rgba(var(--lettre-ink-rgb),.14);
+  border-radius:10px;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;
+  line-height:1.55;color:var(--ether);white-space:pre-wrap;
+}
+.carnet-toggle{
+  background:none;border:none;color:var(--spirit-dim);font-size:11.5px;
+  cursor:pointer;font-family:'Instrument Sans',sans-serif;padding:2px 0;
+  touch-action:manipulation;transition:color .2s;
+}
+.carnet-toggle:hover{color:var(--ghost-blue);}
+.carnet-reactions{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;}
+.carnet-reaction-pill{
+  background:rgba(var(--spirit-rgb),.06);border:1px solid var(--border);
+  border-radius:14px;padding:3px 9px;font-size:11px;
+  font-family:'Instrument Sans',sans-serif;font-style:normal;color:var(--spirit-dim);
+}
 /* Réactions rapides — emojis (juin 2026) */
 .quick-react-row{display:flex;gap:7px;margin-bottom:10px;justify-content:center;flex-wrap:wrap;}
 .quick-react-btn{
@@ -2169,11 +2190,12 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .lettre-seal-btn{
   position:relative;
   width:100%;padding:15px 18px;
+  /* --seal-rgb : couleur de cire, personnalisable par rang (défaut = rouge classique) */
   background:linear-gradient(135deg,
-    rgba(180,55,55,.18) 0%,
-    rgba(140,40,40,.10) 50%,
-    rgba(180,55,55,.18) 100%);
-  border:1px solid rgba(220,90,90,.32);
+    rgba(var(--seal-rgb,180,55,55),.18) 0%,
+    rgba(var(--seal-rgb,180,55,55),.10) 50%,
+    rgba(var(--seal-rgb,180,55,55),.18) 100%);
+  border:1px solid rgba(var(--seal-rgb,180,55,55),.42);
   border-radius:14px;
   color:rgba(var(--seal-ink-rgb),.95);
   -webkit-text-fill-color:rgba(var(--seal-ink-rgb),.95) !important;
@@ -2185,18 +2207,18 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   letter-spacing:.6px;
   box-shadow:
     inset 0 1px 0 rgba(255,200,180,.08),
-    0 0 22px rgba(180,55,55,.10);
+    0 0 22px rgba(var(--seal-rgb,180,55,55),.10);
   display:flex;align-items:center;justify-content:center;gap:10px;
   margin-top:14px;
 }
 .lettre-seal-btn:hover{
   background:linear-gradient(135deg,
-    rgba(200,65,65,.28) 0%,
-    rgba(160,50,50,.18) 50%,
-    rgba(200,65,65,.28) 100%);
+    rgba(var(--seal-rgb,180,55,55),.28) 0%,
+    rgba(var(--seal-rgb,180,55,55),.18) 50%,
+    rgba(var(--seal-rgb,180,55,55),.28) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255,200,180,.14),
-    0 0 30px rgba(220,80,80,.22);
+    0 0 30px rgba(var(--seal-rgb,180,55,55),.32);
   transform:translateY(-1px);
 }
 .lettre-seal-btn:active{transform:scale(.98) translateY(0);}
@@ -2209,12 +2231,12 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   width:26px;height:26px;border-radius:50%;
   background:radial-gradient(circle at 32% 30%,
     rgba(255,180,140,.40),
-    rgba(180,50,50,.65));
+    rgba(var(--seal-rgb,180,50,50),.65));
   border:1px solid rgba(255,180,140,.42);
   font-size:12px;font-style:normal;font-weight:400;
   color:rgba(var(--seal-ink2-rgb),.95);
   -webkit-text-fill-color:rgba(var(--seal-ink2-rgb),.95) !important;
-  box-shadow:0 0 10px rgba(220,90,90,.32),
+  box-shadow:0 0 10px rgba(var(--seal-rgb,220,90,90),.32),
              inset 0 1px 1px rgba(255,220,200,.18);
   flex-shrink:0;letter-spacing:0;
   vertical-align:middle;
@@ -3340,6 +3362,11 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <span style="font-size:16px;">🏆</span>
           <span class="empreinte-pill-label" style="color:rgba(var(--premium-rgb),.7);" data-i18n="empreinte_classement">Classement</span>
         </div>
+      </div>
+      <!-- ── COULEUR DE CIRE — débloquée par rang (juin 2026) ─── -->
+      <div id="sealColorSection" style="margin-bottom:16px;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:8px;" data-i18n="profile_seal_color_title">🎨 Couleur de cire</div>
+        <div id="sealColorPicker" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
       </div>
       <!-- Panel classement inline -->
       <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;">
