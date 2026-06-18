@@ -834,6 +834,17 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 .micro-reply-send:hover{background:rgba(232,160,48,.18);}
 .micro-reply-list{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+/* Réactions rapides — emojis (juin 2026) */
+.quick-react-row{display:flex;gap:7px;margin-bottom:10px;justify-content:center;flex-wrap:wrap;}
+.quick-react-btn{
+  background:rgba(var(--spirit-rgb),.05);border:1px solid var(--border);
+  border-radius:12px;width:40px;height:40px;font-size:18px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;touch-action:manipulation;transition:all .2s;
+}
+.quick-react-btn:hover{background:rgba(var(--spirit-rgb),.1);}
+.quick-react-btn:active{transform:scale(.9);}
+.quick-react-btn:disabled{opacity:.5;pointer-events:none;}
 .micro-reply-pill{
   background:rgba(var(--spirit-rgb),.06);border:1px solid var(--border);
   border-radius:20px;padding:6px 13px;font-size:12.5px;
@@ -2874,6 +2885,14 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         </button>
         <!-- Réactions des autres — affichées AVANT la barre de saisie (juin 2026) -->
         <div id="repliesList" class="micro-reply-list"></div>
+        <div class="quick-react-row" id="quickReactRow">
+          <button class="quick-react-btn" onclick="sendQuickReaction('😂', this)" aria-label="Rire">😂</button>
+          <button class="quick-react-btn" onclick="sendQuickReaction('😢', this)" aria-label="Pleurer">😢</button>
+          <button class="quick-react-btn" onclick="sendQuickReaction('🥹', this)" aria-label="Touché">🥹</button>
+          <button class="quick-react-btn" onclick="sendQuickReaction('🤨', this)" aria-label="Suspect">🤨</button>
+          <button class="quick-react-btn" onclick="sendQuickReaction('😮', this)" aria-label="Surpris">😮</button>
+          <button class="quick-react-btn" onclick="sendQuickReaction('❤️', this)" aria-label="J'aime">❤️</button>
+        </div>
         <div class="micro-reply-row">
           <input type="text" id="microReplyInput" class="micro-reply-input" data-i18n-placeholder="micro_reply_placeholder" placeholder="Réagir en un mot…" maxlength="30" data-i18n-aria-label="micro_reply_aria" aria-label="Réagir en quelques mots, 3 maximum" onkeydown="if(event.key==='Enter')sendMicroReply()">
           <button type="button" id="microReplySend" onclick="sendMicroReply()" data-i18n-aria-label="micro_reply_send_aria" aria-label="Envoyer la réaction" class="micro-reply-send">✦</button>
@@ -2991,20 +3010,6 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           </div>
         </div>
 
-        <!-- Bouton toggle Mode Commerce -->
-        <div id="businessToggleWrap" style="margin:14px 0 0;">
-          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
-            <span style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:20px;-webkit-text-fill-color:initial!important;filter:none!important;flex-shrink:0;">🏪</span>
-                <span style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;-webkit-text-fill-color:rgba(255,230,150,1)!important;" data-i18n="dep_biz_btn">Mode Commerce</span>
-                <span id="bizPremiumBadge" style="font-size:10px;background:rgba(var(--premium-rgb),.25);color:rgba(var(--premium-rgb),1);-webkit-text-fill-color:rgba(var(--premium-rgb),1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(var(--premium-rgb),.3);">✦ Premium</span>
-              </div>
-              <div style="font-size:11px;color:rgba(255,235,180,.8);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
-            </span>
-            <span id="businessToggleIcon" style="font-size:16px;color:rgba(var(--premium-rgb),.6);">○</span>
-          </button>
-        </div>
         <!-- Champ caché businessExtra pour compatibilité depositGhost -->
         <div id="businessExtra" style="display:none;"></div>
 
@@ -3030,6 +3035,21 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 
         <button class="lettre-seal-btn" onclick="depositGhost()" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
         <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
+
+        <!-- Bouton toggle Mode Commerce — déplacé sous "Sceller le fantôme" (juin 2026) -->
+        <div id="businessToggleWrap" style="margin:14px 0 0;">
+          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
+            <span style="flex:1;">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:20px;-webkit-text-fill-color:initial!important;filter:none!important;flex-shrink:0;">🏪</span>
+                <span style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;-webkit-text-fill-color:rgba(255,230,150,1)!important;" data-i18n="dep_biz_btn">Mode Commerce</span>
+                <span id="bizPremiumBadge" style="font-size:10px;background:rgba(var(--premium-rgb),.25);color:rgba(var(--premium-rgb),1);-webkit-text-fill-color:rgba(var(--premium-rgb),1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(var(--premium-rgb),.3);">✦ Premium</span>
+              </div>
+              <div style="font-size:11px;color:rgba(255,235,180,.8);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
+            </span>
+            <span id="businessToggleIcon" style="font-size:16px;color:rgba(var(--premium-rgb),.6);">○</span>
+          </button>
+        </div>
         <!-- Erreur de dépôt remontée ici pour visibilité immédiate -->
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite" style="margin-top:8px;"></div>
         <div class="deposit-advanced-toggle" id="advancedToggle" onclick="toggleAdvancedDeposit()">
