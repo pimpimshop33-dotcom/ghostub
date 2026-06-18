@@ -7981,8 +7981,8 @@ document.addEventListener('DOMContentLoaded', () => {
         counter.textContent = len;
         const parent = counter.parentElement;
         parent.classList.remove('near','full');
-        if (len > 250) parent.classList.add('full');
-        else if (len > 200) parent.classList.add('near');
+        if (len > 540) parent.classList.add('full');
+        else if (len > 450) parent.classList.add('near');
       }
     });
   }
