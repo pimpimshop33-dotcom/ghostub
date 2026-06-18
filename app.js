@@ -173,7 +173,7 @@ const LANGS = {
     dep_btn_saving: '✓ Upload · Sauvegarde…',
     dep_success: '👻 Votre trace est ancrée dans ce lieu…',
     dep_err_msg: 'Écrivez un message.',
-    dep_err_long: 'Message trop long (280 caractères max).',
+    dep_err_long: 'Message trop long (600 caractères max).',
     dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
     dep_err_offline: 'Vous êtes hors ligne — reconnectez-vous pour déposer.',
     dep_err_generic: 'Erreur lors du dépôt — vérifie ta connexion et réessaie.',
@@ -726,7 +726,7 @@ const LANGS = {
     dep_btn_saving: '✓ Upload · Saving…',
     dep_success: '👻 Your trace is anchored to this place…',
     dep_err_msg: 'Write a message.',
-    dep_err_long: 'Message too long (280 chars max).',
+    dep_err_long: 'Message too long (600 chars max).',
     dep_err_gps: 'Location required — enable it in your browser.',
     dep_err_offline: 'You\'re offline — reconnect to drop a ghost.',
     dep_err_generic: 'Error while dropping — check your connection and try again.',
@@ -2258,6 +2258,22 @@ async function _notifyNearbyUsers(newGhostId, lat, lng, location) {
   }
 }
 
+// Verbe d'impact associé à chaque emoji de réaction rapide — fait le pont entre
+// la donnée brute (REPLIES) et un retour émotionnel lisible pour le déposant.
+const _REACTION_VERBS = {
+  '😂': { fr: 'a fait rire quelqu\'un',     en: 'made someone laugh' },
+  '😢': { fr: 'a fait pleurer quelqu\'un',  en: 'made someone cry' },
+  '🥹': { fr: 'a touché quelqu\'un',        en: 'touched someone' },
+  '🤨': { fr: 'a intrigué quelqu\'un',      en: 'intrigued someone' },
+  '😮': { fr: 'a surpris quelqu\'un',       en: 'surprised someone' },
+  '❤️': { fr: 'a été aimé',                 en: 'was loved' },
+};
+function _reactionVerb(rc) {
+  const entry = _REACTION_VERBS[(rc || '').trim()];
+  if (!entry) return null;
+  return _currentLang === 'en' ? entry.en : entry.fr;
+}
+
 async function checkReplyNotifications() {
   if (!currentUser) return;
   try {
@@ -2273,7 +2289,22 @@ async function checkReplyNotifications() {
       let title, msg;
       if (n.type === 'reply') {
         title = t.notif_reply_title;
-        msg = `${escapeHTML(n.fromAuthor || 'Un inconnu')} a laissé une réponse à votre fantôme de <b>${lieu}</b>.`;
+        const rc = (n.reactionContent || '').trim();
+        const verb = _reactionVerb(rc);
+        if (verb) {
+          // Réaction emoji reconnue — feedback émotionnel précis
+          msg = _currentLang === 'en'
+            ? `Your trace at <b>${lieu}</b> ${verb}.`
+            : `Ton fantôme de <b>${lieu}</b> ${verb}.`;
+        } else if (rc) {
+          // Réaction texte (micro-réponse ou ancien écran reply) — on cite le contenu
+          msg = _currentLang === 'en'
+            ? `${escapeHTML(n.fromAuthor || 'Someone')} reacted to your trace at <b>${lieu}</b>: “${escapeHTML(rc)}”`
+            : `${escapeHTML(n.fromAuthor || 'Un inconnu')} a réagi à ton fantôme de <b>${lieu}</b> : « ${escapeHTML(rc)} »`;
+        } else {
+          // Fallback (anciennes notifs sans reactionContent)
+          msg = `${escapeHTML(n.fromAuthor || 'Un inconnu')} a laissé une réponse à votre fantôme de <b>${lieu}</b>.`;
+        }
       } else if (n.type === 'biz_open') {
         title = '🏪 Un client a vu votre offre !';
         msg = _currentLang === 'en' ? `Someone just discovered your commerce offer at <b>${lieu}</b>.` : `Quelqu'un vient de découvrir votre offre commerce à <b>${lieu}</b>.`;
@@ -6252,7 +6283,7 @@ window.depositGhost = async () => {
   const err      = document.getElementById('depositError');
 
   if (!message) { err.textContent = t.dep_err_msg; document.getElementById('depositMsg').focus(); return; }
-  if (message.length > 280) { err.textContent = t.dep_err_long; return; }
+  if (message.length > 600) { err.textContent = t.dep_err_long; return; }
   if (!userLat) {
     // Tenter une dernière fois
     try { await getLocation(); } catch(e) { console.warn('[ghostub:depositGhost:gps]', e); }
@@ -6421,6 +6452,7 @@ window.sendReply = async () => {
         ghostId: selectedGhost.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: anon ? '👻 Anonyme' : (currentUser.displayName || 'Quelqu\'un'),
+        reactionContent: msg.slice(0, 40),
         notified: false,
         createdAt: serverTimestamp()
       }).catch(() => {});
@@ -6470,6 +6502,7 @@ window.sendMicroReply = async () => {
         ghostId: selectedGhost.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: '👻 Anonyme',
+        reactionContent: msg.slice(0, 40),
         notified: false,
         createdAt: serverTimestamp()
       }).catch(() => {});
@@ -6505,6 +6538,7 @@ window.sendQuickReaction = async (emoji, btn) => {
         ghostId: selectedGhost.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: '👻 Anonyme',
+        reactionContent: emoji,
         notified: false,
         createdAt: serverTimestamp()
       }).catch(() => {});
