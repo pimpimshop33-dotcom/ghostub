@@ -2011,9 +2011,12 @@ async function requestNotifPermission() {
 
 function showNotif(title, body) {
   if (!('serviceWorker' in navigator)) return;
+  // La Notification système n'interprète jamais le HTML (contrairement au toast
+  // in-app qui utilise innerHTML) — on nettoie ici une fois pour toutes, pour que
+  // titre et corps restent lisibles même si le texte source contient des balises <b>.
   navigator.serviceWorker.ready.then(reg => {
-    reg.showNotification(title, {
-      body,
+    reg.showNotification(title.replace(/<[^>]*>/g, ''), {
+      body: body.replace(/<[^>]*>/g, ''),
       icon: '/ghostub/icon-maskable-512.png',
       tag: 'fantome-' + Date.now(),
       vibrate: [200, 100, 200],
