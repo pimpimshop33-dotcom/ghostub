@@ -2296,7 +2296,10 @@ const _ANNIV_NOTIFIED_KEY = () => currentUser ? 'ghostub_anniv_notified_' + curr
 
 async function checkMemoryAnniversaries() {
   if (!currentUser) return;
-  if (localStorage.getItem(_ANNIV_CHECK_KEY())) return; // déjà vérifié aujourd'hui
+  // 🔧 DEBUG TEMPORAIRE — le garde-fou "une fois par jour" est désactivé pour
+  // qu'on puisse diagnostiquer pourquoi rien ne s'est affiché. À restaurer une
+  // fois le souci identifié (cf. conversation avec Claude du 18/06).
+  // if (localStorage.getItem(_ANNIV_CHECK_KEY())) return; // déjà vérifié aujourd'hui
   localStorage.setItem(_ANNIV_CHECK_KEY(), '1');
   const key = _ANNIV_NOTIFIED_KEY();
   if (!key) return;
@@ -2310,6 +2313,20 @@ async function checkMemoryAnniversaries() {
       limit(100)
     ));
     const now = Date.now();
+
+    // 🔧 DEBUG TEMPORAIRE — affiche ce que la fonction voit réellement
+    let _oldestDays = 0, _withDate = 0;
+    snap.forEach(d => {
+      const g = d.data();
+      if (g.createdAt) {
+        _withDate++;
+        const ds = Math.floor((now - g.createdAt.seconds * 1000) / 86400000);
+        if (ds > _oldestDays) _oldestDays = ds;
+      }
+    });
+    console.log('[ghostub:anniv:debug] fantômes trouvés:', snap.size, '| avec date:', _withDate, '| le plus ancien a', _oldestDays, 'jours');
+    showToast('info', `🔧 Debug : ${snap.size} fantômes (${_withDate} datés), le plus ancien a ${_oldestDays}j`, 8000);
+
     for (const d of snap.docs) {
       const g = d.data();
       if (!g.createdAt) continue;
