@@ -1241,7 +1241,8 @@ window.setLang = (lang) => {
   if (typeof _setNotifBtnState === 'function') _setNotifBtnState(localStorage.getItem('notif_enabled') === '1');
 
   // Ghost count line — relancer le chargement pour re-générer avec la bonne langue
-  if (typeof loadNearbyGhosts === 'function') loadNearbyGhosts().catch(() => {});
+  // Guard: ne pas appeler avant que l'auth soit confirmée (race condition avec signInAnonymously)
+  if (typeof loadNearbyGhosts === 'function' && currentUser) loadNearbyGhosts().catch(() => {});
 };
 
 // Appliquer la langue au démarrage
