@@ -8604,14 +8604,20 @@ document.addEventListener('click', (e) => {
 
 // ── MODE EXPLORATION ANONYME ─────────────────────────────
 window.guestExplore = async () => {
+  // Si l'auth anonyme silencieuse a déjà réussi, currentUser est déjà anonyme.
+  // signInAnonymously() retournerait le même user SANS déclencher onAuthStateChanged
+  // → aucune navigation. On navigue directement.
+  if (currentUser && currentUser.isAnonymous) {
+    showScreen('screenRadar');
+    setNav('nav-radar');
+    return;
+  }
+  // Pas encore d'utilisateur (auth silencieuse échouée) — nouvel essai
   try {
     await signInAnonymously(auth);
-    // onAuthStateChanged va gérer la suite
-    // On marque comme guest pour limiter les actions
-    localStorage.setItem('ghostub_guest', '1');
+    // onAuthStateChanged gère la navigation vers screenRadar
   } catch(e) {
-    console.warn('guestExplore:', e);
-    // Fallback : aller au radar sans auth (lecture seule partielle)
+    console.warn('[ghostub:guestExplore]', e);
     showScreen('screenRadar'); setNav('nav-radar');
     showToast('info', '🌫️ Mode exploration — connecte-toi pour déposer', 3500);
   }
