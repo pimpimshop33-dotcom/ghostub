@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=130"></script>
+<script type="module" src="app.js?v=131"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2269,8 +2269,9 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
    PHASE 1b "LA NAPPE" v101 — Bottom sheet à onglets
    ═════════════════════════════════════════════════════════ */
 
-/* Cache l'ancien toggle "Personnaliser" : remplacé par les tools */
-#screenDeposit .deposit-advanced-toggle { display: none !important; }
+/* Outils cachés par défaut — révélés par le chevron "Personnaliser" */
+#screenDeposit .lettre-tools { display: none; }
+#screenDeposit .lettre-tools.tools-open { display: grid; animation: fadeUp .3s ease both; }
 /* Cache aussi les anciennes étapes 2 et 3 du wizard (vidées, contenu déplacé dans la nappe) */
 #screenDeposit #wizardStep2,
 #screenDeposit #wizardStep3 { display: none !important; }
