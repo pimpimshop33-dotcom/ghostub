@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=138"></script>
+<script type="module" src="app.js?v=139"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -89,7 +89,9 @@
   --tier-gold-rgb: 245,223,160;
   /* Brume verte — utilisée en rgba(var(--mist-rgb), X) */
   --mist-rgb: 61,184,122;
-  /* Bleu-lavande fantôme (hints, liens secondaires) */
+  /* ── Rôles sémantiques des deux bleus (règle de cohérence) ──
+     --ghost-blue-rgb : lavande froide  → lettres, enveloppes, mystère, hints, sceaux
+     --spirit-rgb     : bleu ciel saturé → radar, espace, distance, GPS, halos extérieurs */
   --ghost-blue-rgb: 168,180,255;
   /* Vert accent (badges succès type "Premier lecteur") */
   --accent-green-rgb: 100,220,160;
@@ -98,7 +100,6 @@
   /* Encre du bouton sceau (rouge) */
   --seal-ink-rgb: 255,210,180;
   --seal-ink2-rgb: 255,235,210;
-  /* Bleu spirit littéral (utilisé hors var(--spirit) existant) */
   --spirit-rgb: 122,184,245;
   /* Brume verte — enseigne nocturne */
   --mist:   #3db87a;
@@ -329,7 +330,7 @@ body:has(#screenProfile.active) .bokeh-light         { opacity:.60; }
   0%,100%{opacity:.6;transform:scaleY(1);}
   50%{opacity:1;transform:scaleY(1.08);}
 }
-.ghost-logo{font-size:68px;margin-bottom:20px;animation:floatG 4s ease-in-out infinite;filter:drop-shadow(0 0 28px rgba(var(--spirit-rgb),.6)) drop-shadow(0 0 60px rgba(232,160,48,.2));}
+.ghost-logo{font-size:68px;margin-bottom:20px;animation:floatG 4s ease-in-out infinite;filter:drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),.6)) drop-shadow(0 0 60px rgba(232,160,48,.2));}
 @keyframes floatG{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .onboard-title{font-family:'Cormorant Garamond',serif;font-size:48px;font-weight:300;font-style:italic;color:var(--ether);margin-bottom:10px;text-shadow:0 0 40px rgba(var(--spirit-rgb),.35),0 2px 20px rgba(232,160,48,.2);}
 .onboard-sub{font-size:13px;color:var(--warm-dim);line-height:1.7;margin-bottom:32px;}
@@ -595,15 +596,15 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   touch-action:manipulation;
 }
 .radar-radius-btn:hover{
-  color:var(--spirit);
-  border-color:var(--border-bright);
-  background:rgba(var(--spirit-rgb),.08);
+  color:rgba(var(--ghost-blue-rgb),.90);
+  border-color:rgba(var(--ghost-blue-rgb),.35);
+  background:rgba(var(--ghost-blue-rgb),.08);
 }
 .radar-radius-btn.active{
-  background:linear-gradient(135deg,rgba(var(--mist-rgb),.15),rgba(var(--spirit-rgb),.08));
-  border-color:rgba(var(--mist-rgb),.5);
-  color:var(--mist);
-  box-shadow:0 0 16px rgba(var(--mist-rgb),.15),inset 0 1px 0 rgba(255,255,255,.04);
+  background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.16),rgba(var(--ghost-blue-rgb),.06));
+  border-color:rgba(var(--ghost-blue-rgb),.45);
+  color:rgba(var(--ghost-blue-rgb),.95);
+  box-shadow:0 0 16px rgba(var(--ghost-blue-rgb),.12),inset 0 1px 0 rgba(255,255,255,.04);
 }
 .radar-radius-btn:active{transform:scale(.96);}
 
@@ -613,7 +614,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   100%{transform:translateX(300%) skewX(-10deg);}
 }
 @keyframes cardBreath{
-  0%,100%{box-shadow:0 2px 16px rgba(0,0,0,.5),0 0 0 1px rgba(var(--spirit-rgb),.04);}
+  0%,100%{box-shadow:0 2px 16px rgba(0,0,0,.5),0 0 0 1px rgba(var(--ghost-blue-rgb),.08);}
   50%{box-shadow:0 3px 24px rgba(0,0,0,.6),0 0 16px rgba(232,160,48,.06);}
 }
 .ghost-list{display:flex;flex-direction:column;gap:8px;}
