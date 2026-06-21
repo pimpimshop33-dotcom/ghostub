@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v39';
+const CACHE_NAME = 'ghostub-v40';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 self.addEventListener('install', e => {

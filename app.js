@@ -312,6 +312,8 @@ const LANGS = {
     dep_success_title: 'Fantôme ancré',
     dep_success_sub: 'Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
     dep_success_hint: 'Appuie pour continuer',
+    dep_notif_btn: '🔔 Savoir quand il est découvert',
+    dep_notif_ok: '✓ Tu seras averti',
     prem_video_label: 'Vidéo',
     prem_video_sub: 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
     prem_video_optional: 'Vidéo (optionnel)',
@@ -877,6 +879,8 @@ const LANGS = {
     dep_success_title: 'Ghost anchored',
     dep_success_sub: 'Your trace rests in this place.<br>A soul will discover it… perhaps.',
     dep_success_hint: 'Tap to continue',
+    dep_notif_btn: '🔔 Know when it\'s discovered',
+    dep_notif_ok: '✓ You\'ll be notified',
     prem_video_label: 'Video',
     prem_video_sub: 'Up to 20 sec · opens only on site',
     prem_video_optional: 'Video (optional)',
@@ -2535,6 +2539,43 @@ window.enableNotifications = async () => {
     btn.style.borderColor = 'rgba(255,100,100,.3)';
     btn.style.color = 'rgba(255,100,100,.7)';
     showToast('warning', t.profile_notif_denied, 5000);
+  }
+};
+
+// ── Prompt push post-dépôt ────────────────────────────────
+// Affiché sur l'overlay de succès uniquement si la permission
+// n'a pas encore été demandée (ni accordée, ni refusée).
+function _maybeShowSuccessNotifPrompt() {
+  const btn = document.getElementById('successNotifBtn');
+  if (!btn) return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission !== 'default') return;
+  // Apparaît 0.9 s après l'overlay (après les animations de titre/sous-titre)
+  setTimeout(() => {
+    btn.style.display = 'block';
+    btn.style.animation = 'fadeUp .4s ease both';
+  }, 900);
+}
+
+window._requestSuccessNotif = async (e) => {
+  e.stopPropagation(); // ne pas déclencher le dismiss de l'overlay
+  const btn = document.getElementById('successNotifBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  const granted = await requestNotifPermission();
+  if (granted) {
+    localStorage.setItem('notif_enabled', '1');
+    _startNotifIntervals();
+    checkDiscoveries();
+    btn.textContent = t.dep_notif_ok;
+    btn.style.color = 'rgba(var(--accent-green-rgb),.9)';
+    btn.style.borderColor = 'rgba(var(--accent-green-rgb),.3)';
+    btn.style.background = 'rgba(var(--accent-green-rgb),.08)';
+    btn.style.cursor = 'default';
+  } else {
+    // Permission refusée ou dismissed : faire disparaître discrètement
+    btn.style.opacity = '0';
+    setTimeout(() => { btn.style.display = 'none'; }, 300);
   }
 };
 
@@ -6546,6 +6587,7 @@ window.depositGhost = async () => {
     depositBtn.disabled = false;
     clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
     document.getElementById('depositSuccess').classList.add('show');
+    _maybeShowSuccessNotifPrompt();
     // Ghost dédié sans UID : afficher le lien de partage
     if (isPremium && !document.getElementById('dedicatedUidInput')?.value.trim()) {
       const _dedEl = document.getElementById('successSubText');
