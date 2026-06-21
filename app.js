@@ -301,6 +301,7 @@ const LANGS = {
     ghost_hint_default: '✦ Un secret vous attend…',
     ghost_badge_archive: 'archive',
     ghost_badge_old: 'ancien',
+    ghost_badge_virgin: '🕯 jamais lu',
     ghost_secret_locked: '🔮 Ce fantôme est secret — approchez-vous à moins de 3m pour le révéler.',
     // Map
     map_you: '📍 Vous êtes ici',
@@ -862,6 +863,7 @@ const LANGS = {
     ghost_hint_default: '✦ A secret awaits you…',
     ghost_badge_archive: 'archive',
     ghost_badge_old: 'old',
+    ghost_badge_virgin: '🕯 unread',
     ghost_secret_locked: '🔮 This ghost is secret — move within 3m to reveal it.',
     // Map
     map_you: '📍 You are here',
@@ -5629,7 +5631,13 @@ function getFilteredGhosts() {
     case 'video':
       return nearbyGhosts.filter(g => g.videoUrl);
     default:
-      return nearbyGhosts; // 'all' = tri par distance
+      // 'all' = virgins en tête (jamais ouverts), puis par distance dans chaque groupe
+      return [...nearbyGhosts].sort((a, b) => {
+        const aV = !a.openCount || a.openCount === 0;
+        const bV = !b.openCount || b.openCount === 0;
+        if (aV !== bV) return aV ? -1 : 1;
+        return a.distance - b.distance;
+      });
   }
 }
 
@@ -5726,9 +5734,10 @@ function renderGhostList() {
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
     const resoStyle = resoCount >= 5 ? 'color:rgba(var(--premium-rgb),.9);text-shadow:0 0 8px rgba(var(--premium-rgb),.4);' : resoCount >= 2 ? 'color:rgba(var(--ghost-blue-rgb),.8);' : '';
-    // Badge "jamais ouvert" — uniquement si déjà lu (pour ne pas doubler avec le hintText)
     const neverOpened = !g.openCount || g.openCount === 0;
-    const virginBadge = ''; // supprimé — info déjà dans hintText
+    const virginBadge = neverOpened
+      ? `<span style="font-size:9px;background:rgba(122,184,245,.14);border:1px solid rgba(122,184,245,.38);border-radius:20px;padding:1px 6px;color:rgba(122,184,245,.95);margin-left:4px;">${t.ghost_badge_virgin}</span>`
+      : '';
     // Hint dynamique selon état
     const hintText = neverOpened && ageDays > 30
       ? t.ghost_hint_never_old.replace('{n}', Math.floor(ageDays))
