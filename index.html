@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=131"></script>
+<script type="module" src="app.js?v=132"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2269,9 +2269,11 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
    PHASE 1b "LA NAPPE" v101 — Bottom sheet à onglets
    ═════════════════════════════════════════════════════════ */
 
-/* Outils cachés par défaut — révélés par le chevron "Personnaliser" */
+/* Outils cachés par défaut — révélés par le hint discret sous le bouton Sceller */
 #screenDeposit .lettre-tools { display: none; }
 #screenDeposit .lettre-tools.tools-open { display: grid; animation: fadeUp .3s ease both; }
+/* Amber toggle remplacé par le hint discret — on le masque */
+#screenDeposit #advancedToggle { display: none !important; }
 /* Cache aussi les anciennes étapes 2 et 3 du wizard (vidées, contenu déplacé dans la nappe) */
 #screenDeposit #wizardStep2,
 #screenDeposit #wizardStep3 { display: none !important; }
@@ -3058,6 +3060,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 
         <button class="lettre-seal-btn" onclick="depositGhost()" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
         <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
+        <div id="advancedHint" onclick="toggleAdvancedDeposit()" style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(var(--ghost-blue-rgb),.55);-webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.55)!important;text-align:center;margin-top:5px;letter-spacing:.3px;cursor:pointer;touch-action:manipulation;user-select:none;">Personnalise ton fantôme <span id="advancedHintArrow">↓</span></div>
 
         <!-- Bouton toggle Mode Commerce — déplacé sous "Sceller le fantôme" (juin 2026) -->
         <div id="businessToggleWrap" style="margin:14px 0 0;">

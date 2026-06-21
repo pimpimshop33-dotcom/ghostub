@@ -3088,11 +3088,13 @@ window.toggleAudioEnabled = () => {
 
 // ── Advanced deposit toggle ────────────────────────────────
 window.toggleAdvancedDeposit = () => {
-  const toggle = document.getElementById('advancedToggle');
+  const hint = document.getElementById('advancedHint');
   const tools = document.querySelector('#screenDeposit .lettre-tools');
-  if (!toggle || !tools) return;
-  const isOpen = toggle.classList.toggle('open');
+  if (!hint || !tools) return;
+  const isOpen = hint.classList.toggle('open');
   tools.classList.toggle('tools-open', isOpen);
+  const arrow = document.getElementById('advancedHintArrow');
+  if (arrow) arrow.textContent = isOpen ? '↑' : '↓';
 };
 
 // ── Proximity data attribute helper ────────────────────────
@@ -7254,11 +7256,13 @@ window.showScreen = (id, fromPopstate = false) => {
     const chainSection = document.getElementById('premSection_chain');
     // Reset depositSuccess overlay
     document.getElementById('depositSuccess')?.classList.remove('show');
-    // Reset outils avancés (cachés par défaut, révélés par le chevron)
-    const _advToggle = document.getElementById('advancedToggle');
+    // Reset outils avancés (cachés par défaut, révélés par le hint discret)
+    const _advToggle = document.getElementById('advancedHint');
     const _tools = document.querySelector('#screenDeposit .lettre-tools');
     if (_advToggle) _advToggle.classList.remove('open');
     if (_tools) _tools.classList.remove('tools-open');
+    const _arrow = document.getElementById('advancedHintArrow');
+    if (_arrow) _arrow.textContent = '↓';
     if (chainSection) chainSection.style.position = 'relative';
     if (!isPremium) {
       if (chainContent) { chainContent.style.opacity = '0.3'; chainContent.style.pointerEvents = 'none'; }
