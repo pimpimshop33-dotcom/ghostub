@@ -1,9 +1,14 @@
-// ── Check guest avant dépôt ───────────────────────────────
+// ── Auth différée — helpers ────────────────────────────────
 function _isGuestUser() {
   return currentUser && currentUser.isAnonymous;
 }
+// Redirige vers l'écran d'inscription (onglet Inscription) pour les anonymes
+function _promptSignUp() {
+  showScreen('screenAuth');
+  setTimeout(() => { if (typeof window.showTab === 'function') window.showTab('register'); }, 150);
+}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
@@ -1802,6 +1807,26 @@ function getLocation() {
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
+
+    // ── Utilisateur anonyme — radar lecture seule ──────────
+    if (user.isAnonymous) {
+      document.getElementById('bottomNav').style.display = 'flex';
+      showScreen('screenRadar');
+      setNav('nav-radar');
+      if (!window._locationWatchStarted) {
+        window._locationWatchStarted = true;
+        LocationService.startWatch();
+        LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+          if (accuracy && accuracy > 5000) return;
+          userLat = lat; userLng = lng;
+        });
+      }
+      try { await getLocation(); } catch(e) {}
+      await loadNearbyGhosts();
+      return;
+    }
+    // ──────────────────────────────────────────────────────
+
     watchMyGhostResonances();
     _startWhisperListener();
     Analytics.track('session_start', { uid_hash: btoa(user.uid).slice(0,8) });
@@ -1918,10 +1943,19 @@ onAuthStateChanged(auth, async user => {
   } else {
     currentUser = null;
     document.getElementById('bottomNav').style.display = 'none';
-    if (localStorage.getItem('ghostub_onboard_seen')) {
-      showScreen('screenAuth');
-    } else {
-      showScreen('screenOnboard');
+    // Auth anonyme silencieuse — l'utilisateur voit le radar en lecture seule
+    // sans aucune action de sa part. L'inscription est demandée à la première
+    // interaction (clic sur fantôme ou dépôt).
+    try {
+      await signInAnonymously(auth);
+      // onAuthStateChanged se re-déclenche avec l'user anonyme → traité dans le bloc isAnonymous ci-dessus
+    } catch(e) {
+      // Fallback si signInAnonymously échoue (réseau coupé, etc.)
+      if (localStorage.getItem('ghostub_onboard_seen')) {
+        showScreen('screenAuth');
+      } else {
+        showScreen('screenOnboard');
+      }
     }
   }
 });
@@ -1940,13 +1974,24 @@ window.register = async () => {
   const btn = document.getElementById('registerBtn') || document.querySelector('#screenRegister button[type=submit], #screenRegister .btn-primary');
   setLoading(btn, true);
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    await updateProfile(cred.user, { displayName: pseudo });
+    let registeredUser;
+    if (_isGuestUser()) {
+      // Lier le compte anonyme au compte réel — préserve toutes les données accumulées
+      const credential = EmailAuthProvider.credential(email, pass);
+      const result = await linkWithCredential(currentUser, credential);
+      registeredUser = result.user;
+    } else {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      registeredUser = cred.user;
+    }
+    await updateProfile(registeredUser, { displayName: pseudo });
     Analytics.track('register');
   } catch(e) {
-    err.textContent = e.code === 'auth/email-already-in-use' ? t.auth_err_email_used :
-                      e.code === 'auth/weak-password' ? t.auth_err_short_pass :
-                      'Erreur : ' + e.message;
+    setLoading(btn, false);
+    err.textContent = e.code === 'auth/email-already-in-use' || e.code === 'auth/credential-already-in-use'
+      ? t.auth_err_email_used
+      : e.code === 'auth/weak-password' ? t.auth_err_short_pass
+      : 'Erreur : ' + e.message;
   }
 };
 
@@ -5994,6 +6039,7 @@ window.swipeGhost = (dir) => {
 })();
 
 window.openGhost = async (id) => {
+  if (_isGuestUser()) { _promptSignUp(); return; }
   const idx = nearbyGhosts.findIndex(g => g.id === id);
   if (idx !== -1) currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
@@ -7584,6 +7630,11 @@ function animateScreenTransition(newId) {
 // Patch showScreen pour ajouter les animations
 const _showScreenOrig = window.showScreen;
 window.showScreen = (id, fromPopstate = false) => {
+  // Écrans réservés aux comptes réels — rediriger les anonymes vers l'inscription
+  if (_isGuestUser() && (id === 'screenDeposit' || id === 'screenProfile')) {
+    _promptSignUp();
+    return;
+  }
   animateScreenTransition(id);
   _showScreenOrig(id, fromPopstate);
 
