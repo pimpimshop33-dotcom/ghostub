@@ -6944,10 +6944,12 @@ async function _doOpenEnvelope() {
 function _initScratchReveal() {
   const zone = document.getElementById('scratchZone');
   if (!zone) return;
-  // Cacher le CONTENU (pas la zone elle-même — sinon le canvas hérite de opacity:0)
   ['detailMessage','detailAudio','detailPhoto','detailReadCount'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) { el.style.opacity = '0'; el.style.visibility = 'hidden'; }
+    if (el) {
+      el.style.opacity = '0'; el.style.visibility = 'hidden';
+      if (id === 'detailMessage') el.classList.remove('ink-revealing');
+    }
   });
   setTimeout(_buildScratchCanvas, 250);
 }
@@ -7052,8 +7054,13 @@ function _completeScratchReveal(canvas, hint, zone) {
       const el = document.getElementById(id);
       if (el) {
         el.style.visibility = 'visible';
-        el.style.transition = 'opacity .35s ease';
-        el.style.opacity = '1';
+        if (id === 'detailMessage') {
+          el.style.opacity = '1';
+          el.classList.add('ink-revealing');
+        } else {
+          el.style.transition = 'opacity .35s ease';
+          el.style.opacity = '1';
+        }
       }
     });
     // Apparition mot par mot du message

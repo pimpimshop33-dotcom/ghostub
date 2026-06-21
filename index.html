@@ -52,7 +52,7 @@
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
 
-<script type="module" src="app.js?v=137"></script>
+<script type="module" src="app.js?v=138"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -189,6 +189,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   position:absolute;border-radius:50%;
   animation:bokehFloat 40s ease-in-out infinite;
   will-change:transform;
+  transition:opacity .8s ease;
 }
 .bokeh-light.warm-lg{
   width:280px;height:280px;top:15%;left:10%;
@@ -259,6 +260,20 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 @media (prefers-reduced-motion:reduce){
   .bokeh-light{animation:none !important;}
 }
+/* ── BOKEH CONTEXTUEL — ambiance par écran ─────────────── */
+/* Radar : lumières froides et mist dominent, ambre en retrait */
+body:has(#screenRadar.active) .bokeh-light.warm-lg  { opacity:.42; }
+body:has(#screenRadar.active) .bokeh-light.warm-md  { opacity:.38; }
+body:has(#screenRadar.active) .bokeh-light.warm-sm  { opacity:.35; }
+body:has(#screenRadar.active) .bokeh-light.front-1  { opacity:.32; }
+/* Dépôt : ambre domine, bleu et mist s'effacent */
+body:has(#screenDeposit.active) .bokeh-light.cool-lg  { opacity:.28; }
+body:has(#screenDeposit.active) .bokeh-light.cool-md  { opacity:.28; }
+body:has(#screenDeposit.active) .bokeh-light.front-2  { opacity:.28; }
+body:has(#screenDeposit.active) .bokeh-light.mist     { opacity:.22; }
+body:has(#screenDeposit.active) .bokeh-light.pink     { opacity:.32; }
+/* Profil : contemplatif, toutes lumières à 60% */
+body:has(#screenProfile.active) .bokeh-light         { opacity:.60; }
 
 /* ── PARTICLES — braises nocturnes ─────────────────────── */
 .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
@@ -774,6 +789,11 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
     linear-gradient(to top,rgba(var(--lettre-ink-rgb),.22) 1px,transparent 1px) calc(100% - 7px) calc(100% - 7px)/1px 18px no-repeat;
 }
 .detail-message > *{position:relative;z-index:1;}
+@keyframes inkReveal{
+  from{opacity:0;filter:blur(6px);letter-spacing:.06em;}
+  to  {opacity:1;filter:blur(0);  letter-spacing:.01em;}
+}
+.detail-message.ink-revealing{animation:inkReveal 700ms ease-out forwards;}
 .detail-info{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
 .detail-badge{display:flex;align-items:center;gap:5px;background:rgba(var(--spirit-rgb),.04);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:11px;color:var(--warm-dim);}
 /* Bouton Résonner — halo ambre */
