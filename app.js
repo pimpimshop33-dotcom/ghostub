@@ -386,6 +386,9 @@ const LANGS = {
     open_limit_sub_remaining: 'Tu peux encore ouvrir <strong>{n} fantôme{s}</strong> gratuitement aujourd\'hui.',
     open_limit_btn_last: '✉ Utiliser ma dernière ouverture',
     open_limit_btn: '✉ Ouvrir ce fantôme',
+    open_limit_toast_last: '🕯 Dernière trace du jour — reviens demain.',
+    open_limit_title_done: 'Reviens demain, chasseur',
+    open_limit_sub_done: 'Ton quota de demain est déjà prêt.<br>Ou passe en <strong>Premium</strong> pour continuer maintenant.',
     // Blocked conditions
     blocked_default_title: 'Ce fantôme dort encore',
     blocked_default_sub: 'Il se réveillera bientôt.',
@@ -948,6 +951,9 @@ const LANGS = {
     open_limit_sub_remaining: 'You can still open <strong>{n} ghost{s}</strong> for free today.',
     open_limit_btn_last: '✉ Use my last open',
     open_limit_btn: '✉ Open this ghost',
+    open_limit_toast_last: '🕯 Last ghost of the day — come back tomorrow.',
+    open_limit_title_done: 'Come back tomorrow, hunter',
+    open_limit_sub_done: 'Your tomorrow\'s quota is already ready.<br>Or go <strong>Premium</strong> to keep exploring now.',
     // Blocked conditions
     blocked_default_title: 'This ghost is still sleeping',
     blocked_default_sub: 'It will wake up soon.',
@@ -6835,6 +6841,11 @@ async function _doOpenEnvelope() {
     if (firstFocusable) firstFocusable.focus();
   }, 180);
   Analytics.track('envelope_opened');
+  // Toast discret post-révélation quand le dernier quota du jour vient d'être consommé.
+  // On attend 1.5 s pour ne pas écraser le "🥇 Premier à lire" s'il s'affiche.
+  if (!isPremium && _quota.remaining === 0) {
+    setTimeout(() => showToast('info', t.open_limit_toast_last, 5000), 1500);
+  }
 }
 
 // ── SCRATCH-TO-REVEAL ─────────────────────────────────────
@@ -6999,9 +7010,9 @@ function showOpenLimitWarning(remaining, onConfirm) {
   ).join('');
 
   if (remaining === 0) {
-    icon.textContent = '🚫';
-    document.getElementById('openLimitTitle').textContent = "Limite atteinte pour aujourd'hui";
-    sub.innerHTML = t.open_limit_sub_reached.replace('{n}', DAILY_OPEN_LIMIT).replace('{s}','');
+    icon.textContent = '🌙';
+    document.getElementById('openLimitTitle').textContent = t.open_limit_title_done;
+    sub.innerHTML = t.open_limit_sub_done;
     okBtn.style.display = 'none';
     premium.style.display = 'block';
   } else {
@@ -7038,14 +7049,12 @@ window.openEnvelope = async () => {
   if (revealed && revealed.style.display !== 'none') return; // déjà ouvert — ne pas reincrémenter
 
   // ── Vérifier limite journalière AVANT la distance ───────
+  // On ne bloque que si le quota est réellement épuisé (remaining === 0).
+  // Pour la dernière ouverture disponible on laisse passer sans modal —
+  // un toast s'affiche APRÈS la révélation (dans _doOpenEnvelope).
   const remaining = await remainingOpensToday();
-  if (!isPremium && (remaining <= 1)) {
-    // Afficher l'avertissement, puis vérifier la distance si confirmé
-    showOpenLimitWarning(remaining, (confirmed) => {
-      if (!confirmed) return;
-      if (remaining === 0) return; // bloqué
-      _checkDistanceThenOpen();
-    });
+  if (!isPremium && remaining === 0) {
+    showOpenLimitWarning(0, () => {});
     return;
   }
   _checkDistanceThenOpen();
