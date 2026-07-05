@@ -3809,9 +3809,9 @@ function showToast(type, msg, duration = 3200) {
   const icon  = document.getElementById('toastIcon');
   const text  = document.getElementById('toastText');
   if (!toast) return;
-  const icons = { success: '✓', error: '✕', warning: '⚠', info: '👻', report: '⚑', link: '🔗' };
+  const icons = { success: '✓', error: '✕', warning: '⚠', info: _BRAND_MARK_HTML, report: '⚑', link: '🔗' };
   if (!toast || !icon || !text) return;
-  icon.textContent = icons[type] || '👻';
+  icon.innerHTML = icons[type] || _BRAND_MARK_HTML;
   text.innerHTML = sanitizeToastMsg(msg);
   toast.style.borderColor = 'rgba(var(--ghost-blue-rgb),.25)';
   if (type === 'success') toast.style.borderColor = 'rgba(var(--accent-green-rgb),.3)';
