@@ -5776,7 +5776,7 @@ function _renderDistantGhostsTeaser() {
   const label = _currentLang === 'en' ? 'Real presences exist nearby — get closer' : 'De vraies présences existent aux alentours — approche-toi';
   const items = real.map(d => `
     <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(var(--ghost-blue-rgb),.04);border-radius:12px;opacity:.45;filter:blur(0.4px);">
-      <span style="font-size:20px;">${escapeHTML(d.emoji)}</span>
+      <span style="font-size:20px;">${d.emoji && d.emoji !== '👻' ? escapeHTML(d.emoji) : _BRAND_MARK_HTML}</span>
       <span style="flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">??? — ${_bearingToCardinal(d.bearing)}</span>
       <span style="font-size:11px;color:var(--spirit-dim);">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : Math.round(d.dist)+'m'}</span>
     </div>`).join('');
@@ -8649,6 +8649,7 @@ window.guestExplore = async () => {
     showToast('info', '🌫️ Mode exploration — connecte-toi pour déposer', 3500);
   }
 };
+
 
 
 
