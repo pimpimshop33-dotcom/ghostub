@@ -1284,7 +1284,7 @@ const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 
 const _brandImg = new Image();
 _brandImg.src = 'assets/brand/ghostub-mark-trace.svg';
-const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" aria-hidden="true">';
+const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;" aria-hidden="true">';
 function _ghostEmojiHTML(g) {
   if (g.secret)       return '🔮';
   if (g.businessMode) return '🏪';
@@ -3194,7 +3194,7 @@ function showDiscoveryToast(count, isNew) {
     text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
-    icon.textContent = '👻';
+    icon.innerHTML = _BRAND_MARK_HTML;
     text.innerHTML = (_currentLang === 'fr' ? t.detail_discovered_prefix || 'Fantôme découvert · <b>' + count + '</b> au total' : 'Ghost discovered · <b>' + count + '</b> total');
     Analytics.track('ghost_discovered', { total: count });
   } else { return; }
@@ -3623,7 +3623,7 @@ function _renderPricingCards() {
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">👻</div>
+        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">${_BRAND_MARK_HTML}</div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
         <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
@@ -5178,7 +5178,7 @@ window.toggleFavoritesList = async () => {
   }
   content.innerHTML = favs.map(f => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:22px;flex-shrink:0;">${escapeHTML(f.emoji)}</span>
+      <span style="font-size:22px;flex-shrink:0;">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
       <div style="flex:1;min-width:0;cursor:pointer;" onclick="openGhost('${escapeHTML(f.id)}')">
         <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
         <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
@@ -5199,7 +5199,7 @@ window.removeFavorite = (ghostId) => {
   } else {
     content.innerHTML = favs.map(f => `
     <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:22px;flex-shrink:0;">${escapeHTML(f.emoji)}</span>
+      <span style="font-size:22px;flex-shrink:0;">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
       <div style="flex:1;min-width:0;cursor:pointer;" onclick="openGhost('${escapeHTML(f.id)}')">
         <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
         <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
@@ -5259,7 +5259,7 @@ window.loadEmpreinteMap = async () => {
     const deposits = [];
     depositSnap.forEach(d => {
       const g = d.data();
-      if (g.lat && g.lng) deposits.push({ lat: g.lat, lng: g.lng, emoji: g.emoji || '👻', location: g.location || '?', id: d.id });
+      if (g.lat && g.lng) deposits.push({ lat: g.lat, lng: g.lng, emoji: _ghostEmojiHTML(g), location: g.location || '?', id: d.id });
     });
 
     // 2. Charger les fantômes découverts (depuis Firestore discoveries)
@@ -5298,7 +5298,7 @@ window.loadEmpreinteMap = async () => {
 
     if (allPoints.length === 0) {
       if (loader) loader.style.display = 'flex';
-      loader.innerHTML = '<div style="font-size:32px;">👻</div><div style="font-size:12px;color:var(--spirit-dim);text-align:center;">' + t.profile_map_empty + '</div>';
+      loader.innerHTML = '<div style="font-size:32px;">' + _BRAND_MARK_HTML + '</div><div style="font-size:12px;color:var(--spirit-dim);text-align:center;">' + t.profile_map_empty + '</div>';
       return;
     }
 
