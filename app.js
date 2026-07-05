@@ -1282,6 +1282,9 @@ try {
 const CLOUDINARY_CLOUD = 'dcarogsye';
 const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 
+const _brandImg = new Image();
+_brandImg.src = 'assets/brand/png/icon-512.png';
+
 let currentUser = null;
 let isPremium = false;
 window._dbg = () => console.log('isPremium:', isPremium, '| pendingVideo:', !!window._pendingVideoFile);
@@ -4050,11 +4053,17 @@ window.generateGhostCard = async () => {
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(100, 128); ctx.lineTo(W-100, 128); ctx.stroke();
 
-    // ── Ghost emoji avec glow ─────────────────────────────
+    // ── Ghost mark avec glow ──────────────────────────────
     ctx.shadowColor = 'rgba(var(--ghost-blue-rgb),0.7)';
     ctx.shadowBlur = 80;
-    ctx.font = '220px serif';
-    ctx.fillText(selectedGhost.emoji || '👻', W/2, H*0.38);
+    const ghostEmoji = selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null;
+    if (ghostEmoji) {
+      ctx.font = '220px serif';
+      ctx.fillText(ghostEmoji, W/2, H*0.38);
+    } else {
+      const sz = 220;
+      ctx.drawImage(_brandImg, W/2 - sz/2, H*0.38 - sz*0.75, sz, sz);
+    }
     ctx.shadowBlur = 0;
 
     // ── Message mystère (pas le texte — le FOMO) ──────────
@@ -6998,11 +7007,10 @@ function _buildScratchCanvas() {
   ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
   // Ghost watermark
   ctx.save();
-  ctx.font = `${Math.min(cssW,cssH)*0.55}px serif`;
-  ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.shadowColor='rgba(var(--ghost-blue-rgb),0.5)'; ctx.shadowBlur=20;
-  ctx.globalAlpha=0.30; ctx.fillStyle='#d0d8ff';
-  ctx.fillText('👻', cssW/2, cssH/2);
+  ctx.globalAlpha=0.30;
+  const wmSz = Math.min(cssW, cssH) * 0.55;
+  ctx.drawImage(_brandImg, cssW/2 - wmSz/2, cssH/2 - wmSz/2, wmSz, wmSz);
   ctx.restore();
 
   // Grattage
@@ -7112,7 +7120,7 @@ function showOpenLimitWarning(remaining, onConfirm) {
     okBtn.style.display = 'none';
     premium.style.display = 'block';
   } else {
-    icon.textContent = remaining === 1 ? '⚠️' : '👻';
+    icon.innerHTML = remaining === 1 ? '⚠️' : '<img src="assets/brand/ghostub-mark-solid.svg" style="width:1em;height:1em;" aria-hidden="true">';
     document.getElementById('openLimitTitle').textContent = remaining === 1 ? t.open_limit_title_last : t.open_limit_title_remaining.replace('{n}', remaining).replace('{s}', remaining > 1 ? 's' : '');
     sub.innerHTML = remaining === 1
       ? t.open_limit_sub_last

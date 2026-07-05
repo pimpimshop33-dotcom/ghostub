@@ -51,6 +51,9 @@
 
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/png/favicon-16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
 <script type="module" src="app.js?v=140"></script>
 
@@ -2676,7 +2679,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 <div class="phone" role="application">
 
   <div class="deposit-success" id="depositSuccess" role="status" aria-live="polite">
-    <div class="success-ghost" aria-hidden="true">👻</div>
+    <img class="success-ghost" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
     <div class="success-title" data-i18n="dep_success_title">Fantôme ancré</div>
     <div class="success-sub" id="successSubText" data-i18n="dep_success_sub">Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.</div>
     <button id="successNotifBtn" onclick="window._requestSuccessNotif(event)" style="display:none;margin-top:18px;padding:10px 22px;background:rgba(122,184,245,.10);border:1px solid rgba(122,184,245,.28);border-radius:20px;color:rgba(122,184,245,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:opacity .3s,color .3s,border-color .3s,background .3s;" data-i18n="dep_notif_btn">🔔 Savoir quand il est découvert</button>
@@ -2706,7 +2709,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <div class="ob-radar">
             <div class="ob-radar-ring"></div><div class="ob-radar-ring ob-rring2"></div><div class="ob-radar-ring ob-rring3"></div>
             <div class="ob-radar-sweep"></div><div class="ob-radar-center"></div>
-            <div class="ob-ghost-dot" style="left:62%;top:28%;">👻</div>
+            <img class="ob-ghost-dot" src="assets/brand/ghostub-mark-solid.svg" style="left:62%;top:28%;" aria-hidden="true">
             <div class="ob-ghost-dot ob-dot2" style="left:35%;top:55%;">🔮</div>
             <div class="ob-ghost-dot ob-dot3" style="left:70%;top:65%;">💬</div>
           </div>
@@ -2721,7 +2724,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <div class="ob-envelope">
             <div class="ob-env-flap"></div>
             <div class="ob-env-body">
-              <div class="ob-env-emoji">👻</div>
+              <img class="ob-env-emoji" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
               <div class="ob-env-lines"><div class="ob-env-line"></div><div class="ob-env-line ob-line2"></div><div class="ob-env-line ob-line3"></div></div>
             </div>
           </div>
@@ -2761,7 +2764,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
   <div class="screen" id="screenAuth" aria-label="Connexion ou inscription">
     <div class="auth-scroll">
       <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:40px;margin-bottom:8px;" aria-hidden="true">👻</div>
+        <img src="assets/brand/ghostub-mark-solid.svg" style="width:40px;height:40px;margin-bottom:8px;" aria-hidden="true">
         <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">Ghostub</div>
       </div>
       <div class="auth-tabs" role="tablist" aria-label="Choisir connexion ou inscription">
@@ -3370,7 +3373,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       <div class="empreinte-trio">
         <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
           <div class="empreinte-num" id="statDeposited">0</div>
-          <div class="empreinte-icon">👻</div>
+          <img class="empreinte-icon" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
           <div class="empreinte-label" data-i18n="empreinte_invoques">Invoqués</div>
         </div>
         <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
@@ -3459,7 +3462,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 Chasseur Premium</div>
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
             </div>
-            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">👻</div>
+            <img src="assets/brand/ghostub-mark-solid.svg" style="width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));" aria-hidden="true">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
             <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ouvertures illimitées</div>
@@ -3550,7 +3553,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <button onclick="history.back()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;" data-i18n="help_back">← retour</button>
       </div>
       <div style="text-align:center;margin-bottom:28px;">
-        <div style="font-size:36px;margin-bottom:8px;">👻</div>
+        <img src="assets/brand/ghostub-mark-solid.svg" style="width:36px;height:36px;margin-bottom:8px;" aria-hidden="true">
         <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;" data-i18n="help_title">Comment ça marche ?</div>
         <div style="font-size:13px;color:var(--spirit-dim);" data-i18n="help_sub">Tout ce que vous devez savoir sur Ghostub</div>
       </div>
@@ -3749,7 +3752,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 <div class="open-limit-modal" id="openLimitModal" role="dialog" aria-modal="true" aria-labelledby="openLimitTitle">
   <div class="open-limit-sheet">
     <div class="sheet-handle" aria-hidden="true"></div>
-    <div class="open-limit-icon" id="openLimitIcon">👻</div>
+    <div class="open-limit-icon" id="openLimitIcon" aria-hidden="true"><img src="assets/brand/ghostub-mark-solid.svg" style="width:1em;height:1em;" aria-hidden="true"></div>
     <div class="open-limit-title" id="openLimitTitle" data-i18n="open_limit_default_title">Encore un fantôme ?</div>
     <div class="open-limit-sub" id="openLimitSub"></div>
     <div class="open-limit-counter" id="openLimitDots" aria-hidden="true"></div>

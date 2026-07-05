@@ -9,13 +9,19 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "icon-maskable-512.png",
+      "src": "assets/brand/png/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/brand/png/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-maskable-512.png",
+      "src": "assets/brand/png/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -36,14 +42,14 @@
       "short_name": "Radar",
       "description": "Voir les fantômes proches",
       "url": "/ghostub/?screen=radar",
-      "icons": [{ "src": "icon-maskable-512.png", "sizes": "512x512" }]
+      "icons": [{ "src": "assets/brand/png/icon-maskable-512.png", "sizes": "512x512" }]
     },
     {
       "name": "Déposer",
       "short_name": "Déposer",
       "description": "Laisser un message",
       "url": "/ghostub/?screen=deposit",
-      "icons": [{ "src": "icon-maskable-512.png", "sizes": "512x512" }]
+      "icons": [{ "src": "assets/brand/png/icon-maskable-512.png", "sizes": "512x512" }]
     }
   ],
   "categories": ["social", "lifestyle", "utilities"],

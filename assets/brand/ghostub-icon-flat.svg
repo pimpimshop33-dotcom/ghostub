@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#23264a"/>
+      <stop offset="55%" stop-color="#14152a"/>
+      <stop offset="100%" stop-color="#0A0B14"/>
+    </radialGradient>
+    <linearGradient id="solid-fill" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#93A2FF"/>
+      <stop offset="100%" stop-color="#C7BCEE"/>
+    </linearGradient>
+    <radialGradient id="eye-shine" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#F5F3FF"/>
+      <stop offset="28%" stop-color="#AEBBFF"/>
+      <stop offset="65%" stop-color="#5C6BC9"/>
+      <stop offset="100%" stop-color="#171A33"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="200" height="200" rx="44" fill="url(#glow)"/>
+
+  <g transform="translate(-10.8,-14.1) scale(1.108)">
+    <path d="M100 38
+             C 128 38 152 62 152 95
+             L 152 150
+             C 152 150 146 168 136 156
+             C 128 146 122 168 112 158
+             C 105 151 100 168 91 160
+             C 82 152 76 168 66 158
+             C 58 150 52 160 48 150
+             L 48 95
+             C 48 62 72 38 100 38 Z"
+          fill="url(#solid-fill)"/>
+    <ellipse cx="79" cy="94" rx="7" ry="8.5" fill="url(#eye-shine)"/>
+    <ellipse cx="121" cy="94" rx="7" ry="8.5" fill="url(#eye-shine)"/>
+    <circle cx="76.3" cy="90.2" r="1.6" fill="#FFFFFF"/>
+    <circle cx="118.3" cy="90.2" r="1.6" fill="#FFFFFF"/>
+  </g>
+</svg>

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="trace-stroke" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#9DABFF" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#C7BCEE" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#C7BCEE" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="trace-fill" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#93A2FF" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#C7BCEE" stop-opacity="0.03"/>
+    </linearGradient>
+    <radialGradient id="eye-shine" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#F5F3FF"/>
+      <stop offset="28%" stop-color="#AEBBFF"/>
+      <stop offset="65%" stop-color="#5C6BC9"/>
+      <stop offset="100%" stop-color="#171A33"/>
+    </radialGradient>
+  </defs>
+
+  <path d="M100 38
+           C 128 38 152 62 152 95
+           L 152 150
+           C 152 150 146 168 136 156
+           C 128 146 122 168 112 158
+           C 105 151 100 168 91 160
+           C 82 152 76 168 66 158
+           C 58 150 52 160 48 150
+           L 48 95
+           C 48 62 72 38 100 38"
+        fill="url(#trace-fill)" stroke="url(#trace-stroke)" stroke-width="4.2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#eye-shine)"/>
+  <ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#eye-shine)"/>
+  <circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/>
+  <circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>
+</svg>
