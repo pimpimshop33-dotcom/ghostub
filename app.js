@@ -1284,6 +1284,13 @@ const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 
 const _brandImg = new Image();
 _brandImg.src = 'assets/brand/ghostub-mark-trace.svg';
+const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;display:inline-block;vertical-align:middle;" aria-hidden="true">';
+function _ghostEmojiHTML(g) {
+  if (g.secret)       return '🔮';
+  if (g.businessMode) return '🏪';
+  if (g.emoji && g.emoji !== '👻') return escapeHTML(g.emoji);
+  return _BRAND_MARK_HTML;
+}
 
 let currentUser = null;
 let isPremium = false;
@@ -1623,7 +1630,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
   nearbyGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
-    const emoji = g.secret ? '🔮' : (g.businessMode ? '🏪' : escapeHTML(g.emoji || '👻'));
+    const emoji = _ghostEmojiHTML(g);
     const delay = (i * 0.3).toFixed(2);
     const ghostRadius = Math.max(20, parseInt(g.radius || '50') || 50);
     const dist = distanceMeters(centerLat, centerLng, g.lat, g.lng);
@@ -3390,7 +3397,7 @@ window.toggleDiscoveryHistory = async () => {
           const g = d.data();
           results.push(`<div style="padding:6px 0;border-bottom:1px solid var(--border);">
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:20px;">${escapeHTML(g.emoji||'👻')}</span>
+              <span style="font-size:20px;">${_ghostEmojiHTML(g)}</span>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||t.detail_location_unknown)}</div>
                 <div style="font-size:11px;opacity:.5;">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB') : ''}</div>
@@ -3437,7 +3444,7 @@ window.toggleDepositedList = async () => {
       html += `
         <div id="deposited-item-${escapeHTML(id)}" style="padding:10px 0;border-bottom:1px solid var(--border);">
           <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:22px;flex-shrink:0;">${escapeHTML(g.emoji||'👻')}</span>
+            <span style="font-size:22px;flex-shrink:0;">${_ghostEmojiHTML(g)}</span>
             <div style="flex:1;min-width:0;">
               <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||t.detail_location_unknown)}</div>
               <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
@@ -5650,8 +5657,8 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs) =
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM France' }).addTo(pubMap);
     coords.forEach(([lat, lng], i) => {
       const g = ghostDocs[i] && ghostDocs[i].data ? ghostDocs[i].data() : {};
-      const em = g.emoji || '👻';
-      L.marker([lat, lng], { icon: L.divIcon({ html: '<div style="font-size:18px;">' + em + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(pubMap);
+      const emHtml = _ghostEmojiHTML(g);
+      L.marker([lat, lng], { icon: L.divIcon({ html: '<div style="font-size:18px;">' + emHtml + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(pubMap);
     });
     if (coords.length > 1) pubMap.fitBounds(coords, { padding: [20, 20], maxZoom: 14 });
     setTimeout(() => pubMap.invalidateSize(), 300);
@@ -5823,7 +5830,7 @@ function renderGhostList() {
     return;
   }
   list.innerHTML = filtered.map(g => {
-    const emoji = g.secret ? '🔮' : (g.businessMode ? '🏪' : escapeHTML(g.emoji || '👻'));
+    const emoji = _ghostEmojiHTML(g);
     // Âge du fantôme
     const ageMs = g.createdAt ? Date.now() - g.createdAt.seconds * 1000 : 0;
     const ageDays = ageMs / 86400000;
@@ -5964,7 +5971,7 @@ function renderRadarDots() {
     dot.onclick = () => openGhost(g.id);
     dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGhost(g.id); } };
 
-    const emoji = g.secret ? '🔮' : (g.businessMode ? '🏪' : (g.emoji || '👻'));
+    const emoji = _ghostEmojiHTML(g);
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -6066,7 +6073,12 @@ window.openGhost = async (id) => {
   }
 
   document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
-  document.getElementById('sealedEmoji').textContent = selectedGhost.secret ? '🔮' : (selectedGhost.businessMode ? '🏪' : (selectedGhost.emoji || '👻'));
+  const sealedEl = document.getElementById('sealedEmoji');
+  const _sv = selectedGhost.secret ? '🔮'
+    : selectedGhost.businessMode ? '🏪'
+    : (selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null);
+  if (_sv) { sealedEl.textContent = _sv; }
+  else      { sealedEl.innerHTML  = _BRAND_MARK_HTML; }
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
 
@@ -8637,4 +8649,6 @@ window.guestExplore = async () => {
     showToast('info', '🌫️ Mode exploration — connecte-toi pour déposer', 3500);
   }
 };
+
+
 
