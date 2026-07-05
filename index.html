@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=143"></script>
+<script type="module" src="app.js?v=144"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -635,6 +635,8 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   50%{box-shadow:0 3px 24px rgba(0,0,0,.6),0 0 16px rgba(232,160,48,.06);}
 }
 .ghost-list{display:flex;flex-direction:column;gap:8px;}
+.ghost-list-wrap{max-height:38vh;overflow-y:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.ghost-list-wrap.is-welcome{max-height:none;flex:1;min-height:0;}
 /* ══ ENVELOPPES ══════════════════════════════════════════ */
 
 /*  Forme d'enveloppe réelle :
@@ -2879,8 +2881,8 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       <button class="filter-btn" onclick="setFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
       <button class="filter-btn" onclick="setFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
     </div>
-    <!-- Liste limitée en hauteur -->
-    <div style="max-height:38vh;overflow-y:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;">
+    <!-- Liste limitée en hauteur (agrandie en plein espace dispo pour l'écran Bienvenue) -->
+    <div class="ghost-list-wrap" id="ghostListWrap">
       <div class="section-label" data-i18n="radar_section_label">Traces dans les alentours</div>
       <div class="ghost-list" id="ghostList" aria-label="Liste des traces proches">
         <div style="text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;" data-i18n="misc_loading">Invocation en cours…</div>

@@ -5789,12 +5789,14 @@ function _renderDistantGhostsTeaser() {
 
 function renderGhostList() {
   const list = document.getElementById('ghostList');
+  const wrap = document.getElementById('ghostListWrap');
   const filtered = getFilteredGhosts();
   if (nearbyGhosts.length === 0) {
     const isFirstTime = getDiscoveryCount() === 0;
+    if (wrap) wrap.classList.toggle('is-welcome', isFirstTime);
     list.innerHTML = isFirstTime ? `
       <div style="text-align:center;padding:32px 16px 20px;">
-        <div style="font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;">👻</div>
+        <div style="font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;">${_BRAND_MARK_HTML}</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">${t.radar_welcome_title}</div>
         <div style="font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;">${t.radar_welcome_sub}</div>
         <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;text-align:left;">
@@ -5814,7 +5816,7 @@ function renderGhostList() {
         <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.2),rgba(var(--ghost-blue-rgb),.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">${t.radar_first_btn}</button>
       </div>` : `
       <div style="text-align:center;padding:20px 16px 12px;">
-        <div style="font-size:40px;margin-bottom:10px;opacity:.4;filter:blur(1px);animation:ghostFloat 3.5s ease-in-out infinite;">👻</div>
+        <div style="font-size:40px;margin-bottom:10px;opacity:.4;filter:blur(1px);animation:ghostFloat 3.5s ease-in-out infinite;">${_BRAND_MARK_HTML}</div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;">${t.radar_empty_title}</div>
         <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:14px;">${t.radar_empty_sub}</div>
         <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
@@ -5825,6 +5827,7 @@ function renderGhostList() {
       </div>`;
     return;
   }
+  if (wrap) wrap.classList.remove('is-welcome');
   if (filtered.length === 0) {
     list.innerHTML = `<div style="text-align:center;padding:30px 0;font-size:13px;color:var(--spirit-dim);">${t.radar_filter_empty}</div>`;
     return;
