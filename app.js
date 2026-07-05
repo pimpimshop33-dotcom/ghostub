@@ -1,4 +1,4 @@
-// ── Auth différée — helpers ────────────────────────────────
+﻿// ── Auth différée — helpers ────────────────────────────────
 function _isGuestUser() {
   return currentUser && currentUser.isAnonymous;
 }
@@ -1283,7 +1283,7 @@ const CLOUDINARY_CLOUD = 'dcarogsye';
 const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 
 const _brandImg = new Image();
-_brandImg.src = 'assets/brand/png/icon-512.png';
+_brandImg.src = 'assets/brand/ghostub-mark-trace.svg';
 
 let currentUser = null;
 let isPremium = false;
@@ -7120,7 +7120,7 @@ function showOpenLimitWarning(remaining, onConfirm) {
     okBtn.style.display = 'none';
     premium.style.display = 'block';
   } else {
-    icon.innerHTML = remaining === 1 ? '⚠️' : '<img src="assets/brand/ghostub-mark-solid.svg" style="width:1em;height:1em;" aria-hidden="true">';
+    icon.innerHTML = remaining === 1 ? '⚠️' : '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;" aria-hidden="true">';
     document.getElementById('openLimitTitle').textContent = remaining === 1 ? t.open_limit_title_last : t.open_limit_title_remaining.replace('{n}', remaining).replace('{s}', remaining > 1 ? 's' : '');
     sub.innerHTML = remaining === 1
       ? t.open_limit_sub_last
@@ -8637,3 +8637,4 @@ window.guestExplore = async () => {
     showToast('info', '🌫️ Mode exploration — connecte-toi pour déposer', 3500);
   }
 };
+

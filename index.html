@@ -350,16 +350,16 @@ body:has(#screenProfile.active) .bokeh-light         { opacity:.60; }
 
 /* Onboarding carousel */
 .ob-title{
-  font-size:var(--serif-lg) !important;font-family:'Cormorant Garamond',serif !important;font-weight:300;font-style:italic;
-  background:linear-gradient(135deg,#f5dfa0 0%,var(--ether) 40%,#a8d4f5 100%);
+  font-size:46px !important;font-family:'Cormorant Garamond',serif !important;font-weight:300;font-style:italic;
+  background:linear-gradient(135deg,#9DABFF 0%,#C7BCEE 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  letter-spacing:-.3px;
+  letter-spacing:1.5px;
 }
-.ob-sub{font-size:16px !important;line-height:1.65 !important;color:rgba(232,212,168,.55) !important;}
+.ob-sub{font-size:16px !important;line-height:1.65 !important;color:#CBC9DC !important;}
 body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ob-ghost-big{
-  width:110px !important;
-  height:110px !important;
+  width:190px !important;
+  height:190px !important;
   display:block !important;
   margin:0 auto !important;
   animation:floatG 3.5s ease-in-out infinite !important;
@@ -371,6 +371,10 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   box-shadow:0 0 24px rgba(var(--spirit-rgb),.06),inset 0 0 24px rgba(var(--spirit-rgb),.03);
 }
 .ob-glow-ring.ob-ring2{border:1px solid rgba(232,160,48,.1) !important;animation-delay:1.5s !important;}
+.ob-ghost-wrap{position:relative;width:190px;height:190px;margin:0 auto;}
+.ob-scene0-halo{position:absolute;inset:-45px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.30) 0%,transparent 70%);animation:obHaloPulse 5s ease-in-out infinite;pointer-events:none;}
+@keyframes obHaloPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+
 /* Brume sous les visuels onboarding */
 .ob-scene-visual{position:relative;}
 .ob-scene-visual::before{display:none;}
@@ -2679,7 +2683,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 <div class="phone" role="application">
 
   <div class="deposit-success" id="depositSuccess" role="status" aria-live="polite">
-    <img class="success-ghost" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
+    <img class="success-ghost" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
     <div class="success-title" data-i18n="dep_success_title">Fantôme ancré</div>
     <div class="success-sub" id="successSubText" data-i18n="dep_success_sub">Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.</div>
     <button id="successNotifBtn" onclick="window._requestSuccessNotif(event)" style="display:none;margin-top:18px;padding:10px 22px;background:rgba(122,184,245,.10);border:1px solid rgba(122,184,245,.28);border-radius:20px;color:rgba(122,184,245,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:opacity .3s,color .3s,border-color .3s,background .3s;" data-i18n="dep_notif_btn">🔔 Savoir quand il est découvert</button>
@@ -2695,7 +2699,10 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
-          <img class="ob-ghost-big" src="assets/brand/ghostub-mark-solid.svg" alt="Ghost" aria-hidden="true">
+          <div class="ob-ghost-wrap">
+            <div class="ob-scene0-halo"></div>
+            <img class="ob-ghost-big" src="assets/brand/ghostub-mark-trace.svg" alt="Ghost" aria-hidden="true">
+          </div>
           <div class="ob-glow-ring"></div>
           <div class="ob-glow-ring ob-ring2"></div>
         </div>
@@ -2709,7 +2716,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <div class="ob-radar">
             <div class="ob-radar-ring"></div><div class="ob-radar-ring ob-rring2"></div><div class="ob-radar-ring ob-rring3"></div>
             <div class="ob-radar-sweep"></div><div class="ob-radar-center"></div>
-            <img class="ob-ghost-dot" src="assets/brand/ghostub-mark-solid.svg" style="left:62%;top:28%;" aria-hidden="true">
+            <img class="ob-ghost-dot" src="assets/brand/ghostub-mark-trace.svg" style="left:62%;top:28%;" aria-hidden="true">
             <div class="ob-ghost-dot ob-dot2" style="left:35%;top:55%;">🔮</div>
             <div class="ob-ghost-dot ob-dot3" style="left:70%;top:65%;">💬</div>
           </div>
@@ -2724,7 +2731,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
           <div class="ob-envelope">
             <div class="ob-env-flap"></div>
             <div class="ob-env-body">
-              <img class="ob-env-emoji" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
+              <img class="ob-env-emoji" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
               <div class="ob-env-lines"><div class="ob-env-line"></div><div class="ob-env-line ob-line2"></div><div class="ob-env-line ob-line3"></div></div>
             </div>
           </div>
@@ -2766,7 +2773,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       <div style="text-align:center;margin-bottom:24px;">
         <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:8px;">
           <div style="position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.28) 0%,transparent 70%);pointer-events:none;"></div>
-          <img src="assets/brand/ghostub-mark-solid.svg" style="width:64px;height:64px;position:relative;" aria-hidden="true">
+          <img src="assets/brand/ghostub-mark-trace.svg" style="width:64px;height:64px;position:relative;" aria-hidden="true">
         </div>
         <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">Ghostub</div>
       </div>
@@ -3376,7 +3383,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       <div class="empreinte-trio">
         <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
           <div class="empreinte-num" id="statDeposited">0</div>
-          <img class="empreinte-icon" src="assets/brand/ghostub-mark-solid.svg" aria-hidden="true">
+          <img class="empreinte-icon" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
           <div class="empreinte-label" data-i18n="empreinte_invoques">Invoqués</div>
         </div>
         <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
@@ -3465,7 +3472,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 Chasseur Premium</div>
               <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
             </div>
-            <img src="assets/brand/ghostub-mark-solid.svg" style="width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));" aria-hidden="true">
+            <img src="assets/brand/ghostub-mark-trace.svg" style="width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));" aria-hidden="true">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
             <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ouvertures illimitées</div>
@@ -3556,7 +3563,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <button onclick="history.back()" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;" data-i18n="help_back">← retour</button>
       </div>
       <div style="text-align:center;margin-bottom:28px;">
-        <img src="assets/brand/ghostub-mark-solid.svg" style="width:36px;height:36px;margin-bottom:8px;" aria-hidden="true">
+        <img src="assets/brand/ghostub-mark-trace.svg" style="width:36px;height:36px;margin-bottom:8px;" aria-hidden="true">
         <div style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;" data-i18n="help_title">Comment ça marche ?</div>
         <div style="font-size:13px;color:var(--spirit-dim);" data-i18n="help_sub">Tout ce que vous devez savoir sur Ghostub</div>
       </div>
@@ -3755,7 +3762,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 <div class="open-limit-modal" id="openLimitModal" role="dialog" aria-modal="true" aria-labelledby="openLimitTitle">
   <div class="open-limit-sheet">
     <div class="sheet-handle" aria-hidden="true"></div>
-    <div class="open-limit-icon" id="openLimitIcon" aria-hidden="true"><img src="assets/brand/ghostub-mark-solid.svg" style="width:1em;height:1em;" aria-hidden="true"></div>
+    <div class="open-limit-icon" id="openLimitIcon" aria-hidden="true"><img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;" aria-hidden="true"></div>
     <div class="open-limit-title" id="openLimitTitle" data-i18n="open_limit_default_title">Encore un fantôme ?</div>
     <div class="open-limit-sub" id="openLimitSub"></div>
     <div class="open-limit-counter" id="openLimitDots" aria-hidden="true"></div>
@@ -3778,4 +3785,8 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
 <canvas id="sealParticles"></canvas>
 </body>
 </html>
+
+
+
+
 
