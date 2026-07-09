@@ -8,7 +8,7 @@ function _promptSignUp() {
   setTimeout(() => { if (typeof window.showTab === 'function') window.showTab('register'); }, 150);
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
@@ -46,6 +46,11 @@ const LANGS = {
     auth_err_pseudo_len: 'Pseudo entre 2 et 30 caractères.',
     auth_err_email_used: 'Email déjà utilisé.',
     auth_err_wrong: 'Email ou mot de passe incorrect.',
+    auth_forgot_link: 'Mot de passe oublié ?',
+    auth_forgot_need_email: 'Saisissez votre email pour recevoir le lien de réinitialisation.',
+    auth_forgot_sent: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+    auth_show_password: 'Afficher le mot de passe',
+    auth_hide_password: 'Masquer le mot de passe',
     // Radar
     radar_locating: 'Localisation en cours…',
     radar_searching: '🔍 Recherche de fantômes…',
@@ -613,6 +618,11 @@ const LANGS = {
     auth_err_pseudo_len: 'Username must be 2–30 characters.',
     auth_err_email_used: 'Email already in use.',
     auth_err_wrong: 'Incorrect email or password.',
+    auth_forgot_link: 'Forgot password?',
+    auth_forgot_need_email: 'Enter your email to receive the reset link.',
+    auth_forgot_sent: 'If an account exists with this email, a reset link has been sent.',
+    auth_show_password: 'Show password',
+    auth_hide_password: 'Hide password',
     // Radar
     radar_locating: 'Getting your location…',
     radar_searching: '🔍 Searching for ghosts…',
@@ -2027,6 +2037,33 @@ onAuthStateChanged(auth, async user => {
     }
   }
 });
+
+// ── Afficher/masquer mot de passe (icône œil, cohérente avec les icônes de nav) ──
+const _EYE_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const _EYE_OFF_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c6.4 0 10 7 10 7a17.9 17.9 0 0 1-4.15 4.9M6.6 6.6C3.4 8.6 2 12 2 12s3.6 7 10 7a10.4 10.4 0 0 0 4.15-.85"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+window.togglePasswordVisibility = (inputId, btn) => {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const willShow = input.type === 'password';
+  input.type = willShow ? 'text' : 'password';
+  btn.innerHTML = willShow ? _EYE_OFF_SVG : _EYE_SVG;
+  const key = willShow ? 'auth_hide_password' : 'auth_show_password';
+  btn.setAttribute('data-i18n-aria-label', key);
+  btn.setAttribute('aria-label', t[key]);
+};
+
+// ── Mot de passe oublié — jamais révéler si le compte existe ──
+window.forgotPassword = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) { showToast('warning', t.auth_forgot_need_email); return; }
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (e) {
+    // auth/user-not-found ou toute autre erreur : même toast neutre, ne pas révéler l'existence du compte
+  }
+  showToast('info', t.auth_forgot_sent, 5000);
+};
 
 window.register = async () => {
   const pseudo = document.getElementById('regPseudo').value.trim();

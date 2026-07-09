@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=146"></script>
+<script type="module" src="app.js?v=147"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -403,6 +403,12 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 .form-textarea{resize:none;height:85px;line-height:1.6;}
 .auth-error{color:var(--red);font-size:var(--text-base);text-align:center;min-height:16px;}
+.form-input-wrap{position:relative;}
+.form-input-wrap .form-input{padding-right:44px;}
+.pass-toggle-btn{position:absolute;right:2px;top:50%;transform:translateY(-50%);width:40px;height:40px;display:flex;align-items:center;justify-content:center;padding:0;background:none;border:none;color:var(--spirit-dim);cursor:pointer;touch-action:manipulation;}
+.pass-toggle-btn:active{color:var(--warm);}
+.auth-forgot-link{align-self:flex-end;margin-top:6px;padding:6px 2px;background:none;border:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(var(--ghost-blue-rgb),.5);cursor:pointer;touch-action:manipulation;}
+.auth-forgot-link:active{color:rgba(var(--ghost-blue-rgb),.8);}
 
 /* ── BOUTONS ───────────────────────────────────────────── */
 .btn-primary{
@@ -2793,7 +2799,13 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         </div>
         <div class="form-group">
           <label class="form-label" for="loginPass" data-i18n="auth_password">Mot de passe</label>
-          <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true" onkeydown="if(event.key==='Enter')login()">
+          <div class="form-input-wrap">
+            <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true" onkeydown="if(event.key==='Enter')login()">
+            <button type="button" class="pass-toggle-btn" onclick="togglePasswordVisibility('loginPass', this)" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <button type="button" class="auth-forgot-link" onclick="forgotPassword()" data-i18n="auth_forgot_link">Mot de passe oublié ?</button>
         </div>
         <div class="auth-error" id="loginAuthError" role="alert" aria-live="polite"></div>
         <button class="btn-primary" onclick="login()" data-i18n="auth_login_btn">Se connecter</button>
@@ -2810,7 +2822,12 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         </div>
         <div class="form-group">
           <label class="form-label" for="regPass" data-i18n="auth_password">Mot de passe</label>
-          <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint" onkeydown="if(event.key==='Enter')register()">
+          <div class="form-input-wrap">
+            <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint" onkeydown="if(event.key==='Enter')register()">
+            <button type="button" class="pass-toggle-btn" onclick="togglePasswordVisibility('regPass', this)" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
           <div id="passHint" style="font-size:10px;color:var(--spirit-dim);margin-top:3px;" data-i18n="auth_pass_hint">6 caractères minimum</div>
         </div>
         <div class="auth-error" id="regAuthError" role="alert" aria-live="polite"></div>
