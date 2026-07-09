@@ -187,6 +187,7 @@ const LANGS = {
     dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
     dep_err_offline: 'Vous êtes hors ligne — reconnectez-vous pour déposer.',
     dep_err_generic: 'Erreur lors du dépôt — vérifie ta connexion et réessaie.',
+    dep_upload_failed: "L'envoi a échoué — vérifie ta connexion et réessaie.",
     misc_error_generic: 'Erreur — réessaie plus tard.',
     stripe_btn_premium: '✦ Devenir Chasseur Premium',
     stripe_btn_commerce: '🏪 Activer le Plan Commerce',
@@ -759,6 +760,7 @@ const LANGS = {
     dep_err_gps: 'Location required — enable it in your browser.',
     dep_err_offline: 'You\'re offline — reconnect to drop a ghost.',
     dep_err_generic: 'Error while dropping — check your connection and try again.',
+    dep_upload_failed: 'Upload failed — check your connection and try again.',
     misc_error_generic: 'Error — please try again later.',
     stripe_btn_premium: '✦ Become a Premium Hunter',
     stripe_btn_commerce: '🏪 Activate Commerce Plan',
@@ -3016,11 +3018,15 @@ async function uploadMedia(uid) {
   let photoUrl = null;
   let videoUrl = null;
 
-  // FIX: Helper avec retry x2 sur erreur réseau
-  async function uploadToCloudinary(fd, resourceType) {
+  // FIX: Helper avec retry x2 sur erreur réseau + timeout (AbortController) —
+  // sans timeout, un fetch qui stalle sur mobile ne rejette jamais et bloque
+  // le dépôt indéfiniment (spinner infini), retry inclus.
+  async function uploadToCloudinary(fd, resourceType, timeoutMs = 30000) {
     for (let attempt = 0; attempt < 2; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`, { method:'POST', body: fd });
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/${resourceType}/upload`, { method:'POST', body: fd, signal: controller.signal });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
@@ -3028,6 +3034,8 @@ async function uploadMedia(uid) {
       } catch(e) {
         if (attempt === 1) throw e;
         await new Promise(r => setTimeout(r, 1000));
+      } finally {
+        clearTimeout(timer);
       }
     }
   }
@@ -3037,21 +3045,21 @@ async function uploadMedia(uid) {
     fd.append('file', window._pendingAudioBlob, 'audio.webm');
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/audio');
-    audioUrl = await uploadToCloudinary(fd, 'video');
+    audioUrl = await uploadToCloudinary(fd, 'video', 30000);
   }
   if (window._pendingPhotoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingPhotoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/photos');
-    photoUrl = await uploadToCloudinary(fd, 'image');
+    photoUrl = await uploadToCloudinary(fd, 'image', 30000);
   }
   if (window._pendingVideoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingVideoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/videos');
-    videoUrl = await uploadToCloudinary(fd, 'video');
+    videoUrl = await uploadToCloudinary(fd, 'video', 120000);
   }
   // Phase 1d v103 — upload des fichiers joints (PDF + images), max 3
   let attachments = null;
@@ -3064,7 +3072,7 @@ async function uploadMedia(uid) {
         fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         fd.append('folder', 'ghostub/files');
         // 'auto' laisse Cloudinary détecter le type (image vs raw pour PDF)
-        const url = await uploadToCloudinary(fd, 'auto');
+        const url = await uploadToCloudinary(fd, 'auto', 30000);
         if (url) attachments.push({ url, name: a.name, type: a.type, size: a.size });
       } catch (e) {
         console.warn('attachment upload failed:', a.name, e);
@@ -6689,8 +6697,22 @@ window.depositGhost = async () => {
   setLoading(depositBtn, true);
   depositBtn.textContent = hasMedia ? '⬆ Upload…' : '';
 
+  // Upload isolé dans son propre try/catch : en cas d'échec (y compris timeout),
+  // on ne doit JAMAIS créer le fantôme sans son média, et l'UI doit toujours
+  // se réinitialiser (bouton réactivé, spinner CSS retiré via setLoading).
+  let uploadResult;
   try {
-    const { audioUrl, photoUrl, videoUrl, attachments } = await uploadMedia(currentUser.uid + '_' + Date.now());
+    uploadResult = await uploadMedia(currentUser.uid + '_' + Date.now());
+  } catch (e) {
+    console.warn('uploadMedia error:', e);
+    setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
+    err.textContent = t.dep_upload_failed;
+    showToast('error', t.dep_upload_failed, 5000);
+    return;
+  }
+
+  try {
+    const { audioUrl, photoUrl, videoUrl, attachments } = uploadResult;
     if (hasMedia) depositBtn.textContent = t.dep_btn_saving;
     const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
     const chainNext = isPremium ? (window._chainNextCoords || null) : null;
@@ -6748,8 +6770,7 @@ window.depositGhost = async () => {
     document.getElementById('chainMapLabel').textContent = 'Placer le prochain point sur la carte';
     document.getElementById('chainMapPreview').style.display = 'none';
     window._chainNextCoords = null;
-    depositBtn.textContent = t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme';
-    depositBtn.disabled = false;
+    setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
     clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
     document.getElementById('depositSuccess').classList.add('show');
     _maybeShowSuccessNotifPrompt();
@@ -6804,8 +6825,7 @@ window.depositGhost = async () => {
     const detail = e?.message ? ` (${e.message})` : '';
     err.textContent = (t.dep_err_generic || 'Erreur lors du dépôt — vérifie ta connexion et réessaie.') + detail;
     console.warn('depositGhost error:', e);
-    depositBtn.textContent = t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme';
-    depositBtn.disabled = false;
+    setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
   }
 };
 
