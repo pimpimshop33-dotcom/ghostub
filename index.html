@@ -1184,19 +1184,21 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .empreinte-header{text-align:center;padding:16px 0 20px;}
 .empreinte-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);margin-bottom:4px;}
 .empreinte-sub{font-size:var(--text-sm);color:var(--spirit-dim);letter-spacing:.6px;}
-.empreinte-trio{display:flex;align-items:flex-end;justify-content:center;gap:0;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
-.empreinte-stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:18px 8px 14px;text-align:center;cursor:default;transition:background .2s;}
-.empreinte-stat:active{background:rgba(232,160,48,.06);}
-.empreinte-stat-center{border-left:1px solid var(--border);border-right:1px solid var(--border);background:linear-gradient(180deg,rgba(232,160,48,.05) 0%,rgba(232,160,48,.01) 100%);padding-top:22px;padding-bottom:18px;}
-.empreinte-num{font-family:'Cormorant Garamond',serif;font-size:var(--serif-md);font-weight:400;color:var(--warm);line-height:1;}
-.empreinte-num-big{font-size:var(--serif-lg);}
-.empreinte-icon{font-size:16px;margin:4px 0 2px;opacity:.7;}
-.empreinte-label{font-size:var(--text-sm);color:var(--spirit-dim);letter-spacing:.8px;text-transform:uppercase;}
+.empreinte-trio{display:grid;grid-template-columns:repeat(3,1fr);align-items:stretch;gap:0;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
 .empreinte-row{display:flex;gap:8px;margin-bottom:16px;}
-.empreinte-pill{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:13px;text-align:center;transition:background .2s;}
-.empreinte-pill:active{background:rgba(232,160,48,.06);}
-.empreinte-pill-num{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);color:var(--warm);line-height:1;}
-.empreinte-pill-label{font-size:var(--text-xs);color:var(--spirit-dim);letter-spacing:.5px;}
+/* Composant unique stat-card : mêmes classes/tailles/poids d'icône pour les 6 cases (--lg = trio du haut, --sm = pills du bas) */
+.stat-card{flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;transition:background .2s;}
+.stat-card:active{background:rgba(232,160,48,.06);}
+.stat-card-icon{font-size:16px;margin:4px 0 2px;opacity:.7;filter:grayscale(1);}
+.stat-card-icon img,img.stat-card-icon{width:1em;height:1em;display:block;}
+.stat-card--lg{height:100%;box-sizing:border-box;justify-content:space-between;padding:18px 8px 14px;cursor:default;}
+.stat-card--lg .stat-card-num{font-family:'Cormorant Garamond',serif;font-size:var(--serif-md);font-weight:400;color:var(--warm);line-height:1;}
+.stat-card--lg .stat-card-icon{font-size:38px;margin:0;}
+.stat-card--lg .stat-card-label{font-size:var(--text-sm);color:var(--spirit-dim);letter-spacing:.8px;text-transform:uppercase;}
+.stat-card--lg.stat-card--highlight{border-left:1px solid var(--border);border-right:1px solid var(--border);background:linear-gradient(180deg,rgba(232,160,48,.05) 0%,rgba(232,160,48,.01) 100%);}
+.stat-card--sm{gap:3px;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:13px;}
+.stat-card--sm .stat-card-num{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);color:var(--warm);line-height:1;}
+.stat-card--sm .stat-card-label{font-size:var(--text-xs);color:var(--spirit-dim);letter-spacing:.5px;}
 .lang-btn.active{background:rgba(var(--spirit-rgb),.12);border-color:rgba(var(--spirit-rgb),.35);color:var(--ether);}
 .logout-btn{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,80,80,.3);border-radius:13px;color:rgba(255,100,100,.7);font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);cursor:pointer;transition:all .2s;margin-top:8px;}
 .logout-btn:hover{background:rgba(255,80,80,.08);}
@@ -3382,37 +3384,8 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <div class="empreinte-title" data-i18n="empreinte_title">Mon empreinte</div>
         <div class="empreinte-sub" data-i18n="empreinte_sub">Les traces que tu laisses dans le monde</div>
       </div>
-      <div class="empreinte-trio">
-        <div class="empreinte-stat" onclick="toggleDepositedList()" role="listitem" style="cursor:pointer;" aria-label="Voir mes fantômes déposés">
-          <div class="empreinte-num" id="statDeposited">0</div>
-          <img class="empreinte-icon" src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;display:block;" aria-hidden="true">
-          <div class="empreinte-label" data-i18n="empreinte_invoques">Invoqués</div>
-        </div>
-        <div class="empreinte-stat empreinte-stat-center" onclick="toggleDiscoveryHistory()" role="listitem" style="cursor:pointer;" aria-label="Voir les fantômes découverts">
-          <div class="empreinte-num empreinte-num-big" id="statDiscovered">0</div>
-          <div class="empreinte-icon" style="filter:grayscale(1);">🔮</div>
-          <div class="empreinte-label" data-i18n="empreinte_sceaux">Sceaux brisés</div>
-        </div>
-        <div class="empreinte-stat" role="listitem">
-          <div class="empreinte-num" id="statResonances">0</div>
-          <div class="empreinte-icon">✦</div>
-          <div class="empreinte-label" data-i18n="empreinte_resonances">Résonances</div>
-        </div>
-      </div>
-      <div class="empreinte-row">
-        <div class="empreinte-pill" onclick="toggleFavoritesList()" style="cursor:pointer;" aria-label="Mes favoris">
-          <span class="empreinte-pill-num" id="statFavorites">0</span>
-          <span class="empreinte-pill-label" data-i18n="empreinte_favoris">★ Favoris</span>
-        </div>
-        <div class="empreinte-pill" style="border-color:rgba(var(--accent-green-rgb),.25);background:rgba(var(--accent-green-rgb),.04);">
-          <span class="empreinte-pill-num" id="statFirstReader" style="color:rgba(var(--accent-green-rgb),.9);">0</span>
-          <span class="empreinte-pill-label" style="color:rgba(var(--accent-green-rgb),.55);" data-i18n="empreinte_premier">🥇 Premier lecteur</span>
-        </div>
-        <div class="empreinte-pill" onclick="toggleLeaderboard()" style="cursor:pointer;border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);" aria-label="Classement">
-          <span class="empreinte-pill-num" style="font-size:16px;line-height:22px;opacity:.7;filter:grayscale(1);">🏆</span>
-          <span class="empreinte-pill-label" style="color:rgba(var(--premium-rgb),.7);" data-i18n="empreinte_classement">Classement</span>
-        </div>
-      </div>
+      <div class="empreinte-trio" id="empreinteTrio"></div>
+      <div class="empreinte-row" id="empreinteRow"></div>
       <!-- Panel classement inline -->
       <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:10px;" data-i18n="profile_top_hunters">🏆 Top chasseurs</div>

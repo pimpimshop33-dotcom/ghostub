@@ -516,8 +516,8 @@ const LANGS = {
     empreinte_invoques: 'Invoqués',
     empreinte_sceaux: 'Sceaux brisés',
     empreinte_resonances: 'Résonances',
-    empreinte_favoris: '★ Favoris',
-    empreinte_premier: '🥇 Premier lecteur',
+    empreinte_favoris: 'Favoris',
+    empreinte_premier: 'Premier lecteur',
     empreinte_classement: 'Classement',
     carnet_no_reactions: 'Pas encore de réaction.',
     carnet_read_btn: '📖 Lire',
@@ -1083,8 +1083,8 @@ const LANGS = {
     empreinte_invoques: 'Invoked',
     empreinte_sceaux: 'Seals broken',
     empreinte_resonances: 'Resonances',
-    empreinte_favoris: '★ Favorites',
-    empreinte_premier: '🥇 First reader',
+    empreinte_favoris: 'Favorites',
+    empreinte_premier: 'First reader',
     empreinte_classement: 'Leaderboard',
     carnet_no_reactions: 'No reactions yet.',
     carnet_read_btn: '📖 Read',
@@ -1244,6 +1244,63 @@ window.setLang = (lang) => {
   // Guard: ne pas appeler avant que l'auth soit confirmée (race condition avec signInAnonymously)
   if (typeof loadNearbyGhosts === 'function' && currentUser) loadNearbyGhosts().catch(() => {});
 };
+
+// ── Composant unique "Mon empreinte" (6 cases : 3 stats + 3 pills) ──
+// Un seul gabarit pour les 6 cases : seul le contenu varie (chiffre, icône,
+// texte, action au clic) — jamais la structure DOM ni les styles.
+function renderStatCard({ variant='lg', highlight=false, id=null, count=0,
+                           icon, iconType='text', i18nKey, label,
+                           onClick=null, ariaLabel=null,
+                           wrapperStyle='', numStyle='', labelStyle='' }) {
+  const numContent = count == null ? '&nbsp;' : count;
+  const iconHTML = iconType === 'img'
+    ? `<img class="stat-card-icon" src="${icon}" aria-hidden="true">`
+    : `<div class="stat-card-icon" aria-hidden="true">${icon}</div>`;
+  const style = (onClick ? 'cursor:pointer;' : '') + wrapperStyle;
+  return `
+    <div class="stat-card stat-card--${variant}${highlight ? ' stat-card--highlight' : ''}"
+         role="listitem"
+         ${onClick ? `onclick="${onClick}"` : ''}
+         ${style ? `style="${style}"` : ''}
+         ${ariaLabel ? `aria-label="${ariaLabel}"` : ''}>
+      <div class="stat-card-num"${id ? ` id="${id}"` : ''}${numStyle ? ` style="${numStyle}"` : ''}>${numContent}</div>
+      ${iconHTML}
+      <div class="stat-card-label" data-i18n="${i18nKey}"${labelStyle ? ` style="${labelStyle}"` : ''}>${label}</div>
+    </div>`;
+}
+
+const EMPREINTE_CARDS = [
+  { variant:'lg', id:'statDeposited', count:0, iconType:'img',
+    icon:'assets/brand/ghostub-mark-trace.svg', i18nKey:'empreinte_invoques',
+    label:'Invoqués', onClick:'toggleDepositedList()',
+    ariaLabel:'Voir mes fantômes déposés' },
+  { variant:'lg', highlight:true, id:'statDiscovered', count:0, iconType:'text',
+    icon:'🔮', i18nKey:'empreinte_sceaux', label:'Sceaux brisés',
+    onClick:'toggleDiscoveryHistory()', ariaLabel:'Voir les fantômes découverts' },
+  { variant:'lg', id:'statResonances', count:0, iconType:'text',
+    icon:'✦', i18nKey:'empreinte_resonances', label:'Résonances' },
+  { variant:'sm', id:'statFavorites', count:0, iconType:'text',
+    icon:'★', i18nKey:'empreinte_favoris', label:'Favoris',
+    onClick:'toggleFavoritesList()', ariaLabel:'Mes favoris' },
+  { variant:'sm', id:'statFirstReader', count:0, iconType:'text',
+    icon:'🥇', i18nKey:'empreinte_premier', label:'Premier lecteur',
+    wrapperStyle:'border-color:rgba(var(--accent-green-rgb),.25);background:rgba(var(--accent-green-rgb),.04);',
+    numStyle:'color:rgba(var(--accent-green-rgb),.9);',
+    labelStyle:'color:rgba(var(--accent-green-rgb),.55);' },
+  { variant:'sm', id:null, count:null, iconType:'text',
+    icon:'🏆', i18nKey:'empreinte_classement', label:'Classement',
+    onClick:'toggleLeaderboard()', ariaLabel:'Classement',
+    wrapperStyle:'border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);',
+    labelStyle:'color:rgba(var(--premium-rgb),.7);' },
+];
+
+function renderEmpreinteCards() {
+  const trio = document.getElementById('empreinteTrio');
+  const row  = document.getElementById('empreinteRow');
+  if (trio) trio.innerHTML = EMPREINTE_CARDS.slice(0, 3).map(renderStatCard).join('');
+  if (row)  row.innerHTML  = EMPREINTE_CARDS.slice(3).map(renderStatCard).join('');
+}
+renderEmpreinteCards();
 
 // Appliquer la langue au démarrage
 document.documentElement.lang = _currentLang;
