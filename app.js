@@ -7937,7 +7937,9 @@ window.hideDepositBadge = () => {
   let startY = 0, pulling = false, triggered = false;
   const MIN_PULL = 72;
 
-  const getContainer = () => document.querySelector('#screenRadar .scroll');
+  // #screenRadar n'a pas de wrapper .scroll comme les autres écrans (en-tête
+  // fixe) — seule la liste des fantômes défile réellement.
+  const getContainer = () => document.querySelector('#screenRadar .ghost-list-wrap');
 
   document.addEventListener('touchstart', (e) => {
     const container = getContainer();
@@ -7957,10 +7959,12 @@ window.hideDepositBadge = () => {
     const txt = document.getElementById('ptrText');
     if (!ind) return;
     if (dy > 20) ind.classList.add('visible');
+    // Seuil franchi mais toujours en train de tirer (pas encore relâché) :
+    // c'est ICI qu'il faut inviter à relâcher, pas afficher "Actualisation…"
+    // (qui ne doit apparaître qu'après le relâchement, une fois le fetch lancé).
     if (dy > MIN_PULL && !triggered) {
       triggered = true;
-      spinner.classList.add('spin');
-      if (txt) txt.textContent = t.misc_ptr_refreshing;
+      if (txt) txt.textContent = t.misc_ptr_release;
     } else if (!triggered && txt) {
       txt.textContent = t.misc_ptr_pull;
     }
@@ -7973,10 +7977,14 @@ window.hideDepositBadge = () => {
     const spinner = document.getElementById('ptrSpinner');
     const txt = document.getElementById('ptrText');
     if (triggered) {
+      // Relâché : c'est maintenant que le spinner tourne et que le texte
+      // passe à "Actualisation…", pendant le fetch réel.
+      if (spinner) spinner.classList.add('spin');
+      if (txt) txt.textContent = t.misc_ptr_refreshing;
       loadNearbyGhosts().finally(() => {
         if (ind) ind.classList.remove('visible');
         if (spinner) spinner.classList.remove('spin');
-        if (txt) txt.textContent = t.misc_ptr_release;
+        if (txt) txt.textContent = t.misc_ptr_pull;
       });
     } else {
       if (ind) ind.classList.remove('visible');
