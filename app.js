@@ -8616,7 +8616,8 @@ function spawnObParticles() {
   const wrap = document.getElementById('obResoParticles');
   if (!wrap) return;
   wrap.innerHTML = '';
-  const syms = ['✦','✧','·','👻','✦','✦'];
+  // 'mark' remplace l'ancien emoji 👻 brut par le mark "Trace" (cf. _BRAND_MARK_HTML)
+  const syms = ['✦','✧','·','mark','✦','✦'];
   for (let i = 0; i < 10; i++) {
     const p = document.createElement('div');
     p.className = 'ob-reso-p';
@@ -8627,8 +8628,15 @@ function spawnObParticles() {
     p.style.setProperty('--ty', Math.sin(angle) * dist - 20 + 'px');
     p.style.setProperty('--d', (1 + Math.random()).toFixed(1) + 's');
     p.style.setProperty('--delay', (i * 0.15).toFixed(2) + 's');
-    p.style.color = 'rgba(var(--ghost-blue-rgb),' + (0.4 + Math.random() * 0.6).toFixed(2) + ')';
-    p.textContent = syms[i % syms.length];
+    // opacity (pas color) : s'applique aussi bien au texte qu'au mark SVG ci-dessous
+    p.style.color = 'rgba(var(--ghost-blue-rgb),1)';
+    p.style.opacity = (0.4 + Math.random() * 0.6).toFixed(2);
+    const sym = syms[i % syms.length];
+    if (sym === 'mark') {
+      p.innerHTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;display:block;" aria-hidden="true">';
+    } else {
+      p.textContent = sym;
+    }
     wrap.appendChild(p);
   }
 }
