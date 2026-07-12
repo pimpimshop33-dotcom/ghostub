@@ -22,15 +22,6 @@
         { "fieldPath": "notified",  "order": "ASCENDING" }
       ]
     },
-    // loadEmpreinteMap() : where discoveredByUid == x
-    {
-      "collectionGroup": "discoveries",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "discoveredByUid", "order": "ASCENDING" }
-      ]
-    },
-
     // ── GHOSTS ─────────────────────────────────────────────
     // checkResonances() : where authorUid == x, limit 50
     {
@@ -50,15 +41,6 @@
         { "fieldPath": "resonances", "order": "DESCENDING" }
       ]
     },
-    // _notifyNearbyUsers() : where lat >= x AND lat <= y
-    {
-      "collectionGroup": "ghosts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "lat", "order": "ASCENDING" }
-      ]
-    },
-
     // ── REPORTS ────────────────────────────────────────────
     // submitReport auto-moderation (Cloud Function) : where ghostId == x
     {
@@ -79,26 +61,7 @@
         { "fieldPath": "ghostId",   "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
-    },
-    // deleteMyGhosts : where authorUid == x
-    {
-      "collectionGroup": "replies",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "authorUid", "order": "ASCENDING" }
-      ]
-    },
-
-    // ── GHOST STATS ────────────────────────────────────────
-    // loadBizDashboard ghostStats : where authorUid == x
-    {
-      "collectionGroup": "ghostStats",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "authorUid", "order": "ASCENDING" }
-      ]
     }
-
   ],
   "fieldOverrides": []
 }
