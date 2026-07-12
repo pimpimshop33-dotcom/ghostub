@@ -53,13 +53,13 @@
     },
 
     // ── REPLIES ────────────────────────────────────────────
-    // openGhost replies : where ghostId == x, orderBy createdAt
+    // openGhost replies : where ghostId == x, orderBy createdAt desc (app.js:6415-6419)
     {
       "collectionGroup": "replies",
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ghostId",   "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "ASCENDING" }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],
