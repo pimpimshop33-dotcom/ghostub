@@ -484,11 +484,15 @@ const LANGS = {
     ob_skip: 'Passer →',
     ob_sub0: 'Des messages invisibles<br>ancrés dans les lieux réels.',
     ob_title1: 'Découvrez', ob_sub1: 'Passez près d\'un lieu et les<br>fantômes autour de vous apparaissent.',
-    ob_title2: 'Ouvrez', ob_sub2: 'Chaque message est une<br>enveloppe scellée à dévoiler.',
+    ob_title2: 'Ouvrez', ob_sub2: 'Chaque message est une<br>enveloppe scellée à dévoiler.<br>3 ouvertures gratuites par jour.',
     ob_title3: 'Résonnez', ob_sub3: 'Une résonance par jour —<br>choisissez le message qui vous touche.',
     ob_cta: 'Entrer dans les lieux ›',
     ob_swipe_hint: 'Glissez pour découvrir →',
     ob_free: 'Gratuit · Sans pub',
+    geo_primer_title: 'Votre position',
+    geo_primer_sub: 'Ghostub s\'en sert uniquement pour vous montrer les fantômes déposés autour de vous.',
+    geo_primer_ok: 'Activer ma position',
+    geo_primer_later: 'Plus tard',
     auth_login_tab: 'Connexion',
     auth_register_tab: 'Inscription',
     auth_pass_hint: '6 caractères minimum',
@@ -566,6 +570,8 @@ const LANGS = {
     help_faq_a2: 'Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.',
     help_faq_q3: 'Comment signaler un message inapproprié ?',
     help_faq_a3: 'Appuyez sur l\'icône ⚑ dans le détail d\'un fantôme pour le signaler. Notre équipe examine chaque signalement.',
+    help_faq_q4: 'Combien de fantômes puis-je ouvrir par jour ?',
+    help_faq_a4: '3 ouvertures gratuites par jour. Passez en Premium pour un accès illimité.',
     help_legal_title: '📋 Mentions légales & RGPD',
     help_legal_body: '<strong>Éditeur :</strong> Ghostub — application indépendante<br><strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">appghostub@gmail.com</a><br><br><strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l\'utilisation), messages déposés.<br><br><strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l\'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br><strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br><strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">📄 Consulter notre politique de confidentialité complète →</a><br><br>En utilisant Ghostub, vous acceptez que vos messages soient visibles par d\'autres utilisateurs à proximité géographique.',
     help_version: 'Ghostub v1.0 — Géocaching émotionnel',
@@ -1057,11 +1063,15 @@ const LANGS = {
     ob_skip: 'Skip →',
     ob_sub0: 'Invisible messages<br>anchored in real places.',
     ob_title1: 'Discover', ob_sub1: 'Pass near a location and the<br>ghosts around you appear.',
-    ob_title2: 'Open', ob_sub2: 'Every message is a<br>sealed envelope to unveil.',
+    ob_title2: 'Open', ob_sub2: 'Every message is a<br>sealed envelope to unveil.<br>3 free opens a day.',
     ob_title3: 'Resonate', ob_sub3: 'One resonance a day —<br>pick the message that moves you.',
     ob_cta: 'Enter the locations ›',
     ob_swipe_hint: 'Swipe to discover →',
     ob_free: 'Free · No ads',
+    geo_primer_title: 'Your location',
+    geo_primer_sub: 'Ghostub only uses it to show you the ghosts left around you.',
+    geo_primer_ok: 'Enable my location',
+    geo_primer_later: 'Later',
     auth_login_tab: 'Sign in',
     auth_register_tab: 'Sign up',
     auth_pass_hint: '6 characters minimum',
@@ -1139,6 +1149,8 @@ const LANGS = {
     help_faq_a2: 'Ghosts have a limited lifespan (24h, 7 days or 1 month). Some also disappear after a certain number of reads.',
     help_faq_q3: 'How to report an inappropriate message?',
     help_faq_a3: 'Tap the ⚑ icon in a ghost\'s detail to report it. Our team reviews every report.',
+    help_faq_q4: 'How many ghosts can I open per day?',
+    help_faq_a4: '3 free opens a day. Go Premium for unlimited access.',
     help_legal_title: '📋 Legal & GDPR',
     help_legal_body: '<strong>Publisher:</strong> Ghostub — independent application<br><strong>Contact:</strong> <a href="mailto:appghostub@gmail.com" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">appghostub@gmail.com</a><br><br><strong>Data collected:</strong> email address, GPS position (only during use), deposited messages.<br><br><strong>Use:</strong> your data is used exclusively for the application to function. It is neither sold nor shared with third parties.<br><br><strong>Deletion:</strong> you can delete your ghosts and account at any time from your profile.<br><br><strong>Hosting:</strong> Firebase (Google) — European servers (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">📄 Read our full privacy policy →</a><br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
     help_version: 'Ghostub v1.0 — Emotional geocaching',
@@ -1884,24 +1896,59 @@ function getLocation() {
   });
 }
 
+// ── Priming avant la 1ʳᵉ demande de géolocalisation ────────────
+// Explique pourquoi Ghostub a besoin de la position avant d'afficher la popup
+// native du navigateur (une seule fois par navigateur, comme _maybeShowSuccessNotifPrompt
+// pour les notifications). Résout true si l'utilisateur accepte de continuer,
+// false s'il diffère — dans ce cas on ne démarre pas le GPS maintenant.
+function _maybeShowLocationPrimer() {
+  return new Promise(resolve => {
+    if (localStorage.getItem('ghostub_geo_primed')) { resolve(true); return; }
+    localStorage.setItem('ghostub_geo_primed', '1');
+    const modal = document.getElementById('geoPrimerModal');
+    if (!modal) { resolve(true); return; }
+    window._geoPrimerResolve = resolve;
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  });
+}
+
+window._dismissGeoPrimer = (accepted) => {
+  const modal = document.getElementById('geoPrimerModal');
+  if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
+  if (window._geoPrimerResolve) { window._geoPrimerResolve(accepted); window._geoPrimerResolve = null; }
+};
+
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
 
     // ── Utilisateur anonyme — radar lecture seule ──────────
     if (user.isAnonymous) {
-      document.getElementById('bottomNav').style.display = 'flex';
-      showScreen('screenRadar');
-      setNav('nav-radar');
-      if (!window._locationWatchStarted) {
-        window._locationWatchStarted = true;
-        LocationService.startWatch();
-        LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
-          if (accuracy && accuracy > 5000) return;
-          userLat = lat; userLng = lng;
-        });
+      // Premier lancement : on laisse le carrousel screenOnboard (déjà actif par
+      // défaut dans le HTML) s'afficher, au lieu de le court-circuiter vers le
+      // radar. L'utilisateur y arrive après une interaction explicite (goAuth()
+      // pose ghostub_onboard_seen, puis guestExplore()/inscription montre le radar).
+      // Le GPS et le chargement des fantômes continuent en fond ci-dessous, comme
+      // avant, pour que le radar soit déjà prêt quand l'utilisateur y arrive.
+      if (localStorage.getItem('ghostub_onboard_seen')) {
+        document.getElementById('bottomNav').style.display = 'flex';
+        showScreen('screenRadar');
+        setNav('nav-radar');
       }
-      try { await getLocation(); } catch(e) {}
+      if (!window._locationWatchStarted) {
+        if (await _maybeShowLocationPrimer()) {
+          window._locationWatchStarted = true;
+          LocationService.startWatch();
+          LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+            if (accuracy && accuracy > 5000) return;
+            userLat = lat; userLng = lng;
+          });
+        }
+      }
+      if (window._locationWatchStarted) {
+        try { await getLocation(); } catch(e) {}
+      }
       await loadNearbyGhosts();
       return;
     }
@@ -1936,7 +1983,7 @@ onAuthStateChanged(auth, async user => {
     // Fantôme garanti au 1er lancement — décalé après le GPS
     setTimeout(() => _seedWelcomeGhost(), 4000);
     // ── Présence passive — GPS watch ─────────────────────────────────
-    if (!window._locationWatchStarted) {
+    if (!window._locationWatchStarted && await _maybeShowLocationPrimer()) {
       window._locationWatchStarted = true;
     LocationService.startWatch();
     let _firstAccuratePosition = false;
@@ -2006,11 +2053,14 @@ onAuthStateChanged(auth, async user => {
     } // fin guard _locationWatchStarted
     document.getElementById('bottomNav').style.display = 'flex';
     // Obtenir la position GPS réelle avant de charger les fantômes
-    try {
-      await getLocation();
-      if (window.map) window.map.setView([userLat, userLng], 16);
-    } catch(e) {
-      // GPS refusé ou timeout — garder fallback
+    // (seulement si le priming a été accepté — sinon on diffère, cf. _maybeShowLocationPrimer)
+    if (window._locationWatchStarted) {
+      try {
+        await getLocation();
+        if (window.map) window.map.setView([userLat, userLng], 16);
+      } catch(e) {
+        // GPS refusé ou timeout — garder fallback
+      }
     }
     await loadNearbyGhosts();
     // Vérifier les notifications de réponses au démarrage
@@ -7282,12 +7332,19 @@ window.openEnvelope = async () => {
   if (revealed && revealed.style.display !== 'none') return; // déjà ouvert — ne pas reincrémenter
 
   // ── Vérifier limite journalière AVANT la distance ───────
-  // On ne bloque que si le quota est réellement épuisé (remaining === 0).
-  // Pour la dernière ouverture disponible on laisse passer sans modal —
-  // un toast s'affiche APRÈS la révélation (dans _doOpenEnvelope).
+  // Quota déjà épuisé : on bloque complètement.
+  // Avant-dernière/dernière ouverture (remaining 1 ou 2) : avertissement
+  // progressif avec possibilité d'annuler, pour ne pas surprendre l'utilisateur
+  // au moment où le quota tombe réellement à 0.
   const remaining = await remainingOpensToday();
   if (!isPremium && remaining === 0) {
     showOpenLimitWarning(0, () => {});
+    return;
+  }
+  if (!isPremium && (remaining === 1 || remaining === 2)) {
+    showOpenLimitWarning(remaining, (confirmed) => {
+      if (confirmed) _checkDistanceThenOpen();
+    });
     return;
   }
   _checkDistanceThenOpen();
