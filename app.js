@@ -1919,6 +1919,26 @@ window._dismissGeoPrimer = (accepted) => {
   if (window._geoPrimerResolve) { window._geoPrimerResolve(accepted); window._geoPrimerResolve = null; }
 };
 
+// Démarre le GPS watch (avec priming) si ce n'est pas déjà fait. Appelée une
+// fois l'onboarding quitté (radar affiché) — jamais pendant screenOnboard,
+// sinon la modale de priming s'affiche en superposition et masque le carrousel
+// derrière un flou quasi opaque dès le tout premier lancement.
+async function _ensureLocationReady() {
+  if (!window._locationWatchStarted) {
+    if (await _maybeShowLocationPrimer()) {
+      window._locationWatchStarted = true;
+      LocationService.startWatch();
+      LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+        if (accuracy && accuracy > 5000) return;
+        userLat = lat; userLng = lng;
+      });
+    }
+  }
+  if (window._locationWatchStarted) {
+    try { await getLocation(); } catch(e) {}
+  }
+}
+
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
@@ -1927,27 +1947,14 @@ onAuthStateChanged(auth, async user => {
     if (user.isAnonymous) {
       // Premier lancement : on laisse le carrousel screenOnboard (déjà actif par
       // défaut dans le HTML) s'afficher, au lieu de le court-circuiter vers le
-      // radar. L'utilisateur y arrive après une interaction explicite (goAuth()
-      // pose ghostub_onboard_seen, puis guestExplore()/inscription montre le radar).
-      // Le GPS et le chargement des fantômes continuent en fond ci-dessous, comme
-      // avant, pour que le radar soit déjà prêt quand l'utilisateur y arrive.
+      // radar — et on ne démarre PAS le GPS/priming ici, sinon sa modale se
+      // superpose au carrousel et le masque derrière un flou dès le premier
+      // affichage. guestExplore()/l'inscription déclenchent le GPS après coup.
       if (localStorage.getItem('ghostub_onboard_seen')) {
         document.getElementById('bottomNav').style.display = 'flex';
         showScreen('screenRadar');
         setNav('nav-radar');
-      }
-      if (!window._locationWatchStarted) {
-        if (await _maybeShowLocationPrimer()) {
-          window._locationWatchStarted = true;
-          LocationService.startWatch();
-          LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
-            if (accuracy && accuracy > 5000) return;
-            userLat = lat; userLng = lng;
-          });
-        }
-      }
-      if (window._locationWatchStarted) {
-        try { await getLocation(); } catch(e) {}
+        await _ensureLocationReady();
       }
       await loadNearbyGhosts();
       return;
@@ -8811,6 +8818,11 @@ window.guestExplore = async () => {
   if (currentUser && currentUser.isAnonymous) {
     showScreen('screenRadar');
     setNav('nav-radar');
+    // Premier passage : le GPS n'a pas encore démarré (voir onAuthStateChanged,
+    // qui l'évite pendant screenOnboard) — on le déclenche maintenant que le
+    // radar est affiché.
+    await _ensureLocationReady();
+    await loadNearbyGhosts();
     return;
   }
   // Pas encore d'utilisateur (auth silencieuse échouée) — nouvel essai
