@@ -1,0 +1,167 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Fonctions utilitaires ──────────────────────────
+    function isAuth() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+    function isPremium() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.premium == true;
+    }
+    function isNewGhost() {
+      // Champs obligatoires présents
+      return request.resource.data.keys().hasAll(['message', 'authorUid', 'lat', 'lng'])
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.message.size() <= 280;
+    }
+    function isPremiumOnlyField() {
+      // Champs réservés Premium dans un ghost
+      return request.resource.data.get('videoUrl', null) != null
+          || request.resource.data.get('duration', '') == '♾ Éternel'
+          || request.resource.data.get('duration', '') == 'Eternal'
+          || request.resource.data.get('chainHint', null) != null
+          || (request.resource.data.get('openCondition', 'always') == 'after')
+          || (request.resource.data.get('openCondition', 'always') == 'future')
+          || request.resource.data.get('businessMode', false) == true
+          || request.resource.data.get('promoCode', null) != null;
+    }
+    function cooldownOk() {
+      // ⚠️ Doit rester identique à DEPOSIT.COOLDOWN_MS dans services/world.service.js
+      // (15 min = 900000 ms). Free uniquement — Premium contourne le cooldown (voir allow create).
+      let uPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      let lastCreated = exists(uPath) ? get(uPath).data.get('lastGhostCreatedAt', null) : null;
+      return lastCreated == null || request.time.toMillis() - lastCreated.toMillis() >= 900000;
+    }
+
+    // ── Ghosts ────────────────────────────────────────
+    match /ghosts/{ghostId} {
+      // Lecture : authentifié, mais un fantôme secret n'est lisible que par son auteur.
+      // Note : pour une requête list/query, Firestore évalue cette règle document par
+      // document et exclut silencieusement ceux qui échouent (pas d'erreur globale).
+      allow read: if isAuth() && (
+        resource.data.get('secret', false) != true
+        || resource.data.authorUid == request.auth.uid
+      );
+
+      // Création : authentifié + champs valides
+      // Si champs Premium présents → vérifier premium === true côté serveur
+      // Cooldown de 15 min entre deux dépôts pour les comptes gratuits
+      allow create: if isAuth()
+        && isNewGhost()
+        && (!isPremiumOnlyField() || isPremium())
+        && (isPremium() || cooldownOk());
+
+      // Mise à jour : propriétaire uniquement (sauf openCount/resonances mis à jour par tous)
+      allow update: if isAuth() && (
+        // Propriétaire peut modifier son fantôme, mais :
+        //  - authorUid/lat/lng ne peuvent plus changer après la création
+        //  - si des champs Premium sont touchés par cette mise à jour, la même
+        //    vérification qu'à la création s'applique (pas de contournement via update)
+        (
+          resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorUid == resource.data.authorUid
+          && request.resource.data.lat == resource.data.lat
+          && request.resource.data.lng == resource.data.lng
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['videoUrl', 'duration', 'chainHint', 'openCondition', 'businessMode', 'promoCode'])
+            || (!isPremiumOnlyField() || isPremium())
+          )
+        )
+        // Tout utilisateur peut incrémenter openCount/resonances/viewCount, et un
+        // visiteur non-propriétaire qui découvre le fantôme peut mettre à jour sa
+        // présence (WorldService.registerPresence()) : activityScore (+1 exactement),
+        // lastPresenceAt (horloge serveur uniquement, anti-forgerie), discoveriesCount
+        // (+1 exactement, optionnel — seulement à la toute première découverte).
+        || (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount'])
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['activityScore'])
+            || request.resource.data.activityScore == resource.data.get('activityScore', 0) + 1
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastPresenceAt'])
+            || request.resource.data.lastPresenceAt == request.time
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['discoveriesCount'])
+            || request.resource.data.discoveriesCount == resource.data.get('discoveriesCount', 0) + 1
+          )
+        )
+      );
+
+      // Suppression : propriétaire uniquement
+      allow delete: if isAuth() && resource.data.authorUid == request.auth.uid;
+    }
+
+    // ── Users ─────────────────────────────────────────
+    match /users/{userId} {
+      // Lecture : propriétaire du compte
+      allow read: if isOwner(userId);
+
+      // Création/mise à jour : propriétaire
+      // Champ premium ne peut être écrit que par une Cloud Function (admin SDK)
+      // lastGhostCreatedAt (utilisé pour le cooldown de dépôt) ne peut être écrit
+      // qu'avec l'horloge serveur — sinon un client pourrait forger une ancienne
+      // date pour toujours paraître "refroidi" et contourner le cooldown.
+      allow create: if isOwner(userId)
+        && !request.resource.data.keys().hasAny(['premium'])
+        && (
+          !request.resource.data.keys().hasAny(['lastGhostCreatedAt'])
+          || request.resource.data.lastGhostCreatedAt == request.time
+        );
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['premium'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastGhostCreatedAt'])
+          || request.resource.data.lastGhostCreatedAt == request.time
+        );
+    }
+
+    // ── Replies ───────────────────────────────────────
+    match /replies/{replyId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.authorUid == request.auth.uid
+        && request.resource.data.message.size() <= 280;
+      allow delete: if isAuth() && resource.data.authorUid == request.auth.uid;
+    }
+
+    // ── Notifications ─────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuth() && resource.data.toUid == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.toUid == request.auth.uid;
+    }
+
+    // ── Discoveries ───────────────────────────────────
+    match /discoveries/{discId} {
+      allow read: if isAuth() && resource.data.authorUid == request.auth.uid;
+      allow create: if isAuth();
+      allow update: if isAuth() && resource.data.authorUid == request.auth.uid;
+    }
+
+    // ── Reports ───────────────────────────────────────
+    match /reports/{reportId} {
+      allow read: if false; // lecture admin uniquement
+      allow create: if isAuth();
+    }
+
+    // ── PremiumCodes ──────────────────────────────────
+    // Lecture/écriture via Cloud Function uniquement (admin SDK)
+    match /premiumCodes/{codeId} {
+      allow read, write: if false;
+    }
+
+    // ── Tout le reste — refus par défaut ──────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
