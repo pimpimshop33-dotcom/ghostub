@@ -1928,7 +1928,10 @@ async function _ensureLocationReady() {
     if (await _maybeShowLocationPrimer()) {
       window._locationWatchStarted = true;
       LocationService.startWatch();
-      LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+      // Callback "pauvre" (mode invité) — remplacé par le callback riche de
+      // onAuthStateChanged si l'utilisateur s'inscrit ensuite (cf. _locationUnsub).
+      if (window._locationUnsub) window._locationUnsub();
+      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
         if (accuracy && accuracy > 5000) return;
         userLat = lat; userLng = lng;
       });
@@ -1990,11 +1993,22 @@ onAuthStateChanged(auth, async user => {
     // Fantôme garanti au 1er lancement — décalé après le GPS
     setTimeout(() => _seedWelcomeGhost(), 4000);
     // ── Présence passive — GPS watch ─────────────────────────────────
-    if (!window._locationWatchStarted && await _maybeShowLocationPrimer()) {
+    // On (ré)enregistre TOUJOURS le callback riche ici, même si le watch GPS
+    // a déjà démarré côté invité (anonyme → authentifié) : sinon, après une
+    // inscription, l'utilisateur restait bloqué sur le callback "pauvre" de
+    // _ensureLocationReady (pas de vibration/glow de proximité, pas de
+    // registerPresence, pas de recentrage) — window._locationWatchStarted
+    // restait déjà à true et empêchait ce bloc de s'exécuter. startWatch()
+    // est idempotent (no-op si déjà démarré) ; _locationUnsub() retire
+    // proprement l'abonnement précédent avant d'en poser un nouveau, plutôt
+    // que d'empiler les deux callbacks (LocationService utilise un Set
+    // d'abonnés — les deux tourneraient sinon en même temps).
+    if (await _maybeShowLocationPrimer()) {
       window._locationWatchStarted = true;
-    LocationService.startWatch();
-    let _firstAccuratePosition = false;
-    LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+      LocationService.startWatch();
+      if (window._locationUnsub) window._locationUnsub();
+      let _firstAccuratePosition = false;
+      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
       // Ignorer les positions trop imprécises (IP-based = Paris, accuracy > 5000m)
       if (accuracy && accuracy > 5000) return;
       // Recentrer la carte si c'est la première position réelle reçue
@@ -6617,7 +6631,7 @@ window._stopWhisperListener = () => {
 
 window.resonate = async () => {
   const btn = document.getElementById('resonanceBtn');
-  if (btn.classList.contains('resonated') || !selectedGhost) return;
+  if (btn.classList.contains('resonated') || btn.disabled || !selectedGhost) return;
   if (hasResonatedToday()) {
     btn.style.borderColor = 'rgba(255,180,50,.4)';
     btn.style.color = 'rgba(var(--premium-rgb),.8)';
@@ -6633,24 +6647,43 @@ window.resonate = async () => {
     }, 3000);
     return;
   }
+  // Capturer les champs nécessaires avant l'await : selectedGhost peut changer
+  // pendant l'attente réseau si l'utilisateur navigue vers un autre fantôme.
+  const ghostId = selectedGhost.id;
+  const ghostAuthorUid = selectedGhost.authorUid;
+  const ghostEmoji = selectedGhost.emoji;
+  const ghostLocation = selectedGhost.location;
+
+  // Verrou synchrone anti double-tap pendant l'écriture réseau.
+  btn.disabled = true;
+  try {
+    await updateDoc(doc(db, COLL.GHOSTS, ghostId), { resonances: increment(1) });
+  } catch (e) {
+    console.warn('[ghostub:resonate]', e);
+    btn.disabled = false;
+    showToast('error', t.misc_error_generic || 'Erreur — réessaie plus tard.');
+    return; // ni markResonatedToday() ni état "résonné" : l'utilisateur peut réessayer
+  }
+
+  // Écriture confirmée : on applique maintenant le verrou quotidien + l'état visuel/sonore.
   fireResonanceParticles(btn);
   AudioService.playResonance();
   HapticsService.resonance();
   btn.classList.add('resonated');
   btn.textContent = t.detail_reso_sent;
-  markResonatedToday(selectedGhost.id);
-  await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), { resonances: increment(1) });
+  btn.disabled = false;
+  markResonatedToday(ghostId);
   // Compteur dénormalisé totalResonances sur l'auteur
-  if (selectedGhost.authorUid) {
-    setDoc(doc(db, COLL.USERS, selectedGhost.authorUid), { totalResonances: increment(1) }, { merge: true })
+  if (ghostAuthorUid) {
+    setDoc(doc(db, COLL.USERS, ghostAuthorUid), { totalResonances: increment(1) }, { merge: true })
       .catch(e => console.warn('totalResonances increment:', e));
     // ── GHOST WHISPER — vibration mystérieuse pour l'auteur ──
-    if (selectedGhost.authorUid !== currentUser?.uid) {
-      setDoc(doc(db, COLL.WHISPERS, selectedGhost.authorUid), {
+    if (ghostAuthorUid !== currentUser?.uid) {
+      setDoc(doc(db, COLL.WHISPERS, ghostAuthorUid), {
         lastWhisper: serverTimestamp(),
-        ghostId: selectedGhost.id,
-        ghostEmoji: selectedGhost.emoji || '👻',
-        ghostLocation: selectedGhost.location || '',
+        ghostId: ghostId,
+        ghostEmoji: ghostEmoji || '👻',
+        ghostLocation: ghostLocation || '',
         count: increment(1)
       }, { merge: true }).catch(() => {});
     }
@@ -7333,93 +7366,112 @@ function showOpenLimitWarning(remaining, onConfirm) {
 }
 
 window.openEnvelope = async () => {
-  if (!selectedGhost) return;
-  // Vérifier si déjà ouvert (pas de vérif distance pour relecture)
-  const revealed = document.getElementById('envelopeContent');
-  if (revealed && revealed.style.display !== 'none') return; // déjà ouvert — ne pas reincrémenter
+  // Verrou synchrone anti double-appel : entre le tap et la vérification du
+  // quota (réseau) puis le callback géoloc (async), un second tap pouvait
+  // jusqu'ici déclencher un second flux concurrent et faire consommer deux
+  // unités du quota quotidien pour une seule action perçue par l'utilisateur.
+  if (window._openingEnvelope) return;
+  window._openingEnvelope = true;
+  try {
+    if (!selectedGhost) return;
+    // Vérifier si déjà ouvert (pas de vérif distance pour relecture)
+    const revealed = document.getElementById('envelopeContent');
+    if (revealed && revealed.style.display !== 'none') return; // déjà ouvert — ne pas reincrémenter
 
-  // ── Vérifier limite journalière AVANT la distance ───────
-  // Quota déjà épuisé : on bloque complètement.
-  // Avant-dernière/dernière ouverture (remaining 1 ou 2) : avertissement
-  // progressif avec possibilité d'annuler, pour ne pas surprendre l'utilisateur
-  // au moment où le quota tombe réellement à 0.
-  const remaining = await remainingOpensToday();
-  if (!isPremium && remaining === 0) {
-    showOpenLimitWarning(0, () => {});
-    return;
+    // ── Vérifier limite journalière AVANT la distance ───────
+    // Quota déjà épuisé : on bloque complètement.
+    // Avant-dernière/dernière ouverture (remaining 1 ou 2) : avertissement
+    // progressif avec possibilité d'annuler, pour ne pas surprendre l'utilisateur
+    // au moment où le quota tombe réellement à 0.
+    const remaining = await remainingOpensToday();
+    if (!isPremium && remaining === 0) {
+      showOpenLimitWarning(0, () => {});
+      return;
+    }
+    if (!isPremium && (remaining === 1 || remaining === 2)) {
+      const confirmed = await new Promise(resolve => showOpenLimitWarning(remaining, resolve));
+      if (!confirmed) return;
+    }
+    await _checkDistanceThenOpen();
+  } finally {
+    window._openingEnvelope = false;
   }
-  if (!isPremium && (remaining === 1 || remaining === 2)) {
-    showOpenLimitWarning(remaining, (confirmed) => {
-      if (confirmed) _checkDistanceThenOpen();
-    });
-    return;
-  }
-  _checkDistanceThenOpen();
 };
 
+// Retourne une Promise qui ne se résout qu'une fois le flux entièrement
+// terminé (géoloc + éventuel _doOpenEnvelope()) — nécessaire pour que le
+// verrou synchrone posé dans openEnvelope() reste actif pendant toute la
+// durée de l'opération, callback géoloc compris (cf. problème 5).
 function _checkDistanceThenOpen() {
-  const btn = document.getElementById('envelopeOpenBtn');
-  const hint = document.getElementById('sealedHint');
-  const origHint = hint.textContent;
+  return new Promise((resolve) => {
+    const btn = document.getElementById('envelopeOpenBtn');
+    const hint = document.getElementById('sealedHint');
+    const origHint = hint.textContent;
 
-  btn.disabled = true;
-  hint.textContent = t.env_gps_checking;
-  // FIX: Timeout de sécurité si géoloc bloque trop longtemps
-  const fallbackTimer = setTimeout(() => {
-    btn.disabled = false;
-    hint.textContent = t.env_gps_slow;
-    setTimeout(() => { hint.textContent = origHint; }, 4000);
-  }, 8000);
+    btn.disabled = true;
+    hint.textContent = t.env_gps_checking;
+    // FIX: Timeout de sécurité si géoloc bloque trop longtemps
+    const fallbackTimer = setTimeout(() => {
+      btn.disabled = false;
+      hint.textContent = t.env_gps_slow;
+      setTimeout(() => { hint.textContent = origHint; }, 4000);
+      resolve();
+    }, 8000);
 
-  if (!navigator.geolocation) {
-    clearTimeout(fallbackTimer);
-    btn.disabled = false;
-    hint.textContent = t.env_gps_unavail;
-    setTimeout(() => { hint.textContent = origHint; }, 4000);
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    if (!navigator.geolocation) {
       clearTimeout(fallbackTimer);
       btn.disabled = false;
-      const dist = distanceMeters(
-        pos.coords.latitude, pos.coords.longitude,
-        selectedGhost.lat, selectedGhost.lng
-      );
-      const ghostRadiusStr = selectedGhost.radius || '50m';
-      const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
-      // Prendre en compte l'imprécision GPS : si dist - accuracy <= ghostRadius, on laisse passer
-      const accuracy = pos.coords.accuracy || 0;
-      const effectiveDist = Math.max(0, dist - accuracy * 0.5);
-      if (effectiveDist <= ghostRadius) {
-        hint.textContent = origHint;
-        _doOpenEnvelope();
-      } else {
-        showDistanceError(dist);
-      }
-    },
-    () => {
-      clearTimeout(fallbackTimer);
-      btn.disabled = false;
-      // Fallback : utiliser la position radar déjà connue si disponible
-      if (userLat && userLng) {
-        const dist = distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng);
+      hint.textContent = t.env_gps_unavail;
+      setTimeout(() => { hint.textContent = origHint; }, 4000);
+      resolve();
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        clearTimeout(fallbackTimer);
+        btn.disabled = false;
+        const dist = distanceMeters(
+          pos.coords.latitude, pos.coords.longitude,
+          selectedGhost.lat, selectedGhost.lng
+        );
         const ghostRadiusStr = selectedGhost.radius || '50m';
         const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
-        if (dist <= ghostRadius) {
+        // Prendre en compte l'imprécision GPS : si dist - accuracy <= ghostRadius, on laisse passer
+        const accuracy = pos.coords.accuracy || 0;
+        const effectiveDist = Math.max(0, dist - accuracy * 0.5);
+        if (effectiveDist <= ghostRadius) {
           hint.textContent = origHint;
-          _doOpenEnvelope();
+          await _doOpenEnvelope();
         } else {
           showDistanceError(dist);
         }
-      } else {
-        hint.textContent = t.env_gps_denied;
-        setTimeout(() => { hint.textContent = origHint; }, 4000);
-      }
-    },
-    { enableHighAccuracy: true, timeout: 7000, maximumAge: 5000 }
-  );
+        resolve();
+      },
+      () => {
+        clearTimeout(fallbackTimer);
+        btn.disabled = false;
+        // Fallback : utiliser la position radar déjà connue si disponible
+        if (userLat && userLng) {
+          const dist = distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng);
+          const ghostRadiusStr = selectedGhost.radius || '50m';
+          const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
+          if (dist <= ghostRadius) {
+            hint.textContent = origHint;
+            _doOpenEnvelope().then(resolve);
+            return;
+          } else {
+            showDistanceError(dist);
+          }
+        } else {
+          hint.textContent = t.env_gps_denied;
+          setTimeout(() => { hint.textContent = origHint; }, 4000);
+        }
+        resolve();
+      },
+      { enableHighAccuracy: true, timeout: 7000, maximumAge: 5000 }
+    );
+  });
 };
 
 // ── HISTORIQUE NAVIGATION ──────────────────────────────

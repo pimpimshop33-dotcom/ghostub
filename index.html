@@ -1700,8 +1700,20 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 /* ── REPORT / SHARE SHEETS ─────────────────────────────── */
 .report-btn{width:100%;padding:10px;background:transparent;border:1px solid rgba(255,80,80,.2);border-radius:11px;color:rgba(255,100,100,.6);font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);cursor:pointer;transition:all .2s;margin-bottom:8px;touch-action:manipulation;}
 .report-btn:hover{background:rgba(255,80,80,.08);border-color:rgba(255,80,80,.4);}
-.report-sheet,.share-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:390px;background:var(--surface2);border:1px solid rgba(232,160,48,.15);border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px;padding-bottom:calc(28px + var(--sab));z-index:10000;transition:transform .3s cubic-bezier(.25,.46,.45,.94);box-shadow:0 -8px 40px rgba(0,0,0,.8);}
-.report-sheet.show,.share-sheet.show{transform:translateX(-50%) translateY(0);}
+.report-modal,.share-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;}
+.report-modal.show,.share-modal.show{opacity:1;pointer-events:all;}
+.report-sheet,.share-sheet{width:100%;max-width:390px;background:var(--surface2);border:1px solid rgba(232,160,48,.15);border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px;padding-bottom:calc(28px + var(--sab));transition:transform .3s cubic-bezier(.25,.46,.45,.94);transform:translateY(100%);box-shadow:0 -8px 40px rgba(0,0,0,.8);}
+.report-modal.show .report-sheet,.share-modal.show .share-sheet{transform:translateY(0);}
+.report-sheet-title,.share-sheet-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;text-align:center;}
+.report-sheet-sub,.share-sheet-sub{font-size:11px;color:var(--spirit-dim);text-align:center;margin-bottom:18px;line-height:1.6;}
+.report-reasons{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.share-actions{display:flex;gap:8px;margin-bottom:12px;}
+.share-copy-btn{flex:1;padding:12px;background:linear-gradient(135deg,rgba(232,160,48,.15),rgba(232,160,48,.06));border:1px solid var(--border-bright);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.share-copy-btn:hover{background:rgba(232,160,48,.22);}
+.share-native-btn{flex:1;padding:12px;background:transparent;border:1px solid var(--border);border-radius:13px;color:var(--warm-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.share-native-btn:hover{border-color:var(--border-bright);color:var(--warm);}
+.report-cancel,.share-cancel{width:100%;padding:12px;background:transparent;border:1px solid var(--border);border-radius:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.report-cancel:hover,.share-cancel:hover{border-color:var(--border-bright);color:var(--warm);}
 .report-title,.share-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);margin-bottom:14px;text-align:center;}
 .report-reason{padding:10px 14px;background:rgba(var(--spirit-rgb),.04);border:1px solid var(--border);border-radius:11px;font-size:var(--text-base);color:var(--warm-dim);cursor:pointer;transition:all .2s;margin-bottom:7px;touch-action:manipulation;}
 .report-reason:hover{background:rgba(255,80,80,.06);border-color:rgba(255,80,80,.2);color:rgba(255,110,110,.8);}
@@ -2851,7 +2863,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
     <span id="main-content" tabindex="-1" style="position:absolute;top:0;"></span>
     <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
       <div class="ptr-spinner" id="ptrSpinner"></div>
-      <span id="ptrText">data-i18n="misc_ptr_release">Relâcher pour actualiser</span>
+      <span id="ptrText" data-i18n="misc_ptr_release">Relâcher pour actualiser</span>
     </div>
     <div class="radar-header">
       <div>
