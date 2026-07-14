@@ -8,12 +8,6 @@ export const GHOST_DURATIONS = {
   '1 mois': 2_592_000_000,
 };
 
-export const LIFECYCLE = {
-  FRESH_RATIO : 0.10,
-  WEAK_RATIO  : 0.80,
-  FRESH_FALLBACK_MS: 7_200_000,
-};
-
 export const ACTIVITY = {
   VERY_ACTIVE_SCORE : 10,
   VERY_ACTIVE_RECENT: 5,
@@ -275,25 +269,6 @@ const WorldService = {
     } catch (e) {
       console.warn('[WorldService] recordDepositTimestamp:', e);
     }
-  },
-
-  computeLifetime(ghost) {
-    if (!ghost.createdAt) return { state: 'fresh', ratio: 0 };
-
-    const age    = Date.now() - ghost.createdAt.seconds * 1000;
-    const maxAge = GHOST_DURATIONS[ghost.duration];
-
-    if (!maxAge) {
-      return { state: age < LIFECYCLE.FRESH_FALLBACK_MS ? 'fresh' : 'stable', ratio: null };
-    }
-
-    const ratio = age / maxAge;
-    let state;
-    if      (ratio < LIFECYCLE.FRESH_RATIO) state = 'fresh';
-    else if (ratio > LIFECYCLE.WEAK_RATIO)  state = 'weak';
-    else                                     state = 'stable';
-
-    return { state, ratio };
   },
 
   async syncLifecycleState(ghostId, newState, currentState) {
