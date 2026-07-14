@@ -1,8 +1,5 @@
 {
   "indexes": [
-
-    // ── NOTIFICATIONS ──────────────────────────────────────
-    // checkReplyNotifications() : where toUid == x AND notified == false
     {
       "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
@@ -11,9 +8,6 @@
         { "fieldPath": "notified", "order": "ASCENDING" }
       ]
     },
-
-    // ── DISCOVERIES ────────────────────────────────────────
-    // checkDiscoveries() : where authorUid == x AND notified == false
     {
       "collectionGroup": "discoveries",
       "queryScope": "COLLECTION",
@@ -22,8 +16,6 @@
         { "fieldPath": "notified",  "order": "ASCENDING" }
       ]
     },
-    // ── GHOSTS ─────────────────────────────────────────────
-    // checkResonances() : where authorUid == x, limit 50
     {
       "collectionGroup": "ghosts",
       "queryScope": "COLLECTION",
@@ -32,7 +24,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-    // refreshProfileStats() : where authorUid == x (count + resonances)
     {
       "collectionGroup": "ghosts",
       "queryScope": "COLLECTION",
@@ -41,8 +32,6 @@
         { "fieldPath": "resonances", "order": "DESCENDING" }
       ]
     },
-    // ── REPORTS ────────────────────────────────────────────
-    // submitReport auto-moderation (Cloud Function) : where ghostId == x
     {
       "collectionGroup": "reports",
       "queryScope": "COLLECTION",
@@ -51,9 +40,6 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-
-    // ── REPLIES ────────────────────────────────────────────
-    // openGhost replies : where ghostId == x, orderBy createdAt desc (app.js:6415-6419)
     {
       "collectionGroup": "replies",
       "queryScope": "COLLECTION",
