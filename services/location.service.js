@@ -89,7 +89,16 @@ export function startWatch({ throttleMs = GPS_THROTTLE_MS } = {}) {
         catch (e) { console.warn('[LocationService] subscriber error', e); }
       });
     },
-    err => console.warn('[LocationService] watchPosition error', err),
+    err => {
+      console.warn('[LocationService] watchPosition error', err);
+      // Propager aux abonnés (payload distinct, sans lat/lng/accuracy) pour
+      // que l'UI puisse réagir — un utilisateur bloqué en PERMISSION_DENIED
+      // ne recevait auparavant aucun signal exploitable.
+      _subscribers.forEach(cb => {
+        try { cb({ error: err }); }
+        catch (e) { console.warn('[LocationService] subscriber error', e); }
+      });
+    },
     { enableHighAccuracy: true, maximumAge: 15_000, timeout: 30_000 }
   );
 }

@@ -1951,7 +1951,8 @@ async function _ensureLocationReady() {
       // Callback "pauvre" (mode invité) — remplacé par le callback riche de
       // onAuthStateChanged si l'utilisateur s'inscrit ensuite (cf. _locationUnsub).
       if (window._locationUnsub) window._locationUnsub();
-      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy, error }) => {
+        if (error) { console.warn('[ghostub] geoloc error', error); return; }
         if (accuracy && accuracy > 5000) return;
         userLat = lat; userLng = lng;
       });
@@ -2028,7 +2029,8 @@ onAuthStateChanged(auth, async user => {
       LocationService.startWatch();
       if (window._locationUnsub) window._locationUnsub();
       let _firstAccuratePosition = false;
-      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy }) => {
+      window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy, error }) => {
+      if (error) { console.warn('[ghostub] geoloc error', error); return; }
       // Ignorer les positions trop imprécises (IP-based = Paris, accuracy > 5000m)
       if (accuracy && accuracy > 5000) return;
       // Recentrer la carte si c'est la première position réelle reçue
