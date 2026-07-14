@@ -4067,6 +4067,9 @@ window.shareMapLocation = async () => {
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
+    // Canvas 2D n'interprète pas var(--...) (contrairement au DOM/CSSOM) :
+    // résoudre la valeur réelle à chaque génération pour rester correct si le thème change.
+    const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
 
     // Fond
     const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -4090,13 +4093,13 @@ window.shareMapLocation = async () => {
     ctx.fillStyle = halo; ctx.fillRect(0, 0, W, H);
 
     // Lignes déco
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.12)`; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(80, 130); ctx.lineTo(W-80, 130); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(80, H-130); ctx.lineTo(W-80, H-130); ctx.stroke();
 
     // App name
     ctx.textAlign = 'center';
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.45)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
     ctx.font = '500 36px "Instrument Sans", sans-serif';
     ctx.fillText('GHOSTUB', W/2, 100);
 
@@ -4106,7 +4109,7 @@ window.shareMapLocation = async () => {
     ctx.fillText(String(count), W/2, H/2 - 20);
 
     // Label sous le chiffre
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.7)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.7)`;
     ctx.font = 'italic 52px "Cormorant Garamond", Georgia, serif';
     ctx.fillText(_currentLang === 'en' ? (count > 1 ? 'presences detected' : 'presence detected') : (count > 1 ? 'présences détectées' : 'présence détectée'), W/2, H/2 + 60);
 
@@ -4118,10 +4121,10 @@ window.shareMapLocation = async () => {
     }
 
     // CTA
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.4)`;
     ctx.font = '34px "Instrument Sans", sans-serif';
     ctx.fillText(_currentLang === 'en' ? 'Come closer to discover what awaits you' : 'Approche-toi pour découvrir ce qui t’attend', W/2, H - 170);
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.2)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.2)`;
     ctx.font = '28px "Instrument Sans", sans-serif';
     ctx.fillText('ghostub.app', W/2, H - 110);
 
@@ -4201,6 +4204,10 @@ window.generateGhostCard = async () => {
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
+    // Canvas 2D n'interprète pas var(--...) (contrairement au DOM/CSSOM) :
+    // résoudre la valeur réelle à chaque génération pour rester correct si le thème change.
+    const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
+    const premiumRgb = getComputedStyle(document.documentElement).getPropertyValue('--premium-rgb').trim();
 
     // ── Fond nuit urbaine ────────────────────────────────
     const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -4257,18 +4264,18 @@ window.generateGhostCard = async () => {
     // ── Header app ────────────────────────────────────────
     ctx.textAlign = 'center';
     ctx.letterSpacing = '8px';
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.45)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
     ctx.font = '400 36px "Instrument Sans", sans-serif';
     ctx.fillText('GHOSTUB', W/2, 100);
     ctx.letterSpacing = '0px';
 
     // Séparateur haut
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
+    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.12)`;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(100, 128); ctx.lineTo(W-100, 128); ctx.stroke();
 
     // ── Ghost mark avec glow ──────────────────────────────
-    ctx.shadowColor = 'rgba(var(--ghost-blue-rgb),0.7)';
+    ctx.shadowColor = `rgba(${ghostBlueRgb},0.7)`;
     ctx.shadowBlur = 80;
     const ghostEmoji = selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null;
     if (ghostEmoji) {
@@ -4295,7 +4302,7 @@ window.generateGhostCard = async () => {
       ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
       ctx.fillText(_currentLang === 'en' ? `Only ${remaining} can still open it` : `Plus que ${remaining} personne${remaining > 1 ? 's' : ''} peut l'ouvrir`, W/2, H*0.52 + 80);
     } else {
-      ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.55)';
+      ctx.fillStyle = `rgba(${ghostBlueRgb},0.55)`;
       ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
       ctx.fillText(_currentLang === 'en' ? '…but only if you are close enough' : '…mais seulement si tu t’en approches', W/2, H*0.52 + 80);
     }
@@ -4310,18 +4317,18 @@ window.generateGhostCard = async () => {
     // Distance et résonances
     const resoCount = selectedGhost.resonances || 0;
     if (resoCount > 0) {
-      ctx.fillStyle = 'rgba(var(--premium-rgb),0.65)';
+      ctx.fillStyle = `rgba(${premiumRgb},0.65)`;
       ctx.font = '38px "Instrument Sans", sans-serif';
       ctx.fillText('✦'.repeat(Math.min(resoCount, 5)) + ` — ${resoCount} résonance${resoCount > 1 ? 's' : ''}`, W/2, H*0.69);
     }
 
     // ── CTA viral ─────────────────────────────────────────
     // Fond pill pour le CTA
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.12)`;
     const pillY = H*0.78;
     _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
     ctx.fill();
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.25)';
+    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.25)`;
     ctx.lineWidth = 1.5;
     _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
     ctx.stroke();
@@ -4331,12 +4338,12 @@ window.generateGhostCard = async () => {
     ctx.fillText(_currentLang === 'en' ? 'Come and open it on Ghostub' : 'Viens l’ouvrir sur Ghostub', W/2, pillY + 15);
 
     // Séparateur bas
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.10)';
+    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.10)`;
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(100, H - 130); ctx.lineTo(W-100, H - 130); ctx.stroke();
 
     // URL
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.3)';
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.3)`;
     ctx.font = '28px "Instrument Sans", sans-serif';
     ctx.letterSpacing = '1px';
     ctx.fillText('ghostub.app', W/2, H - 80);
