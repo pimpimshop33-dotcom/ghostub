@@ -39,6 +39,17 @@ export function getCurrentPosition() {
     }
     navigator.geolocation.getCurrentPosition(
       pos => {
+        const accuracy = pos.coords.accuracy;
+
+        // Même filtre que startWatch() : rejeter les positions issues de
+        // géoloc IP (accuracy > 5000m) plutôt que de renvoyer une position
+        // trompeuse sans que l'appelant en soit informé.
+        if (accuracy > 5000) {
+          console.warn('[LocationService] position ignorée — trop imprécise (' + Math.round(accuracy) + 'm)');
+          reject(new Error('Position trop imprécise (' + Math.round(accuracy) + 'm)'));
+          return;
+        }
+
         _lat = pos.coords.latitude;
         _lng = pos.coords.longitude;
         resolve({ lat: _lat, lng: _lng });
