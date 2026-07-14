@@ -1431,6 +1431,9 @@ window._dbg = () => console.log('isPremium:', isPremium, '| pendingVideo:', !!wi
 let userLat = null;
 let userLng = null;
 let nearbyGhosts = [];
+// null tant que le radar n'a pas fait un premier chargement — sert à ne jamais
+// jouer le ping sonar sur le tout premier lot de fantômes affiché.
+let _radarKnownGhostIds = null;
 let selectedGhost = null;
 let map = null;
 let mediaRecorder = null;
@@ -5090,6 +5093,16 @@ window.loadNearbyGhosts = async () => {
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
   }
+  // Ping sonar : uniquement sur une VRAIE nouvelle détection (un fantôme absent
+  // du radar au refresh précédent), jamais au tout premier chargement (sinon ça
+  // sonne à chaque ouverture de l'app) et jamais pour les secrets (déjà leur
+  // propre chime via playChime() ci-dessus — pas de son en double).
+  const _radarIdsNow = new Set(nearbyGhosts.map(g => g.id));
+  if (_radarKnownGhostIds && nearbyGhosts.some(g => !g.secret && !_radarKnownGhostIds.has(g.id))) {
+    AudioService.playSonarPing();
+  }
+  _radarKnownGhostIds = _radarIdsNow;
+
   const mc = document.getElementById('mapCount');
   if (mc) mc.textContent = count + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
   if (map) { map.remove(); map = null; }

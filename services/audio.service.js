@@ -175,6 +175,24 @@ class _AudioService {
     shimmer.start(t + 0.5); shimmer.stop(t + 2.5);
   }
 
+  // ── Ping sonar — nouveau fantôme détecté au radar ──
+  playSonarPing() {
+    if (!this.enabled) return;
+    this.init(); this.resume();
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(1200, t);
+    osc.frequency.exponentialRampToValueAtTime(900, t + 0.35);
+    gain.gain.setValueAtTime(0.001, t);
+    gain.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+    osc.connect(gain).connect(this._masterGain);
+    osc.start(t); osc.stop(t + 0.55);
+  }
+
   // ── Ghost Whisper (chuchotement mystérieux) ──
   playWhisper() {
     if (!this.enabled) return;
