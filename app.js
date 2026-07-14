@@ -5090,13 +5090,14 @@ window.loadNearbyGhosts = async () => {
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
   }
-  // Ping sonar à chaque détection/refresh où au moins un fantôme est présent
-  // (pas seulement sur une nouvelle apparition) — le toggle 🔊/🔇 reste le seul
-  // moyen de le couper. Exclu pour les secrets, qui ont déjà leur propre chime
-  // via playChime() ci-dessus (pas de son en double).
-  if (nearbyGhosts.some(g => !g.secret)) {
-    AudioService.playSonarPing();
-  }
+  // Ping sonar : un ping par fantôme présent dans le rayon, à CHAQUE refresh
+  // (pas juste 1 ping global, pas seulement sur nouveauté) — légèrement décalés
+  // pour rester audibles individuellement plutôt que superposés. Le toggle
+  // 🔊/🔇 reste le seul moyen de le couper. Exclu pour les secrets, qui ont
+  // déjà leur propre chime via playChime() ci-dessus (pas de son en double).
+  nearbyGhosts.filter(g => !g.secret).forEach((g, i) => {
+    setTimeout(() => AudioService.playSonarPing(), i * 180);
+  });
 
   const mc = document.getElementById('mapCount');
   if (mc) mc.textContent = count + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
