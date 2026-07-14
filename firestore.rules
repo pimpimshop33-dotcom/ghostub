@@ -191,9 +191,19 @@ service cloud.firestore {
     }
 
     // ── Discoveries ───────────────────────────────────
+    // ⚠️ Piège de nommage : ici authorUid == propriétaire du fantôme découvert
+    // (destinataire de la notif « ton fantôme a été découvert », cf.
+    // checkDiscoveries() qui filtre where('authorUid','==',currentUser.uid)),
+    // PAS l'auteur du document. Le vrai créateur (celui qui fait la découverte)
+    // est discoveredByUid — seul point d'écriture : app.js:4972.
     match /discoveries/{discId} {
       allow read: if isAuth() && resource.data.authorUid == request.auth.uid;
-      allow create: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.discoveredByUid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+             'ghostId', 'ghostLocation', 'ghostMessage', 'authorUid',
+             'discoveredBy', 'discoveredByUid', 'discoveredAt', 'notified'
+           ]);
       allow update: if isAuth() && resource.data.authorUid == request.auth.uid;
     }
 
