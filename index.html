@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=168"></script>
+<script type="module" src="app.js?v=169"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2102,15 +2102,21 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   color: initial !important;
   filter: none !important;
 }
-/* Icônes de Sceau (SVG monochrome, stroke=currentColor) : plus spécifique
-   que ".emoji-opt *" ci-dessus, donc gagne malgré le color:initial!important.
-   Couleur pleine opacité (pas de rgba(...,.X)) : le dimming de l'état non
-   sélectionné vient UNIQUEMENT de .lettre-stamp-strip .emoji-opt{filter:
-   grayscale(.55) opacity(.55)} — cumuler une couleur déjà semi-transparente
-   avec ce filtre retombait à ~30% d'opacité effective, illisible sur mobile
-   (BUG-REGRESSIONS-TRACE-COLORE.md, bug 2). Régression corrigée : couleur
-   pleine, le filtre du parent reste le seul mécanisme de dimming. */
-.emoji-opt .category-icon{color:var(--ether) !important;}
+/* Icônes de Sceau (SVG monochrome, stroke=currentColor) — cause réelle du
+   bug 2 (BUG-REGRESSIONS-TRACE-COLORE.md) : ".emoji-opt *" ci-dessus cible
+   TOUS les descendants, y compris le <path> À L'INTÉRIEUR du <svg>, pas
+   seulement le <svg> lui-même. Or currentColor se réévalue à CHAQUE élément
+   selon SA PROPRE couleur héritée (pas celle d'un ancêtre plus lointain) :
+   un premier correctif ne ciblait que ".category-icon" (le <svg>) — sa
+   couleur devenait correcte, mais le <path> à l'intérieur restait forcé en
+   noir par ".emoji-opt *", donc le stroke="currentColor" du path continuait
+   à se résoudre en noir. Il faut donc cibler aussi les descendants du svg.
+   Couleur pleine (pas de rgba(...,.X)) : le dimming de l'état non
+   sélectionné vient uniquement de .lettre-stamp-strip .emoji-opt{filter:
+   grayscale(.55) opacity(.55)} — ne pas cumuler une couleur déjà
+   semi-transparente avec ce filtre (ancien bug 2, opacité effective ~30%). */
+.emoji-opt .category-icon,
+.emoji-opt .category-icon *{color:var(--ether) !important;}
 .wizard-back-btn {
   color: rgba(var(--ghost-blue-rgb),0.5) !important;
   -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),0.5) !important;
