@@ -58,7 +58,8 @@ const LANGS = {
     radar_guest_banner: 'Mode exploration — créez un compte pour déposer vos fantômes',
     radar_locating: 'Localisation en cours…',
     radar_searching: '🔍 Recherche de fantômes…',
-    radar_no_gps: 'Géolocalisation refusée — activez-la dans les paramètres de votre navigateur.',
+    radar_no_gps: 'Géolocalisation refusée — autorisez-la dans les réglages de votre navigateur pour découvrir les fantômes proches.',
+    radar_retry_btn: '↻ Réessayer',
     radar_no_ghosts: 'Aucun fantôme proche — soyez le premier !',
     radar_no_ghosts_widened: 'Aucun fantôme à 5km — affichage élargi 50km',
     radar_firestore_err: 'Impossible de charger les fantômes — vérifiez votre connexion.',
@@ -142,7 +143,7 @@ const LANGS = {
     env_gps_checking: '📡 Vérification de votre position…',
     env_gps_slow: '⚠️ GPS trop long — déplacez-vous en extérieur et réessayez.',
     env_gps_unavail: '⚠️ GPS indisponible sur cet appareil.',
-    env_gps_denied: '⚠️ GPS indisponible — activez-le et réessayez en extérieur.',
+    env_gps_denied: '⚠️ GPS indisponible — vérifiez votre signal ou autorisez la géolocalisation dans les réglages de votre navigateur.',
     env_resist: '🌫️ Le sceau résiste encore',
     env_resist_dist: 'encore {n}m à parcourir',
     env_hint_reset: 'Approchez-vous pour briser le sceau',
@@ -648,7 +649,8 @@ const LANGS = {
     radar_guest_banner: 'Exploration mode — create an account to drop your own ghosts',
     radar_locating: 'Getting your location…',
     radar_searching: '🔍 Searching for ghosts…',
-    radar_no_gps: 'Location denied — enable it in your browser settings.',
+    radar_no_gps: 'Location denied — enable it in your browser settings to discover nearby ghosts.',
+    radar_retry_btn: '↻ Try again',
     radar_no_ghosts: 'No ghosts nearby — be the first!',
     radar_no_ghosts_widened: 'No ghosts within 5km — showing up to 50km',
     radar_firestore_err: 'Could not load ghosts — check your connection.',
@@ -732,7 +734,7 @@ const LANGS = {
     env_gps_checking: '📡 Checking your position…',
     env_gps_slow: '⚠️ GPS taking too long — go outside and try again.',
     env_gps_unavail: '⚠️ GPS not available on this device.',
-    env_gps_denied: '⚠️ GPS unavailable — enable it and try outside.',
+    env_gps_denied: '⚠️ GPS unavailable — check your signal or allow location in your browser settings.',
     env_resist: '🌫️ The seal still resists',
     env_resist_dist: '{n}m still to go',
     env_hint_reset: 'Move closer to break the seal',
@@ -4933,13 +4935,21 @@ window.loadNearbyGhosts = async () => {
   document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_locating + '</span>';
   skeletonGhostList();
   try {
-    await getLocation();
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_searching + '</span>';
-    window._gpsIsFallback = false;
-    document.getElementById('userCoords').textContent =
-      userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
+    // Ne déclenche la popup GPS native que si le priming a déjà été accepté
+    // (cf. _maybeShowLocationPrimer) — sinon, sur le tout premier lancement,
+    // cet appel partirait avant toute explication pendant que l'onboarding
+    // est encore affiché. On utilise le fallback en attendant _ensureLocationReady().
+    if (!window._locationWatchStarted) {
+      if (!userLat || !userLng) { userLat = 46.6034; userLng = 1.8883; window._gpsIsFallback = true; }
+    } else {
+      await getLocation();
+      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_searching + '</span>';
+      window._gpsIsFallback = false;
+      document.getElementById('userCoords').textContent =
+        userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
+    }
   } catch(e) {
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_no_gps + '</span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_no_gps + ' <button onclick="loadNearbyGhosts()" style="background:none;border:none;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;padding:0;">' + t.radar_retry_btn + '</button></span>';
     // Utiliser la dernière position connue si disponible, sinon centre de France
     if (!userLat || !userLng) {
       userLat = 46.6034; userLng = 1.8883;
