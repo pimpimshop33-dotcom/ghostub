@@ -55,6 +55,7 @@ const LANGS = {
     auth_show_password: 'Afficher le mot de passe',
     auth_hide_password: 'Masquer le mot de passe',
     // Radar
+    radar_guest_banner: 'Mode exploration — créez un compte pour déposer vos fantômes',
     radar_locating: 'Localisation en cours…',
     radar_searching: '🔍 Recherche de fantômes…',
     radar_no_gps: 'Géolocalisation refusée — activez-la dans les paramètres de votre navigateur.',
@@ -644,6 +645,7 @@ const LANGS = {
     auth_show_password: 'Show password',
     auth_hide_password: 'Hide password',
     // Radar
+    radar_guest_banner: 'Exploration mode — create an account to drop your own ghosts',
     radar_locating: 'Getting your location…',
     radar_searching: '🔍 Searching for ghosts…',
     radar_no_gps: 'Location denied — enable it in your browser settings.',
@@ -7975,6 +7977,12 @@ window.showScreen = (id, fromPopstate = false) => {
   }
   animateScreenTransition(id);
   _showScreenOrig(id, fromPopstate);
+
+  // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que
+  // le compte n'est plus anonyme (inscription/liaison de compte), réévalué
+  // à chaque navigation donc toujours synchronisé sans écouteur dédié.
+  const guestBanner = document.getElementById('guestBanner');
+  if (guestBanner) guestBanner.style.display = (id === 'screenRadar' && _isGuestUser()) ? 'flex' : 'none';
 
   // Affiche/cache la bottom-nav selon l'écran (toujours visible sauf auth/onboarding)
   const nav = document.getElementById('bottomNav');
