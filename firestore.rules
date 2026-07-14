@@ -14,10 +14,15 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.premium == true;
     }
     function isNewGhost() {
-      // Champs obligatoires présents
+      // Champs obligatoires présents + types/plages valides
       return request.resource.data.keys().hasAll(['message', 'authorUid', 'lat', 'lng'])
         && request.resource.data.authorUid == request.auth.uid
-        && request.resource.data.message.size() <= 280;
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 280
+        && request.resource.data.lat is number
+        && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+        && request.resource.data.lng is number
+        && request.resource.data.lng >= -180 && request.resource.data.lng <= 180;
     }
     function isPremiumOnlyField() {
       // Champs réservés Premium dans un ghost
@@ -25,6 +30,8 @@ service cloud.firestore {
           || request.resource.data.get('duration', '') == '♾ Éternel'
           || request.resource.data.get('duration', '') == 'Eternal'
           || request.resource.data.get('chainHint', null) != null
+          || request.resource.data.get('chainLat', null) != null
+          || request.resource.data.get('chainLng', null) != null
           || (request.resource.data.get('openCondition', 'always') == 'after')
           || (request.resource.data.get('openCondition', 'always') == 'future')
           || request.resource.data.get('businessMode', false) == true
@@ -51,9 +58,31 @@ service cloud.firestore {
       // Création : authentifié + champs valides
       // Si champs Premium présents → vérifier premium === true côté serveur
       // Cooldown de 15 min entre deux dépôts pour les comptes gratuits
+      // Liste exhaustive établie depuis WorldService.createGhost() (services/world.service.js)
+      // + dedicatedTo/attachments (calculés dans depositGhost() côté app.js, cf. rapport)
       allow create: if isAuth()
         && isNewGhost()
+        && request.resource.data.keys().hasOnly([
+             'message', 'location', 'emoji', 'duration', 'radius',
+             'audioUrl', 'photoUrl', 'videoUrl', 'attachments',
+             'openCondition', 'openHour', 'openAfterGhostId', 'openDate',
+             'businessMode', 'promoCode', 'maxOpenCount',
+             'anonymous', 'secret', 'dedicatedTo',
+             'chainHint', 'chainLat', 'chainLng',
+             'author', 'authorUid', 'lat', 'lng',
+             'geohash', 'geohash4',
+             'resonances', 'activityScore', 'discoveriesCount', 'openCount',
+             'lastPresenceAt', 'state', 'expired', 'createdAt'
+           ])
         && (!isPremiumOnlyField() || isPremium())
+        // A2-bis : maxOpenCount > 1 (5/10 lectures) réservé Premium — 1 (ou absence
+        // du champ, cas gratuit) reste ouvert à tous. Règle séparée de
+        // isPremiumOnlyField() car la valeur par défaut ne doit pas bloquer le gratuit.
+        && (
+          !('maxOpenCount' in request.resource.data)
+          || request.resource.data.maxOpenCount <= 1
+          || isPremium()
+        )
         && (isPremium() || cooldownOk());
 
       // Mise à jour : propriétaire uniquement (sauf openCount/resonances mis à jour par tous)
@@ -81,6 +110,18 @@ service cloud.firestore {
         || (
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount'])
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['openCount'])
+            || request.resource.data.openCount == resource.data.get('openCount', 0) + 1
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['resonances'])
+            || request.resource.data.resonances == resource.data.get('resonances', 0) + 1
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['viewCount'])
+            || request.resource.data.viewCount == resource.data.get('viewCount', 0) + 1
+          )
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['activityScore'])
             || request.resource.data.activityScore == resource.data.get('activityScore', 0) + 1

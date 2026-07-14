@@ -86,6 +86,7 @@ const LANGS = {
     dep_maxopen_1: '1 lecture',
     dep_maxopen_5: '5 lectures',
     dep_maxopen_10: '10 lectures',
+    dep_maxopen_locked: '🔒 5/10 lectures réservé au Premium — reste à 1 lecture ou passe Premium.',
     dep_cond_always_label: 'Toujours accessible',
     dep_cond_always_sub: 'N\'importe quand',
     dep_cond_night_label: 'La nuit uniquement',
@@ -664,6 +665,7 @@ const LANGS = {
     dep_maxopen_1: '1 read',
     dep_maxopen_5: '5 reads',
     dep_maxopen_10: '10 reads',
+    dep_maxopen_locked: '🔒 5/10 reads is Premium only — stays at 1 read, or go Premium.',
     dep_cond_always_label: 'Always accessible',
     dep_cond_always_sub: 'Anytime',
     dep_cond_night_label: 'Night only',
@@ -3713,6 +3715,8 @@ function updatePremiumUI() {
   const attachContent = document.getElementById('attachmentsContent');
   if (attachContent) attachContent.style.display = isPremium ? 'block' : 'none';
   if (typeof _renderAttachmentsList === 'function') _renderAttachmentsList();
+  // Verrou 5/10 lectures (A2-bis) — gratuit reste forcé à 1
+  if (typeof _updateMaxOpenLockUI === 'function') _updateMaxOpenLockUI();
   // Badge avatar Premium
   const avatar = document.getElementById('profileAvatar');
   if (avatar) {
@@ -7578,6 +7582,7 @@ window.showScreen = (id, fromPopstate = false) => {
       if (chainContent) { chainContent.style.opacity = '1'; chainContent.style.pointerEvents = ''; }
       if (chainLock) chainLock.style.display = 'none';
     }
+    if (typeof _updateMaxOpenLockUI === 'function') _updateMaxOpenLockUI();
   }
   if (id === 'screenDetail') {
     const sealed = document.getElementById('envelopeSealed');
@@ -8633,6 +8638,11 @@ window.selectDur = (el) => {
 };
 
 window.selectMaxOpen = (el) => {
+  const val = parseInt(el.dataset.maxopen || '0');
+  if (val > 1 && !isPremium) {
+    showToast('warning', t.dep_maxopen_locked, 4000);
+    return;
+  }
   el.parentElement.querySelectorAll('.dur-btn').forEach(b => {
     b.classList.remove('active');
     b.setAttribute('aria-pressed', 'false');
@@ -8640,6 +8650,21 @@ window.selectMaxOpen = (el) => {
   el.classList.add('active');
   el.setAttribute('aria-pressed', 'true');
 };
+
+function _updateMaxOpenLockUI() {
+  ['maxOpen5Btn', 'maxOpen10Btn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn) return;
+    btn.classList.toggle('locked', !isPremium);
+    // Un compte redevenu gratuit ne doit pas garder 5/10 sélectionné
+    if (!isPremium && btn.classList.contains('active')) {
+      btn.classList.remove('active');
+      btn.setAttribute('aria-pressed', 'false');
+      const oneBtn = btn.parentElement.querySelector('.dur-btn[data-maxopen="1"]');
+      if (oneBtn) { oneBtn.classList.add('active'); oneBtn.setAttribute('aria-pressed', 'true'); }
+    }
+  });
+}
 
 // ── ONBOARDING CAROUSEL ─────────────────
 let obCurrentScene = 0;

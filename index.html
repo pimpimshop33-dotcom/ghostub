@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=153"></script>
+<script type="module" src="app.js?v=154"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1078,6 +1078,8 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   box-shadow:0 0 14px rgba(var(--spirit-rgb),.12),inset 0 1px 0 rgba(255,255,255,.04);
   transform:translateY(-1px);
 }
+.dur-btn.locked{opacity:.35;cursor:not-allowed;}
+.dur-btn.locked.active{opacity:.6;}
 .deposit-error{color:var(--red);font-size:var(--text-base);min-height:16px;margin-bottom:8px;}
 
 /* ── FILTRE UNIVERSEL POUR TOUTES LES CARTES LEAFLET ─── */
@@ -3241,8 +3243,8 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
               <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition">
                 <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
                 <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
-                <button class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
-                <button class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+                <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
+                <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
               </div>
             </div>
             <div id="step2CondWrap" class="form-group" style="margin-bottom:0;">
