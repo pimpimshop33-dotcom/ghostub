@@ -1431,6 +1431,9 @@ window._dbg = () => console.log('isPremium:', isPremium, '| pendingVideo:', !!wi
 let userLat = null;
 let userLng = null;
 let nearbyGhosts = [];
+// Cibles du ping sonar (angle du faisceau) — reconstruit à chaque renderRadarDots(),
+// consommé en continu par _radarPingLoop() pendant que l'écran radar est actif.
+let radarPingTargets = [];
 let selectedGhost = null;
 let map = null;
 let mediaRecorder = null;
@@ -5090,15 +5093,8 @@ window.loadNearbyGhosts = async () => {
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
   }
-  // Ping sonar : un ping par fantôme présent dans le rayon, à CHAQUE refresh
-  // (pas juste 1 ping global, pas seulement sur nouveauté) — légèrement décalés
-  // pour rester audibles individuellement plutôt que superposés. Le toggle
-  // 🔊/🔇 reste le seul moyen de le couper. Exclu pour les secrets, qui ont
-  // déjà leur propre chime via playChime() ci-dessus (pas de son en double).
-  nearbyGhosts.filter(g => !g.secret).forEach((g, i) => {
-    setTimeout(() => AudioService.playSonarPing(), i * 180);
-  });
-
+  // Le ping sonar n'est plus lié au refresh — il suit désormais le passage du
+  // faisceau radar sur chaque point (cf. renderRadarDots() / _radarPingLoop).
   const mc = document.getElementById('mapCount');
   if (mc) mc.textContent = count + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
   if (map) { map.remove(); map = null; }
@@ -6184,10 +6180,18 @@ function setRadarRadius(meters) {
   try { if (window.HapticsService?.tap) window.HapticsService.tap(); } catch(_){ console.warn('[ghostub:setRadarRadius:haptic]', _); }
 }
 
+// ⚠️ Doit rester identique à "sweep 4s" (.radar-sweep) et "ghostReveal 4s"
+// (.ghost-dot-emoji) dans index.html, et 17% doit rester le palier du pic dans
+// @keyframes ghostReveal — c'est le point du cycle où le faisceau visuel passe
+// exactement sur le dot. _radarPingLoop() s'en sert pour caler le bip sonore.
+const RADAR_SWEEP_DURATION_S = 4;
+const RADAR_SWEEP_PEAK_FRACTION = 0.17;
+
 function renderRadarDots() {
   const radar = document.getElementById('radarDots');
   if (!radar) return;
   radar.innerHTML = '';
+  radarPingTargets = [];
 
   const radius = window._radarRadius || 200;
 
@@ -6249,7 +6253,7 @@ function renderRadarDots() {
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
-    const sweepDuration = 4;
+    const sweepDuration = RADAR_SWEEP_DURATION_S;
     const angleNorm = ((angle + Math.PI / 2) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
     const delay = -(angleNorm / (2 * Math.PI)) * sweepDuration;
 
@@ -6259,11 +6263,52 @@ function renderRadarDots() {
       <div class="ghost-dot-label" aria-hidden="true">${label} · ${formatDistance(g.distance)}</div>
     `;
     radar.appendChild(dot);
+
+    // Cible de ping sonar : même horloge que le flash visuel du dot (delay
+    // ci-dessus), pas les secrets (déjà leur propre chime à la détection).
+    if (!g.secret) {
+      const peakSec = ((RADAR_SWEEP_PEAK_FRACTION * sweepDuration - delay) % sweepDuration + sweepDuration) % sweepDuration;
+      radarPingTargets.push({ id: g.id, peakSec });
+    }
   });
 }
 
 // Expose setRadarRadius globalement pour les onclick inline
 window.setRadarRadius = setRadarRadius;
+
+// ── PING SONAR — calé sur le passage du faisceau radar ──────────────────
+// Indépendant de loadNearbyGhosts()/du refresh : suit uniquement la rotation
+// continue du faisceau (.radar-sweep, 4s linear infinite) et sonne, pour
+// chaque fantôme affiché, exactement quand le faisceau croise son angle
+// (radarPingTargets, recalculé à chaque renderRadarDots()). Redémarre à
+// chaque entrée sur l'écran radar (cf. window.showScreen), s'arrête dès
+// qu'on le quitte — pas de son en tâche de fond, pas de fuite d'intervalle.
+let _radarPingIntervalId = null;
+let _radarPingStartTime = 0;
+let _radarPingLastPhase = 0;
+
+function _startRadarPingLoop() {
+  _stopRadarPingLoop();
+  _radarPingStartTime = performance.now();
+  _radarPingLastPhase = 0;
+  _radarPingIntervalId = setInterval(() => {
+    const elapsedSec = (performance.now() - _radarPingStartTime) / 1000;
+    const phase = elapsedSec % RADAR_SWEEP_DURATION_S;
+    const last = _radarPingLastPhase;
+    for (const target of radarPingTargets) {
+      const p = target.peakSec;
+      // Détection de croisement entre deux échantillons — gère le passage
+      // 0 -> 2π (fin de tour) comme un cas normal, pas un raté.
+      const crossed = phase >= last ? (p > last && p <= phase) : (p > last || p <= phase);
+      if (crossed) AudioService.playSonarPing();
+    }
+    _radarPingLastPhase = phase;
+  }, 80);
+}
+
+function _stopRadarPingLoop() {
+  if (_radarPingIntervalId) { clearInterval(_radarPingIntervalId); _radarPingIntervalId = null; }
+}
 
 let currentGhostIndex = 0;
 
@@ -8022,8 +8067,14 @@ window.showScreen = (id, fromPopstate = false) => {
     _promptSignUp(id === 'screenDeposit' ? 'guest_signup_deposit' : 'guest_signup_profile');
     return;
   }
+  // Ping sonar du radar : calé sur .active avant le switch pour ne (re)démarrer
+  // qu'en entrant réellement sur le radar (pas sur un re-showScreen redondant
+  // pendant qu'on y est déjà), et s'arrêter net dès qu'on le quitte.
+  const _wasRadarActive = document.getElementById('screenRadar')?.classList.contains('active');
   animateScreenTransition(id);
   _showScreenOrig(id, fromPopstate);
+  if (id === 'screenRadar' && !_wasRadarActive) _startRadarPingLoop();
+  else if (id !== 'screenRadar' && _wasRadarActive) _stopRadarPingLoop();
 
   // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que
   // le compte n'est plus anonyme (inscription/liaison de compte), réévalué
