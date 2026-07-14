@@ -6778,17 +6778,32 @@ window.toggleSecret = async () => {
   if (selectedGhost.authorUid !== currentUser.uid) return;
   const nowSecret = !selectedGhost.secret;
   const btn = document.getElementById('secretBtn');
+  const prevText = btn.textContent;
+  const prevBorderColor = btn.style.borderColor;
+  const prevColor = btn.style.color;
   btn.textContent = t.dep_pending || 'En cours…';
-  await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), {
-    secret: nowSecret,
-    radius: nowSecret ? '3m' : (selectedGhost.radius || '10m'),
-    emoji: nowSecret ? '🔮' : '👻'
-  });
-  selectedGhost.secret = nowSecret;
-  btn.textContent = nowSecret ? '🔮 Mode secret activé' : '🔮 Passer en secret';
-  btn.style.borderColor = nowSecret ? 'rgba(168,100,255,.5)' : '';
-  btn.style.color = nowSecret ? 'rgba(200,150,255,.9)' : '';
-  document.getElementById('detailRadius').textContent = '📡 ' + (nowSecret ? '3m' : (selectedGhost.radius || '10m'));
+  try {
+    await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), {
+      secret: nowSecret,
+      radius: nowSecret ? '3m' : (selectedGhost.radius || '10m'),
+      emoji: nowSecret ? '🔮' : '👻'
+    });
+    // selectedGhost.secret n'est mis à jour qu'après confirmation serveur —
+    // même principe que resonate() (Lot précédent) : ne pas anticiper l'état.
+    selectedGhost.secret = nowSecret;
+    btn.textContent = nowSecret ? '🔮 Mode secret activé' : '🔮 Passer en secret';
+    btn.style.borderColor = nowSecret ? 'rgba(168,100,255,.5)' : '';
+    btn.style.color = nowSecret ? 'rgba(200,150,255,.9)' : '';
+    document.getElementById('detailRadius').textContent = '📡 ' + (nowSecret ? '3m' : (selectedGhost.radius || '10m'));
+  } catch (e) {
+    console.warn('toggleSecret error:', e);
+    // Échec : restaurer le bouton à son état exact d'avant le clic (pas un texte
+    // générique) — selectedGhost.secret n'a pas bougé, rien à désynchroniser.
+    btn.textContent = prevText;
+    btn.style.borderColor = prevBorderColor;
+    btn.style.color = prevColor;
+    showToast('error', t.misc_error_generic || 'Erreur — réessaie plus tard.');
+  }
 };
 
 window.depositGhost = async () => {
