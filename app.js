@@ -2751,7 +2751,7 @@ function _setNotifBtnState(active) {
     btn.style.color = 'rgba(var(--accent-green-rgb),.9)';
   } else {
     if (span) span.textContent = t.profile_notif_off;
-    btn.style.color = 'var(--text)';
+    btn.style.color = ''; // retombe sur color:var(--warm) défini par .settings-row-btn
   }
 }
 
