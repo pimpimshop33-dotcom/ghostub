@@ -46,6 +46,8 @@ const LANGS = {
     auth_err_pseudo_len: 'Pseudo entre 2 et 30 caractères.',
     auth_err_email_used: 'Email déjà utilisé.',
     auth_err_wrong: 'Email ou mot de passe incorrect.',
+    auth_err_network: 'Connexion impossible — vérifiez votre connexion et réessayez.',
+    auth_err_generic: 'Une erreur est survenue — réessayez.',
     auth_forgot_link: 'Mot de passe oublié ?',
     auth_forgot_need_email: 'Saisissez votre email pour recevoir le lien de réinitialisation.',
     auth_forgot_sent: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
@@ -189,6 +191,7 @@ const LANGS = {
     dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
     dep_err_offline: 'Vous êtes hors ligne — reconnectez-vous pour déposer.',
     dep_err_generic: 'Erreur lors du dépôt — vérifie ta connexion et réessaie.',
+    dep_err_denied: 'Dépôt refusé — certains champs ne sont pas autorisés. Réessaie ou contacte le support.',
     dep_upload_failed: "L'envoi a échoué — vérifie ta connexion et réessaie.",
     misc_error_generic: 'Erreur — réessaie plus tard.',
     stripe_btn_premium: '✦ Devenir Chasseur Premium',
@@ -281,6 +284,7 @@ const LANGS = {
     profile_code_short: 'Code trop court.',
     profile_code_invalid: 'Code invalide.',
     profile_code_used: 'Code déjà utilisé.',
+    profile_code_error_generic: 'Erreur lors de l\'activation — réessayez.',
     profile_premium_toast: '👑 Premium activé ! Toutes les fonctionnalités sont débloquées.',
     profile_discovery_btn: '📜 Mes découvertes',
     profile_deposited_btn: '👻 Mes fantômes déposés',
@@ -303,6 +307,8 @@ const LANGS = {
     profile_export_btn: '⬇ Exporter mes données',
     profile_export_ok: '✓ Export téléchargé',
     profile_export_empty: 'Aucune donnée à exporter',
+    profile_export_err_network: 'Export impossible — vérifiez votre connexion et réessayez.',
+    profile_export_err_generic: 'Erreur lors de l\'export — réessayez.',
     profile_day_mode: 'Mode jour',
     profile_night_mode: 'Mode nuit',
     profile_lang_label: '🌐 Langue / Language',
@@ -627,6 +633,8 @@ const LANGS = {
     auth_err_pseudo_len: 'Username must be 2–30 characters.',
     auth_err_email_used: 'Email already in use.',
     auth_err_wrong: 'Incorrect email or password.',
+    auth_err_network: 'Connection failed — check your connection and try again.',
+    auth_err_generic: 'Something went wrong — try again.',
     auth_forgot_link: 'Forgot password?',
     auth_forgot_need_email: 'Enter your email to receive the reset link.',
     auth_forgot_sent: 'If an account exists with this email, a reset link has been sent.',
@@ -770,6 +778,7 @@ const LANGS = {
     dep_err_gps: 'Location required — enable it in your browser.',
     dep_err_offline: 'You\'re offline — reconnect to drop a ghost.',
     dep_err_generic: 'Error while dropping — check your connection and try again.',
+    dep_err_denied: 'Deposit rejected — some fields aren\'t allowed. Try again or contact support.',
     dep_upload_failed: 'Upload failed — check your connection and try again.',
     misc_error_generic: 'Error — please try again later.',
     stripe_btn_premium: '✦ Become a Premium Hunter',
@@ -862,6 +871,7 @@ const LANGS = {
     profile_code_short: 'Code too short.',
     profile_code_invalid: 'Invalid code.',
     profile_code_used: 'Code already used.',
+    profile_code_error_generic: 'Error activating the code — try again.',
     profile_premium_toast: '👑 Premium activated! All features are unlocked.',
     profile_discovery_btn: '📜 My discoveries',
     profile_deposited_btn: '👻 My dropped ghosts',
@@ -884,6 +894,8 @@ const LANGS = {
     profile_export_btn: '⬇ Export my data',
     profile_export_ok: '✓ Export downloaded',
     profile_export_empty: 'No data to export',
+    profile_export_err_network: 'Export failed — check your connection and try again.',
+    profile_export_err_generic: 'Error exporting your data — try again.',
     profile_day_mode: 'Day mode',
     profile_night_mode: 'Night mode',
     profile_lang_label: '🌐 Langue / Language',
@@ -2177,10 +2189,12 @@ window.register = async () => {
     Analytics.track('register');
   } catch(e) {
     setLoading(btn, false);
-    err.textContent = e.code === 'auth/email-already-in-use' || e.code === 'auth/credential-already-in-use'
+    console.error('register error:', e);
+    err.textContent = (e.code === 'auth/email-already-in-use' || e.code === 'auth/credential-already-in-use')
       ? t.auth_err_email_used
       : e.code === 'auth/weak-password' ? t.auth_err_short_pass
-      : 'Erreur : ' + e.message;
+      : (e.code === 'auth/network-request-failed' || e.code === 'auth/too-many-requests') ? t.auth_err_network
+      : t.auth_err_generic;
   }
 };
 
@@ -3912,9 +3926,10 @@ window.activatePremium = async () => {
     showToast('success', t.profile_premium_toast, 4000);
     Analytics.track('premium_activated');
   } catch(e) {
+    console.error('activatePremium error:', e);
     if (e.code === 'not-found') errEl.textContent = t.profile_code_invalid;
     else if (e.code === 'already-used') errEl.textContent = t.profile_code_used;
-    else errEl.textContent = 'Erreur : ' + e.message;
+    else errEl.textContent = t.profile_code_error_generic;
     btn.textContent = t.profile_activate_btn;
     btn.disabled = false;
   }
@@ -4668,7 +4683,9 @@ window.exportMyData = async () => {
     showToast('success', t.profile_export_ok, 4000);
     Analytics.track('data_exported', { ghosts: ghosts.length, replies: replies.length });
   } catch(e) {
-    showToast('error', 'Erreur export : ' + e.message);
+    console.error('exportMyData error:', e);
+    const isNetworkErr = e.code === 'unavailable' || e.code === 'deadline-exceeded';
+    showToast('error', isNetworkErr ? t.profile_export_err_network : t.profile_export_err_generic);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = t.profile_export_btn; }
   }
@@ -6927,9 +6944,10 @@ window.depositGhost = async () => {
     successEl.addEventListener('click', dismissSuccess);
     setTimeout(() => dismissSuccess(), 6000);
   } catch(e) {
-    const detail = e?.message ? ` (${e.message})` : '';
-    err.textContent = (t.dep_err_generic || 'Erreur lors du dépôt — vérifie ta connexion et réessaie.') + detail;
     console.warn('depositGhost error:', e);
+    err.textContent = e.code === 'permission-denied'
+      ? t.dep_err_denied
+      : (t.dep_err_generic || 'Erreur lors du dépôt — vérifie ta connexion et réessaie.');
     setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
   }
 };
