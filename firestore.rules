@@ -175,9 +175,18 @@ service cloud.firestore {
     }
 
     // ── Notifications ─────────────────────────────────
+    // Schéma établi depuis les 4 sites d'écriture client dans app.js
+    // (_notifyNearbyUsers, sendReply, sendMicroReply, sendQuickReaction, _doOpenEnvelope) :
+    // aucun champ d'identité d'émetteur (pas de fromUid, seulement fromAuthor en
+    // texte libre) — hasOnly() limite donc la forme du document mais ne peut pas
+    // empêcher l'usurpation d'émetteur avec le schéma actuel (voir rapport).
     match /notifications/{notifId} {
       allow read: if isAuth() && resource.data.toUid == request.auth.uid;
-      allow create: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly([
+             'type', 'toUid', 'ghostId', 'ghostLocation',
+             'fromAuthor', 'reactionContent', 'notified', 'createdAt'
+           ]);
       allow update: if isAuth() && resource.data.toUid == request.auth.uid;
     }
 
