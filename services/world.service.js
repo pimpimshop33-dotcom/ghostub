@@ -29,6 +29,12 @@ export const DEPOSIT = {
 const GEOHASH_STORE_PRECISION = 5;
 const QUERY_LIMIT = 100;
 
+// Ramène une longitude dans [-180, 180) — gère le wraparound à l'antiméridien
+// (ex. 180.02 devient -179.98) au lieu de la clamper et perdre la position réelle.
+function wrapLng(lng) {
+  return ((lng + 180) % 360 + 360) % 360 - 180;
+}
+
 // Retourne les 9 cellules geohash5 couvrant ~7km autour de lat/lng
 function getGeohash5Neighbors(lat, lng) {
   const d = 0.045; // ~5km en degrés
@@ -39,8 +45,8 @@ function getGeohash5Neighbors(lat, lng) {
   ];
   for (const [dlat, dlng] of offsets) {
     cells.add(encodeGeohash(
-      Math.max(-90,  Math.min(90,  lat + dlat)),
-      Math.max(-180, Math.min(180, lng + dlng)),
+      Math.max(-90, Math.min(90, lat + dlat)),
+      wrapLng(lng + dlng),
       GEOHASH_STORE_PRECISION
     ));
   }
