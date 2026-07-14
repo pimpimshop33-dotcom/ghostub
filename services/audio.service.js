@@ -9,16 +9,20 @@ class _AudioService {
     this.enabled = true;
     this.ambientDrone = null;
     this._masterGain = null;
+    this._initFailed = false;
   }
 
   init() {
-    if (this.ctx) return;
+    if (this.ctx || this._initFailed) return;
     try {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
       this._masterGain = this.ctx.createGain();
       this._masterGain.gain.value = 0.6;
       this._masterGain.connect(this.ctx.destination);
-    } catch(e) { console.warn('AudioService: Web Audio not available'); }
+    } catch(e) {
+      this._initFailed = true;
+      console.warn('AudioService: Web Audio not available');
+    }
   }
 
   resume() {
@@ -31,6 +35,7 @@ class _AudioService {
   playChime(freq = 880) {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const osc2 = this.ctx.createOscillator();
@@ -49,6 +54,7 @@ class _AudioService {
   playSealBreak() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     // Noise burst (craquement)
     const bufLen = Math.floor(this.ctx.sampleRate * 0.12);
@@ -84,6 +90,7 @@ class _AudioService {
   playReveal() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     [440, 554, 659, 880].forEach((f, i) => {
       const osc = this.ctx.createOscillator();
@@ -103,6 +110,7 @@ class _AudioService {
   playResonance() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -121,6 +129,7 @@ class _AudioService {
   playDeposit() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     [261.6, 329.6, 392, 523.3].forEach((f, i) => {
       const osc = this.ctx.createOscillator();
@@ -140,6 +149,7 @@ class _AudioService {
   playRareGhost() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     // Mélodie ascendante + reverb simulée
     [523.3, 659.3, 784, 1047].forEach((f, i) => {
@@ -169,6 +179,7 @@ class _AudioService {
   playWhisper() {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const bufLen = Math.floor(this.ctx.sampleRate * 0.8);
     const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
@@ -189,6 +200,7 @@ class _AudioService {
   startAmbientDrone() {
     if (!this.enabled || this.ambientDrone) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const osc1 = this.ctx.createOscillator();
     const osc2 = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -203,6 +215,7 @@ class _AudioService {
 
   stopAmbientDrone() {
     if (!this.ambientDrone) return;
+    if (!this.ctx) { this.ambientDrone = null; return; }
     try {
       this.ambientDrone.gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
       setTimeout(() => {
@@ -216,6 +229,7 @@ class _AudioService {
   playSealCrescendo(durationMs = 1400) {
     if (!this.enabled) return;
     this.init(); this.resume();
+    if (!this.ctx) return;
     const t = this.ctx.currentTime;
     const dur = durationMs / 1000;
     const osc = this.ctx.createOscillator();
