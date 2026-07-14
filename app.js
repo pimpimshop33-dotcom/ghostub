@@ -49,6 +49,7 @@ const LANGS = {
     auth_forgot_link: 'Mot de passe oublié ?',
     auth_forgot_need_email: 'Saisissez votre email pour recevoir le lien de réinitialisation.',
     auth_forgot_sent: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
+    auth_forgot_failed: 'Échec de l\'envoi — vérifiez votre connexion et réessayez.',
     auth_show_password: 'Afficher le mot de passe',
     auth_hide_password: 'Masquer le mot de passe',
     // Radar
@@ -629,6 +630,7 @@ const LANGS = {
     auth_forgot_link: 'Forgot password?',
     auth_forgot_need_email: 'Enter your email to receive the reset link.',
     auth_forgot_sent: 'If an account exists with this email, a reset link has been sent.',
+    auth_forgot_failed: 'Couldn\'t send it — check your connection and try again.',
     auth_show_password: 'Show password',
     auth_hide_password: 'Hide password',
     // Radar
@@ -2134,10 +2136,17 @@ window.forgotPassword = async () => {
   if (!email) { showToast('warning', t.auth_forgot_need_email); return; }
   try {
     await sendPasswordResetEmail(auth, email);
+    showToast('info', t.auth_forgot_sent, 5000);
   } catch (e) {
-    // auth/user-not-found ou toute autre erreur : même toast neutre, ne pas révéler l'existence du compte
+    // auth/user-not-found, auth/invalid-email : toast neutre, ne pas révéler l'existence du compte
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-email') {
+      showToast('info', t.auth_forgot_sent, 5000);
+      return;
+    }
+    // Vraie panne (réseau, quota Firebase…) : le dire — sinon l'utilisateur croit
+    // l'email envoyé alors que rien n'est parti.
+    showToast('error', t.auth_forgot_failed, 5000);
   }
-  showToast('info', t.auth_forgot_sent, 5000);
 };
 
 window.register = async () => {
