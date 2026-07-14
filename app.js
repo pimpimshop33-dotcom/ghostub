@@ -2,8 +2,13 @@
 function _isGuestUser() {
   return currentUser && currentUser.isAnonymous;
 }
-// Redirige vers l'écran d'inscription (onglet Inscription) pour les anonymes
-function _promptSignUp() {
+// Redirige vers l'écran d'inscription (onglet Inscription) pour les anonymes.
+// toastKey : clé LANGS optionnelle pour expliquer pourquoi avant de basculer
+// d'écran (sinon le changement d'écran est brutal, sans contexte).
+function _promptSignUp(toastKey) {
+  if (toastKey && typeof showToast === 'function') {
+    showToast('info', (typeof t !== 'undefined' && t[toastKey]) || t.guest_signup_generic, 3500);
+  }
   showScreen('screenAuth');
   setTimeout(() => { if (typeof window.showTab === 'function') window.showTab('register'); }, 150);
 }
@@ -56,6 +61,10 @@ const LANGS = {
     auth_hide_password: 'Masquer le mot de passe',
     // Radar
     radar_guest_banner: 'Mode exploration — créez un compte pour déposer vos fantômes',
+    guest_signup_open: 'Créez un compte gratuit pour ouvrir ce fantôme',
+    guest_signup_deposit: 'Créez un compte gratuit pour déposer un fantôme',
+    guest_signup_profile: 'Créez un compte gratuit pour accéder à votre profil',
+    guest_signup_generic: 'Créez un compte gratuit pour continuer',
     radar_locating: 'Localisation en cours…',
     radar_searching: '🔍 Recherche de fantômes…',
     radar_no_gps: 'Géolocalisation refusée — autorisez-la dans les réglages de votre navigateur pour découvrir les fantômes proches.',
@@ -510,6 +519,11 @@ const LANGS = {
     auth_pass_hint: '6 caractères minimum',
     radar_area_title: 'Aux alentours',
     radar_invoke_btn: '↻ Invoquer',
+    radar_invoke_tip: 'Invoquer',
+    radar_rank_tip: 'Votre rang — grimpez en explorant et déposant des fantômes',
+    radar_reso_tip: 'Résonance quotidienne disponible',
+    radar_radius_tip: 'Rayon de détection des fantômes autour de vous',
+    radar_help_tip: 'Comment ça marche ?',
     radar_section_label: 'Traces dans les alentours',
     radar_vibe_label: 'Détection active · présences en attente',
     filter_all: '🌫️ Toutes',
@@ -647,6 +661,10 @@ const LANGS = {
     auth_hide_password: 'Hide password',
     // Radar
     radar_guest_banner: 'Exploration mode — create an account to drop your own ghosts',
+    guest_signup_open: 'Create a free account to open this ghost',
+    guest_signup_deposit: 'Create a free account to drop a ghost',
+    guest_signup_profile: 'Create a free account to access your profile',
+    guest_signup_generic: 'Create a free account to continue',
     radar_locating: 'Getting your location…',
     radar_searching: '🔍 Searching for ghosts…',
     radar_no_gps: 'Location denied — enable it in your browser settings to discover nearby ghosts.',
@@ -1101,6 +1119,11 @@ const LANGS = {
     auth_pass_hint: '6 characters minimum',
     radar_area_title: 'Nearby',
     radar_invoke_btn: '↻ Invoke',
+    radar_invoke_tip: 'Summon',
+    radar_rank_tip: 'Your rank — climb by exploring and dropping ghosts',
+    radar_reso_tip: 'Daily resonance available',
+    radar_radius_tip: 'Detection radius for ghosts around you',
+    radar_help_tip: 'How it works',
     radar_section_label: 'Traces around you',
     radar_vibe_label: 'Detection active · presences waiting',
     filter_all: '🌫️ All',
@@ -1246,6 +1269,11 @@ window.setLang = (lang) => {
     const key = el.getAttribute('data-i18n-aria-label');
     const val = t[key];
     if (val !== undefined) el.setAttribute('aria-label', val);
+  });
+  document.querySelectorAll('[data-i18n-tip]').forEach(el => {
+    const key = el.getAttribute('data-i18n-tip');
+    const val = t[key];
+    if (val !== undefined) el.setAttribute('data-tip', val);
   });
 
   // 2. Boutons langue
@@ -3949,7 +3977,7 @@ window.activatePremium = async () => {
 const REPORT_THRESHOLD = 3;
 
 function openReportModal() {
-  if (_isGuestUser()) { _promptSignUp(); return; }
+  if (_isGuestUser()) { _promptSignUp('guest_signup_generic'); return; }
   if (!currentUser) return;
   if (!selectedGhost) return;
   const key = 'reported_' + currentUser.uid + '_' + selectedGhost.id;
@@ -3971,7 +3999,7 @@ window.closeReportModal = (e) => {
 };
 
 window.submitReport = async (reason) => {
-  if (_isGuestUser()) { _promptSignUp(); return; }
+  if (_isGuestUser()) { _promptSignUp('guest_signup_generic'); return; }
   if (!currentUser || !selectedGhost) return;
   closeModal('reportModal');
   const ghostId = selectedGhost.id;
@@ -6293,7 +6321,7 @@ window.swipeGhost = (dir) => {
 })();
 
 window.openGhost = async (id) => {
-  if (_isGuestUser()) { _promptSignUp(); return; }
+  if (_isGuestUser()) { _promptSignUp('guest_signup_open'); return; }
   const idx = nearbyGhosts.findIndex(g => g.id === id);
   if (idx !== -1) currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
@@ -7982,7 +8010,7 @@ const _showScreenOrig = window.showScreen;
 window.showScreen = (id, fromPopstate = false) => {
   // Écrans réservés aux comptes réels — rediriger les anonymes vers l'inscription
   if (_isGuestUser() && (id === 'screenDeposit' || id === 'screenProfile')) {
-    _promptSignUp();
+    _promptSignUp(id === 'screenDeposit' ? 'guest_signup_deposit' : 'guest_signup_profile');
     return;
   }
   animateScreenTransition(id);

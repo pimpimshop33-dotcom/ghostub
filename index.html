@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=159"></script>
+<script type="module" src="app.js?v=160"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2884,8 +2884,9 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <div id="userCoords" style="font-size:10px;color:var(--spirit-dim);opacity:.55;margin-top:2px;letter-spacing:.5px;font-family:'Instrument Sans',sans-serif;" aria-label="Coordonnées GPS"></div>
       </div>
       <div style="display:flex;gap:6px;align-items:center;">
+        <button class="audio-toggle" onclick="showScreen('screenHelp')" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip">❓</button>
         <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudioEnabled()" aria-label="Activer/désactiver les sons" title="Sons">🔊</button>
-        <button class="refresh-btn" onclick="loadNearbyGhosts()" aria-label="Invoquer les présences proches" data-tip="Invoquer" data-i18n="radar_invoke_btn">↻ Invoquer</button>
+        <button class="refresh-btn" onclick="loadNearbyGhosts()" aria-label="Invoquer les présences proches" data-tip="Invoquer" data-i18n-tip="radar_invoke_tip" data-i18n="radar_invoke_btn">↻ Invoquer</button>
       </div>
     </div>
     <!-- Bandeau mode invité — masqué par défaut, affiché/masqué par showScreen() -->
@@ -2894,7 +2895,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       <span data-i18n="radar_guest_banner">Mode exploration — créez un compte pour déposer vos fantômes</span>
     </div>
     <!-- Rang & Progression -->
-    <div class="rank-bar" id="rankBar">
+    <div class="rank-bar" id="rankBar" data-tip="Votre rang — grimpez en explorant et déposant des fantômes" data-i18n-tip="radar_rank_tip">
       <span class="rank-badge" id="rankBadge">✦ Curieux</span>
       <div class="rank-progress-wrap"><div class="rank-progress-fill" id="rankProgressFill" style="width:0%;"></div></div>
       <span class="rank-next" id="rankNext">→ Flâneur</span>
@@ -2902,7 +2903,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
     <div class="vibe-bar" aria-live="polite" aria-atomic="false">
       <div style="font-size:15px;" aria-hidden="true">📳</div>
       <div style="font-size:12px;color:var(--warm-dim);flex:1;" data-i18n="radar_vibe_label">Détection active · présences en attente</div>
-      <div id="resoStatus" title="Résonance quotidienne disponible" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(var(--ghost-blue-rgb),.15);color:rgba(var(--ghost-blue-rgb),.5);cursor:default;" aria-label="Résonance quotidienne">✦ 1</div>
+      <div id="resoStatus" data-tip="Résonance quotidienne disponible" data-i18n-tip="radar_reso_tip" style="font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(var(--ghost-blue-rgb),.15);color:rgba(var(--ghost-blue-rgb),.5);cursor:default;" aria-label="Résonance quotidienne">✦ 1</div>
       <div id="streakDisplay" style="display:none;font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,150,50,.25);color:rgba(255,150,50,.8);cursor:default;" aria-label="Streak de découvertes"></div>
       <div class="vibe-dot" aria-hidden="true"></div>
     </div>
@@ -2915,7 +2916,7 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
       </div>
     </div>
     <!-- Sélecteur de rayon de détection -->
-    <div class="radar-radius-selector" role="group" aria-label="Rayon de détection">
+    <div class="radar-radius-selector" role="group" aria-label="Rayon de détection" data-tip="Rayon de détection des fantômes autour de vous" data-i18n-tip="radar_radius_tip">
       <button class="radar-radius-btn" data-r="50" onclick="setRadarRadius(50)" aria-label="Rayon 50 mètres">50 m</button>
       <button class="radar-radius-btn active" data-r="200" onclick="setRadarRadius(200)" aria-label="Rayon 200 mètres">200 m</button>
       <button class="radar-radius-btn" data-r="1000" onclick="setRadarRadius(1000)" aria-label="Rayon 1 kilomètre">1 km</button>
