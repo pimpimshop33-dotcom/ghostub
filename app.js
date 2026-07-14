@@ -8228,6 +8228,34 @@ document.addEventListener('click', (e) => {
   if (e.target.closest('.ghost-envelope')) haptic([15]);
 });
 
+// ── TOOLTIPS [data-tip] — fermeture tactile ──────────────
+// [data-tip]::after ne s'affichait qu'en CSS pur (:hover/:focus). Sur mobile,
+// un tap simule un :hover/:focus "collant" qui ne se relâche jamais (pas de
+// vrai mouseleave/blur tactile) — la bulle restait affichée en permanence
+// (confirmé y compris en émulation tactile Playwright). CSS ne peut plus
+// déclencher l'affichage (cf. règle [data-tip].tip-show::after dans
+// index.html) : c'est entièrement piloté ici via une classe .tip-show —
+// apparaît au tap/clic/focus clavier sur l'élément (ou un enfant, ex. les
+// boutons dans .radar-radius-selector), se referme après un court délai, ou
+// immédiatement au tap ailleurs sur l'écran.
+const TIP_AUTO_HIDE_MS = 2200;
+function _showTip(tipEl) {
+  document.querySelectorAll('.tip-show').forEach(el => {
+    if (el !== tipEl) { el.classList.remove('tip-show'); clearTimeout(el._tipTimer); }
+  });
+  if (tipEl) {
+    tipEl.classList.add('tip-show');
+    clearTimeout(tipEl._tipTimer);
+    tipEl._tipTimer = setTimeout(() => tipEl.classList.remove('tip-show'), TIP_AUTO_HIDE_MS);
+  }
+}
+document.addEventListener('click', (e) => _showTip(e.target.closest('[data-tip]')));
+// focusin (contrairement à focus) bubble — nécessaire pour la navigation clavier
+document.addEventListener('focusin', (e) => {
+  const tipEl = e.target.closest('[data-tip]');
+  if (tipEl) _showTip(tipEl);
+});
+
 // ── GESTE RETOUR (glisser depuis le bord gauche) ─────────
 (function initEdgeSwipeBack() {
   let startX = 0, startY = 0, tracking = false;

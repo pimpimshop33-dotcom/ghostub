@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=165"></script>
+<script type="module" src="app.js?v=166"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1826,7 +1826,10 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 #nav-deposit{position:relative;}
 [data-tip]{position:relative;}
 [data-tip]::after{content:attr(data-tip);position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:rgba(4,8,15,.97);color:var(--warm);font-size:var(--text-sm);white-space:nowrap;padding:4px 8px;border-radius:8px;border:1px solid rgba(232,160,48,.2);pointer-events:none;opacity:0;transition:opacity .2s;z-index:9000;}
-[data-tip]:hover::after,[data-tip]:focus::after{opacity:1;}
+/* Affichage piloté exclusivement en JS (.tip-show, cf. app.js) — :hover/:focus
+   seuls restent "collés" après un tap tactile (pas de vrai mouseleave/blur
+   sur mobile), ce qui bloquait la bulle affichée en permanence. */
+[data-tip].tip-show::after{opacity:1;}
 
 /* P2/P5 — badges cycle de vie */
 .ghost-state-fresh{color:rgba(var(--mist-rgb),.9) !important;}
