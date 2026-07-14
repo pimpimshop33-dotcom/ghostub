@@ -302,6 +302,8 @@ const LANGS = {
     profile_delete_btn: '🗑 Supprimer tous mes fantômes',
     profile_delete_confirm_title: '🗑 Supprimer tous mes fantômes ?',
     profile_delete_confirm_sub: 'Cette action est irréversible — tous vos messages et réponses seront effacés.',
+    profile_delete_confirm_word: 'SUPPRIMER',
+    profile_delete_confirm_type: 'Tapez <strong>{word}</strong> pour confirmer',
     profile_delete_success: '✓ {n} fantômes supprimés',
     profile_delete_err: 'Erreur — réessayez',
     profile_export_btn: '⬇ Exporter mes données',
@@ -889,6 +891,8 @@ const LANGS = {
     profile_delete_btn: '🗑 Delete all my ghosts',
     profile_delete_confirm_title: '🗑 Delete all my ghosts?',
     profile_delete_confirm_sub: 'This is irreversible — all your messages and replies will be deleted.',
+    profile_delete_confirm_word: 'DELETE',
+    profile_delete_confirm_type: 'Type <strong>{word}</strong> to confirm',
     profile_delete_success: '✓ {n} ghosts deleted',
     profile_delete_err: 'Error — try again',
     profile_export_btn: '⬇ Export my data',
@@ -4529,12 +4533,16 @@ function showConfirm(title, subtitle, options = {}) {
 
     // Mode saisie obligatoire
     if (options.requireTyped) {
+      const expectedWord = t.profile_delete_confirm_word;
+      const typedLabel = typedWrap.querySelector('div');
+      if (typedLabel) typedLabel.innerHTML = t.profile_delete_confirm_type.replace('{word}', expectedWord);
+      typedInput.placeholder = expectedWord;
       typedWrap.style.display = 'block';
       typedInput.value = '';
       btnOk.disabled = true;
       btnOk.style.opacity = '0.35';
       const onType = () => {
-        const ok = typedInput.value.trim().toUpperCase() === 'SUPPRIMER';
+        const ok = typedInput.value.trim().toUpperCase() === expectedWord;
         btnOk.disabled = !ok;
         btnOk.style.opacity = ok ? '1' : '0.35';
       };
