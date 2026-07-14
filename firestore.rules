@@ -60,6 +60,7 @@ service cloud.firestore {
       // Cooldown de 15 min entre deux dépôts pour les comptes gratuits
       // Liste exhaustive établie depuis WorldService.createGhost() (services/world.service.js)
       // + dedicatedTo/attachments (calculés dans depositGhost() côté app.js, cf. rapport)
+      // + _welcome (flag posé par _seedWelcomeGhost() dans app.js, cf. DIAGNOSTIC-DEPOT-REFUSE.md)
       allow create: if isAuth()
         && isNewGhost()
         && request.resource.data.keys().hasOnly([
@@ -72,7 +73,8 @@ service cloud.firestore {
              'author', 'authorUid', 'lat', 'lng',
              'geohash', 'geohash4',
              'resonances', 'activityScore', 'discoveriesCount', 'openCount',
-             'lastPresenceAt', 'state', 'expired', 'createdAt'
+             'lastPresenceAt', 'state', 'expired', 'createdAt',
+             '_welcome'
            ])
         && (!isPremiumOnlyField() || isPremium())
         // A2-bis : maxOpenCount > 1 (5/10 lectures) réservé Premium — 1 (ou absence
@@ -163,6 +165,20 @@ service cloud.firestore {
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastGhostCreatedAt'])
           || request.resource.data.lastGhostCreatedAt == request.time
         );
+    }
+
+    // ── UserStats ─────────────────────────────────────
+    // dailyOpens (quota d'ouvertures) n'est incrémenté que par la Cloud Function
+    // checkAndConsumeOpen (admin SDK, hors règles). isDevAccount accorde un bypass
+    // illimité et ne doit être posé que depuis la console Firebase (admin SDK) —
+    // voir CLAUDE.md. Le client ne peut écrire que ses propres champs non sensibles
+    // (ex. discoveries, cf. addDiscovery() dans app.js).
+    match /userStats/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && !request.resource.data.keys().hasAny(['dailyOpens', 'isDevAccount']);
+      allow update: if isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['dailyOpens', 'isDevAccount']);
     }
 
     // ── Replies ───────────────────────────────────────

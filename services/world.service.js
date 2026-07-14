@@ -117,7 +117,7 @@ const WorldService = {
       openDate        : data.openDate        || null,
       businessMode    : data.businessMode    || false,
       promoCode       : data.promoCode       || null,
-      maxOpenCount    : data.maxOpenCount    || null,
+      maxOpenCount    : data.maxOpenCount    ?? null,
       anonymous       : data.anonymous || false,
       secret          : data.secret    || false,
       chainHint       : data.chainHint || null,
