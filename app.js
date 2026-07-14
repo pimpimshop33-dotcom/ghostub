@@ -1464,7 +1464,7 @@ let _traceIdSeq = 0;
  * @param {object} g - document fantôme (createdAt/duration/lastPresenceAt pour computeLifetime)
  * @param {{size?:number, discovered?:boolean}} opts
  */
-function _traceMarkHTML(g, { size = 20, discovered = false } = {}) {
+function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
   const [c1, c2] = discovered
     ? TRACE_DISCOVERED_COLORS
     : (TRACE_CATEGORY_COLORS[g.emoji] || TRACE_DEFAULT_COLORS);
@@ -1472,10 +1472,15 @@ function _traceMarkHTML(g, { size = 20, discovered = false } = {}) {
   let opacity = 1, saturation = 100;
   if (!discovered) {
     const { pct } = GhostService.computeLifetime(g);
-    // pct 0 (frais) -> opacity 1 / saturation 100% ; pct 100 (bientôt expiré)
-    // -> opacity .35 / saturation 15% (gris-lavande pâle, jamais invisible).
-    opacity = 1 - (pct / 100) * 0.65;
+    // pct 0 (frais) -> saturation 100% ; pct 100 (bientôt expiré) -> 15%
+    // (gris-lavande pâle). L'opacité ne fane que si fadeOpacity=true (radar) :
+    // sur la Carte, les marqueurs ont déjà leur propre opacité selon la
+    // distance (jusqu'à ×0.25) — cumuler les deux faisait tomber des ghosts
+    // âgés+lointains à ~9% d'opacité combinée, quasi invisibles
+    // (BUG-REGRESSIONS-TRACE-COLORE.md, bug 1). La saturation seule suffit à
+    // communiquer le fanage sans ce risque de disparition.
     saturation = 100 - (pct / 100) * 85;
+    if (fadeOpacity) opacity = 1 - (pct / 100) * 0.65;
   }
 
   const uid = 'tm' + (_traceIdSeq++);
@@ -1862,7 +1867,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
     // FEATURE-TRACE-COLORE-FANAGE.md) — plus d'icône de catégorie brute sur
     // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
     // d'équivalent badge séparé ici contrairement au radar.
-    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened });
+    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false });
 
     if (huntMode) {
       // Mode chasse : icône différente selon proximité

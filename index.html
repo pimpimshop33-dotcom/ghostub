@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=167"></script>
+<script type="module" src="app.js?v=168"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2103,9 +2103,14 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   filter: none !important;
 }
 /* Icônes de Sceau (SVG monochrome, stroke=currentColor) : plus spécifique
-   que ".emoji-opt *" ci-dessus, donc gagne malgré le color:initial!important. */
-.emoji-opt .category-icon{color:rgba(var(--ghost-blue-rgb),.55) !important;}
-.emoji-opt.active .category-icon{color:var(--ether) !important;}
+   que ".emoji-opt *" ci-dessus, donc gagne malgré le color:initial!important.
+   Couleur pleine opacité (pas de rgba(...,.X)) : le dimming de l'état non
+   sélectionné vient UNIQUEMENT de .lettre-stamp-strip .emoji-opt{filter:
+   grayscale(.55) opacity(.55)} — cumuler une couleur déjà semi-transparente
+   avec ce filtre retombait à ~30% d'opacité effective, illisible sur mobile
+   (BUG-REGRESSIONS-TRACE-COLORE.md, bug 2). Régression corrigée : couleur
+   pleine, le filtre du parent reste le seul mécanisme de dimming. */
+.emoji-opt .category-icon{color:var(--ether) !important;}
 .wizard-back-btn {
   color: rgba(var(--ghost-blue-rgb),0.5) !important;
   -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),0.5) !important;
