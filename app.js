@@ -3924,6 +3924,7 @@ window.activatePremium = async () => {
 const REPORT_THRESHOLD = 3;
 
 function openReportModal() {
+  if (_isGuestUser()) { _promptSignUp(); return; }
   if (!currentUser) return;
   if (!selectedGhost) return;
   const key = 'reported_' + currentUser.uid + '_' + selectedGhost.id;
@@ -3945,6 +3946,7 @@ window.closeReportModal = (e) => {
 };
 
 window.submitReport = async (reason) => {
+  if (_isGuestUser()) { _promptSignUp(); return; }
   if (!currentUser || !selectedGhost) return;
   closeModal('reportModal');
   const ghostId = selectedGhost.id;
