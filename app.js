@@ -1425,6 +1425,93 @@ function _ghostEmojiHTML(g) {
   return _BRAND_MARK_HTML;
 }
 
+// ══════════════════════════════════════════════════════════
+// TRACE COLORÉ — teinte par catégorie (Sceau) + fanage temporel
+// (FEATURE-TRACE-COLORE-FANAGE.md)
+//
+// Palette : chaque Sceau reçoit un dégradé [clair, sombre] dans la même
+// famille tonale pastel/désaturée que le Trace d'origine (#9DABFF→#C7BCEE),
+// juste décliné en teinte — cohérence visuelle avant variété, comme demandé.
+//   👻 neutre    : bleu-lavande d'origine, INCHANGÉ (aucun Sceau choisi)
+//   💬 message   : bleu ciel  → cyan pâle   (famille --spirit, communication)
+//   ❤️ cœur      : rose doux  → rose pâle
+//   🌙 lune      : violet     → violet pâle (à côté du lavande, plus nocturne)
+//   ✨ étincelle : or pâle    → crème       (famille --premium/--tier-gold)
+//   🔥 feu       : corail     → pêche pâle  (chaud, distinct de l'ambre UI)
+//   🌸 fleur     : orchidée   → lilas pâle
+// Un emoji personnalisé (saisie libre dans depositEmoji) n'a pas de teinte
+// dédiée — retombe sur le neutre 👻, pour ne pas avoir à mapper un espace
+// infini de caractères.
+// État "découvert" : dégradé or stable (famille --premium-rgb), remplace la
+// teinte de catégorie et ne fane plus — signal unique "déjà trouvé".
+const TRACE_CATEGORY_COLORS = {
+  '👻': ['#9DABFF', '#C7BCEE'],
+  '💬': ['#7AC8F5', '#A8DCF0'],
+  '❤️': ['#FF9DB8', '#EEC7D8'],
+  '🌙': ['#B8A8FF', '#D8CBFF'],
+  '✨': ['#FFE59D', '#FFF3C7'],
+  '🔥': ['#FFAD7A', '#FFD4B8'],
+  '🌸': ['#C7A8FF', '#E8D4FF'],
+};
+const TRACE_DEFAULT_COLORS = TRACE_CATEGORY_COLORS['👻'];
+const TRACE_DISCOVERED_COLORS = ['#FFD98A', '#F5DFA0'];
+
+let _traceIdSeq = 0;
+/**
+ * Rendu du Trace (marque fantôme) teinté par catégorie et fané par ancienneté.
+ * Remplace _ghostEmojiHTML() sur Carte/Radar (voir contraintes de la feature :
+ * plus aucune icône de catégorie affichée là-bas, uniquement le Trace).
+ * @param {object} g - document fantôme (createdAt/duration/lastPresenceAt pour computeLifetime)
+ * @param {{size?:number, discovered?:boolean}} opts
+ */
+function _traceMarkHTML(g, { size = 20, discovered = false } = {}) {
+  const [c1, c2] = discovered
+    ? TRACE_DISCOVERED_COLORS
+    : (TRACE_CATEGORY_COLORS[g.emoji] || TRACE_DEFAULT_COLORS);
+
+  let opacity = 1, saturation = 100;
+  if (!discovered) {
+    const { pct } = GhostService.computeLifetime(g);
+    // pct 0 (frais) -> opacity 1 / saturation 100% ; pct 100 (bientôt expiré)
+    // -> opacity .35 / saturation 15% (gris-lavande pâle, jamais invisible).
+    opacity = 1 - (pct / 100) * 0.65;
+    saturation = 100 - (pct / 100) * 85;
+  }
+
+  const uid = 'tm' + (_traceIdSeq++);
+  return `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%);flex-shrink:0;" aria-hidden="true"><svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
+    `<defs>` +
+    `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
+    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".10"/><stop offset="100%" stop-color="${c2}" stop-opacity=".03"/></linearGradient>` +
+    `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
+    `</defs>` +
+    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
+    `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
+    `</svg></span>`;
+}
+
+// ══════════════════════════════════════════════════════════
+// ICÔNES DE CATÉGORIE (Sceau) — SVG monochrome, style nav-icon
+// (viewBox 24×24, stroke=currentColor, stroke-width 1.5 — même convention
+// que .nav-icon). Utilisées UNIQUEMENT sur l'écran de dépôt (sélecteur) et
+// l'écran de détail (sealedEmoji) — jamais sur Carte/Radar, où seul le
+// Trace coloré (_traceMarkHTML) doit apparaître.
+const CATEGORY_ICON_PATHS = {
+  '👻': '<path d="M12 3a6 6 0 0 0-6 6v10l2-2 2 2 2-2 2 2 2-2 2 2V9a6 6 0 0 0-6-6z"/><circle cx="9.5" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/>',
+  '💬': '<path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
+  '❤️': '<path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/>',
+  '🌙': '<path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/>',
+  '✨': '<path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/>',
+  '🔥': '<path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/>',
+  '🌸': '<circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/>',
+};
+function _categoryIconHTML(emoji, { size = 20 } = {}) {
+  const path = CATEGORY_ICON_PATHS[emoji];
+  if (!path) return escapeHTML(emoji || ''); // emoji perso non mappé : fallback tel quel
+  return `<svg class="category-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${path}</svg>`;
+}
+
 let currentUser = null;
 let isPremium = false;
 window._dbg = () => console.log('isPremium:', isPremium, '| pendingVideo:', !!window._pendingVideoFile);
@@ -1766,22 +1853,26 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
   nearbyGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
-    const emoji = _ghostEmojiHTML(g);
     const delay = (i * 0.3).toFixed(2);
     const ghostRadius = Math.max(20, parseInt(g.radius || '50') || 50);
     const dist = distanceMeters(centerLat, centerLng, g.lat, g.lng);
     const isInRange = dist <= ghostRadius;
     const alreadyOpened = getDiscoveredIds().includes(g.id);
+    // Trace coloré par catégorie + fané par ancienneté (cf.
+    // FEATURE-TRACE-COLORE-FANAGE.md) — plus d'icône de catégorie brute sur
+    // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
+    // d'équivalent badge séparé ici contrairement au radar.
+    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened });
 
     if (huntMode) {
       // Mode chasse : icône différente selon proximité
       const huntIcon = L.divIcon({
         html: alreadyOpened
-          ? `<div style="font-size:26px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emoji}</div>`
+          ? `<div style="font-size:26px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emojiAt(26)}</div>`
           : isInRange
-          ? `<div style="font-size:28px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emoji}</div>`
+          ? `<div style="font-size:28px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emojiAt(28)}</div>`
           : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;">
-               <div style="font-size:26px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emoji}</div>
+               <div style="font-size:26px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(26)}</div>
                <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">🔒</div>
              </div>`,
         iconSize: [44, 44], iconAnchor: [22, 22], className: ''
@@ -1819,14 +1910,14 @@ function buildLeafletMap(centerLat, centerLng, h) {
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="font-size:30px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;opacity:1;">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:30px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;opacity:1;">${emojiAt(30)}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="font-size:27px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;opacity:0.85;">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:27px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;opacity:0.85;">${emojiAt(27)}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="font-size:24px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;opacity:${farOpacity.toFixed(2)};">${emoji}</div>`;
+        ghostHtml = `<div style="font-size:24px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;opacity:${farOpacity.toFixed(2)};">${emojiAt(24)}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
@@ -6249,7 +6340,10 @@ function renderRadarDots() {
     dot.onclick = () => openGhost(g.id);
     dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGhost(g.id); } };
 
-    const emoji = _ghostEmojiHTML(g);
+    // Trace coloré par catégorie + fané par ancienneté (cf. FEATURE-TRACE-COLORE-FANAGE.md)
+    // — plus d'icône de catégorie brute sur le radar, uniquement le Trace.
+    // Les secrets gardent leur 🔮 dédié (mécanique de révélation distincte).
+    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 18, discovered: getDiscoveredIds().includes(g.id) });
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -6392,12 +6486,17 @@ window.openGhost = async (id) => {
   }
 
   document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
+  // Icône de catégorie (Sceau) visible dans le détail — seul autre endroit
+  // avec l'écran de dépôt où elle apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md).
   const sealedEl = document.getElementById('sealedEmoji');
   const _sv = selectedGhost.secret ? '🔮'
     : selectedGhost.businessMode ? '🏪'
-    : (selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null);
+    : null;
   if (_sv) { sealedEl.textContent = _sv; }
-  else      { sealedEl.innerHTML  = _BRAND_MARK_HTML; }
+  else if (selectedGhost.emoji && selectedGhost.emoji !== '👻') {
+    sealedEl.innerHTML = `<span style="color:var(--ether);display:inline-flex;">${_categoryIconHTML(selectedGhost.emoji, { size: 32 })}</span>`;
+  }
+  else { sealedEl.innerHTML = _BRAND_MARK_HTML; }
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
 

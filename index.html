@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=166"></script>
+<script type="module" src="app.js?v=167"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -572,30 +572,28 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ghost-dot-emoji{
   position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%) scale(1);
-  /* Point lumineux minimal — plus d'emoji surchargé */
-  width:10px;height:10px;
-  font-size:0;       /* masque le contenu emoji */
-  line-height:0;
-  background:var(--spirit);
-  border-radius:50%;
-  box-shadow:0 0 8px var(--spirit);
+  /* Contient le Trace coloré (SVG injecté par _traceMarkHTML, cf. app.js) —
+     la couleur/l'opacité de fanage viennent de ce SVG, cette animation ne
+     gère plus que l'apparition/disparition synchronisée au sweep. */
+  width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;
   pointer-events:none;
   opacity:0;
   animation:ghostReveal 4s linear infinite;
 }
 @keyframes ghostReveal{
   /* Tout le cycle : invisible */
-  0%,11%{opacity:0;transform:translate(-50%,-50%) scale(.4);box-shadow:0 0 0 transparent;}
+  0%,11%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
   /* Sweep s'approche (12-14%) : montée rapide */
-  13%{opacity:.9;transform:translate(-50%,-50%) scale(1.3);background:var(--spirit);box-shadow:0 0 14px var(--spirit),0 0 28px rgba(var(--spirit-rgb),.6);}
-  /* Pic exact (17%) : flash spectral bleu + touche ambre */
-  17%{opacity:1;transform:translate(-50%,-50%) scale(1.5);background:#cfe4ff;box-shadow:0 0 18px var(--spirit),0 0 36px rgba(var(--spirit-rgb),.8),0 0 52px rgba(232,160,48,.35);}
+  13%{opacity:.9;transform:translate(-50%,-50%) scale(1.15);filter:drop-shadow(0 0 6px rgba(var(--spirit-rgb),.7));}
+  /* Pic exact (17%) : flash + touche ambre */
+  17%{opacity:1;transform:translate(-50%,-50%) scale(1.3);filter:drop-shadow(0 0 10px rgba(var(--spirit-rgb),.9)) drop-shadow(0 0 18px rgba(232,160,48,.3));}
   /* Sweep s'éloigne (19-22%) : retombée */
-  21%{opacity:.75;transform:translate(-50%,-50%) scale(1.1);background:var(--spirit);box-shadow:0 0 10px var(--spirit),0 0 20px rgba(232,160,48,.25);}
-  /* Traînée de braise ambre qui s'éteint très vite */
-  27%{opacity:.25;transform:translate(-50%,-50%) scale(.9);background:var(--amber);box-shadow:0 0 6px rgba(232,160,48,.4);}
+  21%{opacity:.75;transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 0 6px rgba(var(--spirit-rgb),.5));}
+  /* Traînée qui s'éteint très vite */
+  27%{opacity:.25;transform:translate(-50%,-50%) scale(.9);filter:drop-shadow(0 0 3px rgba(232,160,48,.4));}
   /* Reste du cycle : complètement invisible, zone morte */
-  33%,100%{opacity:0;transform:translate(-50%,-50%) scale(.4);box-shadow:0 0 0 transparent;}
+  33%,100%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
 }
 /* Hover : emoji révélé en lieu et place du point, le dot est interactif */
 .ghost-dot:hover .ghost-dot-label,.ghost-dot:focus .ghost-dot-label{opacity:1;}
@@ -2104,6 +2102,10 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   color: initial !important;
   filter: none !important;
 }
+/* Icônes de Sceau (SVG monochrome, stroke=currentColor) : plus spécifique
+   que ".emoji-opt *" ci-dessus, donc gagne malgré le color:initial!important. */
+.emoji-opt .category-icon{color:rgba(var(--ghost-blue-rgb),.55) !important;}
+.emoji-opt.active .category-icon{color:var(--ether) !important;}
 .wizard-back-btn {
   color: rgba(var(--ghost-blue-rgb),0.5) !important;
   -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),0.5) !important;
@@ -3088,15 +3090,17 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <div id="normalDepositForm">
           <div class="lettre-paper">
             <div class="lettre-salutation" data-i18n="dep_lettre_salutation">À qui passera par ici,</div>
-            <div class="lettre-stamp-strip emoji-picker" role="group" aria-label="Choisir un emoji">
+            <!-- Icônes SVG monochrome (style nav-icon) — cf. CATEGORY_ICON_PATHS
+                 dans app.js, garder synchronisé si ces tracés changent. -->
+            <div class="lettre-stamp-strip emoji-picker" role="group" aria-label="Choisir un Sceau">
               <span class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">Sceau :</span>
-              <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Emoji fantôme" aria-pressed="true">👻</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Emoji message" aria-pressed="false">💬</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Emoji cœur" aria-pressed="false">❤️</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Emoji lune" aria-pressed="false">🌙</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Emoji étoiles" aria-pressed="false">✨</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Emoji feu" aria-pressed="false">🔥</button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Emoji fleur" aria-pressed="false">🌸</button>
+              <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Sceau fantôme" aria-pressed="true"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v10l2-2 2 2 2-2 2 2 2-2 2 2V9a6 6 0 0 0-6-6z"/><circle cx="9.5" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Sceau message" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Sceau cœur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Sceau lune" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Sceau étincelle" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Sceau feu" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/></svg></button>
+              <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Sceau fleur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/></svg></button>
               <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" oninput="pickEmojiCustom(this)">
             </div>
             <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="600" aria-required="true" aria-describedby="msgCharCount"></textarea>
