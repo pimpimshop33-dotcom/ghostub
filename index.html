@@ -434,7 +434,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .btn-secondary:hover{border-color:var(--border-bright);color:var(--warm);}
 
 /* ── RADAR ─────────────────────────────────────────────── */
-.radar-header{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 0;}
+.radar-header{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 20px 0;}
 .radar-title{
   font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;
   color:var(--ether);letter-spacing:.2px;
@@ -791,7 +791,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 }
 
 /* ── DETAIL ────────────────────────────────────────────── */
-.back-btn{display:flex;align-items:center;gap:5px;font-size:var(--text-base);color:var(--spirit-dim);cursor:pointer;padding:12px 20px 0;transition:color .2s;background:none;border:none;font-family:'Instrument Sans',sans-serif;min-height:44px;}
+.back-btn{display:flex;align-items:center;gap:5px;font-size:var(--text-base);color:var(--spirit-dim);cursor:pointer;padding:calc(var(--sat) + 12px) 20px 0;transition:color .2s;background:none;border:none;font-family:'Instrument Sans',sans-serif;min-height:44px;}
 .back-btn:hover{color:var(--amber);}
 .detail-location{font-size:var(--text-sm);text-transform:uppercase;letter-spacing:2px;color:var(--spirit-dim);margin-bottom:4px;}
 .detail-distance{font-size:var(--text-base);color:var(--spirit-dim);margin-bottom:16px;}
