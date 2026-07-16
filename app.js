@@ -1484,7 +1484,11 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   }
 
   const uid = 'tm' + (_traceIdSeq++);
-  return `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%);flex-shrink:0;" aria-hidden="true"><svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
+  // Halo sombre (drop-shadow) derrière le Trace : sans lui, les teintes pâles
+  // du Trace sont quasi invisibles sur un fond clair (thème clair, tuiles
+  // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
+  // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
+  return `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));flex-shrink:0;" aria-hidden="true"><svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
     `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
     `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".10"/><stop offset="100%" stop-color="${c2}" stop-opacity=".03"/></linearGradient>` +
@@ -5262,13 +5266,13 @@ function getPoeticName(ghostId) {
   for (let i = 0; i < ghostId.length; i++) hash = (hash * 31 + ghostId.charCodeAt(i)) >>> 0;
   if (_currentLang === 'en') {
     const adj  = POETIC_ADJ_EN[hash % POETIC_ADJ_EN.length];
-    const noun = POETIC_NOUN_EN[(hash >> 4) % POETIC_NOUN_EN.length];
-    const time = POETIC_TIME_EN[(hash >> 8) % POETIC_TIME_EN.length];
+    const noun = POETIC_NOUN_EN[(hash >>> 4) % POETIC_NOUN_EN.length];
+    const time = POETIC_TIME_EN[(hash >>> 8) % POETIC_TIME_EN.length];
     return `The ${adj} ${noun} ${time}`;
   }
   const adj  = POETIC_ADJ[hash % POETIC_ADJ.length];
-  const noun = POETIC_NOUN[(hash >> 4) % POETIC_NOUN.length];
-  const time = POETIC_TIME[(hash >> 8) % POETIC_TIME.length];
+  const noun = POETIC_NOUN[(hash >>> 4) % POETIC_NOUN.length];
+  const time = POETIC_TIME[(hash >>> 8) % POETIC_TIME.length];
   return `Le ${noun} ${adj} ${time}`;
 }
 
@@ -6196,7 +6200,11 @@ function renderGhostList() {
     return;
   }
   list.innerHTML = filtered.map(g => {
-    const emoji = _ghostEmojiHTML(g);
+    // Trace coloré (cf. _traceMarkHTML) — même rendu que sur la Carte, pas
+    // l'ancien _ghostEmojiHTML() qui n'était pas encore migré ici
+    // (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 2).
+    const emoji = g.secret ? '🔮' : g.businessMode ? '🏪'
+      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id) });
     // Âge du fantôme
     const ageMs = g.createdAt ? Date.now() - g.createdAt.seconds * 1000 : 0;
     const ageDays = ageMs / 86400000;
