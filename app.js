@@ -1875,16 +1875,18 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
     if (huntMode) {
       // Mode chasse : icône différente selon proximité
+      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : trop fin pour
+      // être lisible sans zoomer à fond — tailles relevées ~x1.4.
       const huntIcon = L.divIcon({
         html: alreadyOpened
-          ? `<div style="font-size:26px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emojiAt(26)}</div>`
+          ? `<div style="font-size:38px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:52px;height:52px;">${emojiAt(38)}</div>`
           : isInRange
-          ? `<div style="font-size:28px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;">${emojiAt(28)}</div>`
-          : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:44px;height:44px;cursor:pointer;">
-               <div style="font-size:26px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(26)}</div>
-               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;">🔒</div>
+          ? `<div style="font-size:40px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:52px;height:52px;">${emojiAt(40)}</div>`
+          : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;cursor:pointer;">
+               <div style="font-size:38px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(38)}</div>
+               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;">🔒</div>
              </div>`,
-        iconSize: [44, 44], iconAnchor: [22, 22], className: ''
+        iconSize: [56, 56], iconAnchor: [28, 28], className: ''
       });
 
       // Cercle de rayon autour du fantôme
@@ -1916,21 +1918,23 @@ function buildLeafletMap(centerLat, centerLng, h) {
         });
     } else {
       // Mode normal — apparition progressive selon distance
+      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : trop fin pour
+      // être lisible sans zoomer à fond — tailles relevées ~x1.4.
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="font-size:30px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:40px;height:40px;opacity:1;">${emojiAt(30)}</div>`;
+        ghostHtml = `<div style="font-size:44px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:56px;height:56px;opacity:1;">${emojiAt(44)}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="font-size:27px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:36px;height:36px;opacity:0.85;">${emojiAt(27)}</div>`;
+        ghostHtml = `<div style="font-size:40px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:52px;height:52px;opacity:0.85;">${emojiAt(40)}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="font-size:24px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:32px;height:32px;opacity:${farOpacity.toFixed(2)};">${emojiAt(24)}</div>`;
+        ghostHtml = `<div style="font-size:34px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:44px;height:44px;opacity:${farOpacity.toFixed(2)};">${emojiAt(34)}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
-        iconSize: [40, 40], iconAnchor: [20, 20], className: ''
+        iconSize: [56, 56], iconAnchor: [28, 28], className: ''
       });
       L.marker([g.lat, g.lng], { icon: ghostIcon })
         .addTo(map)
