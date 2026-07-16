@@ -1491,10 +1491,13 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   return `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));flex-shrink:0;" aria-hidden="true"><svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
     `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
-    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".10"/><stop offset="100%" stop-color="${c2}" stop-opacity=".03"/></linearGradient>` +
+    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
     `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
     `</defs>` +
-    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>` +
+    // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
+    // restait "trop fin" — le ratio trait/silhouette compte plus que la
+    // taille globale du marqueur pour la lisibilité au premier coup d'œil.
+    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
     `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
     `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
     `</svg></span>`;
@@ -1875,18 +1878,19 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
     if (huntMode) {
       // Mode chasse : icône différente selon proximité
-      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : trop fin pour
-      // être lisible sans zoomer à fond — tailles relevées ~x1.4.
+      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : la 1ʳᵉ passe
+      // (~x1.4) restait trop discrète d'après Pipo — nouvelle passe, taille
+      // quasi doublée par rapport à l'original pour être visible d'un coup d'œil.
       const huntIcon = L.divIcon({
         html: alreadyOpened
-          ? `<div style="font-size:38px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:52px;height:52px;">${emojiAt(38)}</div>`
+          ? `<div style="font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${emojiAt(52)}</div>`
           : isInRange
-          ? `<div style="font-size:40px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:52px;height:52px;">${emojiAt(40)}</div>`
-          : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:56px;height:56px;cursor:pointer;">
-               <div style="font-size:38px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(38)}</div>
-               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:11px;">🔒</div>
+          ? `<div style="font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${emojiAt(56)}</div>`
+          : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:76px;height:76px;cursor:pointer;">
+               <div style="font-size:52px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(52)}</div>
+               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔒</div>
              </div>`,
-        iconSize: [56, 56], iconAnchor: [28, 28], className: ''
+        iconSize: [76, 76], iconAnchor: [38, 38], className: ''
       });
 
       // Cercle de rayon autour du fantôme
@@ -1918,23 +1922,24 @@ function buildLeafletMap(centerLat, centerLng, h) {
         });
     } else {
       // Mode normal — apparition progressive selon distance
-      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : trop fin pour
-      // être lisible sans zoomer à fond — tailles relevées ~x1.4.
+      // Trace agrandi (cf. BUG-TRACE-VIDE-MARQUEURS-CARTE.md) : la 1ʳᵉ passe
+      // (~x1.4) restait trop discrète d'après Pipo — nouvelle passe, taille
+      // quasi doublée par rapport à l'original pour être visible d'un coup d'œil.
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="font-size:44px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:56px;height:56px;opacity:1;">${emojiAt(44)}</div>`;
+        ghostHtml = `<div style="font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;">${emojiAt(64)}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="font-size:40px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:52px;height:52px;opacity:0.85;">${emojiAt(40)}</div>`;
+        ghostHtml = `<div style="font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;">${emojiAt(58)}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="font-size:34px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:44px;height:44px;opacity:${farOpacity.toFixed(2)};">${emojiAt(34)}</div>`;
+        ghostHtml = `<div style="font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;opacity:${farOpacity.toFixed(2)};">${emojiAt(50)}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
-        iconSize: [56, 56], iconAnchor: [28, 28], className: ''
+        iconSize: [78, 78], iconAnchor: [39, 39], className: ''
       });
       L.marker([g.lat, g.lng], { icon: ghostIcon })
         .addTo(map)
