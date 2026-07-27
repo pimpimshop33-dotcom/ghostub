@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=175"></script>
+<script type="module" src="app.js?v=176"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -675,6 +675,14 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ghost-list{display:flex;flex-direction:column;gap:8px;}
 .ghost-list-wrap{max-height:38vh;overflow-y:auto;padding:0 20px 16px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .ghost-list-wrap.is-welcome{max-height:none;flex:1;min-height:0;}
+/* ── Lot G-bis : radar en quasi pleine page ─────────────────
+   Retrait de la liste d'enveloppes sous le radar (et des filtres qui ne
+   servaient qu'à elle) — le radar lui-même absorbe l'espace libéré et
+   s'agrandit. Rayon de détection et barre de nav du bas inchangés. */
+#screenRadar #ghostListWrap,
+#screenRadar #radarFilterBar { display: none !important; }
+#screenRadar .radar-wrap { flex: 1; }
+#screenRadar .radar { max-width: 380px; }
 /* ══ ENVELOPPES ══════════════════════════════════════════ */
 
 /*  Forme d'enveloppe réelle :
@@ -2774,8 +2782,10 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
     </div>
     <div class="radar-status" id="radarStatus" style="display:none;" aria-live="polite"></div>
     <div class="ghost-count-line" aria-live="polite"><span id="ghostCount">0</span> présence(s) détectée(s) · <span id="radarInRangeCount" style="color:var(--spirit-dim);font-size:11px;"></span></div>
-    <!-- Filtres fixes -->
-    <div style="display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;" role="group" aria-label="Filtres">
+    <!-- Filtres fixes — masqués sur le Radar (Lot G-bis, ne filtraient que la
+         liste d'enveloppes retirée) ; le type de média reste visible via un
+         badge directement sur chaque point radar, cf. renderRadarDots(). -->
+    <div id="radarFilterBar" style="display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;" role="group" aria-label="Filtres">
       <button class="filter-btn active" onclick="setFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
       <button class="filter-btn" onclick="setFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
       <button class="filter-btn" onclick="setFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>

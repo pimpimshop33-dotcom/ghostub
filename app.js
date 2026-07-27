@@ -6496,18 +6496,19 @@ function renderRadarDots() {
     dot.style.left = cx + '%';
     dot.style.top = cy + '%';
 
+    // Indicateur de type de média (Lot G-bis) : remplace l'info perdue avec
+    // le retrait de la liste d'enveloppes sous le radar — priorité vidéo >
+    // photo > voix, pas de badge si texte seul (déjà l'état par défaut).
+    const _mediaIcon = g.videoUrl ? '🎥' : g.photoUrl ? '📷' : g.audioUrl ? '🎙' : null;
+    const _mediaLabel = g.videoUrl ? (_currentLang === 'en' ? 'video' : 'vidéo')
+      : g.photoUrl ? (_currentLang === 'en' ? 'photo' : 'photo')
+      : g.audioUrl ? (_currentLang === 'en' ? 'voice message' : 'message vocal')
+      : null;
+
     // Accessibilité : focusable + label
     dot.setAttribute('tabindex', '0');
     dot.setAttribute('role', 'button');
-    dot.setAttribute('aria-label', `${escapeHTML(g.location || 'Fantôme')} — ${formatDistance(g.distance)}`);
-
-    if (g.businessMode) {
-      const bizBadge = document.createElement('div');
-      bizBadge.textContent = '🏪';
-      bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(var(--premium-rgb),.6));';
-      dot.style.position = 'absolute';
-      dot.appendChild(bizBadge);
-    }
+    dot.setAttribute('aria-label', `${escapeHTML(g.location || 'Fantôme')} — ${formatDistance(g.distance)}` + (_mediaLabel ? ` · ${_mediaLabel}` : ''));
 
     dot.onclick = () => openGhost(g.id);
     dot.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openGhost(g.id); } };
@@ -6529,6 +6530,25 @@ function renderRadarDots() {
       <div class="ghost-dot-inner" aria-hidden="true"></div>
       <div class="ghost-dot-label" aria-hidden="true">${label} · ${formatDistance(g.distance)}</div>
     `;
+    // FIX (bug pré-existant, hors Lot G-bis mais bloquant pour l'indicateur de
+    // média) : appendChild() doit venir APRÈS dot.innerHTML= ci-dessus, sinon
+    // innerHTML remplace tout le contenu et efface silencieusement les badges
+    // — c'est pour ça que le badge 🏪 Commerce n'apparaissait jamais non plus.
+    if (g.businessMode) {
+      const bizBadge = document.createElement('div');
+      bizBadge.textContent = '🏪';
+      bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(var(--premium-rgb),.6));';
+      dot.style.position = 'absolute';
+      dot.appendChild(bizBadge);
+    }
+    if (_mediaIcon) {
+      const mediaBadge = document.createElement('div');
+      mediaBadge.textContent = _mediaIcon;
+      mediaBadge.setAttribute('aria-hidden', 'true');
+      mediaBadge.style.cssText = 'position:absolute;bottom:-6px;right:-6px;font-size:12px;filter:drop-shadow(0 0 4px rgba(0,0,0,.7));';
+      dot.style.position = 'absolute';
+      dot.appendChild(mediaBadge);
+    }
     radar.appendChild(dot);
 
     // Cible de ping sonar : même horloge que le flash visuel du dot (delay
