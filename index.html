@@ -280,6 +280,13 @@ body:has(#screenRadar.active) .bokeh-light.warm-lg  { opacity:.42; }
 body:has(#screenRadar.active) .bokeh-light.warm-md  { opacity:.38; }
 body:has(#screenRadar.active) .bokeh-light.warm-sm  { opacity:.35; }
 body:has(#screenRadar.active) .bokeh-light.front-1  { opacity:.32; }
+/* Lot G-bis : le radar occupe l'essentiel de l'écran désormais — bokeh froid/
+   lavande renforcé (saturation + luminosité) pour se rapprocher de l'intensité
+   de la maquette, sans toucher aux autres écrans qui partagent ces classes. */
+body:has(#screenRadar.active) .bokeh-light.cool-lg,
+body:has(#screenRadar.active) .bokeh-light.cool-md,
+body:has(#screenRadar.active) .bokeh-light.mist,
+body:has(#screenRadar.active) .bokeh-light.front-2  { filter: saturate(1.35) brightness(1.15); }
 /* Dépôt : ambre domine, bleu et mist s'effacent */
 body:has(#screenDeposit.active) .bokeh-light.cool-lg  { opacity:.28; }
 body:has(#screenDeposit.active) .bokeh-light.cool-md  { opacity:.28; }
@@ -451,12 +458,6 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   0%,100%{transform:translateX(-20%);opacity:.4;}
   50%{transform:translateX(40%);opacity:.9;}
 }
-.refresh-btn{
-  font-size:var(--text-sm);color:var(--spirit-dim);cursor:pointer;padding:6px 12px;
-  border:1px solid var(--border);border-radius:10px;background:none;
-  font-family:'Instrument Sans',sans-serif;transition:all .2s;min-height:44px;
-}
-.refresh-btn:hover{border-color:var(--border-bright);color:var(--spirit);}
 .vibe-bar{
   display:flex;align-items:center;gap:10px;
   background:linear-gradient(135deg,rgba(var(--spirit-rgb),.05),rgba(var(--mist-rgb),.03));
@@ -490,32 +491,35 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .radar-wrap{display:flex;align-items:center;justify-content:center;padding:8px 20px 4px;}
 .radar{
   width:100%;max-width:320px;aspect-ratio:1;border-radius:50%;position:relative;
-  background:radial-gradient(circle,rgba(var(--mist-rgb),.06) 0%,rgba(var(--spirit-rgb),.035) 40%,transparent 70%);
-  border:1px solid rgba(var(--spirit-rgb),.14);
-  box-shadow:0 0 50px rgba(var(--spirit-rgb),.06) inset,0 0 80px rgba(var(--mist-rgb),.04) inset,0 0 40px rgba(var(--spirit-rgb),.04);
+  /* Contraste renforcé (Lot G-bis, rapprochement maquette) : le radar occupe
+     maintenant l'essentiel de l'écran, il doit se voir depuis le fond bokeh
+     plutôt que s'y fondre — alphas ~doublés par rapport à la version d'origine. */
+  background:radial-gradient(circle,rgba(var(--mist-rgb),.14) 0%,rgba(var(--spirit-rgb),.08) 40%,transparent 70%);
+  border:1px solid rgba(var(--spirit-rgb),.30);
+  box-shadow:0 0 60px rgba(var(--spirit-rgb),.14) inset,0 0 90px rgba(var(--mist-rgb),.09) inset,0 0 50px rgba(var(--spirit-rgb),.10);
 }
 /* Anneaux — respiration synchronisée, lente */
 .radar-ring{
-  position:absolute;border-radius:50%;border:1px solid rgba(var(--spirit-rgb),.09);
+  position:absolute;border-radius:50%;border:1px solid rgba(var(--spirit-rgb),.18);
   top:50%;left:50%;transform:translate(-50%,-50%);
   animation:ringBreathe 6s ease-in-out infinite;
 }
-.radar-ring:nth-child(1){width:33%;height:33%;border-color:rgba(var(--mist-rgb),.22);animation-delay:0s;}
-.radar-ring:nth-child(2){width:66%;height:66%;border-style:dashed;opacity:.4;animation-delay:-2s;}
+.radar-ring:nth-child(1){width:33%;height:33%;border-color:rgba(var(--mist-rgb),.38);animation-delay:0s;}
+.radar-ring:nth-child(2){width:66%;height:66%;border-style:dashed;opacity:.55;animation-delay:-2s;}
 .radar-ring:nth-child(3){width:100%;height:100%;animation-delay:-4s;}
 @keyframes ringBreathe{
-  0%,100%{opacity:var(--ring-op,.35);}
-  50%{opacity:calc(var(--ring-op,.35) + .25);}
+  0%,100%{opacity:var(--ring-op,.5);}
+  50%{opacity:calc(var(--ring-op,.5) + .28);}
 }
 /* Sweep vert — balayage sonar avec trail plus long */
 .radar-sweep{
   position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(from 0deg,
     transparent 0%,
-    rgba(var(--mist-rgb),.04) 8%,
-    rgba(var(--mist-rgb),.12) 14%,
-    rgba(var(--mist-rgb),.22) 17%,
-    rgba(232,160,48,.08) 19%,
+    rgba(var(--mist-rgb),.08) 8%,
+    rgba(var(--mist-rgb),.22) 14%,
+    rgba(var(--mist-rgb),.36) 17%,
+    rgba(232,160,48,.14) 19%,
     transparent 22%);
   animation:sweep 4s linear infinite;
 }
@@ -525,8 +529,8 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;
   background:var(--mist);transform:translate(-50%,-50%);
   box-shadow:
-    0 0 0 3px rgba(var(--mist-rgb),.2),
-    0 0 0 8px rgba(var(--mist-rgb),.08),
+    0 0 0 3px rgba(var(--mist-rgb),.28),
+    0 0 0 8px rgba(var(--mist-rgb),.12),
     0 0 20px var(--mist),
     0 0 35px rgba(var(--mist-rgb),.4);
   animation:centerPulse 2.5s ease-in-out infinite;
@@ -534,17 +538,17 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 @keyframes centerPulse{
   0%,100%{
     box-shadow:
-      0 0 0 3px rgba(var(--mist-rgb),.2),
-      0 0 0 8px rgba(var(--mist-rgb),.08),
+      0 0 0 3px rgba(var(--mist-rgb),.28),
+      0 0 0 8px rgba(var(--mist-rgb),.12),
       0 0 20px var(--mist),
       0 0 35px rgba(var(--mist-rgb),.4);
   }
   50%{
     box-shadow:
-      0 0 0 4px rgba(var(--mist-rgb),.3),
-      0 0 0 12px rgba(var(--mist-rgb),.12),
+      0 0 0 4px rgba(var(--mist-rgb),.4),
+      0 0 0 12px rgba(var(--mist-rgb),.18),
       0 0 28px var(--mist),
-      0 0 50px rgba(var(--mist-rgb),.55);
+      0 0 50px rgba(var(--mist-rgb),.6);
   }
 }
 #radarDots{position:absolute;inset:0;}
@@ -2745,7 +2749,6 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
       <div style="display:flex;gap:6px;align-items:center;">
         <button class="audio-toggle" onclick="showScreen('screenHelp')" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip">❓</button>
         <button class="audio-toggle" id="audioToggleBtn" onclick="toggleAudioEnabled()" aria-label="Activer/désactiver les sons" title="Sons">🔊</button>
-        <button class="refresh-btn" onclick="loadNearbyGhosts()" aria-label="Invoquer les présences proches" data-tip="Invoquer" data-i18n-tip="radar_invoke_tip" data-i18n="radar_invoke_btn">↻ Invoquer</button>
       </div>
     </div>
     <!-- Bandeau mode invité — masqué par défaut, affiché/masqué par showScreen() -->
