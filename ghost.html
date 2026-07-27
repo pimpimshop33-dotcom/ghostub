@@ -317,8 +317,17 @@
   const ghostEmoji = params.get('emoji') || '👻';
   const ghostLocation = decodeURIComponent(params.get('loc') || '');
 
-  // Emoji du ghost
-  document.getElementById('ghostEmoji').textContent = ghostEmoji;
+  // Emoji du ghost — le cas neutre (pas de Sceau choisi) doit utiliser le
+  // même Trace (asset SVG glossy) que le reste de l'app plutôt qu'un emoji
+  // unicode brut différent (Lot F, unification du Trace). Un Sceau
+  // personnalisé (💬❤️🌙✨🔥🌸 ou emoji libre) reste affiché tel quel, comme
+  // dans app.js (cf. _ghostEmojiHTML).
+  const ghostEmojiEl = document.getElementById('ghostEmoji');
+  if (ghostEmoji === '👻') {
+    ghostEmojiEl.innerHTML = '<img src="assets/brand/ghostub-mark-trace.svg" alt="" style="width:56px;height:56px;display:block;" aria-hidden="true">';
+  } else {
+    ghostEmojiEl.textContent = ghostEmoji;
+  }
 
   // Location
   document.getElementById('locationText').textContent = ghostLocation || t.unknown;

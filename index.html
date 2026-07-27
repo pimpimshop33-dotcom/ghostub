@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=172"></script>
+<script type="module" src="app.js?v=173"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -557,6 +557,29 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   transition:transform .2s;
 }
 .ghost-dot-inner{display:none;}
+/* Halo de rareté (Lot G2) : doré pour rare/légendaire, lavande pour secret —
+   distinct du bleu commun, visible en continu (pas seulement au passage du
+   sweep comme .ghost-dot-emoji). Même teinte or/lavande que le reste de
+   l'app (--tier-gold-rgb, cf. .ghost-envelope[data-tier], .ghost-envelope-secret). */
+.ghost-dot-halo{
+  position:absolute;top:50%;left:50%;
+  width:32px;height:32px;
+  transform:translate(-50%,-50%) scale(1);
+  border-radius:50%;
+  pointer-events:none;
+  opacity:0;
+}
+.ghost-dot-rare .ghost-dot-halo{
+  opacity:1;
+  background:radial-gradient(circle,rgba(var(--tier-gold-rgb),.4) 0%,rgba(var(--tier-gold-rgb),.1) 55%,transparent 75%);
+  animation:dotHaloPulse 3s ease-in-out infinite;
+}
+.ghost-dot-secret .ghost-dot-halo{
+  opacity:1;
+  background:radial-gradient(circle,rgba(200,130,255,.42) 0%,rgba(200,130,255,.12) 55%,transparent 75%);
+  animation:dotHaloPulse 3s ease-in-out infinite;
+}
+@keyframes dotHaloPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.8;}50%{transform:translate(-50%,-50%) scale(1.18);opacity:1;}}
 .ghost-dot-label{
   position:absolute;top:-22px;left:50%;transform:translateX(-50%);
   white-space:nowrap;font-size:var(--text-sm);color:var(--warm);
@@ -1597,7 +1620,7 @@ body.light-theme .envelope-open-btn:hover{
 @keyframes sealFlash{0%{opacity:0;}8%{opacity:1;}40%{opacity:.4;}100%{opacity:0;}}
 #sealParticles{position:fixed;inset:0;z-index:9998;pointer-events:none;}
 .envelope-reveal{animation:revealContent .45s cubic-bezier(.25,.8,.25,1) forwards;}
-@keyframes revealContent{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes revealContent{from{opacity:0;transform:translateY(14px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 
 /* ── WIZARD ────────────────────────────────────────────── */
 .wizard-header{padding:16px 0 8px;}
@@ -1625,17 +1648,28 @@ body.light-theme .envelope-open-btn:hover{
 
 /* ── DISCOVERY TOAST ───────────────────────────────────── */
 .discovery-toast{
-  position:fixed;bottom:calc(80px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px);
+  position:fixed;bottom:calc(80px + var(--sab));left:50%;transform:translateX(-50%) translateY(20px) scale(.92);
   background:rgba(4,8,15,.97);backdrop-filter:blur(14px);
   border:1px solid rgba(232,160,48,.35);border-radius:20px;
   padding:12px 20px;min-width:220px;text-align:center;z-index:9000;
   opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.25,.46,.45,.94);
   box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 20px rgba(232,160,48,.08);
 }
-.discovery-toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all;}
+.discovery-toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);pointer-events:all;}
 .discovery-toast-icon{font-size:28px;display:block;margin-bottom:4px;filter:drop-shadow(0 0 10px rgba(232,160,48,.6));}
 .discovery-toast-text{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--warm);}
 .discovery-toast-rank{font-size:var(--text-sm);color:var(--amber);letter-spacing:.5px;margin-top:2px;}
+/* Variantes de rareté (Lot G4) — même palette or/lavande que le halo radar
+   (G2). !important nécessaire pour passer devant body.light-theme
+   .discovery-toast, plus spécifique (même convention que
+   .ghost-envelope[data-tier="rare"] ci-dessus). */
+.discovery-toast-rare{border-color:rgba(var(--tier-gold-rgb),.55) !important;box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 26px rgba(var(--tier-gold-rgb),.24) !important;}
+.discovery-toast-rare .discovery-toast-icon{filter:drop-shadow(0 0 14px rgba(var(--tier-gold-rgb),.85));}
+.discovery-toast-secret{border-color:rgba(200,130,255,.5) !important;box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 26px rgba(200,130,255,.22) !important;}
+.discovery-toast-secret .discovery-toast-icon{filter:drop-shadow(0 0 14px rgba(200,130,255,.8));}
+.discovery-toast-tier{font-size:var(--text-xs);font-style:normal;letter-spacing:.4px;}
+.discovery-toast-tier-rare{color:rgba(var(--tier-gold-rgb),.95);}
+.discovery-toast-tier-secret{color:rgba(200,130,255,.9);}
 body.light-theme .discovery-toast{
   background:rgba(240,238,248,.97);
   border-color:rgba(80,60,200,.25);
@@ -1901,7 +1935,15 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
 .rank-bar{display:flex;align-items:center;gap:10px;padding:6px 20px 2px;}
 .rank-badge{font-size:var(--text-sm);color:var(--amber);font-weight:600;letter-spacing:.3px;white-space:nowrap;}
 .rank-progress-wrap{flex:1;height:4px;background:rgba(var(--spirit-rgb),.08);border-radius:2px;overflow:hidden;position:relative;}
-.rank-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(232,160,48,.6) 0%,rgba(var(--mist-rgb),.6) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 6px rgba(232,160,48,.3);}
+.rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(232,160,48,.6) 0%,rgba(var(--mist-rgb),.6) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 6px rgba(232,160,48,.3);}
+/* Scintillement continu (Lot G3) : bande claire qui balaie le dégradé en boucle lente */
+.rank-progress-fill::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.55) 50%,transparent 100%);
+  background-size:200% 100%;
+  animation:rankShimmer 3s linear infinite;
+}
+@keyframes rankShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
 .rank-next{font-size:var(--text-xs);color:var(--spirit-dim);letter-spacing:.4px;white-space:nowrap;}
 
 /* ── GHOST TIERS — raretés visuelles ──────────────────── */
@@ -2355,267 +2397,15 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 }
 
 /* ═════════════════════════════════════════════════════════
-   PHASE 1b "LA NAPPE" v101 — Bottom sheet à onglets
+   Écran Dépôt — anciennement "La Nappe" (bottom sheet à onglets
+   derrière un bandeau d'outils révélé au clic). Fusionné en sections
+   empilées dans un seul scroll (Lot H, juillet 2026) — voir le HTML de
+   #screenDeposit. Ne reste ici que ce qui est encore utilisé.
    ═════════════════════════════════════════════════════════ */
 
-/* Outils cachés par défaut — révélés par le hint discret sous le bouton Sceller */
-#screenDeposit .lettre-tools { display: none; }
-#screenDeposit .lettre-tools.tools-open { display: grid; animation: fadeUp .3s ease both; }
-/* Amber toggle remplacé par le hint discret — on le masque */
-#screenDeposit #advancedToggle { display: none !important; }
-/* Cache aussi les anciennes étapes 2 et 3 du wizard (vidées, contenu déplacé dans la nappe) */
+/* Anciennes étapes 2 et 3 du wizard, vidées (contenu fusionné dans l'étape 1) */
 #screenDeposit #wizardStep2,
 #screenDeposit #wizardStep3 { display: none !important; }
-
-/* ── Bandeau d'outils sous le sceau ─────────────────────── */
-.lettre-tools{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:6px;
-  margin:14px 0 4px;
-}
-.lettre-tool{
-  background:rgba(14,12,28,.55);
-  border:1px solid rgba(var(--ghost-blue-rgb),.14);
-  border-radius:12px;
-  padding:11px 4px 9px;
-  cursor:pointer;touch-action:manipulation;
-  display:flex;flex-direction:column;align-items:center;gap:5px;
-  transition:all .2s;
-  font-family:'Instrument Sans',sans-serif;
-  font-size:var(--text-sm);
-  color:rgba(var(--ghost-blue-rgb),.62);
-  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.62) !important;
-  letter-spacing:.5px;text-transform:uppercase;
-}
-body.light-theme .lettre-tool{background:rgba(210,204,234,.65) !important;}
-.lettre-tool:hover{
-  background:rgba(var(--ghost-blue-rgb),.08);
-  border-color:rgba(var(--ghost-blue-rgb),.28);
-  color:var(--ether);
-  -webkit-text-fill-color:var(--ether) !important;
-}
-.lettre-tool:active{transform:scale(.97);}
-.lettre-tool .tool-icon{
-  font-size:18px;line-height:1;
-  filter:grayscale(.30) opacity(.85);
-  transition:filter .2s;
-}
-.lettre-tool:hover .tool-icon{filter:grayscale(0) opacity(1);}
-.lettre-tool.has-content{
-  border-color:rgba(var(--lettre-ink-rgb),.28);
-}
-.lettre-tool.has-content::after{
-  content:'';position:absolute;
-  width:6px;height:6px;border-radius:50%;
-  background:var(--amber);
-  top:6px;right:6px;
-  box-shadow:0 0 6px rgba(232,160,48,.6);
-}
-.lettre-tool{position:relative;}
-
-/* ── Overlay de fond ─────────────────────────────────────── */
-.lettre-sheet-overlay{
-  position:absolute;inset:0;
-  background:rgba(2,4,10,.55);
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-  z-index:50;
-  opacity:0;pointer-events:none;
-  transition:opacity .3s;
-}
-.lettre-sheet-overlay.open{opacity:1;pointer-events:auto;}
-
-/* ── La nappe glissante ─────────────────────────────────── */
-.lettre-sheet{
-  position:absolute;left:0;right:0;bottom:0;
-  max-height:88%;height:88%;
-  background:linear-gradient(180deg,rgba(14,12,28,.985) 0%,rgba(8,6,20,.985) 100%);
-  border-top-left-radius:24px;border-top-right-radius:24px;
-  border-top:1px solid rgba(var(--lettre-ink-rgb),.18);
-  box-shadow:0 -10px 40px rgba(0,0,0,.55);
-  z-index:51;
-  transform:translateY(100%);
-  transition:transform .35s cubic-bezier(.32,.72,.32,1.04);
-  display:flex;flex-direction:column;
-}
-body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,244,.99) 0%,rgba(218,214,238,.99) 100%) !important;}
-.lettre-sheet.open{transform:translateY(0);}
-
-.lettre-sheet-handle{
-  width:38px;height:4px;
-  background:rgba(var(--ghost-blue-rgb),.28);
-  border-radius:2px;
-  margin:8px auto 4px;flex-shrink:0;
-}
-.lettre-sheet-head{
-  padding:6px 18px 0;
-  display:flex;flex-direction:column;gap:10px;
-  flex-shrink:0;
-}
-.lettre-sheet-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:18px;font-style:italic;
-  color:var(--ether);
-  -webkit-text-fill-color:var(--ether) !important;
-  letter-spacing:.4px;
-}
-.lettre-sheet-back{
-  width:100%;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  background:rgba(var(--ghost-blue-rgb),.05);
-  border:1px solid rgba(var(--ghost-blue-rgb),.18);
-  border-radius:12px;
-  padding:11px 14px;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:15px;
-  color:var(--ether);
-  -webkit-text-fill-color:var(--ether) !important;
-  cursor:pointer;
-  transition:all .2s;
-  touch-action:manipulation;
-  min-height:44px;
-  letter-spacing:.3px;
-}
-.lettre-sheet-back:hover,.lettre-sheet-back:active{
-  background:rgba(var(--ghost-blue-rgb),.1);
-  border-color:rgba(var(--ghost-blue-rgb),.3);
-}
-
-/* Onglets */
-.lettre-sheet-tabs{
-  display:flex;
-  padding:14px 12px 0;
-  gap:2px;
-  flex-shrink:0;
-  border-bottom:1px solid rgba(var(--ghost-blue-rgb),.06);
-  margin-bottom:0;
-}
-.lettre-sheet-tab{
-  flex:1;
-  background:transparent;
-  border:none;
-  padding:8px 2px 12px;
-  font-family:'Instrument Sans',sans-serif;
-  font-size:var(--text-sm);
-  color:rgba(var(--ghost-blue-rgb),.45);
-  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.45) !important;
-  cursor:pointer;touch-action:manipulation;
-  border-radius:8px 8px 0 0;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  position:relative;
-  transition:color .2s;
-  letter-spacing:.4px;text-transform:uppercase;
-}
-.lettre-sheet-tab .tab-icon{
-  font-size:18px;line-height:1;
-  filter:grayscale(.4) opacity(.65);
-  transition:filter .2s;
-}
-.lettre-sheet-tab.active{
-  color:var(--ether);
-  -webkit-text-fill-color:var(--ether) !important;
-}
-.lettre-sheet-tab.active .tab-icon{filter:grayscale(0) opacity(1);}
-.lettre-sheet-tab.active::after{
-  content:'';position:absolute;
-  bottom:0;left:18%;right:18%;
-  height:2px;
-  background:linear-gradient(90deg,transparent,var(--amber),transparent);
-}
-
-/* Contenu scrollable */
-.lettre-sheet-content{
-  flex:1;
-  overflow-y:auto;
-  padding:18px 18px 90px;
-  -webkit-overflow-scrolling:touch;
-}
-.lettre-sheet-content::-webkit-scrollbar{width:0;}
-.lettre-sheet-pane{display:none;}
-.lettre-sheet-pane.active{display:block;animation:paneIn .25s ease;}
-@keyframes paneIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-
-/* Bouton "Terminer" en bas — flottant */
-.lettre-sheet-done{
-  position:absolute;
-  bottom:16px;left:18px;right:18px;
-  padding:13px;
-  background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.20),rgba(var(--ghost-blue-rgb),.08));
-  border:1px solid rgba(var(--ghost-blue-rgb),.32);
-  border-radius:14px;
-  color:var(--ether);
-  -webkit-text-fill-color:var(--ether) !important;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:15px;
-  cursor:pointer;touch-action:manipulation;
-  letter-spacing:.4px;
-  z-index:1;
-  backdrop-filter:blur(8px);
-  box-shadow:0 4px 14px rgba(0,0,0,.3);
-}
-.lettre-sheet-done:hover{
-  background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.28),rgba(var(--ghost-blue-rgb),.12));
-}
-.lettre-sheet-done:active{transform:scale(.98);}
-
-/* Petit message d'état pour panes vides en mode commerce */
-.lettre-sheet-empty{
-  text-align:center;
-  padding:40px 20px;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:var(--text-md);
-  color:rgba(var(--ghost-blue-rgb),.45);
-  -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.45) !important;
-  line-height:1.6;
-}
-
-/* ── Phase 1c v102 : Mode Commerce dans la nappe ─────────── */
-/* Tools row : passe de 4 à 2 colonnes, masque Règles + Identité */
-#screenDeposit.biz-mode .lettre-tools{
-  grid-template-columns:repeat(2,1fr);
-}
-#screenDeposit.biz-mode #toolBtnRules,
-#screenDeposit.biz-mode #toolBtnIdentity{
-  display:none !important;
-}
-/* Tabs de la nappe : masque Règles + Identité */
-#lettreSheet.biz-mode .lettre-sheet-tab[data-tab="rules"],
-#lettreSheet.biz-mode .lettre-sheet-tab[data-tab="identity"]{
-  display:none !important;
-}
-/* Badge "Commerce" à côté du titre */
-.lettre-sheet-biz-badge{
-  display:none;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;
-  font-size:var(--text-sm);
-  color:rgba(var(--premium-rgb),.92);
-  -webkit-text-fill-color:rgba(var(--premium-rgb),.92) !important;
-  margin-left:8px;
-  padding:2px 9px 3px;
-  background:rgba(var(--premium-rgb),.14);
-  border:1px solid rgba(var(--premium-rgb),.32);
-  border-radius:8px;
-  letter-spacing:.5px;
-  vertical-align:middle;
-  align-items:center;
-}
-#lettreSheet.biz-mode .lettre-sheet-biz-badge{display:inline-flex;}
-/* Hint sous le titre, visible uniquement en mode commerce */
-.lettre-sheet-biz-hint{
-  display:none;
-  padding:4px 18px 2px;
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;
-  font-size:var(--text-base);
-  color:rgba(var(--premium-rgb),.55);
-  -webkit-text-fill-color:rgba(var(--premium-rgb),.55) !important;
-  letter-spacing:.3px;
-  flex-shrink:0;
-}
-#lettreSheet.biz-mode .lettre-sheet-biz-hint{display:block;}
-/* Onglet "Lieu" en mode commerce : badge subtil "1 mois fixe" sous le label peut être ajouté plus tard */
 
 /* ═════════════════════════════════════════════════════════
    PHASE 1d v103 — Galerie de fichiers (PDF, images) Premium
@@ -3152,29 +2942,189 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         <!-- Champ caché businessExtra pour compatibilité depositGhost -->
         <div id="businessExtra" style="display:none;"></div>
 
-        <!-- Bandeau d'outils — accède à la nappe sur l'onglet voulu -->
-        <div class="lettre-tools" role="group" aria-label="Réglages du fantôme">
-          <button class="lettre-tool" id="toolBtnLieu" type="button" onclick="openLettreSheet('lieu')">
-            <span class="tool-icon" aria-hidden="true">📍</span>
-            <span data-i18n="dep_tool_lieu">Lieu</span>
-          </button>
-          <button class="lettre-tool" id="toolBtnRules" type="button" onclick="openLettreSheet('rules')">
-            <span class="tool-icon" aria-hidden="true">⏱</span>
-            <span data-i18n="dep_tool_rules">Règles</span>
-          </button>
-          <button class="lettre-tool" id="toolBtnMedia" type="button" onclick="openLettreSheet('media')">
-            <span class="tool-icon" aria-hidden="true">🎨</span>
-            <span data-i18n="dep_tool_media">Média</span>
-          </button>
-          <button class="lettre-tool" id="toolBtnIdentity" type="button" onclick="openLettreSheet('identity')">
-            <span class="tool-icon" aria-hidden="true">👤</span>
-            <span data-i18n="dep_tool_identity">Identité</span>
-          </button>
+        <!-- Réglages du fantôme — fusionnés en sections empilées dans le
+             même scroll (Lot H, juillet 2026) : Lieu → Durée de vie →
+             Disparaît après → Condition d'ouverture → Média → Identité.
+             Remplace l'ancien système de "nappe" (bottom sheet à onglets,
+             elle-même derrière un bandeau d'outils révélé au clic) — mêmes
+             ids/handlers/valeurs qu'avant (H4/H5), seule la disposition
+             change : tout est désormais visible sans clic intermédiaire. -->
+
+        <!-- ── LIEU ──────────────────────────────────────── -->
+        <div class="section-label">📍 <span data-i18n="dep_tool_lieu">Lieu</span></div>
+        <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
+          <div id="depositMiniMap"></div>
+          <div class="dep-map-scan" aria-hidden="true"></div>
+          <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
         </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
+          <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true">
+        </div>
+        <div id="step2RadiusWrap" class="form-group" style="margin-bottom:18px;">
+          <label class="form-label" data-i18n="dep_radius_label">Rayon de détection</label>
+          <div class="radius-selector" role="group" aria-label="Rayon de détection">
+            <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">3m</button>
+            <button class="radius-btn active" onclick="_selectRadius(this)" aria-pressed="true">10m</button>
+            <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">50m</button>
+          </div>
+        </div>
+
+        <!-- ── DURÉE DE VIE ──────────────────────────────── -->
+        <div id="step2DurWrap" class="form-group" style="margin-bottom:18px;">
+          <label class="form-label" data-i18n="dep_duration_label">Durée de vie</label>
+          <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme">
+            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
+            <button class="dur-btn active" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
+            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
+            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+          </div>
+        </div>
+
+        <!-- ── DISPARAÎT APRÈS ───────────────────────────── -->
+        <div id="step2MaxOpenWrap" class="form-group" style="margin-bottom:18px;">
+          <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
+          <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition">
+            <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
+            <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
+            <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
+            <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+          </div>
+        </div>
+
+        <!-- ── CONDITION D'OUVERTURE — accordéon replié par défaut (Lot H3) ── -->
+        <div id="step2CondWrap" class="form-group" style="margin-bottom:18px;">
+          <label class="form-label" data-i18n="dep_cond_label">Condition d'ouverture</label>
+          <div class="deposit-advanced-toggle" id="condAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="condAccordionContent" onclick="toggleCondAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCondAccordion();}">
+            <span id="condAccordionSummary">✉ Toujours accessible</span>
+            <span class="toggle-arrow" aria-hidden="true">▼</span>
+          </div>
+          <div class="deposit-advanced-content" id="condAccordionContent">
+          <div class="cond-selector" role="group" aria-label="Condition d'ouverture du fantôme" style="margin-top:10px;">
+            <button class="cond-btn active" data-cond="always" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">✉</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
+                <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
+              </span>
+            </button>
+            <button class="cond-btn" data-cond="night" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">🌙</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
+                <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
+              </span>
+            </button>
+            <button class="cond-btn" data-cond="hour" onclick="selectCond(this)" type="button">
+              <span class="cond-btn-icon">⏰</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
+                <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
+              </span>
+            </button>
+            <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button" id="condFutureBtn">
+              <span class="cond-btn-icon">📅</span>
+              <span class="cond-btn-text">
+                <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
+                <div class="cond-btn-sub" data-i18n="dep_cond_future_sub">S'ouvre à une date précise</div>
+              </span>
+            </button>
+            <div id="premSection_chain"></div>
+            <div id="chainContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;flex-direction:column;gap:10px;">
+              <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
+              <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
+                <span class="media-icon" aria-hidden="true">🗺</span>
+                <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
+              </button>
+              <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);"></div>
+            </div>
+            <div id="premSection_dedicated"></div>
+            <div id="dedicatedContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;">
+              <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
+              <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
+              <div style="font-size:10px;color:var(--spirit-dim);" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
+            </div>
+          </div>
+          <div class="cond-extra" id="condExtraHour">
+            <label class="form-label" style="margin-bottom:6px;" for="condHourInput">Heure d'ouverture</label>
+            <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera accessible 15 min avant et après cette heure</div>
+          </div>
+          <div class="cond-extra" id="condExtraFuture">
+            <label class="form-label" style="margin-bottom:6px;" for="condFutureInput">Date d'ouverture</label>
+            <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
+            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
+          </div>
+          </div>
+        </div>
+
+        <!-- ── MÉDIA ─────────────────────────────────────── -->
+        <div class="section-label">🎨 <span data-i18n="dep_tool_media">Média</span></div>
+        <div id="step3VocalWrap" class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
+          <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
+            <span class="media-icon" aria-hidden="true">🎙</span>
+            <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
+            <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
+          </button>
+          <div id="audioPreview"></div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
+          <div class="photo-choice">
+            <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
+              <span class="media-icon" aria-hidden="true">📷</span>
+              <span data-i18n="dep_photo_camera">Appareil photo</span>
+            </button>
+            <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
+              <span class="media-icon" aria-hidden="true">🖼️</span>
+              <span data-i18n="dep_photo_gallery">Galerie</span>
+            </button>
+          </div>
+          <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+          <div id="photoPreview"></div>
+        </div>
+        <div class="form-group" id="step3VideoWrap" style="margin-bottom:14px;">
+          <div id="premSection_video"></div>
+          <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
+          <div id="videoPreview"></div>
+        </div>
+        <!-- Phase 1d v103 — Galerie de fichiers Premium -->
+        <div class="form-group" id="step3AttachmentsWrap" style="margin-bottom:18px;">
+          <div id="premSection_attachments"></div>
+          <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
+          <div id="attachmentsContent" style="display:none;">
+            <div class="attachments-list" id="attachmentsList"></div>
+            <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
+          </div>
+        </div>
+
+        <!-- ── IDENTITÉ ──────────────────────────────────── -->
+        <div class="section-label">👤 <span data-i18n="dep_tool_identity">Identité</span></div>
+        <div id="step3IdentityWrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+          <div>
+            <label class="form-label">Identité</label>
+            <div class="type-selector" role="group" aria-label="Mode d'identité">
+              <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
+              <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" data-i18n="dep_visibility_label">Visibilité</label>
+            <div class="type-selector" role="group" aria-label="Visibilité du fantôme">
+              <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
+              <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
+            </div>
+          </div>
+        </div>
+        <!-- Conservé pour compat — textes basculés par toggleBusinessMode() -->
+        <div id="step3Title" style="display:none;" data-i18n="dep_pane3_title">Récapitulatif</div>
+        <div id="step3Sub" style="display:none;" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
 
         <button class="lettre-seal-btn" onclick="depositGhost()" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
         <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
-        <div id="advancedHint" onclick="openLettreSheet('rules')" role="button" style="display:flex;align-items:center;justify-content:space-between;width:100%;background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.18);border-radius:12px;padding:11px 14px;margin-top:10px;cursor:pointer;touch-action:manipulation;user-select:none;box-sizing:border-box;font-family:'Instrument Sans',sans-serif;font-size:13px;color:rgba(var(--ghost-blue-rgb),.80);-webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.80)!important;"><span>Personnalise ton fantôme</span><span style="font-size:12px;opacity:.55;">↓</span></div>
 
         <!-- Bouton toggle Mode Commerce — déplacé sous "Sceller le fantôme" (juin 2026) -->
         <div id="businessToggleWrap" style="margin:14px 0 0;">
@@ -3192,225 +3142,15 @@ body.light-theme .lettre-sheet{background:linear-gradient(180deg,rgba(230,227,24
         </div>
         <!-- Erreur de dépôt remontée ici pour visibilité immédiate -->
         <div class="deposit-error" id="depositError" role="alert" aria-live="polite" style="margin-top:8px;"></div>
-        <div class="deposit-advanced-toggle" id="advancedToggle" onclick="toggleAdvancedDeposit()">
-          <span>✨ Personnaliser ton fantôme</span>
-          <span class="toggle-arrow">▼</span>
-        </div>
         <div style="font-size:10px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;display:none;">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
       </div>
 
-      <!-- ÉTAPE 2 (vidée — contenu déplacé dans la nappe en bas) -->
+      <!-- ÉTAPE 2 (vidée — obsolète depuis la fusion en une seule page, Lot H) -->
       <div class="wizard-pane" id="wizardStep2" style="display:none;"></div>
 
-      <!-- ÉTAPE 3 (vidée — contenu déplacé dans la nappe en bas) -->
+      <!-- ÉTAPE 3 (vidée — obsolète depuis la fusion en une seule page, Lot H) -->
       <div class="wizard-pane" id="wizardStep3" style="display:none;"></div>
       </div><!-- fin scroll -->
-
-      <!-- ════════════════════════════════════════════════════
-           LA NAPPE — bottom sheet à onglets (Phase 1b v101)
-           ════════════════════════════════════════════════════ -->
-      <div class="lettre-sheet-overlay" id="lettreSheetOverlay" onclick="closeLettreSheet()" aria-hidden="true"></div>
-      <div class="lettre-sheet" id="lettreSheet" role="dialog" aria-modal="true" aria-labelledby="lettreSheetTitle" aria-hidden="true">
-        <div class="lettre-sheet-handle" aria-hidden="true"></div>
-        <div class="lettre-sheet-head">
-          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0;">
-            <span class="lettre-sheet-title" id="lettreSheetTitle" data-i18n="dep_sheet_title">Réglages du fantôme</span>
-            <span class="lettre-sheet-biz-badge" data-i18n="dep_sheet_biz_badge">✦ Commerce</span>
-          </div>
-          <button class="lettre-sheet-back" onclick="closeLettreSheet()" type="button">
-            <span aria-hidden="true">←</span><span data-i18n="dep_sheet_back">Retour au message</span>
-          </button>
-        </div>
-        <div class="lettre-sheet-biz-hint" data-i18n="dep_sheet_biz_hint">Visible 50m max · 1 mois · réglages auto</div>
-        <div class="lettre-sheet-tabs" role="tablist">
-          <button class="lettre-sheet-tab active" data-tab="lieu" role="tab" aria-selected="true" type="button" onclick="switchLettreTab('lieu')">
-            <span class="tab-icon" aria-hidden="true">📍</span>
-            <span data-i18n="dep_tool_lieu">Lieu</span>
-          </button>
-          <button class="lettre-sheet-tab" data-tab="rules" role="tab" aria-selected="false" type="button" onclick="switchLettreTab('rules')">
-            <span class="tab-icon" aria-hidden="true">⏱</span>
-            <span data-i18n="dep_tool_rules">Règles</span>
-          </button>
-          <button class="lettre-sheet-tab" data-tab="media" role="tab" aria-selected="false" type="button" onclick="switchLettreTab('media')">
-            <span class="tab-icon" aria-hidden="true">🎨</span>
-            <span data-i18n="dep_tool_media">Média</span>
-          </button>
-          <button class="lettre-sheet-tab" data-tab="identity" role="tab" aria-selected="false" type="button" onclick="switchLettreTab('identity')">
-            <span class="tab-icon" aria-hidden="true">👤</span>
-            <span data-i18n="dep_tool_identity">Identité</span>
-          </button>
-        </div>
-        <div class="lettre-sheet-content">
-          <!-- ── PANE LIEU ─────────────────────────────────── -->
-          <div class="lettre-sheet-pane active" data-pane="lieu" role="tabpanel">
-            <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
-              <div id="depositMiniMap"></div>
-              <div class="dep-map-scan" aria-hidden="true"></div>
-              <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
-            </div>
-            <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
-              <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true">
-            </div>
-            <div id="step2RadiusWrap" class="form-group" style="margin-bottom:0;">
-              <label class="form-label" data-i18n="dep_radius_label">Rayon de détection</label>
-              <div class="radius-selector" role="group" aria-label="Rayon de détection">
-                <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">3m</button>
-                <button class="radius-btn active" onclick="_selectRadius(this)" aria-pressed="true">10m</button>
-                <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">50m</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── PANE RÈGLES ───────────────────────────────── -->
-          <div class="lettre-sheet-pane" data-pane="rules" role="tabpanel">
-            <div id="step2DurWrap" class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" data-i18n="dep_duration_label">Durée de vie</label>
-              <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme">
-                <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
-                <button class="dur-btn active" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
-                <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-                <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
-              </div>
-            </div>
-            <div id="step2MaxOpenWrap" class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
-              <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition">
-                <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
-                <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
-                <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
-                <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
-              </div>
-            </div>
-            <div id="step2CondWrap" class="form-group" style="margin-bottom:0;">
-              <label class="form-label" data-i18n="dep_cond_label">Condition d'ouverture</label>
-              <div class="cond-selector" role="group" aria-label="Condition d'ouverture du fantôme">
-                <button class="cond-btn active" data-cond="always" onclick="selectCond(this)" type="button">
-                  <span class="cond-btn-icon">✉</span>
-                  <span class="cond-btn-text">
-                    <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
-                    <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
-                  </span>
-                </button>
-                <button class="cond-btn" data-cond="night" onclick="selectCond(this)" type="button">
-                  <span class="cond-btn-icon">🌙</span>
-                  <span class="cond-btn-text">
-                    <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
-                    <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
-                  </span>
-                </button>
-                <button class="cond-btn" data-cond="hour" onclick="selectCond(this)" type="button">
-                  <span class="cond-btn-icon">⏰</span>
-                  <span class="cond-btn-text">
-                    <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
-                    <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
-                  </span>
-                </button>
-                <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button" id="condFutureBtn">
-                  <span class="cond-btn-icon">📅</span>
-                  <span class="cond-btn-text">
-                    <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
-                    <div class="cond-btn-sub" data-i18n="dep_cond_future_sub">S'ouvre à une date précise</div>
-                  </span>
-                </button>
-                <div id="premSection_chain"></div>
-                <div id="chainContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;flex-direction:column;gap:10px;">
-                  <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
-                  <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
-                    <span class="media-icon" aria-hidden="true">🗺</span>
-                    <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
-                  </button>
-                  <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);"></div>
-                </div>
-                <div id="premSection_dedicated"></div>
-                <div id="dedicatedContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;">
-                  <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
-                  <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
-                  <div style="font-size:10px;color:var(--spirit-dim);" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
-                </div>
-              </div>
-              <div class="cond-extra" id="condExtraHour">
-                <label class="form-label" style="margin-bottom:6px;" for="condHourInput">Heure d'ouverture</label>
-                <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
-                <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera accessible 15 min avant et après cette heure</div>
-              </div>
-              <div class="cond-extra" id="condExtraFuture">
-                <label class="form-label" style="margin-bottom:6px;" for="condFutureInput">Date d'ouverture</label>
-                <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
-                <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── PANE MÉDIA ────────────────────────────────── -->
-          <div class="lettre-sheet-pane" data-pane="media" role="tabpanel">
-            <div id="step3VocalWrap" class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
-              <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
-                <span class="media-icon" aria-hidden="true">🎙</span>
-                <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
-                <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
-              </button>
-              <div id="audioPreview"></div>
-            </div>
-            <div class="form-group" style="margin-bottom:14px;">
-              <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
-              <div class="photo-choice">
-                <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
-                  <span class="media-icon" aria-hidden="true">📷</span>
-                  <span data-i18n="dep_photo_camera">Appareil photo</span>
-                </button>
-                <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
-                  <span class="media-icon" aria-hidden="true">🖼️</span>
-                  <span data-i18n="dep_photo_gallery">Galerie</span>
-                </button>
-              </div>
-              <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-              <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-              <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-              <div id="photoPreview"></div>
-            </div>
-            <div class="form-group" id="step3VideoWrap" style="margin-bottom:14px;">
-              <div id="premSection_video"></div>
-              <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
-              <div id="videoPreview"></div>
-            </div>
-            <!-- Phase 1d v103 — Galerie de fichiers Premium -->
-            <div class="form-group" id="step3AttachmentsWrap" style="margin-bottom:0;">
-              <div id="premSection_attachments"></div>
-              <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
-              <div id="attachmentsContent" style="display:none;">
-                <div class="attachments-list" id="attachmentsList"></div>
-                <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- ── PANE IDENTITÉ ─────────────────────────────── -->
-          <div class="lettre-sheet-pane" data-pane="identity" role="tabpanel">
-            <div id="step3IdentityWrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
-              <div>
-                <label class="form-label">Identité</label>
-                <div class="type-selector" role="group" aria-label="Mode d'identité">
-                  <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
-                  <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
-                </div>
-              </div>
-              <div>
-                <label class="form-label" data-i18n="dep_visibility_label">Visibilité</label>
-                <div class="type-selector" role="group" aria-label="Visibilité du fantôme">
-                  <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
-                  <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
-                </div>
-              </div>
-            </div>
-            <!-- Conservé pour compat — masqué dans la nappe d'identité -->
-            <div id="step3Title" style="display:none;" data-i18n="dep_pane3_title">Récapitulatif</div>
-            <div id="step3Sub" style="display:none;" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
-          </div>
-        </div>
-        <button class="lettre-sheet-done" onclick="closeLettreSheet()" type="button" data-i18n="dep_sheet_done">Terminer</button>
-      </div>
   </div><!-- fin screenDeposit -->
 
   <!-- MAP -->

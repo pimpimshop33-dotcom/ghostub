@@ -1509,8 +1509,14 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
 // que .nav-icon). Utilisées UNIQUEMENT sur l'écran de dépôt (sélecteur) et
 // l'écran de détail (sealedEmoji) — jamais sur Carte/Radar, où seul le
 // Trace coloré (_traceMarkHTML) doit apparaître.
+// Pas d'entrée '👻' ici volontairement (Lot F, unification du Trace) : le
+// neutre n'est jamais un Sceau parmi d'autres, c'est LE Trace, donc il doit
+// toujours passer par _BRAND_MARK_HTML/_traceMarkHTML (même asset que
+// l'écran d'intro) plutôt que par un contour minimaliste différent. Une
+// entrée '👻' existait ici avant et n'était en pratique jamais atteinte
+// (cf. l'appelant ligne ~6518, qui exclut déjà ce cas) — supprimée pour ne
+// pas laisser un second dessin du fantôme trainer dans le code.
 const CATEGORY_ICON_PATHS = {
-  '👻': '<path d="M12 3a6 6 0 0 0-6 6v10l2-2 2 2 2-2 2 2 2-2 2 2V9a6 6 0 0 0-6-6z"/><circle cx="9.5" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/>',
   '💬': '<path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
   '❤️': '<path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/>',
   '🌙': '<path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/>',
@@ -3490,16 +3496,40 @@ window.toggleAudioEnabled = () => {
   }
 })();
 
-// ── Advanced deposit toggle ────────────────────────────────
-window.toggleAdvancedDeposit = () => {
-  const hint = document.getElementById('advancedHint');
-  const tools = document.querySelector('#screenDeposit .lettre-tools');
-  if (!hint || !tools) return;
-  const isOpen = hint.classList.toggle('open');
-  tools.classList.toggle('tools-open', isOpen);
-  const arrow = document.getElementById('advancedHintArrow');
-  if (arrow) arrow.textContent = isOpen ? '↑' : '↓';
+// ── Accordéon "Condition d'ouverture" (Lot H3) ──────────────
+// Replié par défaut, affiche juste le choix actuel — ne se déplie que pour
+// changer. Remplace l'ancien système de nappe/bandeau d'outils (Lot H1).
+const _CORD_ACCORDION_LABELS = {
+  always: '✉ ',
+  night:  '🌙 ',
+  hour:   '⏰ ',
+  future: '📅 ',
 };
+function _updateCondAccordionSummary() {
+  const el = document.getElementById('condAccordionSummary');
+  if (!el) return;
+  const cond = getSelectedCond();
+  const labelKey = { always: 'dep_cond_always_label', night: 'dep_cond_night_label', hour: 'dep_cond_hour_label', future: 'dep_cond_future_label' }[cond] || 'dep_cond_always_label';
+  el.textContent = (_CORD_ACCORDION_LABELS[cond] || _CORD_ACCORDION_LABELS.always) + (t[labelKey] || 'Toujours accessible');
+}
+window.toggleCondAccordion = (forceOpen) => {
+  const toggle = document.getElementById('condAccordionToggle');
+  const content = document.getElementById('condAccordionContent');
+  if (!toggle || !content) return;
+  const open = typeof forceOpen === 'boolean' ? forceOpen : !toggle.classList.contains('open');
+  toggle.classList.toggle('open', open);
+  content.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
+// Un choix de condition referme l'accordéon et met à jour le résumé —
+// délégation sur le conteneur (pas de changement de selectCond() lui-même,
+// qui reste la seule logique métier ici).
+document.getElementById('condAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.cond-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateCondAccordionSummary();
+  window.toggleCondAccordion(false);
+});
 
 // ── Proximity data attribute helper ────────────────────────
 function getProximityClass(distM) {
@@ -3514,6 +3544,7 @@ function showDiscoveryToast(count, isNew) {
   const icon  = document.getElementById('toastIcon');
   const text  = document.getElementById('toastText');
   if (!toast) return;
+  toast.classList.remove('discovery-toast-rare', 'discovery-toast-secret');
   const rank = getRank(count);
   const isMilestone = MILESTONES.includes(count) && isNew;
   if (isNew) {
@@ -3543,7 +3574,29 @@ function showDiscoveryToast(count, isNew) {
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
     icon.innerHTML = _BRAND_MARK_HTML;
-    text.innerHTML = (_currentLang === 'fr' ? t.detail_discovered_prefix || 'Fantôme découvert · <b>' + count + '</b> au total' : 'Ghost discovered · <b>' + count + '</b> total');
+    let _discoveredHTML = (_currentLang === 'fr' ? t.detail_discovered_prefix || 'Fantôme découvert · <b>' + count + '</b> au total' : 'Ghost discovered · <b>' + count + '</b> total');
+    // Lot G4 : mise en scène différenciée par rareté — halo + mention doré
+    // (rare/légendaire) ou lavande (secret), distincts du toast bleu commun.
+    // Vocabulaire "découverte" volontairement conservé plutôt que "Résonance"
+    // (cf. flag envoyé à Pipo : "Résonance" désigne déjà, ailleurs dans
+    // l'app, la réaction quotidienne ✦ Résonner sur un fantôme — un nouveau
+    // sens du même mot aurait créé une confusion produit).
+    let _tierName = null;
+    if (selectedGhost?.secret) {
+      toast.classList.add('discovery-toast-secret');
+      _tierName = 'secret'; // identique FR/EN
+    } else if (selectedGhost) {
+      const tier = getGhostTier(selectedGhost.id);
+      if (tier.name === 'rare' || tier.name === 'legendary') {
+        toast.classList.add('discovery-toast-rare');
+        _tierName = getTierLabel(tier);
+      }
+    }
+    if (_tierName) {
+      const _tierClass = selectedGhost?.secret ? 'discovery-toast-tier-secret' : 'discovery-toast-tier-rare';
+      _discoveredHTML += ' <span class="discovery-toast-tier ' + _tierClass + '">· ' + escapeHTML(_tierName) + '</span>';
+    }
+    text.innerHTML = _discoveredHTML;
     Analytics.track('ghost_discovered', { total: count });
   } else { return; }
   toast.classList.add('show');
@@ -6342,7 +6395,18 @@ function renderRadarDots() {
     const cy = 50 + r * Math.sin(angle);
 
     const dot = document.createElement('div');
-    dot.className = 'ghost-dot';
+    // Halo de rareté (Lot G2) : lavande pour les secrets (mécanique dédiée,
+    // déjà distincte via 🔮), doré pour rare/légendaire (cf. GHOST_TIERS) —
+    // distinct du bleu commun par défaut du Trace. Les "uncommon" restent
+    // neutres, seule la vraie rareté (rare/legendary) mérite le halo.
+    let _tierDotClass = '';
+    if (g.secret) {
+      _tierDotClass = ' ghost-dot-secret';
+    } else {
+      const _tier = getGhostTier(g.id);
+      if (_tier.name === 'rare' || _tier.name === 'legendary') _tierDotClass = ' ghost-dot-rare';
+    }
+    dot.className = 'ghost-dot' + _tierDotClass;
     dot.style.left = cx + '%';
     dot.style.top = cy + '%';
 
@@ -6374,6 +6438,7 @@ function renderRadarDots() {
     const delay = -(angleNorm / (2 * Math.PI)) * sweepDuration;
 
     dot.innerHTML = `
+      <div class="ghost-dot-halo" aria-hidden="true"></div>
       <div class="ghost-dot-emoji" style="animation-delay:${delay.toFixed(2)}s" aria-hidden="true">${emoji}</div>
       <div class="ghost-dot-inner" aria-hidden="true"></div>
       <div class="ghost-dot-label" aria-hidden="true">${label} · ${formatDistance(g.distance)}</div>
@@ -7039,7 +7104,6 @@ window.depositGhost = async () => {
   const depositBtn = document.getElementById('depositBtn');
   depositBtn.disabled = true;
   try {
-    const message  = document.getElementById('depositMsg').value.trim();
     const location = document.getElementById('depositLocation').value.trim();
     const rawEmoji  = document.getElementById('depositEmoji').value || '👻';
     // FIX: Limiter l'emoji à 2 caractères max pour éviter injection de HTML
@@ -7051,6 +7115,43 @@ window.depositGhost = async () => {
     const anon     = typeBtns[1]?.querySelector('.type-btn.active')?.dataset.val === 'anon';
     const secret   = typeBtns[0]?.querySelector('.type-btn.active')?.dataset.val === 'secret';
     const err      = document.getElementById('depositError');
+
+    // Le message dépend du mode : Commerce le reconstruit depuis titre/description/
+    // code (le champ #depositMsg normal est masqué dans ce mode, cf toggleBusinessMode) ;
+    // ces validations vivaient avant dans l'ancien wizardNext(1), disparu avec la
+    // fusion en une seule page (Lot H) — reportées ici pour ne pas les perdre.
+    let message;
+    if (_depositMode === 'business') {
+      const bizTitle = document.getElementById('bizTitle').value.trim();
+      if (!bizTitle) {
+        const el = document.getElementById('bizTitle');
+        el.style.borderColor = 'rgba(255,100,100,.5)';
+        setTimeout(() => el.style.borderColor = '', 1500);
+        el.focus();
+        showToast('warning', t.dep_biz_title_err);
+        return;
+      }
+      const bizType = document.querySelector('#bizTypeSelector .type-btn.active')?.dataset.val || 'Offre';
+      const bizDesc = document.getElementById('bizDesc').value.trim();
+      const promoCodeVal = document.getElementById('promoCode').value.trim();
+      message = `🏪 ${bizType} : ${bizTitle}`;
+      if (bizDesc) message += `\n${bizDesc}`;
+      if (promoCodeVal) message += `\nCode : ${promoCodeVal}`;
+    } else {
+      message = document.getElementById('depositMsg').value.trim();
+      // Filtre anti-pub pour les non-premium (Mode Commerce Premium requis pour les offres)
+      if (!isPremium && message) {
+        const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
+        const msgLower = message.toLowerCase();
+        if (spamWords.some(w => msgLower.includes(w))) {
+          showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
+          const msgEl = document.getElementById('depositMsg');
+          msgEl.style.borderColor = 'rgba(var(--premium-rgb),.5)';
+          setTimeout(() => msgEl.style.borderColor = '', 2000);
+          return;
+        }
+      }
+    }
 
     if (!message) { err.textContent = t.dep_err_msg; document.getElementById('depositMsg').focus(); return; }
     if (message.length > 600) { err.textContent = t.dep_err_long; return; }
@@ -7849,18 +7950,14 @@ window.showScreen = (id, fromPopstate = false) => {
     document.getElementById('condExtraHour')?.classList.remove('show');
     document.getElementById('condExtraAfter')?.classList.remove('show');
     document.getElementById('condExtraFuture')?.classList.remove('show');
+    // Reset accordéon Condition d'ouverture (Lot H3) — replié, résumé "always"
+    if (typeof window.toggleCondAccordion === 'function') window.toggleCondAccordion(false);
+    if (typeof _updateCondAccordionSummary === 'function') _updateCondAccordionSummary();
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('premSection_chain');
     // Reset depositSuccess overlay
     document.getElementById('depositSuccess')?.classList.remove('show');
-    // Reset outils avancés (cachés par défaut, révélés par le hint discret)
-    const _advToggle = document.getElementById('advancedHint');
-    const _tools = document.querySelector('#screenDeposit .lettre-tools');
-    if (_advToggle) _advToggle.classList.remove('open');
-    if (_tools) _tools.classList.remove('tools-open');
-    const _arrow = document.getElementById('advancedHintArrow');
-    if (_arrow) _arrow.textContent = '↓';
     if (chainSection) chainSection.style.position = 'relative';
     if (!isPremium) {
       if (chainContent) { chainContent.style.opacity = '0.3'; chainContent.style.pointerEvents = 'none'; }
@@ -7870,6 +7967,24 @@ window.showScreen = (id, fromPopstate = false) => {
       if (chainLock) chainLock.style.display = 'none';
     }
     if (typeof _updateMaxOpenLockUI === 'function') _updateMaxOpenLockUI();
+    // Lieu + sections Premium toujours visibles désormais (Lot H1) — plus
+    // besoin d'attendre l'ouverture d'un onglet/nappe pour les initialiser.
+    setTimeout(_initDepositMiniMap, 80);
+    // Auto-remplir le nom du lieu via reverse geocoding si vide (reporté ici
+    // depuis l'ancien wizardNext(1), disparu avec la fusion en une seule page)
+    const locInput = document.getElementById('depositLocation');
+    if (locInput && userLat && !locInput.value) {
+      locInput.placeholder = t.dep_loc_searching;
+      reverseGeocode(userLat, userLng).then(name => {
+        if (name && !locInput.value) {
+          locInput.value = name;
+          locInput.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
+          setTimeout(() => locInput.style.borderColor = '', 1500);
+        }
+        locInput.placeholder = 'ex: Banc du parc, Café du coin…';
+      });
+    }
+    updatePremiumUI();
   }
   if (id === 'screenDetail') {
     const sealed = document.getElementById('envelopeSealed');
@@ -7962,8 +8077,6 @@ window.toggleBusinessMode = () => {
       });
     }, 100);
     showToast('success', t.dep_biz_toast);
-    // Phase 1c : synchroniser la nappe (masque tabs Règles/Identité, badge ✦ Commerce)
-    _applyLettreBizMode(true);
   } else {
     _depositMode = 'normal';
     window._depositMode = _depositMode;
@@ -7992,8 +8105,6 @@ window.toggleBusinessMode = () => {
     if (s3b) s3b.textContent = t.dep_pane3_sub;
     const depBtnB = document.getElementById('depositBtn');
     if (depBtnB) depBtnB.textContent = t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme';
-    // Phase 1c : restaurer la nappe en mode normal
-    _applyLettreBizMode(false);
   }
 };
 
@@ -8512,85 +8623,6 @@ async function reverseGeocode(lat, lng) {
   } catch(e) { return null; }
 }
 
-window.wizardNext = (step) => {
-  if (step === 1) {
-    const isBizMode = _depositMode === 'business';
-
-    if (isBizMode) {
-      // Validation mode Commerce : titre obligatoire
-      const bizTitle = document.getElementById('bizTitle').value.trim();
-      if (!bizTitle) {
-        const el = document.getElementById('bizTitle');
-        el.style.borderColor = 'rgba(255,100,100,.5)';
-        setTimeout(() => el.style.borderColor = '', 1500);
-        el.focus();
-        showToast('warning', t.dep_biz_title_err);
-        return;
-      }
-      // Construire le message auto depuis les champs commerce
-      const bizType = document.querySelector('#bizTypeSelector .type-btn.active')?.dataset.val || 'Offre';
-      const bizDesc = document.getElementById('bizDesc').value.trim();
-      const promoCode = document.getElementById('promoCode').value.trim();
-      let autoMsg = `🏪 ${bizType} : ${bizTitle}`;
-      if (bizDesc) autoMsg += `\n${bizDesc}`;
-      if (promoCode) autoMsg += `\nCode : ${promoCode}`;
-      document.getElementById('depositMsg').value = autoMsg;
-    } else {
-      const msg = document.getElementById('depositMsg').value.trim();
-      if (!msg) {
-        document.getElementById('depositMsg').style.borderColor = 'rgba(255,100,100,.5)';
-        document.getElementById('depositMsg').setAttribute('aria-invalid', 'true');
-        setTimeout(() => {
-          document.getElementById('depositMsg').style.borderColor = '';
-          document.getElementById('depositMsg').removeAttribute('aria-invalid');
-        }, 1500);
-        document.getElementById('depositMsg').focus();
-        return;
-      }
-      // Filtre anti-pub pour les non-premium
-      if (!isPremium) {
-        const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
-        const msgLower = msg.toLowerCase();
-        if (spamWords.some(w => msgLower.includes(w))) {
-          showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
-          document.getElementById('depositMsg').style.borderColor = 'rgba(var(--premium-rgb),.5)';
-          setTimeout(() => document.getElementById('depositMsg').style.borderColor = '', 2000);
-          return;
-        }
-      }
-    }
-    setWizardStep(2);
-    // Auto-remplir le nom du lieu si vide
-    const locInput = document.getElementById('depositLocation');
-    if (userLat && !locInput.value) {
-      locInput.placeholder = t.dep_loc_searching;
-      reverseGeocode(userLat, userLng).then(name => {
-        if (name && !locInput.value) {
-          locInput.value = name;
-          locInput.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
-          setTimeout(() => locInput.style.borderColor = '', 1500);
-        }
-        locInput.placeholder = 'ex: Banc du parc, Café du coin…';
-      });
-    }
-  } else if (step === 2) {
-    // On suggère un nom de lieu mais ce n'est plus bloquant
-    const loc = document.getElementById('depositLocation');
-    if (!loc.value.trim()) {
-      loc.value = 'Lieu sans nom';
-    }
-    setWizardStep(3);
-    // Auto-remplir pseudo si connecté et champ vide
-    const pseudoInput = document.getElementById('depositAuthor');
-    if (pseudoInput && !pseudoInput.value && currentUser?.displayName) {
-      pseudoInput.value = currentUser.displayName;
-    }
-  }
-};
-
-window.wizardBack = (step) => { setWizardStep(step - 1); };
-
-
 // ── DEPOSIT MINI-MAP ─────────────────────────────────────
 let _depositMiniMap = null;
 let _depositRadiusCircle = null;
@@ -8816,98 +8848,6 @@ function setWizardStep(n) {
   if (n === 2) setTimeout(_initDepositMiniMap, 80);
   if (n === 3) updatePremiumUI(); // Basculer aperçu/contenu Premium à l'affichage de l'étape 3
 }
-
-// ═══════════════════════════════════════════════════════════
-//  PHASE 1b "LA NAPPE" v101 — bottom sheet à onglets
-// ═══════════════════════════════════════════════════════════
-
-window.openLettreSheet = (tab = 'lieu') => {
-  const sheet = document.getElementById('lettreSheet');
-  const overlay = document.getElementById('lettreSheetOverlay');
-  if (!sheet || !overlay) return;
-  sheet.classList.add('open');
-  overlay.classList.add('open');
-  sheet.setAttribute('aria-hidden', 'false');
-  overlay.setAttribute('aria-hidden', 'false');
-  // Switch to requested tab
-  if (typeof window.switchLettreTab === 'function') window.switchLettreTab(tab);
-  // Init the mini map when opening on 'lieu' (deferred so layout settles)
-  if (tab === 'lieu') {
-    setTimeout(() => {
-      try { _initDepositMiniMap(); } catch (_) { console.warn('[ghostub:openLettreSheet:initMiniMap]', _); }
-    }, 120);
-  }
-  // Update Premium gating UI when opening rules/media (chain, dedicated, future, video)
-  if (tab === 'rules' || tab === 'media') {
-    try { if (typeof updatePremiumUI === 'function') updatePremiumUI(); } catch (_) { console.warn('[ghostub:openLettreSheet:updatePremiumUI]', _); }
-  }
-};
-
-window.closeLettreSheet = () => {
-  const sheet = document.getElementById('lettreSheet');
-  const overlay = document.getElementById('lettreSheetOverlay');
-  if (sheet) { sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true'); }
-  if (overlay) { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); }
-};
-
-window.switchLettreTab = (tab) => {
-  // Tabs
-  document.querySelectorAll('.lettre-sheet-tab').forEach(b => {
-    const isActive = b.dataset.tab === tab;
-    b.classList.toggle('active', isActive);
-    b.setAttribute('aria-selected', isActive ? 'true' : 'false');
-  });
-  // Panes
-  document.querySelectorAll('.lettre-sheet-pane').forEach(p => {
-    p.classList.toggle('active', p.dataset.pane === tab);
-  });
-  // Tools row visual sync (highlight which tool was tapped)
-  document.querySelectorAll('.lettre-tool').forEach(b => b.classList.remove('active'));
-  const toolMap = { lieu: 'toolBtnLieu', rules: 'toolBtnRules', media: 'toolBtnMedia', identity: 'toolBtnIdentity' };
-  const toolBtn = document.getElementById(toolMap[tab]);
-  if (toolBtn) toolBtn.classList.add('active');
-  // If switching to lieu after sheet is already open, refresh map size
-  if (tab === 'lieu') {
-    setTimeout(() => {
-      try {
-        if (_depositMiniMap && typeof _depositMiniMap.invalidateSize === 'function') {
-          _depositMiniMap.invalidateSize();
-        } else { _initDepositMiniMap(); }
-      } catch (_) { console.warn('[ghostub:switchLettreTab:miniMap]', _); }
-    }, 80);
-  }
-};
-
-// Close sheet on Escape key (accessibility)
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    const sheet = document.getElementById('lettreSheet');
-    if (sheet && sheet.classList.contains('open')) window.closeLettreSheet();
-  }
-});
-
-// Phase 1c v102 — Sync de la nappe avec le mode Commerce
-function _applyLettreBizMode(isOn) {
-  const screen = document.getElementById('screenDeposit');
-  const sheet  = document.getElementById('lettreSheet');
-  const title  = document.getElementById('lettreSheetTitle');
-  if (screen) screen.classList.toggle('biz-mode', !!isOn);
-  if (sheet)  sheet.classList.toggle('biz-mode', !!isOn);
-  if (title) {
-    title.textContent = isOn
-      ? (t.dep_sheet_biz_title || "Réglages de l'offre")
-      : (t.dep_sheet_title || 'Réglages du fantôme');
-  }
-  // Si l'utilisateur était sur un onglet désormais masqué, basculer sur Lieu
-  if (isOn) {
-    const activeTab = document.querySelector('.lettre-sheet-tab.active');
-    const activeName = activeTab ? activeTab.dataset.tab : null;
-    if (activeName === 'rules' || activeName === 'identity') {
-      try { window.switchLettreTab('lieu'); } catch (_) { console.warn('[ghostub:_applyLettreBizMode]', _); }
-    }
-  }
-}
-window._applyLettreBizMode = _applyLettreBizMode;
 
 window.pickEmoji = (el, emoji) => {
   document.querySelectorAll('.emoji-opt').forEach(e => {
