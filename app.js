@@ -1846,8 +1846,11 @@ function buildLeafletMap(centerLat, centerLng, h) {
   container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
   if (map) { try { map.remove(); } catch(e){ console.warn('[ghostub:buildLeafletMap]', e); } map = null; }
 
-  map = L.map('leafletMap', { zoomControl: true, attributionControl: false })
+  map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
           .setView([centerLat, centerLng], 16);
+  // Zoom en bas à droite (pas top-left) : laisse la place aux filtres
+  // flottants du haut (Lot I4) sans qu'ils se chevauchent.
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(map);
 
@@ -1869,7 +1872,12 @@ function buildLeafletMap(centerLat, centerLng, h) {
     }).addTo(map);
   }
 
-  nearbyGhosts.forEach((g, i) => {
+  // Filtres flottants (Lot I4) — mêmes filtres Toutes/Récentes/Visions/Voix/
+  // Vidéos que le Radar, appliqués à la liste source avant de dessiner
+  // marqueurs et zones, pour rester cohérents entre eux.
+  const _mapGhosts = _filterGhostsByType(nearbyGhosts, _mapActiveFilter);
+
+  _mapGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
     const delay = (i * 0.3).toFixed(2);
     const ghostRadius = Math.max(20, parseInt(g.radius || '50') || 50);
@@ -1881,6 +1889,12 @@ function buildLeafletMap(centerLat, centerLng, h) {
     // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
     // d'équivalent badge séparé ici contrairement au radar.
     const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false });
+    // Halo de rareté (Lot I1) : même logique que le Radar (Lot G2) — doré
+    // pour rare/légendaire, lavande pour secret, rien pour commun/uncommon.
+    let _haloClass = '';
+    if (g.secret) _haloClass = 'map-ghost-halo-secret';
+    else { const _tier = getGhostTier(g.id); if (_tier.name === 'rare' || _tier.name === 'legendary') _haloClass = 'map-ghost-halo-rare'; }
+    const haloHTML = _haloClass ? `<div class="map-ghost-halo ${_haloClass}" aria-hidden="true"></div>` : '';
 
     if (huntMode) {
       // Mode chasse : icône différente selon proximité
@@ -1889,10 +1903,11 @@ function buildLeafletMap(centerLat, centerLng, h) {
       // quasi doublée par rapport à l'original pour être visible d'un coup d'œil.
       const huntIcon = L.divIcon({
         html: alreadyOpened
-          ? `<div style="font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${emojiAt(52)}</div>`
+          ? `<div style="position:relative;font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${haloHTML}${emojiAt(52)}</div>`
           : isInRange
-          ? `<div style="font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${emojiAt(56)}</div>`
+          ? `<div style="position:relative;font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${haloHTML}${emojiAt(56)}</div>`
           : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:76px;height:76px;cursor:pointer;">
+               ${haloHTML}
                <div style="font-size:52px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(52)}</div>
                <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔒</div>
              </div>`,
@@ -1917,9 +1932,9 @@ function buildLeafletMap(centerLat, centerLng, h) {
           if (alreadyOpened) {
             showToast('info', t.map_hunt_already);
           } else if (isInRange) {
-            openGhost(g.id);
-            showScreen('screenDetail');
-            setNav('nav-radar');
+            // Lot I3 : fiche bottom sheet au lieu de naviguer directement —
+            // le bouton "Ouvrir" de la fiche déclenche la vraie ouverture.
+            _openMapGhostSheet(g, dist);
           } else {
             const distText = dist >= 1000 ? (dist/1000).toFixed(1)+'km' : Math.round(dist)+'m';
             showToast('warning', `🔒 Encore ${distText} à parcourir pour l'ouvrir`);
@@ -1934,14 +1949,14 @@ function buildLeafletMap(centerLat, centerLng, h) {
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;">${emojiAt(64)}</div>`;
+        ghostHtml = `<div style="position:relative;font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;">${haloHTML}${emojiAt(64)}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;">${emojiAt(58)}</div>`;
+        ghostHtml = `<div style="position:relative;font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;">${haloHTML}${emojiAt(58)}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;opacity:${farOpacity.toFixed(2)};">${emojiAt(50)}</div>`;
+        ghostHtml = `<div style="position:relative;font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;opacity:${farOpacity.toFixed(2)};">${haloHTML}${emojiAt(50)}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
@@ -1949,19 +1964,15 @@ function buildLeafletMap(centerLat, centerLng, h) {
       });
       L.marker([g.lat, g.lng], { icon: ghostIcon })
         .addTo(map)
-        .on('click', () => {
-          openGhost(g.id);
-          showScreen('screenDetail');
-          setNav('nav-radar');
-        });
+        .on('click', () => _openMapGhostSheet(g, dist));
     }
   });
 
   // ── ZONES HANTÉES : clusters 3+ ghosts dans 80m — 3 niveaux ───────────
   const _spotted = new Set();
-  nearbyGhosts.forEach((g) => {
+  _mapGhosts.forEach((g) => {
     if (_spotted.has(g.id) || !g.lat || !g.lng) return;
-    const cluster = nearbyGhosts.filter(h =>
+    const cluster = _mapGhosts.filter(h =>
       h.id !== g.id && h.lat && h.lng &&
       distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 300
     );
@@ -1972,37 +1983,36 @@ function buildLeafletMap(centerLat, centerLng, h) {
     const n = clusterIds.length;
 
     // Niveau : spot (3-4) | zone hantée (5-7) | infestation (8+)
-    let level, labelFr, labelEn, color, fillColor, fillOpacity, radius, pulseColor, borderColor;
+    let level, labelFr, labelEn, color, fillColor, fillOpacity, radius;
     if (n >= 8) {
       level = 'infest';
       labelFr = `🔥 Infestation · ${n}`; labelEn = `🔥 Infestation · ${n}`;
       color = 'rgba(255,80,60,0.7)'; fillColor = 'rgba(255,80,60,0.13)';
       fillOpacity = 1; radius = 250;
-      pulseColor = 'rgba(255,80,60,'; borderColor = 'rgba(255,80,60,.8)';
     } else if (n >= 5) {
       level = 'haunted';
       labelFr = `👻 Zone hantée · ${n}`; labelEn = `👻 Haunted zone · ${n}`;
       color = 'rgba(168,100,255,0.6)'; fillColor = 'rgba(168,100,255,0.10)';
       fillOpacity = 1; radius = 200;
-      pulseColor = 'rgba(168,100,255,'; borderColor = 'rgba(168,100,255,.7)';
     } else {
       level = 'spot';
       labelFr = `✦ Ghost Spot · ${n}`; labelEn = `✦ Ghost Spot · ${n}`;
       color = 'rgba(var(--premium-rgb),0.5)'; fillColor = 'rgba(var(--premium-rgb),0.07)';
       fillOpacity = 1; radius = 150;
-      pulseColor = 'rgba(var(--premium-rgb),'; borderColor = 'rgba(var(--premium-rgb),.6)';
     }
 
-    // Cercle de chaleur extérieur (glow large)
+    // Cercle de chaleur extérieur (glow large) — halo qui pulse doucement
+    // pour signaler "il y a du monde ici" (Lot I2).
     L.circle([g.lat, g.lng], {
       radius: radius * 1.6,
       color: 'transparent',
       fillColor,
       fillOpacity: 0.06,
-      interactive: false
+      interactive: false,
+      className: 'zone-halo-pulse'
     }).addTo(map);
 
-    // Cercle principal avec bordure lumineuse
+    // Cercle principal avec bordure lumineuse — tap = fiche bottom sheet (Lot I3)
     L.circle([g.lat, g.lng], {
       radius,
       color,
@@ -2010,9 +2020,7 @@ function buildLeafletMap(centerLat, centerLng, h) {
       fillOpacity: 0.04,
       weight: level === 'infest' ? 2 : 1.5,
       dashArray: level === 'spot' ? '4 5' : ''
-    }).addTo(map);
-
-    // Badge flottant
+    }).addTo(map).on('click', () => _openMapClusterSheet(level, n, labelFr, labelEn));
   });
 
   // ── LÉGENDE zones hantées — injectée dans le conteneur Leaflet ──
@@ -2026,9 +2034,9 @@ function buildLeafletMap(centerLat, centerLng, h) {
   const zones = { spot: 0, haunted: 0, infest: 0 };
   const zoneGhosts = { spot: 0, haunted: 0, infest: 0 };
   const _check = new Set();
-  nearbyGhosts.forEach(g => {
+  _mapGhosts.forEach(g => {
     if (_check.has(g.id) || !g.lat || !g.lng) return;
-    const cl = nearbyGhosts.filter(h => h.id !== g.id && h.lat && h.lng && distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 300);
+    const cl = _mapGhosts.filter(h => h.id !== g.id && h.lat && h.lng && distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 300);
     if (cl.length < 2) return;
     const n2 = cl.length + 1;
     [g.id, ...cl.map(h => h.id)].forEach(id => _check.add(id));
@@ -2050,9 +2058,62 @@ function buildLeafletMap(centerLat, centerLng, h) {
     }
   }
 
+  // Le compteur reflète le filtre actif (Lot I4), pas le total non filtré
+  const mapCountEl = document.getElementById('mapCount');
+  if (mapCountEl) mapCountEl.textContent = _mapGhosts.length + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
+
   setTimeout(() => map && map.invalidateSize(), 500);
   Analytics.track('map_opened', { ghost_count: nearbyGhosts.length, hunt_mode: huntMode });
 }
+
+// ── CARTE — Fiche bottom sheet au tap (Lot I3) ────────────
+// Remplace la navigation directe vers screenDetail / le popup Leaflet par
+// défaut : un tap sur un marqueur ou un cluster affiche d'abord un résumé
+// (lieu, distance, rareté — jamais le message, réservé au vrai rituel
+// d'ouverture) ; seul le bouton "Ouvrir" déclenche openGhost().
+let _mapSheetGhostId = null;
+
+function _openMapGhostSheet(g, dist) {
+  _mapSheetGhostId = g.id;
+  const iconEl = document.getElementById('mapSheetIcon');
+  const alreadyOpened = getDiscoveredIds().includes(g.id);
+  iconEl.innerHTML = g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size: 40, discovered: alreadyOpened, fadeOpacity: false });
+  document.getElementById('mapSheetTitle').textContent = g.location || (_currentLang === 'en' ? 'Unknown place' : 'Lieu inconnu');
+  const tier = g.secret ? null : getGhostTier(g.id);
+  const tierLabel = tier ? getTierLabel(tier) : '';
+  const bits = [formatDistance(dist), tierLabel].filter(Boolean);
+  document.getElementById('mapSheetSub').textContent = bits.join(' · ') || (_currentLang === 'en' ? 'A trace left here' : 'Une trace laissée ici');
+  const btn = document.getElementById('mapSheetActionBtn');
+  btn.textContent = _currentLang === 'en' ? '✉ Open' : '✉ Ouvrir';
+  btn.style.display = '';
+  openModal('mapSheetModal');
+}
+
+function _openMapClusterSheet(level, n, labelFr, labelEn) {
+  _mapSheetGhostId = null;
+  document.getElementById('mapSheetIcon').textContent = level === 'infest' ? '🔥' : level === 'haunted' ? '👻' : '✦';
+  document.getElementById('mapSheetTitle').textContent = _currentLang === 'en' ? labelEn : labelFr;
+  document.getElementById('mapSheetSub').textContent = _currentLang === 'en'
+    ? `${n} ghosts nearby — get closer to spot them.`
+    : `${n} fantômes à proximité — approche-toi pour les repérer.`;
+  // Pas d'ouverture directe pour un cluster, juste l'info — bouton masqué.
+  document.getElementById('mapSheetActionBtn').style.display = 'none';
+  openModal('mapSheetModal');
+}
+
+window.closeMapSheet = (e) => {
+  if (e && e.target !== e.currentTarget) return;
+  closeModal('mapSheetModal');
+};
+
+window._mapSheetAction = () => {
+  const id = _mapSheetGhostId;
+  closeModal('mapSheetModal');
+  if (!id) return;
+  openGhost(id);
+  showScreen('screenDetail');
+  setNav('nav-radar');
+};
 
 
 function getLocation() {
@@ -6152,31 +6213,54 @@ let activeFilter = 'all';
 
 window.setFilter = (filter, btn) => {
   activeFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  // Scopé au Radar : la Carte a ses propres boutons .filter-btn (Lot I4,
+  // cf. setMapFilter) avec un état indépendant, ne pas se marcher dessus.
+  document.querySelectorAll('#screenRadar .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   renderGhostList();
   Analytics.track('filter_used', { filter });
 };
 
-function getFilteredGhosts() {
-  switch (activeFilter) {
+// ── FILTRES CARTE (Lot I4) — indépendants du Radar, même logique de filtrage
+let _mapActiveFilter = 'all';
+window.setMapFilter = (filter, btn) => {
+  _mapActiveFilter = filter;
+  document.querySelectorAll('.map-filter-bar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // NB: `map` (pas `window.map`, jamais assigné) est la variable de module
+  // qui référence l'instance Leaflet — cf. buildLeafletMap().
+  if (map) renderStaticMap();
+  Analytics.track('map_filter_used', { filter });
+};
+
+// Partagé par le Radar (getFilteredGhosts) et la Carte (Lot I4, setMapFilter) :
+// mêmes filtres Toutes/Récentes/Visions/Voix/Vidéos sur la même liste source.
+function _filterGhostsByType(list, filter) {
+  switch (filter) {
     case 'recent':
-      return [...nearbyGhosts].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+      return [...list].sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
     case 'photo':
-      return nearbyGhosts.filter(g => g.photoUrl);
+      return list.filter(g => g.photoUrl);
     case 'audio':
-      return nearbyGhosts.filter(g => g.audioUrl);
+      return list.filter(g => g.audioUrl);
     case 'video':
-      return nearbyGhosts.filter(g => g.videoUrl);
+      return list.filter(g => g.videoUrl);
     default:
-      // 'all' = virgins en tête (jamais ouverts), puis par distance dans chaque groupe
-      return [...nearbyGhosts].sort((a, b) => {
-        const aV = !a.openCount || a.openCount === 0;
-        const bV = !b.openCount || b.openCount === 0;
-        if (aV !== bV) return aV ? -1 : 1;
-        return a.distance - b.distance;
-      });
+      return list;
   }
+}
+
+function getFilteredGhosts() {
+  if (activeFilter === 'all') {
+    // 'all' = virgins en tête (jamais ouverts), puis par distance dans chaque groupe
+    return [...nearbyGhosts].sort((a, b) => {
+      const aV = !a.openCount || a.openCount === 0;
+      const bV = !b.openCount || b.openCount === 0;
+      if (aV !== bV) return aV ? -1 : 1;
+      return a.distance - b.distance;
+    });
+  }
+  return _filterGhostsByType(nearbyGhosts, activeFilter);
 }
 
 
