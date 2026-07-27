@@ -1848,9 +1848,10 @@ function buildLeafletMap(centerLat, centerLng, h) {
 
   map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
           .setView([centerLat, centerLng], 16);
-  // Zoom en bas à droite (pas top-left) : laisse la place aux filtres
-  // flottants du haut (Lot I4) sans qu'ils se chevauchent.
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  // Zoom en haut à droite : en bas à droite, il chevauchait l'étiquette de
+  // cluster (#mapHauntedLegend, centrée en bas) sur les écrans étroits ou
+  // quand plusieurs niveaux de zone sont affichés côte à côte.
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(map);
 

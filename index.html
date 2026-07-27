@@ -1291,12 +1291,14 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .map-header{padding:12px 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .map-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);}
 .map-count{font-size:var(--text-sm);color:var(--spirit-dim);}
-/* ── Lot I4 : filtres flottants sur la Carte (mêmes filtres que le Radar,
-   réutilise .filter-btn — juste un fond semi-transparent + flou pour rester
-   lisible par-dessus les tuiles) ────────────────────────────────────── */
-.map-filter-bar{position:absolute;top:54px;left:0;right:0;z-index:900;display:flex;gap:6px;padding:0 14px;overflow-x:auto;scrollbar-width:none;pointer-events:none;}
+/* ── Lot I4 : filtres sur la Carte (mêmes filtres que le Radar, réutilise
+   .filter-btn — fond semi-transparent + flou). Positionnés en flux normal
+   (pas absolute) : un top fixe en pixels ne suivait pas la hauteur réelle
+   du .map-header (variable selon la langue/largeur d'écran), ce qui le
+   faisait chevaucher le titre et le bouton Chasse juste au-dessus. */
+.map-filter-bar{flex-shrink:0;display:flex;gap:6px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none;}
 .map-filter-bar::-webkit-scrollbar{display:none;}
-.map-filter-bar .filter-btn{pointer-events:all;background:rgba(8,6,18,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.map-filter-bar .filter-btn{background:rgba(8,6,18,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
 .map-filter-bar .filter-btn.active{background:rgba(232,160,48,.28) !important;}
 /* ── Lot I1 : halo de rareté derrière le Trace des marqueurs (même logique
    que .ghost-dot-halo du Radar — Lot G2) ────────────────────────────── */
