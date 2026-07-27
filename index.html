@@ -47,7 +47,7 @@
 <link rel="preconnect" href="https://api.cloudinary.com">
 <link rel="preconnect" href="https://unpkg.com">
 
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Sans:wght@300;400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- Manifest PWA -->
 <link rel="manifest" href="/ghostub/manifest.json">
@@ -275,18 +275,30 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   .bokeh-light{animation:none !important;}
 }
 /* ── BOKEH CONTEXTUEL — ambiance par écran ─────────────── */
-/* Radar : lumières froides et mist dominent, ambre en retrait */
-body:has(#screenRadar.active) .bokeh-light.warm-lg  { opacity:.42; }
-body:has(#screenRadar.active) .bokeh-light.warm-md  { opacity:.38; }
-body:has(#screenRadar.active) .bokeh-light.warm-sm  { opacity:.35; }
-body:has(#screenRadar.active) .bokeh-light.front-1  { opacity:.32; }
-/* Lot G-bis : le radar occupe l'essentiel de l'écran désormais — bokeh froid/
-   lavande renforcé (saturation + luminosité) pour se rapprocher de l'intensité
-   de la maquette, sans toucher aux autres écrans qui partagent ces classes. */
-body:has(#screenRadar.active) .bokeh-light.cool-lg,
-body:has(#screenRadar.active) .bokeh-light.cool-md,
-body:has(#screenRadar.active) .bokeh-light.mist,
-body:has(#screenRadar.active) .bokeh-light.front-2  { filter: saturate(1.35) brightness(1.15); }
+/* Radar : valeurs EXACTES de ghostub-nocturne-precieux.html — 3 taches
+   #9DABFF/#C7BCEE/#6C7AE0 à opacité .35, blur 20px ; le reste des 9 lumières
+   du bokeh partagé (ambre/rose/etc., absentes de la maquette) est masqué
+   pour ne garder que ces 3 sur cet écran. Fond du .phone et du body
+   également remplacé par le radial-gradient exact de la maquette. */
+body:has(#screenRadar.active) .phone {
+  background: radial-gradient(120% 90% at 30% -10%, #14162b 0%, #0A0B14 55%, #05060c 100%) !important;
+}
+body:has(#screenRadar.active) { background: #05060c; }
+body:has(#screenRadar.active) .bokeh-light.warm-lg,
+body:has(#screenRadar.active) .bokeh-light.warm-md,
+body:has(#screenRadar.active) .bokeh-light.warm-sm,
+body:has(#screenRadar.active) .bokeh-light.pink,
+body:has(#screenRadar.active) .bokeh-light.front-1,
+body:has(#screenRadar.active) .bokeh-light.front-2  { opacity: 0 !important; }
+body:has(#screenRadar.active) .bokeh-light.cool-lg {
+  background: #9DABFF !important; opacity: .35 !important; filter: blur(20px) !important;
+}
+body:has(#screenRadar.active) .bokeh-light.cool-md {
+  background: #C7BCEE !important; opacity: .35 !important; filter: blur(20px) !important;
+}
+body:has(#screenRadar.active) .bokeh-light.mist {
+  background: #6C7AE0 !important; opacity: .35 !important; filter: blur(20px) !important;
+}
 /* Dépôt : ambre domine, bleu et mist s'effacent */
 body:has(#screenDeposit.active) .bokeh-light.cool-lg  { opacity:.28; }
 body:has(#screenDeposit.active) .bokeh-light.cool-md  { opacity:.28; }
@@ -441,9 +453,33 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .btn-secondary:hover{border-color:var(--border-bright);color:var(--warm);}
 
 /* ── RADAR ─────────────────────────────────────────────── */
+/* La maquette n'a pas de variante thème clair — le fond forcé sombre
+   ci-dessous (bokeh contextuel) reste donc sombre même si l'utilisateur a
+   le thème clair actif ; sans ça le texte hérite des teintes clair-sur-clair
+   de body.light-theme (--ether/--warm-dim etc. redéfinis foncés pour un fond
+   clair) et devient illisible sur un fond maintenant sombre. On restaure ici
+   les valeurs thème sombre de ces variables, uniquement dans ce sous-arbre. */
+body.light-theme #screenRadar{
+  --void:#05060c;--deep:#0A0B14;--surface:rgba(20,22,43,.5);--surface2:rgba(20,22,43,.7);
+  --spirit:#7ab8f5;--spirit-dim:rgba(122,184,245,.45);--spirit-glow:rgba(122,184,245,.10);
+  --ether:#c8daf5;--warm:#e8d4a8;--warm-dim:rgba(232,212,168,.55);
+  --border:rgba(122,184,245,.10);--border-bright:rgba(122,184,245,.28);
+  --amber:#e8a030;--amber-dim:rgba(232,160,48,.30);--mist:#3db87a;
+  --premium-rgb:255,200,80;--tier-gold-rgb:245,223,160;--mist-rgb:61,184,122;
+  --ghost-blue-rgb:168,180,255;--accent-green-rgb:100,220,160;
+  --spirit-rgb:122,184,245;
+  color:#e8d4a8;
+}
+/* Typographie EXACTE de la maquette : Inter pour tout le texte de l'écran,
+   Cormorant Garamond réservé au titre. Le titre est réaffirmé via un
+   sélecteur `#screenRadar .radar-title` (1 ID + 1 classe) pour battre en
+   spécificité le wildcard `#screenRadar *` (1 ID seul) malgré les deux
+   !important — une classe seule (l'ancien `.radar-title`) aurait perdu
+   face à un ID, un ID bat toujours une classe en CSS. */
+#screenRadar, #screenRadar * { font-family: 'Inter', sans-serif !important; }
 .radar-header{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 20px 0;}
-.radar-title{
-  font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;
+#screenRadar .radar-title{
+  font-family:'Cormorant Garamond',serif !important;font-size:var(--serif-sm);font-style:italic;
   color:var(--ether);letter-spacing:.2px;
   position:relative;padding-bottom:6px;
 }
@@ -498,72 +534,39 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   border:1px solid rgba(var(--spirit-rgb),.30);
   box-shadow:0 0 60px rgba(var(--spirit-rgb),.14) inset,0 0 90px rgba(var(--ghost-blue-rgb),.09) inset,0 0 50px rgba(var(--spirit-rgb),.10);
 }
-/* Anneaux — respiration synchronisée, lente */
+/* Anneaux — valeur EXACTE de la maquette, uniforme sur les 3 (plus de
+   respiration/breathing animée : la maquette est statique) */
 .radar-ring{
-  position:absolute;border-radius:50%;border:1px solid rgba(var(--spirit-rgb),.18);
+  position:absolute;border-radius:50%;border:1px solid rgba(157,171,255,0.12);
   top:50%;left:50%;transform:translate(-50%,-50%);
-  animation:ringBreathe 6s ease-in-out infinite;
 }
-/* Bleu/lavande uniforme sur les 3 anneaux (maquette "Nocturne Précieux" —
-   pas de vert ici, cf. .user-map-dot qui est déjà bleu/blanc sur la Carte) */
-.radar-ring:nth-child(1){width:33%;height:33%;border-color:rgba(var(--ghost-blue-rgb),.4);animation-delay:0s;}
-.radar-ring:nth-child(2){width:66%;height:66%;border-style:dashed;opacity:.55;animation-delay:-2s;}
-.radar-ring:nth-child(3){width:100%;height:100%;animation-delay:-4s;}
-@keyframes ringBreathe{
-  0%,100%{opacity:var(--ring-op,.5);}
-  50%{opacity:calc(var(--ring-op,.5) + .28);}
-}
-/* Balayage sonar — bleu spirit (maquette), pas vert. Les paliers % (8/14/17/19/22)
-   sont un invariant partagé avec ghostReveal et _radarPingLoop() dans app.js
-   (le bip sonore est calé sur le pic à 17%) : NE PAS LES CHANGER, seule la
-   teinte change ici. Pointe dorée conservée (rareté/précieux). */
+.radar-ring:nth-child(1){width:33%;height:33%;}
+.radar-ring:nth-child(2){width:66%;height:66%;border-style:dashed;}
+.radar-ring:nth-child(3){width:100%;height:100%;}
+/* Balayage sonar — dégradé EXACT de la maquette. Le pic visuel est
+   maintenant à 0° (début du dégradé) au lieu de 17% : RADAR_SWEEP_PEAK_FRACTION
+   dans app.js a été mis à jour en conséquence pour garder le bip sonore
+   calé sur le passage réel du faisceau (cf. _radarPingLoop()). */
 .radar-sweep{
   position:absolute;inset:0;border-radius:50%;
-  background:conic-gradient(from 0deg,
-    transparent 0%,
-    rgba(var(--ghost-blue-rgb),.10) 8%,
-    rgba(var(--ghost-blue-rgb),.26) 14%,
-    rgba(var(--ghost-blue-rgb),.42) 17%,
-    rgba(232,160,48,.16) 19%,
-    transparent 22%);
+  background:conic-gradient(from 0deg, rgba(157,171,255,0.35), transparent 55deg);
   animation:sweep 4s linear infinite;
 }
 @keyframes sweep{to{transform:rotate(360deg)}}
-/* Centre du radar — "vous êtes ici", même teinte que .user-map-dot sur la
-   Carte (blanc-lavande) plutôt que le vert utilisé avant, pour coller à la
-   maquette et rester cohérent entre les deux écrans. */
+/* Centre du radar — "vous êtes ici", valeur EXACTE de la maquette (plus
+   d'animation de pulsation : la maquette est statique) */
 .radar-center{
   position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;
-  background:#f1eeff;transform:translate(-50%,-50%);
-  box-shadow:
-    0 0 0 3px rgba(241,238,255,.28),
-    0 0 0 8px rgba(var(--ghost-blue-rgb),.14),
-    0 0 20px #f1eeff,
-    0 0 35px rgba(var(--ghost-blue-rgb),.5);
-  animation:centerPulse 2.5s ease-in-out infinite;
-}
-@keyframes centerPulse{
-  0%,100%{
-    box-shadow:
-      0 0 0 3px rgba(241,238,255,.28),
-      0 0 0 8px rgba(var(--ghost-blue-rgb),.14),
-      0 0 20px #f1eeff,
-      0 0 35px rgba(var(--ghost-blue-rgb),.5);
-  }
-  50%{
-    box-shadow:
-      0 0 0 4px rgba(241,238,255,.4),
-      0 0 0 12px rgba(var(--ghost-blue-rgb),.2),
-      0 0 28px #f1eeff,
-      0 0 50px rgba(var(--ghost-blue-rgb),.7);
-  }
+  background:#F1EEFF;transform:translate(-50%,-50%);
+  box-shadow:0 0 12px 4px rgba(241,238,255,0.5);
 }
 #radarDots{position:absolute;inset:0;}
 .ghost-dot{
   position:absolute;cursor:pointer;
   transform:translate(-50%,-50%);
-  /* Zone tactile généreuse (WCAG 44px) — le point visuel est plus petit */
-  width:44px;height:44px;
+  /* Zone tactile (WCAG 44px min) — agrandie pour englober le Trace élargi
+     (~10% du diamètre du radar, cf. .ghost-dot-emoji) sans le rogner. */
+  width:52px;height:52px;
   display:flex;align-items:center;justify-content:center;
   transition:transform .2s;
 }
@@ -574,7 +577,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
    l'app (--tier-gold-rgb, cf. .ghost-envelope[data-tier], .ghost-envelope-secret). */
 .ghost-dot-halo{
   position:absolute;top:50%;left:50%;
-  width:32px;height:32px;
+  width:44px;height:44px;
   transform:translate(-50%,-50%) scale(1);
   border-radius:50%;
   pointer-events:none;
@@ -599,7 +602,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   pointer-events:none;opacity:0;transition:opacity .3s;
 }
 /* Apparition fantôme — synchronisée avec le passage du sweep
-   Le sweep a son pic à 17% de la circonférence et son halo 12-22%.
+   Le sweep (valeurs exactes de la maquette) a son pic à 0deg/0%.
    Le JS injecte un animation-delay négatif = angle du dot / 2π × 4s.
    Résultat : chaque dot n'est visible QUE quand le sweep le balaie.
    Fenêtre visible : ~18% du cycle (0.7s), le reste invisible. */
@@ -608,26 +611,26 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   transform:translate(-50%,-50%) scale(1);
   /* Contient le Trace coloré (SVG injecté par _traceMarkHTML, cf. app.js) —
      la couleur/l'opacité de fanage viennent de ce SVG, cette animation ne
-     gère plus que l'apparition/disparition synchronisée au sweep. */
-  width:18px;height:18px;
+     gère plus que l'apparition/disparition synchronisée au sweep.
+     Taille ~10% du diamètre du radar (34px/300px maquette) — cf. app.js. */
+  width:38px;height:38px;
   display:flex;align-items:center;justify-content:center;
   pointer-events:none;
   opacity:0;
   animation:ghostReveal 4s linear infinite;
 }
+/* Pic recalé sur 0%/100% (au lieu de 17%) : le nouveau .radar-sweep (valeurs
+   exactes de la maquette) a son pic angulaire à 0deg — RADAR_SWEEP_PEAK_FRACTION
+   dans app.js est passé de .17 à 0 en conséquence, même décalage relatif
+   qu'avant (-6/-4/pic/+4/+10/+16), juste repositionné autour du nouveau pic.
+   Couleur du drop-shadow = currentColor, fixée par fantôme en JS selon la
+   rareté (commun/rare/secret) — cf. renderRadarDots(). */
 @keyframes ghostReveal{
-  /* Tout le cycle : invisible */
-  0%,11%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
-  /* Sweep s'approche (12-14%) : montée rapide */
-  13%{opacity:.9;transform:translate(-50%,-50%) scale(1.15);filter:drop-shadow(0 0 6px rgba(var(--spirit-rgb),.7));}
-  /* Pic exact (17%) : flash + touche ambre */
-  17%{opacity:1;transform:translate(-50%,-50%) scale(1.3);filter:drop-shadow(0 0 10px rgba(var(--spirit-rgb),.9)) drop-shadow(0 0 18px rgba(232,160,48,.3));}
-  /* Sweep s'éloigne (19-22%) : retombée */
-  21%{opacity:.75;transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 0 6px rgba(var(--spirit-rgb),.5));}
-  /* Traînée qui s'éteint très vite */
-  27%{opacity:.25;transform:translate(-50%,-50%) scale(.9);filter:drop-shadow(0 0 3px rgba(232,160,48,.4));}
-  /* Reste du cycle : complètement invisible, zone morte */
-  33%,100%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
+  0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1.3);filter:drop-shadow(0 0 10px currentColor);}
+  4%{opacity:.75;transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 0 6px currentColor);}
+  10%{opacity:.25;transform:translate(-50%,-50%) scale(.9);filter:drop-shadow(0 0 3px currentColor);}
+  16%,94%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
+  96%{opacity:.9;transform:translate(-50%,-50%) scale(1.15);filter:drop-shadow(0 0 6px currentColor);}
 }
 /* Hover : emoji révélé en lieu et place du point, le dot est interactif */
 .ghost-dot:hover .ghost-dot-label,.ghost-dot:focus .ghost-dot-label{opacity:1;}
@@ -636,7 +639,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   width:auto;height:auto;font-size:18px;line-height:1;
   background:transparent;box-shadow:none;
   transform:translate(-50%,-50%) scale(1.1);
-  filter:drop-shadow(0 0 10px rgba(232,160,48,.8));
+  filter:drop-shadow(0 0 10px currentColor);
 }
 .radar-status{font-size:var(--text-sm);color:var(--spirit-dim);text-align:center;padding:4px 20px 6px;}
 .ghost-count-line{font-family:'Cormorant Garamond',serif;font-size:var(--text-base);color:var(--warm-dim);text-align:center;margin-bottom:10px;}

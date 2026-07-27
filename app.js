@@ -6433,11 +6433,13 @@ function setRadarRadius(meters) {
 }
 
 // ⚠️ Doit rester identique à "sweep 4s" (.radar-sweep) et "ghostReveal 4s"
-// (.ghost-dot-emoji) dans index.html, et 17% doit rester le palier du pic dans
-// @keyframes ghostReveal — c'est le point du cycle où le faisceau visuel passe
-// exactement sur le dot. _radarPingLoop() s'en sert pour caler le bip sonore.
+// (.ghost-dot-emoji) dans index.html. Le sweep exact de la maquette
+// (ghostub-nocturne-precieux.html) a son pic à 0deg (0% du cycle angulaire),
+// pas 17% comme l'ancien dégradé à 5 paliers — @keyframes ghostReveal a été
+// recalée en conséquence (pic à 0%/100%). _radarPingLoop() s'en sert pour
+// caler le bip sonore sur le passage réel du faisceau.
 const RADAR_SWEEP_DURATION_S = 4;
-const RADAR_SWEEP_PEAK_FRACTION = 0.17;
+const RADAR_SWEEP_PEAK_FRACTION = 0;
 
 function renderRadarDots() {
   const radar = document.getElementById('radarDots');
@@ -6486,11 +6488,16 @@ function renderRadarDots() {
     // distinct du bleu commun par défaut du Trace. Les "uncommon" restent
     // neutres, seule la vraie rareté (rare/legendary) mérite le halo.
     let _tierDotClass = '';
+    // Couleur EXACTE de la maquette (ghostub-nocturne-precieux.html) par
+    // rareté — sert de `color` au Trace pour le drop-shadow(currentColor)
+    // de .ghost-dot-emoji (cf. @keyframes ghostReveal).
+    let _traceGlowColor = '#9DABFF'; // commun
     if (g.secret) {
       _tierDotClass = ' ghost-dot-secret';
+      _traceGlowColor = '#C7BCEE';
     } else {
       const _tier = getGhostTier(g.id);
-      if (_tier.name === 'rare' || _tier.name === 'legendary') _tierDotClass = ' ghost-dot-rare';
+      if (_tier.name === 'rare' || _tier.name === 'legendary') { _tierDotClass = ' ghost-dot-rare'; _traceGlowColor = '#F4D998'; }
     }
     dot.className = 'ghost-dot' + _tierDotClass;
     dot.style.left = cx + '%';
@@ -6516,7 +6523,8 @@ function renderRadarDots() {
     // Trace coloré par catégorie + fané par ancienneté (cf. FEATURE-TRACE-COLORE-FANAGE.md)
     // — plus d'icône de catégorie brute sur le radar, uniquement le Trace.
     // Les secrets gardent leur 🔮 dédié (mécanique de révélation distincte).
-    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 18, discovered: getDiscoveredIds().includes(g.id) });
+    // Taille ~10% du diamètre du radar (34px/300px maquette) — cf. .ghost-dot-emoji
+    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id) });
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -6526,7 +6534,7 @@ function renderRadarDots() {
 
     dot.innerHTML = `
       <div class="ghost-dot-halo" aria-hidden="true"></div>
-      <div class="ghost-dot-emoji" style="animation-delay:${delay.toFixed(2)}s" aria-hidden="true">${emoji}</div>
+      <div class="ghost-dot-emoji" style="animation-delay:${delay.toFixed(2)}s;color:${_traceGlowColor}" aria-hidden="true">${emoji}</div>
       <div class="ghost-dot-inner" aria-hidden="true"></div>
       <div class="ghost-dot-label" aria-hidden="true">${label} · ${formatDistance(g.distance)}</div>
     `;
