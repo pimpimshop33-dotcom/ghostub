@@ -494,9 +494,9 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   /* Contraste renforcé (Lot G-bis, rapprochement maquette) : le radar occupe
      maintenant l'essentiel de l'écran, il doit se voir depuis le fond bokeh
      plutôt que s'y fondre — alphas ~doublés par rapport à la version d'origine. */
-  background:radial-gradient(circle,rgba(var(--mist-rgb),.14) 0%,rgba(var(--spirit-rgb),.08) 40%,transparent 70%);
+  background:radial-gradient(circle,rgba(var(--ghost-blue-rgb),.14) 0%,rgba(var(--spirit-rgb),.08) 40%,transparent 70%);
   border:1px solid rgba(var(--spirit-rgb),.30);
-  box-shadow:0 0 60px rgba(var(--spirit-rgb),.14) inset,0 0 90px rgba(var(--mist-rgb),.09) inset,0 0 50px rgba(var(--spirit-rgb),.10);
+  box-shadow:0 0 60px rgba(var(--spirit-rgb),.14) inset,0 0 90px rgba(var(--ghost-blue-rgb),.09) inset,0 0 50px rgba(var(--spirit-rgb),.10);
 }
 /* Anneaux — respiration synchronisée, lente */
 .radar-ring{
@@ -504,51 +504,58 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   top:50%;left:50%;transform:translate(-50%,-50%);
   animation:ringBreathe 6s ease-in-out infinite;
 }
-.radar-ring:nth-child(1){width:33%;height:33%;border-color:rgba(var(--mist-rgb),.38);animation-delay:0s;}
+/* Bleu/lavande uniforme sur les 3 anneaux (maquette "Nocturne Précieux" —
+   pas de vert ici, cf. .user-map-dot qui est déjà bleu/blanc sur la Carte) */
+.radar-ring:nth-child(1){width:33%;height:33%;border-color:rgba(var(--ghost-blue-rgb),.4);animation-delay:0s;}
 .radar-ring:nth-child(2){width:66%;height:66%;border-style:dashed;opacity:.55;animation-delay:-2s;}
 .radar-ring:nth-child(3){width:100%;height:100%;animation-delay:-4s;}
 @keyframes ringBreathe{
   0%,100%{opacity:var(--ring-op,.5);}
   50%{opacity:calc(var(--ring-op,.5) + .28);}
 }
-/* Sweep vert — balayage sonar avec trail plus long */
+/* Balayage sonar — bleu spirit (maquette), pas vert. Les paliers % (8/14/17/19/22)
+   sont un invariant partagé avec ghostReveal et _radarPingLoop() dans app.js
+   (le bip sonore est calé sur le pic à 17%) : NE PAS LES CHANGER, seule la
+   teinte change ici. Pointe dorée conservée (rareté/précieux). */
 .radar-sweep{
   position:absolute;inset:0;border-radius:50%;
   background:conic-gradient(from 0deg,
     transparent 0%,
-    rgba(var(--mist-rgb),.08) 8%,
-    rgba(var(--mist-rgb),.22) 14%,
-    rgba(var(--mist-rgb),.36) 17%,
-    rgba(232,160,48,.14) 19%,
+    rgba(var(--ghost-blue-rgb),.10) 8%,
+    rgba(var(--ghost-blue-rgb),.26) 14%,
+    rgba(var(--ghost-blue-rgb),.42) 17%,
+    rgba(232,160,48,.16) 19%,
     transparent 22%);
   animation:sweep 4s linear infinite;
 }
 @keyframes sweep{to{transform:rotate(360deg)}}
-/* Centre du radar — diamant fantôme avec double halo */
+/* Centre du radar — "vous êtes ici", même teinte que .user-map-dot sur la
+   Carte (blanc-lavande) plutôt que le vert utilisé avant, pour coller à la
+   maquette et rester cohérent entre les deux écrans. */
 .radar-center{
   position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;
-  background:var(--mist);transform:translate(-50%,-50%);
+  background:#f1eeff;transform:translate(-50%,-50%);
   box-shadow:
-    0 0 0 3px rgba(var(--mist-rgb),.28),
-    0 0 0 8px rgba(var(--mist-rgb),.12),
-    0 0 20px var(--mist),
-    0 0 35px rgba(var(--mist-rgb),.4);
+    0 0 0 3px rgba(241,238,255,.28),
+    0 0 0 8px rgba(var(--ghost-blue-rgb),.14),
+    0 0 20px #f1eeff,
+    0 0 35px rgba(var(--ghost-blue-rgb),.5);
   animation:centerPulse 2.5s ease-in-out infinite;
 }
 @keyframes centerPulse{
   0%,100%{
     box-shadow:
-      0 0 0 3px rgba(var(--mist-rgb),.28),
-      0 0 0 8px rgba(var(--mist-rgb),.12),
-      0 0 20px var(--mist),
-      0 0 35px rgba(var(--mist-rgb),.4);
+      0 0 0 3px rgba(241,238,255,.28),
+      0 0 0 8px rgba(var(--ghost-blue-rgb),.14),
+      0 0 20px #f1eeff,
+      0 0 35px rgba(var(--ghost-blue-rgb),.5);
   }
   50%{
     box-shadow:
-      0 0 0 4px rgba(var(--mist-rgb),.4),
-      0 0 0 12px rgba(var(--mist-rgb),.18),
-      0 0 28px var(--mist),
-      0 0 50px rgba(var(--mist-rgb),.6);
+      0 0 0 4px rgba(241,238,255,.4),
+      0 0 0 12px rgba(var(--ghost-blue-rgb),.2),
+      0 0 28px #f1eeff,
+      0 0 50px rgba(var(--ghost-blue-rgb),.7);
   }
 }
 #radarDots{position:absolute;inset:0;}
@@ -1992,7 +1999,9 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
 .rank-bar{display:flex;align-items:center;gap:10px;padding:6px 20px 2px;}
 .rank-badge{font-size:var(--text-sm);color:var(--amber);font-weight:600;letter-spacing:.3px;white-space:nowrap;}
 .rank-progress-wrap{flex:1;height:4px;background:rgba(var(--spirit-rgb),.08);border-radius:2px;overflow:hidden;position:relative;}
-.rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(232,160,48,.6) 0%,rgba(var(--mist-rgb),.6) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 6px rgba(232,160,48,.3);}
+/* Dégradé indigo → lavande → doré (maquette "Nocturne Précieux"), pas
+   ambre → vert comme avant. */
+.rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(108,122,224,.85) 0%,rgba(199,188,238,.85) 50%,rgba(244,217,152,.9) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(199,188,238,.25);}
 /* Scintillement continu (Lot G3) : bande claire qui balaie le dégradé en boucle lente */
 .rank-progress-fill::after{
   content:'';position:absolute;inset:0;
