@@ -2213,7 +2213,9 @@ onAuthStateChanged(auth, async user => {
     const pending = sessionStorage.getItem('pendingGhost');
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
     document.getElementById('profileName').textContent = escapeHTML(user.displayName || user.email);
-    document.getElementById('profileAvatar').textContent = (user.displayName || user.email).charAt(0).toUpperCase();
+    // Avatar = Trace unifié (Lot F/J1), plus l'initiale du pseudo/email —
+    // même asset que partout ailleurs (radar, carte, dépôt).
+    document.getElementById('profileAvatar').innerHTML = _BRAND_MARK_HTML;
     const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
     updatePremiumUI();
@@ -4080,8 +4082,8 @@ function _renderPricingCards() {
   if (!section || isPremium) return;
   const isEn = _currentLang === 'en';
   section.innerHTML = `
-    <!-- Premium -->
-    <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;">
+    <!-- Premium — bordure légèrement lumineuse bleu spirit (Lot J2) -->
+    <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
@@ -4099,8 +4101,8 @@ function _renderPricingCards() {
       </div>
       <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_premium || '✦ Become Premium Hunter'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
     </div>
-    <!-- Commerce -->
-    <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;">
+    <!-- Commerce — bordure légèrement lumineuse dorée (Lot J2) -->
+    <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--premium-rgb),.08);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
           <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>

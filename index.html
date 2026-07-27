@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=174"></script>
+<script type="module" src="app.js?v=175"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1202,12 +1202,30 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 
 /* ── PROFILE ───────────────────────────────────────────── */
 .profile-hdr{text-align:center;padding:16px 0 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+/* Anneau dégradé animé autour du Trace (Lot J1) — rotation lente en continu,
+   indépendante de l'état Premium (cf. le style dynamique appliqué à
+   .profile-avatar-big lui-même dans updatePremiumUI()). */
+.profile-avatar-ring{
+  position:relative;
+  width:64px;height:64px;border-radius:19px;
+  margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;
+}
+.profile-avatar-ring::before{
+  content:'';
+  position:absolute;inset:0;
+  border-radius:19px;
+  background:conic-gradient(from 0deg,rgba(232,160,48,.9),rgba(var(--spirit-rgb),.6),rgba(232,160,48,.9));
+  animation:avatarRingSpin 7s linear infinite;
+}
+@keyframes avatarRingSpin{to{transform:rotate(360deg);}}
 .profile-avatar-big{
+  position:relative;z-index:1;
   width:56px;height:56px;border-radius:16px;
   background:linear-gradient(135deg,rgba(232,160,48,.2),rgba(var(--spirit-rgb),.08));
   border:1px solid rgba(232,160,48,.3);
   display:flex;align-items:center;justify-content:center;
-  font-size:var(--serif-sm);font-weight:700;color:var(--warm);margin:0 auto 10px;
+  font-size:var(--serif-sm);font-weight:700;color:var(--warm);margin:0;
   box-shadow:0 0 20px rgba(232,160,48,.1);
 }
 .profile-name-big{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);}
@@ -3219,7 +3237,9 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   <div class="screen" id="screenProfile" aria-label="Mon profil">
     <div class="scroll">
       <div class="profile-hdr">
-        <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true">?</div>
+        <div class="profile-avatar-ring">
+          <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true"></div>
+        </div>
         <div class="profile-name-big" id="profileName">…</div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
           <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
@@ -3293,8 +3313,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 
       <!-- ── CARDS PLANS (visibles si Free) ─────────────────── -->
       <div id="pricingSection" style="margin-bottom:10px;">
-        <!-- Premium -->
-        <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;">
+        <!-- Premium — bordure légèrement lumineuse bleu spirit (Lot J2) -->
+        <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div>
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 Chasseur Premium</div>
@@ -3313,8 +3333,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">✦ Devenir Chasseur Premium</button>
         </div>
 
-        <!-- Commerce -->
-        <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;">
+        <!-- Commerce — bordure légèrement lumineuse dorée (Lot J2) -->
+        <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--premium-rgb),.08);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <div>
               <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 Plan Commerce</div>
