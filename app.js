@@ -1541,6 +1541,7 @@ let nearbyGhosts = [];
 let radarPingTargets = [];
 let selectedGhost = null;
 let map = null;
+let _mapResizeObserver = null;
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
@@ -1784,10 +1785,13 @@ window.closeModal = closeModal;
 window.renderStaticMap = () => {
   const centerLat = userLat || 48.8566; // Paris par défaut si GPS indisponible
   const centerLng = userLng || 2.3522;
-  const container = document.getElementById('mapContainer');
-  const h = Math.max(window.innerHeight - 160, 500);
-  container.style.height = h + 'px';
-
+  // #mapContainer se dimensionne lui-même via flex:1 (CSS) — on ne force plus
+  // de hauteur en JS ici. L'ancien calcul (window.innerHeight - 160) était un
+  // nombre magique qui ne tenait pas compte de la hauteur réelle, variable,
+  // de .map-header + .map-filter-bar au-dessus : dès que cette dernière a
+  // changé de mise en page (flux normal au lieu d'overlay), #leafletMap
+  // (dimensionné en dur sur cette valeur) ne correspondait plus à l'espace
+  // réellement disponible → tuiles manquantes/grises (BUG chevauchement Carte).
   if (!document.getElementById('leafletCSS')) {
     const css = document.createElement('link');
     css.id = 'leafletCSS';
@@ -1797,11 +1801,11 @@ window.renderStaticMap = () => {
   }
 
   if (window.L) {
-    buildLeafletMap(centerLat, centerLng, h);
+    buildLeafletMap(centerLat, centerLng);
   } else {
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => buildLeafletMap(centerLat, centerLng, h);
+    script.onload = () => buildLeafletMap(centerLat, centerLng);
     document.head.appendChild(script);
   }
 };
@@ -1834,7 +1838,7 @@ window.toggleHuntMode = () => {
   if (window.map) renderStaticMap();
 };
 
-function buildLeafletMap(centerLat, centerLng, h) {
+function buildLeafletMap(centerLat, centerLng) {
   const container = document.getElementById('mapContainer');
 
   // Si la carte existe déjà — réinitialiser pour redessiner marqueurs et zones
@@ -1843,7 +1847,14 @@ function buildLeafletMap(centerLat, centerLng, h) {
     map = null;
   }
 
-  container.innerHTML = `<div id="leafletMap" style="width:100%;height:${h}px;"></div>`;
+  // position:absolute + inset:0 (pas une hauteur en % ni une valeur en px
+  // calculée en JS) : #mapContainer (position:relative, cf. son style inline)
+  // se dimensionne via flex:1/min-height en CSS, #leafletMap épouse
+  // exactement sa boîte réelle quelle que soit la hauteur du header/de la
+  // barre de filtres au-dessus (cf. renderStaticMap()). height:100% seul ne
+  // suffisait pas ici : un enfant direct d'un item flex n'hérite pas
+  // toujours une hauteur définie en pourcentage de façon fiable.
+  container.innerHTML = `<div id="leafletMap" style="position:absolute;inset:0;width:100%;height:100%;"></div>`;
   if (map) { try { map.remove(); } catch(e){ console.warn('[ghostub:buildLeafletMap]', e); } map = null; }
 
   map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
@@ -1852,6 +1863,17 @@ function buildLeafletMap(centerLat, centerLng, h) {
   // cluster (#mapHauntedLegend, centrée en bas) sur les écrans étroits ou
   // quand plusieurs niveaux de zone sont affichés côte à côte.
   L.control.zoom({ position: 'topright' }).addTo(map);
+
+  // Filet de sécurité "classique Leaflet" : si le conteneur change de taille
+  // après l'init (reflow tardif — police qui finit de charger, clavier
+  // virtuel, rotation d'écran...), Leaflet garde son ancienne grille de
+  // tuiles tant qu'on ne l'appelle pas explicitement. Un ResizeObserver
+  // couvre ça en continu, pas juste une fois à un délai fixe deviné.
+  if (window.ResizeObserver) {
+    if (_mapResizeObserver) { try { _mapResizeObserver.disconnect(); } catch(_) {} }
+    _mapResizeObserver = new ResizeObserver(() => { if (map) map.invalidateSize(); });
+    _mapResizeObserver.observe(container);
+  }
 
   L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(map);
 
