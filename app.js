@@ -3576,6 +3576,9 @@ function _renderStreak() {
 
 // ── MILESTONES ──────────────────────────────────────────
 const MILESTONES = [1,5,10,25,50,100];
+// Résonances (utilisé aussi par _checkResoMilestone plus bas et par
+// CARD_TRACKS ci-dessous — déclaré ici pour être disponible avant les deux).
+const RESO_MILESTONES = [5, 10, 25, 50, 100];
 const RANKS_FR = [
   {min:0,   label:'Curieux',      icon:'🌫️'},
   {min:3,   label:'Flâneur',      icon:'🚶'},
@@ -5424,9 +5427,8 @@ function _getWeeklyPlaces() {
 
 // ══════════════════════════════════════════════════════════
 // FEATURE : RÉSONANCE COLLECTIVE — milestones 5, 10, 25, 50
+// (RESO_MILESTONES déclaré plus haut avec MILESTONES, cf. Lot L)
 // ══════════════════════════════════════════════════════════
-
-const RESO_MILESTONES = [5, 10, 25, 50, 100];
 
 function _checkResoMilestone(ghostId, lieu, prev, curr) {
   for (const milestone of RESO_MILESTONES) {
