@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=176"></script>
+<script type="module" src="app.js?v=177"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -275,38 +275,29 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   .bokeh-light{animation:none !important;}
 }
 /* ── BOKEH CONTEXTUEL — ambiance par écran ─────────────── */
-/* Radar : valeurs EXACTES de ghostub-nocturne-precieux.html — 3 taches
-   #9DABFF/#C7BCEE/#6C7AE0 à opacité .35, blur 20px ; le reste des 9 lumières
-   du bokeh partagé (ambre/rose/etc., absentes de la maquette) est masqué
-   pour ne garder que ces 3 sur cet écran. Fond du .phone et du body
-   également remplacé par le radial-gradient exact de la maquette. */
-body:has(#screenRadar.active) .phone {
+/* Lot M : Radar, Déposer, Carte et Profil partagent le même traitement
+   "Nocturne Précieux" — valeurs EXACTES de ghostub-nocturne-precieux.html —
+   3 taches #9DABFF/#C7BCEE/#6C7AE0 à opacité .35, blur 20px ; le reste des
+   9 lumières du bokeh partagé (ambre/rose/etc., absentes de la maquette)
+   est masqué pour ne garder que ces 3, cohérentes sur tout le chantier.
+   Fond du .phone et du body également remplacé par le radial-gradient
+   exact de la maquette. (Onboarding non concerné, cf. décision Lot M.) */
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .phone {
   background: radial-gradient(120% 90% at 30% -10%, #14162b 0%, #0A0B14 55%, #05060c 100%) !important;
 }
-body:has(#screenRadar.active) { background: #05060c; }
-body:has(#screenRadar.active) .bokeh-light.warm-lg,
-body:has(#screenRadar.active) .bokeh-light.warm-md,
-body:has(#screenRadar.active) .bokeh-light.warm-sm,
-body:has(#screenRadar.active) .bokeh-light.pink,
-body:has(#screenRadar.active) .bokeh-light.front-1,
-body:has(#screenRadar.active) .bokeh-light.front-2  { opacity: 0 !important; }
-body:has(#screenRadar.active) .bokeh-light.cool-lg {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) { background: #05060c; }
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light:is(.warm-lg,.warm-md,.warm-sm,.pink,.front-1,.front-2) {
+  opacity: 0 !important;
+}
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.cool-lg {
   background: #9DABFF !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active) .bokeh-light.cool-md {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.cool-md {
   background: #C7BCEE !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active) .bokeh-light.mist {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.mist {
   background: #6C7AE0 !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-/* Dépôt : ambre domine, bleu et mist s'effacent */
-body:has(#screenDeposit.active) .bokeh-light.cool-lg  { opacity:.28; }
-body:has(#screenDeposit.active) .bokeh-light.cool-md  { opacity:.28; }
-body:has(#screenDeposit.active) .bokeh-light.front-2  { opacity:.28; }
-body:has(#screenDeposit.active) .bokeh-light.mist     { opacity:.22; }
-body:has(#screenDeposit.active) .bokeh-light.pink     { opacity:.32; }
-/* Profil : contemplatif, toutes lumières à 60% */
-body:has(#screenProfile.active) .bokeh-light         { opacity:.60; }
 
 /* ── PARTICLES — braises nocturnes ─────────────────────── */
 .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
