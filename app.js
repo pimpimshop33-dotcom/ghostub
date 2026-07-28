@@ -252,8 +252,6 @@ const LANGS = {
     dep_deposit_btn: '👻 Ancrer ce fantôme',
     dep_pending: 'En cours…',
     dep_deleting: '⏳ Suppression…',
-    dep_secret_on: '🔮 Mode secret activé',
-    dep_secret_off: '🔮 Passer en secret',
     auth_loading: 'Connexion…',
     profile_notif_denied: '🔕 Notifications refusées',
     dep_biz_toast: '🏪 Mode Commerce activé — visible à 50m de votre établissement',
@@ -851,8 +849,6 @@ const LANGS = {
     dep_deposit_btn: '👻 Anchor this ghost',
     dep_pending: 'Saving…',
     dep_deleting: '⏳ Deleting…',
-    dep_secret_on: '🔮 Secret mode on',
-    dep_secret_off: '🔮 Switch to secret',
     auth_loading: 'Signing in…',
     profile_notif_denied: '🔕 Notifications denied',
     dep_biz_toast: '🏪 Commerce Mode on — visible within 50m of your business',
@@ -6929,21 +6925,9 @@ window.openGhost = async (id) => {
       document.getElementById('resonanceCount').textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
     }
 
-    const secretBtn = document.getElementById('secretBtn');
-    if (isOwner && !selectedGhost.businessMode && !selectedGhost._welcome) {
-      secretBtn.style.display = 'block';
-      if (selectedGhost.secret) {
-        secretBtn.textContent = t.dep_secret_on || '🔮 Mode secret activé';
-        secretBtn.style.borderColor = 'rgba(168,100,255,.5)';
-        secretBtn.style.color = 'rgba(200,150,255,.9)';
-      } else {
-        secretBtn.textContent = t.dep_secret_off || '🔮 Passer en secret';
-        secretBtn.style.borderColor = '';
-        secretBtn.style.color = '';
-      }
-    } else {
-      secretBtn.style.display = 'none';
-    }
+    // Passer en secret désactivé (Lot P) — plus aucun nouveau fantôme secret,
+    // même en convertissant un fantôme existant après coup.
+    document.getElementById('secretBtn').style.display = 'none';
 
     const audioEl = document.getElementById('detailAudio');
     if (selectedGhost.audioUrl) {
@@ -7274,39 +7258,6 @@ window.followChain = () => {
       L.marker([selectedGhost.chainLat, selectedGhost.chainLng], { icon: L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.9));animation:floatG 2s ease-in-out infinite;">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' }) }).addTo(window.map);
     }
   }, 800);
-};
-
-window.toggleSecret = async () => {
-  if (!selectedGhost || !currentUser) return;
-  if (selectedGhost.authorUid !== currentUser.uid) return;
-  const nowSecret = !selectedGhost.secret;
-  const btn = document.getElementById('secretBtn');
-  const prevText = btn.textContent;
-  const prevBorderColor = btn.style.borderColor;
-  const prevColor = btn.style.color;
-  btn.textContent = t.dep_pending || 'En cours…';
-  try {
-    await updateDoc(doc(db, COLL.GHOSTS, selectedGhost.id), {
-      secret: nowSecret,
-      radius: nowSecret ? '3m' : (selectedGhost.radius || '10m'),
-      emoji: nowSecret ? '🔮' : '👻'
-    });
-    // selectedGhost.secret n'est mis à jour qu'après confirmation serveur —
-    // même principe que resonate() (Lot précédent) : ne pas anticiper l'état.
-    selectedGhost.secret = nowSecret;
-    btn.textContent = nowSecret ? '🔮 Mode secret activé' : '🔮 Passer en secret';
-    btn.style.borderColor = nowSecret ? 'rgba(168,100,255,.5)' : '';
-    btn.style.color = nowSecret ? 'rgba(200,150,255,.9)' : '';
-    document.getElementById('detailRadius').textContent = '📡 ' + (nowSecret ? '3m' : (selectedGhost.radius || '10m'));
-  } catch (e) {
-    console.warn('toggleSecret error:', e);
-    // Échec : restaurer le bouton à son état exact d'avant le clic (pas un texte
-    // générique) — selectedGhost.secret n'a pas bougé, rien à désynchroniser.
-    btn.textContent = prevText;
-    btn.style.borderColor = prevBorderColor;
-    btn.style.color = prevColor;
-    showToast('error', t.misc_error_generic || 'Erreur — réessaie plus tard.');
-  }
 };
 
 window.depositGhost = async () => {
