@@ -3667,6 +3667,47 @@ document.getElementById('maxOpenAccordionContent')?.addEventListener('click', (e
   window.toggleMaxOpenAccordion(false);
 });
 
+// ── Accordéons "Identité", "Visibilité", "Type d'offre" (Lot O) ──
+// Même modèle que ci-dessus — généralisation du Lot N au reste des
+// réglages de la page Déposer.
+window.toggleIdentityAccordion   = (forceOpen) => _toggleDepositAccordion('identityAccordionToggle', 'identityAccordionContent', forceOpen);
+window.toggleVisibilityAccordion = (forceOpen) => _toggleDepositAccordion('visibilityAccordionToggle', 'visibilityAccordionContent', forceOpen);
+window.toggleBizTypeAccordion    = (forceOpen) => _toggleDepositAccordion('bizTypeAccordionToggle', 'bizTypeAccordionContent', forceOpen);
+
+function _updateIdentityAccordionSummary() {
+  const el = document.getElementById('identityAccordionSummary');
+  const btn = document.querySelector('#identityAccordionContent .type-btn.active');
+  if (el && btn) el.textContent = btn.textContent.trim();
+}
+function _updateVisibilityAccordionSummary() {
+  const el = document.getElementById('visibilityAccordionSummary');
+  const btn = document.querySelector('#visibilityAccordionContent .type-btn.active');
+  if (el && btn) el.textContent = btn.textContent.trim();
+}
+function _updateBizTypeAccordionSummary() {
+  const el = document.getElementById('bizTypeAccordionSummary');
+  const btn = document.querySelector('#bizTypeAccordionContent .type-btn.active');
+  if (el && btn) el.textContent = btn.textContent.trim();
+}
+document.getElementById('identityAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateIdentityAccordionSummary();
+  window.toggleIdentityAccordion(false);
+});
+document.getElementById('visibilityAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateVisibilityAccordionSummary();
+  window.toggleVisibilityAccordion(false);
+});
+document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateBizTypeAccordionSummary();
+  window.toggleBizTypeAccordion(false);
+});
+
 // ── Proximity data attribute helper ────────────────────────
 function getProximityClass(distM) {
   if (distM <= 15) return 'close';
@@ -8146,6 +8187,10 @@ window.showScreen = (id, fromPopstate = false) => {
     if (typeof window.toggleRadiusAccordion === 'function') window.toggleRadiusAccordion(false);
     if (typeof window.toggleDurAccordion === 'function') window.toggleDurAccordion(false);
     if (typeof window.toggleMaxOpenAccordion === 'function') window.toggleMaxOpenAccordion(false);
+    // Referme aussi Identité / Visibilité / Type d'offre (Lot O)
+    if (typeof window.toggleIdentityAccordion === 'function') window.toggleIdentityAccordion(false);
+    if (typeof window.toggleVisibilityAccordion === 'function') window.toggleVisibilityAccordion(false);
+    if (typeof window.toggleBizTypeAccordion === 'function') window.toggleBizTypeAccordion(false);
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('premSection_chain');
@@ -8268,6 +8313,10 @@ window.toggleBusinessMode = () => {
           b.setAttribute('aria-pressed', 'true');
         }
       });
+      // Resynchroniser les résumés d'accordéon (Lot O) — ces changements
+      // forcés ne passent pas par le clic délégué qui les met à jour d'habitude.
+      if (typeof _updateDurAccordionSummary === 'function') _updateDurAccordionSummary();
+      if (typeof _updateRadiusAccordionSummary === 'function') _updateRadiusAccordionSummary();
     }, 100);
     showToast('success', t.dep_biz_toast);
   } else {

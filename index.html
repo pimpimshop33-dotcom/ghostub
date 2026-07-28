@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=178"></script>
+<script type="module" src="app.js?v=179"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -2980,11 +2980,17 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <div id="businessDepositForm" style="display:none;">
           <div style="background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
             <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:10px;">🏪 Type d'offre</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
-              <button class="type-btn active" data-val="Promo" onclick="selectType(this)" aria-pressed="true" style="flex:1;min-width:70px;">🏷 Promo</button>
-              <button class="type-btn" data-val="Événement" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🎉 Événement</button>
-              <button class="type-btn" data-val="Nouveauté" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">✨ Nouveauté</button>
-              <button class="type-btn" data-val="Service" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🛎 Service</button>
+            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" onclick="toggleBizTypeAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBizTypeAccordion();}">
+              <span id="bizTypeAccordionSummary">🏷 Promo</span>
+              <span class="toggle-arrow" aria-hidden="true">▼</span>
+            </div>
+            <div class="deposit-advanced-content" id="bizTypeAccordionContent">
+              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
+                <button class="type-btn active" data-val="Promo" onclick="selectType(this)" aria-pressed="true" style="flex:1;min-width:70px;">🏷 Promo</button>
+                <button class="type-btn" data-val="Événement" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🎉 Événement</button>
+                <button class="type-btn" data-val="Nouveauté" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">✨ Nouveauté</button>
+                <button class="type-btn" data-val="Service" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🛎 Service</button>
+              </div>
             </div>
           </div>
           <div class="form-group" style="margin-bottom:10px;">
@@ -3187,19 +3193,31 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 
         <!-- ── IDENTITÉ ──────────────────────────────────── -->
         <div class="section-label">👤 <span data-i18n="dep_tool_identity">Identité</span></div>
-        <div id="step3IdentityWrap" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
-          <div>
+        <div id="step3IdentityWrap" style="margin-bottom:18px;">
+          <div class="form-group" style="margin-bottom:14px;">
             <label class="form-label">Identité</label>
-            <div class="type-selector" role="group" aria-label="Mode d'identité">
-              <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
-              <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
+            <div class="deposit-advanced-toggle" id="identityAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="identityAccordionContent" onclick="toggleIdentityAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleIdentityAccordion();}">
+              <span id="identityAccordionSummary">👻 Anon</span>
+              <span class="toggle-arrow" aria-hidden="true">▼</span>
+            </div>
+            <div class="deposit-advanced-content" id="identityAccordionContent">
+              <div class="type-selector" role="group" aria-label="Mode d'identité" style="margin-top:10px;">
+                <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
+                <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
+              </div>
             </div>
           </div>
-          <div>
+          <div class="form-group">
             <label class="form-label" data-i18n="dep_visibility_label">Visibilité</label>
-            <div class="type-selector" role="group" aria-label="Visibilité du fantôme">
-              <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
-              <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
+            <div class="deposit-advanced-toggle" id="visibilityAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="visibilityAccordionContent" onclick="toggleVisibilityAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleVisibilityAccordion();}">
+              <span id="visibilityAccordionSummary">Normal</span>
+              <span class="toggle-arrow" aria-hidden="true">▼</span>
+            </div>
+            <div class="deposit-advanced-content" id="visibilityAccordionContent">
+              <div class="type-selector" role="group" aria-label="Visibilité du fantôme" style="margin-top:10px;">
+                <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
+                <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
+              </div>
             </div>
           </div>
         </div>
