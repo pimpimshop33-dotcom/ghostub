@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=184"></script>
+<script type="module" src="app.js?v=185"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1244,9 +1244,48 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
   font-size:50px;font-weight:700;color:var(--warm);margin:0;
   box-shadow:0 0 28px rgba(199,140,238,.16);
 }
-/* Lot N — teinte violet/orchidée distincte des autres occurrences du Trace
-   (radar, carte, dépôt), qui restent bleu/lavande #9DABFF/#C7BCEE. */
-.profile-avatar-big img{filter:hue-rotate(35deg) saturate(1.2);}
+/* Lot K — teinte du Trace de profil personnalisable (Lot N posait un violet
+   fixe ; devient l'une des options, "violet" reste la valeur par défaut
+   pour ne rien changer visuellement tant que l'utilisateur n'a pas choisi).
+   Une classe est ajoutée sur .profile-avatar-big par _applyTraceColor(). */
+.profile-avatar-big img{filter:hue-rotate(35deg) saturate(1.2);} /* fallback = violet */
+.profile-avatar-big.trace-color-spirit img{filter:none;}
+.profile-avatar-big.trace-color-violet img{filter:hue-rotate(35deg) saturate(1.2);}
+.profile-avatar-big.trace-color-mist img{filter:hue-rotate(150deg) saturate(1.1) brightness(1.05);}
+.profile-avatar-big.trace-color-amber img{filter:hue-rotate(190deg) saturate(1.35) brightness(1.1);}
+.profile-avatar-big.trace-color-rose img{filter:hue-rotate(80deg) saturate(1.3);}
+.profile-avatar-big.trace-color-crimson img{filter:hue-rotate(255deg) saturate(1.5) brightness(.92);}
+
+/* ── Sélecteur de teinte du Trace (Lot K) ─────────────────── */
+.trace-color-picker{display:flex;justify-content:center;gap:9px;margin-top:12px;flex-wrap:wrap;}
+.trace-color-swatch{
+  position:relative;width:30px;height:30px;border-radius:50%;
+  border:2px solid transparent;cursor:pointer;padding:0;
+  transition:transform .2s,border-color .2s;touch-action:manipulation;
+}
+.trace-color-swatch:hover{transform:scale(1.12);}
+.trace-color-swatch.active{border-color:var(--ether);box-shadow:0 0 10px rgba(255,255,255,.25);}
+.trace-color-swatch.locked{opacity:.4;}
+.trace-color-swatch-lock{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:11px;background:rgba(0,0,0,.35);border-radius:50%;
+}
+
+/* ── Collection de cartes (Lot L) ──────────────────────────── */
+.trace-collection-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px;
+  margin-bottom:18px;
+}
+.trace-card{
+  aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  transition:transform .2s,border-color .2s;
+}
+.trace-card.unlocked{border-color:rgba(var(--spirit-rgb),.35);box-shadow:0 0 12px rgba(var(--spirit-rgb),.12);}
+.trace-card.locked{opacity:.4;filter:grayscale(1);}
+.trace-card-icon{font-size:19px;}
+.trace-card-count{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--warm);}
+
 .profile-name-big{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
 .stat-card{
@@ -3343,6 +3382,8 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true"></div>
         </div>
         <div class="profile-name-big" id="profileName">…</div>
+        <!-- Teinte du Trace (Lot K) — personnalisation de l'avatar profil -->
+        <div class="trace-color-picker" id="traceColorPicker" role="group" aria-label="Teinte de mon Trace"></div>
         <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
           <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
           <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(var(--premium-rgb),.8);background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_year_btn">✦ Mon année</button>
@@ -3353,6 +3394,13 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <span id="statRank" style="font-size:20px;font-weight:700;color:var(--warm);letter-spacing:.3px;">—</span>
         <div style="font-size:10px;color:var(--spirit-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;" data-i18n="profile_rank">Rang</div>
       </div>
+
+      <!-- ── COLLECTION DE CARTES (Lot L) ────────────────── -->
+      <div class="empreinte-header">
+        <div class="empreinte-title" data-i18n="collection_title">Ma collection</div>
+        <div class="empreinte-sub" id="collectionProgress">0 / 0</div>
+      </div>
+      <div class="trace-collection-grid" id="traceCollectionGrid"></div>
 
       <!-- ── MON EMPREINTE ──────────────────────────────── -->
       <div class="empreinte-header">

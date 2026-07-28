@@ -286,6 +286,20 @@ const LANGS = {
     profile_rank: 'Rang',
     profile_discovered: 'Découvertes',
     profile_deposited: 'Dépôts',
+    // Teinte du Trace (Lot K)
+    trace_color_spirit: 'Spirit blue',
+    trace_color_violet: 'Orchidée',
+    trace_color_mist: 'Brume',
+    trace_color_amber: 'Ambre',
+    trace_color_rose: 'Rose spectral',
+    trace_color_crimson: 'Braise',
+    trace_color_locked: '🔒 Teinte réservée aux membres Premium',
+    // Collection de cartes (Lot L)
+    collection_title: 'Ma collection',
+    collection_track_discovered: 'Découvertes',
+    collection_track_deposited: 'Dépôts',
+    collection_track_resonances: 'Résonances',
+    collection_track_streak: 'Série',
     profile_resonances: 'Résonances',
     profile_first_reader: 'Premiers lecteurs',
     profile_favorites: 'Favoris',
@@ -888,6 +902,20 @@ const LANGS = {
     profile_discovered: 'Discovered',
     profile_deposited: 'Dropped',
     profile_resonances: 'Resonances',
+    // Trace color (Lot K)
+    trace_color_spirit: 'Spirit blue',
+    trace_color_violet: 'Orchid',
+    trace_color_mist: 'Mist',
+    trace_color_amber: 'Amber',
+    trace_color_rose: 'Spectral rose',
+    trace_color_crimson: 'Ember',
+    trace_color_locked: '🔒 Premium-only tint',
+    // Card collection (Lot L)
+    collection_title: 'My collection',
+    collection_track_discovered: 'Discoveries',
+    collection_track_deposited: 'Drops',
+    collection_track_resonances: 'Resonances',
+    collection_track_streak: 'Streak',
     profile_first_reader: 'First reads',
     profile_favorites: 'Favorites',
     profile_notif_on: 'Notifications enabled ✓',
@@ -1516,6 +1544,62 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
     `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
     `</svg></span>`;
 }
+
+// ══════════════════════════════════════════════════════════
+// TEINTE DU TRACE DE PROFIL — personnalisation par utilisateur (Lot K)
+// Distinct du Trace coloré par Sceau ci-dessus (_traceMarkHTML, par
+// fantôme déposé) : ceci ne concerne que l'avatar du Profil, "le Trace qui
+// représente" l'utilisateur — stocké dans users/{uid}.traceColor.
+// "violet" reste la valeur par défaut (= apparence du Lot N, inchangée pour
+// qui ne personnalise rien). 3 teintes gratuites + 3 réservées Premium
+// (K6, décision produit non tranchée — cf. résumé de session) : même
+// logique que le reste de l'app (options de base gratuites, palette élargie
+// en Premium, ex. Mode Commerce, 5/10 lectures, vidéo, documents).
+// ══════════════════════════════════════════════════════════
+const TRACE_COLORS = [
+  { id: 'spirit',  swatch: '#9DABFF', premium: false, labelKey: 'trace_color_spirit' },
+  { id: 'violet',  swatch: '#B478E8', premium: false, labelKey: 'trace_color_violet' },
+  { id: 'mist',    swatch: '#6EE0B0', premium: false, labelKey: 'trace_color_mist' },
+  { id: 'amber',   swatch: '#F0C868', premium: true,  labelKey: 'trace_color_amber' },
+  { id: 'rose',    swatch: '#FF9DC4', premium: true,  labelKey: 'trace_color_rose' },
+  { id: 'crimson', swatch: '#E85A6E', premium: true,  labelKey: 'trace_color_crimson' },
+];
+const TRACE_COLOR_IDS = TRACE_COLORS.map(c => c.id);
+let userTraceColor = 'violet';
+
+function _applyTraceColor(colorId) {
+  const avatar = document.getElementById('profileAvatar');
+  if (!avatar) return;
+  TRACE_COLOR_IDS.forEach(id => avatar.classList.remove('trace-color-' + id));
+  avatar.classList.add('trace-color-' + (TRACE_COLOR_IDS.includes(colorId) ? colorId : 'violet'));
+}
+
+function _renderTraceColorPicker() {
+  const wrap = document.getElementById('traceColorPicker');
+  if (!wrap) return;
+  wrap.innerHTML = TRACE_COLORS.map(c => {
+    const locked = c.premium && !isPremium;
+    const active = c.id === userTraceColor;
+    return `<button type="button" class="trace-color-swatch${active ? ' active' : ''}${locked ? ' locked' : ''}" style="background:${c.swatch};" onclick="setTraceColor('${c.id}')" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">🔒</span>' : ''}</button>`;
+  }).join('');
+}
+
+window.setTraceColor = async (colorId) => {
+  const color = TRACE_COLORS.find(c => c.id === colorId);
+  if (!color) return;
+  if (color.premium && !isPremium) {
+    showToast('info', t.trace_color_locked || 'Teinte réservée Premium', 3000);
+    return;
+  }
+  userTraceColor = colorId;
+  _applyTraceColor(colorId);
+  _renderTraceColorPicker();
+  if (currentUser) {
+    try {
+      await setDoc(doc(db, COLL.USERS, currentUser.uid), { traceColor: colorId }, { merge: true });
+    } catch (e) { console.warn('setTraceColor error:', e); }
+  }
+};
 
 // ══════════════════════════════════════════════════════════
 // ICÔNES DE CATÉGORIE (Sceau) — SVG monochrome, style nav-icon
@@ -2256,6 +2340,10 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('profileAvatar').innerHTML = _BRAND_MARK_HTML;
     const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
+    // Teinte du Trace de profil (Lot K) — "violet" par défaut si jamais choisi
+    userTraceColor = (userDoc.exists() && userDoc.data().traceColor) || 'violet';
+    _applyTraceColor(userTraceColor);
+    _renderTraceColorPicker();
     updatePremiumUI();
     // Retry après 800ms pour couvrir les cas où le DOM n'est pas encore stable
     setTimeout(() => updatePremiumUI(), 800);
@@ -3516,6 +3604,49 @@ function getRank(n) {
   return { ...rank, index: rankIdx };
 }
 
+// ══════════════════════════════════════════════════════════
+// COLLECTION DE CARTES (Lot L)
+// Une carte par palier atteint, répartie sur 4 pistes distinctes plutôt
+// qu'un total unique et ambigu (L3, décision produit non tranchée — cf.
+// résumé de session) : Découvertes ET Dépôts restent deux pistes séparées,
+// chacune avec ses propres cartes, au lieu de les fusionner. Toutes les
+// stats utilisées (découvertes, dépôts, résonances, série) sont déjà
+// trackées ailleurs dans l'app — la collection est entièrement dérivée à
+// l'affichage, sans nouveau champ Firestore ni état "débloqué" à persister
+// (ces compteurs ne font que croître, jamais rétrograder).
+const CARD_STREAK_MILESTONES = [3, 7, 14, 30];
+const CARD_TIER_NAMES_FR = { 1:'Premier pas', 3:'Régulier', 5:'Habitué', 7:'Assidu', 10:'Confirmé', 14:'Endurant', 25:'Expert', 30:'Vétéran', 50:'Maître', 100:'Légende' };
+const CARD_TIER_NAMES_EN = { 1:'First step', 3:'Regular', 5:'Habitué', 7:'Dedicated', 10:'Confirmed', 14:'Enduring', 25:'Expert', 30:'Veteran', 50:'Master', 100:'Legend' };
+const CARD_TRACKS = [
+  { id: 'discovered', icon: '🔍', labelKey: 'collection_track_discovered', thresholds: MILESTONES },
+  { id: 'deposited',  icon: '👻', labelKey: 'collection_track_deposited',  thresholds: MILESTONES },
+  { id: 'resonances', icon: '💫', labelKey: 'collection_track_resonances', thresholds: RESO_MILESTONES },
+  { id: 'streak',     icon: '🔥', labelKey: 'collection_track_streak',     thresholds: CARD_STREAK_MILESTONES },
+];
+function _renderTraceCollection(stats) {
+  const grid = document.getElementById('traceCollectionGrid');
+  const progressEl = document.getElementById('collectionProgress');
+  if (!grid) return;
+  const tierNames = _currentLang === 'en' ? CARD_TIER_NAMES_EN : CARD_TIER_NAMES_FR;
+  let unlockedCount = 0, totalCount = 0, html = '';
+  CARD_TRACKS.forEach(track => {
+    const value = stats[track.id] || 0;
+    const label = t[track.labelKey] || track.id;
+    track.thresholds.forEach(threshold => {
+      totalCount++;
+      const unlocked = value >= threshold;
+      if (unlocked) unlockedCount++;
+      const tier = tierNames[threshold] || threshold;
+      html += `<div class="trace-card ${unlocked ? 'unlocked' : 'locked'}" title="${escapeHTML(label)} · ${threshold} · ${escapeHTML(tier)}">` +
+        `<div class="trace-card-icon" aria-hidden="true">${unlocked ? track.icon : '🔒'}</div>` +
+        `<div class="trace-card-count">${threshold}</div>` +
+        `</div>`;
+    });
+  });
+  grid.innerHTML = html;
+  if (progressEl) progressEl.textContent = unlockedCount + ' / ' + totalCount;
+}
+
 // ── Update rank bar in radar ──────────────────────────────
 function updateRankBar() {
   const count = getDiscoveryCount();
@@ -3826,6 +3957,7 @@ async function refreshProfileStats() {
   updateFavoritesCount();
   const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
+  let deposited = 0, resonances = 0;
   try {
     // 1 lecture Firestore sur users/{uid} pour les compteurs dénormalisés
     const userSnap = await getDoc(doc(db, COLL.USERS, currentUser.uid));
@@ -3833,22 +3965,27 @@ async function refreshProfileStats() {
     const _depKey2 = 'ghostub_total_deposited_' + currentUser.uid;
     const _localDep = parseInt(localStorage.getItem(_depKey2) || '0');
     if (userData.ghostCount != null) {
-      animateStatNumber('statDeposited', Math.max(userData.ghostCount, _localDep));
+      deposited = Math.max(userData.ghostCount, _localDep);
     } else {
       // Fallback : compter les docs (migration douce)
       const snap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid), limit(100)));
-      animateStatNumber('statDeposited', Math.max(snap.size, _localDep));
+      deposited = Math.max(snap.size, _localDep);
     }
+    animateStatNumber('statDeposited', deposited);
     if (userData.totalResonances != null) {
-      animateStatNumber('statResonances', userData.totalResonances);
+      resonances = userData.totalResonances;
     } else {
       const snap2 = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid), limit(100)));
-      let totalReso = 0;
-      snap2.forEach(d => { totalReso += d.data().resonances || 0; });
-      animateStatNumber('statResonances', totalReso);
+      snap2.forEach(d => { resonances += d.data().resonances || 0; });
     }
+    animateStatNumber('statResonances', resonances);
   } catch(e) { console.warn('refreshProfileStats:', e); }
   updateRankBar();
+  // Collection de cartes (Lot L) — dérivée des stats déjà chargées ci-dessus,
+  // aucune lecture Firestore supplémentaire.
+  if (typeof _renderTraceCollection === 'function') {
+    _renderTraceCollection({ discovered: count, deposited, resonances, streak: _getStreak().count });
+  }
 }
 async function loadBizDashboard() {
   if (!currentUser) return;
@@ -4139,6 +4276,8 @@ function updatePremiumUI() {
     const el = document.getElementById(id);
     if (el) el.style.display = isPremium ? 'none' : '';
   });
+  // Verrous du sélecteur de teinte du Trace (Lot K)
+  if (typeof _renderTraceColorPicker === 'function') _renderTraceColorPicker();
 
   // Afficher/masquer chainContent et dedicatedContent
   const chainContent = document.getElementById('chainContent');
