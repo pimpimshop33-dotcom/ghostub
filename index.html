@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=179"></script>
+<script type="module" src="app.js?v=180"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -3194,7 +3194,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         <!-- ── IDENTITÉ ──────────────────────────────────── -->
         <div class="section-label">👤 <span data-i18n="dep_tool_identity">Identité</span></div>
         <div id="step3IdentityWrap" style="margin-bottom:18px;">
-          <div class="form-group" style="margin-bottom:14px;">
+          <div class="form-group">
             <label class="form-label">Identité</label>
             <div class="deposit-advanced-toggle" id="identityAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="identityAccordionContent" onclick="toggleIdentityAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleIdentityAccordion();}">
               <span id="identityAccordionSummary">👻 Anon</span>
@@ -3204,19 +3204,6 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
               <div class="type-selector" role="group" aria-label="Mode d'identité" style="margin-top:10px;">
                 <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
                 <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" data-i18n="dep_visibility_label">Visibilité</label>
-            <div class="deposit-advanced-toggle" id="visibilityAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="visibilityAccordionContent" onclick="toggleVisibilityAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleVisibilityAccordion();}">
-              <span id="visibilityAccordionSummary">Normal</span>
-              <span class="toggle-arrow" aria-hidden="true">▼</span>
-            </div>
-            <div class="deposit-advanced-content" id="visibilityAccordionContent">
-              <div class="type-selector" role="group" aria-label="Visibilité du fantôme" style="margin-top:10px;">
-                <button class="type-btn active" data-val="normal" onclick="selectType(this)" aria-pressed="true">Normal</button>
-                <button class="type-btn" data-val="secret" onclick="selectType(this)" aria-pressed="false">🔮 Secret</button>
               </div>
             </div>
           </div>

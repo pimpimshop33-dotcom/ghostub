@@ -229,7 +229,6 @@ const LANGS = {
     dep_duration_label: 'Durée de vie',
     dep_radius_label: 'Rayon de détection',
     dep_identity_label: 'Identité',
-    dep_visibility_label: 'Visibilité',
     dep_vocal_label: 'Message vocal (optionnel)',
     dep_photo_label: 'Photo (optionnel)',
     profile_code_question: 'Vous avez un code d\'activation ?',
@@ -829,7 +828,6 @@ const LANGS = {
     dep_duration_label: 'Lifespan',
     dep_radius_label: 'Detection radius',
     dep_identity_label: 'Identity',
-    dep_visibility_label: 'Visibility',
     dep_vocal_label: 'Voice message (optional)',
     dep_photo_label: 'Photo (optional)',
     profile_code_question: 'Do you have an activation code?',
@@ -3667,21 +3665,15 @@ document.getElementById('maxOpenAccordionContent')?.addEventListener('click', (e
   window.toggleMaxOpenAccordion(false);
 });
 
-// ── Accordéons "Identité", "Visibilité", "Type d'offre" (Lot O) ──
+// ── Accordéons "Identité", "Type d'offre" (Lot O, Visibilité retirée au Lot P) ──
 // Même modèle que ci-dessus — généralisation du Lot N au reste des
 // réglages de la page Déposer.
 window.toggleIdentityAccordion   = (forceOpen) => _toggleDepositAccordion('identityAccordionToggle', 'identityAccordionContent', forceOpen);
-window.toggleVisibilityAccordion = (forceOpen) => _toggleDepositAccordion('visibilityAccordionToggle', 'visibilityAccordionContent', forceOpen);
 window.toggleBizTypeAccordion    = (forceOpen) => _toggleDepositAccordion('bizTypeAccordionToggle', 'bizTypeAccordionContent', forceOpen);
 
 function _updateIdentityAccordionSummary() {
   const el = document.getElementById('identityAccordionSummary');
   const btn = document.querySelector('#identityAccordionContent .type-btn.active');
-  if (el && btn) el.textContent = btn.textContent.trim();
-}
-function _updateVisibilityAccordionSummary() {
-  const el = document.getElementById('visibilityAccordionSummary');
-  const btn = document.querySelector('#visibilityAccordionContent .type-btn.active');
   if (el && btn) el.textContent = btn.textContent.trim();
 }
 function _updateBizTypeAccordionSummary() {
@@ -3694,12 +3686,6 @@ document.getElementById('identityAccordionContent')?.addEventListener('click', (
   if (!btn || !btn.classList.contains('active')) return;
   _updateIdentityAccordionSummary();
   window.toggleIdentityAccordion(false);
-});
-document.getElementById('visibilityAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.type-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateVisibilityAccordionSummary();
-  window.toggleVisibilityAccordion(false);
 });
 document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e) => {
   const btn = e.target.closest('.type-btn');
@@ -7339,9 +7325,11 @@ window.depositGhost = async () => {
     const duration = document.querySelector('.dur-btn.active:not([data-maxopen])')?.textContent || t.dep_dur_7d;
     const maxOpenCount = parseInt(document.querySelector('.dur-btn.active[data-maxopen]')?.dataset.maxopen || '0');
     const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
-    const typeBtns = document.querySelectorAll('#screenDeposit .type-selector');
-    const anon     = typeBtns[1]?.querySelector('.type-btn.active')?.dataset.val === 'anon';
-    const secret   = typeBtns[0]?.querySelector('.type-btn.active')?.dataset.val === 'secret';
+    // Ciblage direct par id (Lot P) — l'ancien lookup positionnel via
+    // `#screenDeposit .type-selector` s'appuyait sur l'ordre DOM Identité/
+    // Visibilité et lisait le mauvais bloc (bug repéré au Lot O).
+    // Visibilité a été retirée (Lot P) : seule Identité subsiste.
+    const anon     = document.querySelector('#identityAccordionContent .type-btn.active')?.dataset.val === 'anon';
     const err      = document.getElementById('depositError');
 
     // Le message dépend du mode : Commerce le reconstruit depuis titre/description/
@@ -7429,7 +7417,7 @@ window.depositGhost = async () => {
       // ── Dépôt via WorldService.createGhost() ────────────────────────────
       const ghostData = {
         message, location: location || 'Lieu sans nom', emoji, duration, radius, maxOpenCount: maxOpenCount || 0,
-        anonymous: anon, secret: secret || false,
+        anonymous: anon,
         dedicatedTo: (isPremium && document.getElementById('dedicatedUidInput')?.value.trim()) || null,
         audioUrl: audioUrl || null, photoUrl: photoUrl || null, videoUrl: videoUrl || null,
         attachments: (isPremium && Array.isArray(attachments) && attachments.length > 0) ? attachments : null,
@@ -7513,7 +7501,7 @@ window.depositGhost = async () => {
       _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(e => console.warn('notify:', e));
       playDepositSound();
       HapticsService.deposit();
-      Analytics.track('ghost_deposited', { anonymous: anon, secret, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
+      Analytics.track('ghost_deposited', { anonymous: anon, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
       // Clic pour fermer manuellement si le timer bloque
       const successEl = document.getElementById('depositSuccess');
       const dismissSuccess = () => {
@@ -8187,9 +8175,8 @@ window.showScreen = (id, fromPopstate = false) => {
     if (typeof window.toggleRadiusAccordion === 'function') window.toggleRadiusAccordion(false);
     if (typeof window.toggleDurAccordion === 'function') window.toggleDurAccordion(false);
     if (typeof window.toggleMaxOpenAccordion === 'function') window.toggleMaxOpenAccordion(false);
-    // Referme aussi Identité / Visibilité / Type d'offre (Lot O)
+    // Referme aussi Identité / Type d'offre (Lot O)
     if (typeof window.toggleIdentityAccordion === 'function') window.toggleIdentityAccordion(false);
-    if (typeof window.toggleVisibilityAccordion === 'function') window.toggleVisibilityAccordion(false);
     if (typeof window.toggleBizTypeAccordion === 'function') window.toggleBizTypeAccordion(false);
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
