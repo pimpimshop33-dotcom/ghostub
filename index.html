@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=177"></script>
+<script type="module" src="app.js?v=178"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1220,27 +1220,30 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
    .profile-avatar-big lui-même dans updatePremiumUI()). */
 .profile-avatar-ring{
   position:relative;
-  width:64px;height:64px;border-radius:19px;
-  margin:0 auto 10px;
+  width:116px;height:116px;border-radius:34px;
+  margin:0 auto 14px;
   display:flex;align-items:center;justify-content:center;
 }
 .profile-avatar-ring::before{
   content:'';
   position:absolute;inset:0;
-  border-radius:19px;
-  background:conic-gradient(from 0deg,rgba(232,160,48,.9),rgba(var(--spirit-rgb),.6),rgba(232,160,48,.9));
+  border-radius:34px;
+  background:conic-gradient(from 0deg,rgba(199,140,238,.9),rgba(var(--spirit-rgb),.6),rgba(199,140,238,.9));
   animation:avatarRingSpin 7s linear infinite;
 }
 @keyframes avatarRingSpin{to{transform:rotate(360deg);}}
 .profile-avatar-big{
   position:relative;z-index:1;
-  width:56px;height:56px;border-radius:16px;
-  background:linear-gradient(135deg,rgba(232,160,48,.2),rgba(var(--spirit-rgb),.08));
-  border:1px solid rgba(232,160,48,.3);
+  width:104px;height:104px;border-radius:30px;
+  background:linear-gradient(135deg,rgba(199,140,238,.22),rgba(var(--spirit-rgb),.08));
+  border:1px solid rgba(199,140,238,.35);
   display:flex;align-items:center;justify-content:center;
-  font-size:var(--serif-sm);font-weight:700;color:var(--warm);margin:0;
-  box-shadow:0 0 20px rgba(232,160,48,.1);
+  font-size:50px;font-weight:700;color:var(--warm);margin:0;
+  box-shadow:0 0 28px rgba(199,140,238,.16);
 }
+/* Lot N — teinte violet/orchidée distincte des autres occurrences du Trace
+   (radar, carte, dépôt), qui restent bleu/lavande #9DABFF/#C7BCEE. */
+.profile-avatar-big img{filter:hue-rotate(35deg) saturate(1.2);}
 .profile-name-big{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
 .stat-card{
@@ -3026,32 +3029,50 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         </div>
         <div id="step2RadiusWrap" class="form-group" style="margin-bottom:18px;">
           <label class="form-label" data-i18n="dep_radius_label">Rayon de détection</label>
-          <div class="radius-selector" role="group" aria-label="Rayon de détection">
-            <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">3m</button>
-            <button class="radius-btn active" onclick="_selectRadius(this)" aria-pressed="true">10m</button>
-            <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">50m</button>
+          <div class="deposit-advanced-toggle" id="radiusAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="radiusAccordionContent" onclick="toggleRadiusAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRadiusAccordion();}">
+            <span id="radiusAccordionSummary">📡 10m</span>
+            <span class="toggle-arrow" aria-hidden="true">▼</span>
+          </div>
+          <div class="deposit-advanced-content" id="radiusAccordionContent">
+            <div class="radius-selector" role="group" aria-label="Rayon de détection" style="margin-top:10px;">
+              <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">3m</button>
+              <button class="radius-btn active" onclick="_selectRadius(this)" aria-pressed="true">10m</button>
+              <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">50m</button>
+            </div>
           </div>
         </div>
 
         <!-- ── DURÉE DE VIE ──────────────────────────────── -->
         <div id="step2DurWrap" class="form-group" style="margin-bottom:18px;">
           <label class="form-label" data-i18n="dep_duration_label">Durée de vie</label>
-          <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme">
-            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
-            <button class="dur-btn active" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
-            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-            <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+          <div class="deposit-advanced-toggle" id="durAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="durAccordionContent" onclick="toggleDurAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDurAccordion();}">
+            <span id="durAccordionSummary">⏳ 7 jours</span>
+            <span class="toggle-arrow" aria-hidden="true">▼</span>
+          </div>
+          <div class="deposit-advanced-content" id="durAccordionContent">
+            <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme" style="margin-top:10px;">
+              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
+              <button class="dur-btn active" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
+              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
+              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+            </div>
           </div>
         </div>
 
         <!-- ── DISPARAÎT APRÈS ───────────────────────────── -->
         <div id="step2MaxOpenWrap" class="form-group" style="margin-bottom:18px;">
           <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
-          <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition">
-            <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
-            <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
-            <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
-            <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+          <div class="deposit-advanced-toggle" id="maxOpenAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="maxOpenAccordionContent" onclick="toggleMaxOpenAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMaxOpenAccordion();}">
+            <span id="maxOpenAccordionSummary">👁️ ∞ Illimité</span>
+            <span class="toggle-arrow" aria-hidden="true">▼</span>
+          </div>
+          <div class="deposit-advanced-content" id="maxOpenAccordionContent">
+            <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition" style="margin-top:10px;">
+              <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
+              <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
+              <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
+              <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+            </div>
           </div>
         </div>
 

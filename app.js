@@ -3617,6 +3617,56 @@ document.getElementById('condAccordionContent')?.addEventListener('click', (e) =
   window.toggleCondAccordion(false);
 });
 
+// ── Accordéons "Rayon", "Durée de vie", "Disparaît après" (Lot N) ──
+// Même modèle que l'accordéon Condition d'ouverture ci-dessus : repliés par
+// défaut, résumé icône + valeur active, se referment après un choix.
+function _toggleDepositAccordion(toggleId, contentId, forceOpen) {
+  const toggle = document.getElementById(toggleId);
+  const content = document.getElementById(contentId);
+  if (!toggle || !content) return;
+  const open = typeof forceOpen === 'boolean' ? forceOpen : !toggle.classList.contains('open');
+  toggle.classList.toggle('open', open);
+  content.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+window.toggleRadiusAccordion  = (forceOpen) => _toggleDepositAccordion('radiusAccordionToggle', 'radiusAccordionContent', forceOpen);
+window.toggleDurAccordion     = (forceOpen) => _toggleDepositAccordion('durAccordionToggle', 'durAccordionContent', forceOpen);
+window.toggleMaxOpenAccordion = (forceOpen) => _toggleDepositAccordion('maxOpenAccordionToggle', 'maxOpenAccordionContent', forceOpen);
+
+function _updateRadiusAccordionSummary() {
+  const el = document.getElementById('radiusAccordionSummary');
+  const btn = document.querySelector('#radiusAccordionContent .radius-btn.active');
+  if (el && btn) el.textContent = '📡 ' + btn.textContent.trim();
+}
+function _updateDurAccordionSummary() {
+  const el = document.getElementById('durAccordionSummary');
+  const btn = document.querySelector('#durAccordionContent .dur-btn.active');
+  if (el && btn) el.textContent = '⏳ ' + btn.textContent.trim();
+}
+function _updateMaxOpenAccordionSummary() {
+  const el = document.getElementById('maxOpenAccordionSummary');
+  const btn = document.querySelector('#maxOpenAccordionContent .dur-btn.active');
+  if (el && btn) el.textContent = '👁️ ' + btn.textContent.trim();
+}
+document.getElementById('radiusAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.radius-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateRadiusAccordionSummary();
+  window.toggleRadiusAccordion(false);
+});
+document.getElementById('durAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.dur-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateDurAccordionSummary();
+  window.toggleDurAccordion(false);
+});
+document.getElementById('maxOpenAccordionContent')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('.dur-btn');
+  if (!btn || !btn.classList.contains('active')) return;
+  _updateMaxOpenAccordionSummary();
+  window.toggleMaxOpenAccordion(false);
+});
+
 // ── Proximity data attribute helper ────────────────────────
 function getProximityClass(distM) {
   if (distM <= 15) return 'close';
@@ -8090,6 +8140,12 @@ window.showScreen = (id, fromPopstate = false) => {
     // Reset accordéon Condition d'ouverture (Lot H3) — replié, résumé "always"
     if (typeof window.toggleCondAccordion === 'function') window.toggleCondAccordion(false);
     if (typeof _updateCondAccordionSummary === 'function') _updateCondAccordionSummary();
+    // Referme aussi les accordéons Rayon / Durée de vie / Disparaît après
+    // (Lot N) — la sélection elle-même n'est pas réinitialisée, seul l'état
+    // ouvert/fermé l'est, pour éviter qu'ils restent ouverts d'une visite à l'autre.
+    if (typeof window.toggleRadiusAccordion === 'function') window.toggleRadiusAccordion(false);
+    if (typeof window.toggleDurAccordion === 'function') window.toggleDurAccordion(false);
+    if (typeof window.toggleMaxOpenAccordion === 'function') window.toggleMaxOpenAccordion(false);
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('premSection_chain');
@@ -9066,6 +9122,7 @@ function _updateMaxOpenLockUI() {
       btn.setAttribute('aria-pressed', 'false');
       const oneBtn = btn.parentElement.querySelector('.dur-btn[data-maxopen="1"]');
       if (oneBtn) { oneBtn.classList.add('active'); oneBtn.setAttribute('aria-pressed', 'true'); }
+      if (typeof _updateMaxOpenAccordionSummary === 'function') _updateMaxOpenAccordionSummary();
     }
   });
 }
