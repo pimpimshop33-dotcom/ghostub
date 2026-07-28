@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=182"></script>
+<script type="module" src="app.js?v=183"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -297,6 +297,29 @@ body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenP
 }
 body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.mist {
   background: #6C7AE0 !important; opacity: .35 !important; filter: blur(20px) !important;
+}
+/* Lot R : écran d'intro — même palette spirit blue / ghost lavender que le
+   reste de l'app, à la place du mélange orange/doré + bleu par défaut.
+   Layout, forme, taille, position et animation des lumières inchangés :
+   seul le dégradé de couleur de chaque tache est remplacé (par une teinte
+   de la même famille), pour garder de la profondeur plutôt qu'un aplat. */
+body:has(#screenOnboard.active) .bokeh-light.warm-lg {
+  background: radial-gradient(circle,rgba(157,171,255,.42) 0%,rgba(157,171,255,.12) 50%,transparent 80%) !important;
+}
+body:has(#screenOnboard.active) .bokeh-light.warm-md {
+  background: radial-gradient(circle,rgba(199,188,238,.48) 0%,rgba(199,188,238,.15) 50%,transparent 80%) !important;
+}
+body:has(#screenOnboard.active) .bokeh-light.warm-sm {
+  background: radial-gradient(circle,rgba(200,212,255,.55) 0%,transparent 70%) !important;
+}
+body:has(#screenOnboard.active) .bokeh-light.pink {
+  background: radial-gradient(circle,rgba(108,122,224,.28) 0%,rgba(108,122,224,.06) 50%,transparent 80%) !important;
+}
+body:has(#screenOnboard.active) .bokeh-light.mist {
+  background: radial-gradient(circle,rgba(139,150,224,.22) 0%,rgba(139,150,224,.06) 50%,transparent 80%) !important;
+}
+body:has(#screenOnboard.active) .bokeh-light.front-1 {
+  background: radial-gradient(circle,rgba(212,200,240,.40) 0%,transparent 70%) !important;
 }
 
 /* ── PARTICLES — braises nocturnes ─────────────────────── */

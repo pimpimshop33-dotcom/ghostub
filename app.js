@@ -26,6 +26,18 @@ import HapticsService from './services/haptics.service.js';
 document.addEventListener('click', () => { AudioService.init(); AudioService.resume(); }, { once: true });
 document.addEventListener('touchstart', () => { AudioService.init(); AudioService.resume(); }, { once: true });
 
+// ── Durée minimale d'affichage de l'intro (Lot R) ───────────
+// #screenOnboard est actif par défaut dans le HTML dès le chargement ; ne
+// garantit un délai que pour les transitions AUTOMATIQUES qui l'écartent
+// (onAuthStateChanged) — les clics explicites ("Passer", "← retour", CTA)
+// appellent showScreen() directement ailleurs et ne passent pas par ici.
+const _APP_LOAD_TS = Date.now();
+const _INTRO_MIN_DISPLAY_MS = 1000;
+function _waitMinIntroDisplay() {
+  const remaining = _INTRO_MIN_DISPLAY_MS - (Date.now() - _APP_LOAD_TS);
+  return remaining > 0 ? new Promise(r => setTimeout(r, remaining)) : Promise.resolve();
+}
+
 // ── I18N ─────────────────────────────────────────────────
 const LANGS = {
   fr: {
@@ -2211,6 +2223,7 @@ onAuthStateChanged(auth, async user => {
       // superpose au carrousel et le masque derrière un flou dès le premier
       // affichage. guestExplore()/l'inscription déclenchent le GPS après coup.
       if (localStorage.getItem('ghostub_onboard_seen')) {
+        await _waitMinIntroDisplay();
         document.getElementById('bottomNav').style.display = 'flex';
         showScreen('screenRadar');
         setNav('nav-radar');
@@ -2247,6 +2260,7 @@ onAuthStateChanged(auth, async user => {
     // Retry après 800ms pour couvrir les cas où le DOM n'est pas encore stable
     setTimeout(() => updatePremiumUI(), 800);
     _renderPricingCards();
+    await _waitMinIntroDisplay();
     showScreen('screenRadar');
     setNav('nav-radar');
     // Fantôme garanti au 1er lancement — décalé après le GPS
