@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=183"></script>
+<script type="module" src="app.js?v=184"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -275,51 +275,31 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   .bokeh-light{animation:none !important;}
 }
 /* ── BOKEH CONTEXTUEL — ambiance par écran ─────────────── */
-/* Lot M : Radar, Déposer, Carte et Profil partagent le même traitement
-   "Nocturne Précieux" — valeurs EXACTES de ghostub-nocturne-precieux.html —
-   3 taches #9DABFF/#C7BCEE/#6C7AE0 à opacité .35, blur 20px ; le reste des
-   9 lumières du bokeh partagé (ambre/rose/etc., absentes de la maquette)
-   est masqué pour ne garder que ces 3, cohérentes sur tout le chantier.
-   Fond du .phone et du body également remplacé par le radial-gradient
-   exact de la maquette. (Onboarding non concerné, cf. décision Lot M.) */
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .phone {
+/* Lot M/S : Radar, Déposer, Carte, Profil et Intro partagent le même
+   traitement "Nocturne Précieux" — valeurs EXACTES de
+   ghostub-nocturne-precieux.html — 3 taches #9DABFF/#C7BCEE/#6C7AE0 à
+   opacité .35, blur 20px ; le reste des 9 lumières du bokeh partagé
+   (ambre/rose/etc., absentes de la maquette) est masqué pour ne garder que
+   ces 3, cohérentes sur tout le chantier. Fond du .phone et du body
+   également remplacé par le radial-gradient exact de la maquette.
+   Lot S : copie à l'identique sur l'intro (les couleurs "dans le même
+   esprit" du Lot R ne suffisaient pas — mêmes valeurs exactes, sans
+   réinterprétation, comme la leçon du Lot G sur le radar lui-même). */
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .phone {
   background: radial-gradient(120% 90% at 30% -10%, #14162b 0%, #0A0B14 55%, #05060c 100%) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) { background: #05060c; }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light:is(.warm-lg,.warm-md,.warm-sm,.pink,.front-1,.front-2) {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) { background: #05060c; }
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light:is(.warm-lg,.warm-md,.warm-sm,.pink,.front-1,.front-2) {
   opacity: 0 !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.cool-lg {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-lg {
   background: #9DABFF !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.cool-md {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-md {
   background: #C7BCEE !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active) .bokeh-light.mist {
+body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.mist {
   background: #6C7AE0 !important; opacity: .35 !important; filter: blur(20px) !important;
-}
-/* Lot R : écran d'intro — même palette spirit blue / ghost lavender que le
-   reste de l'app, à la place du mélange orange/doré + bleu par défaut.
-   Layout, forme, taille, position et animation des lumières inchangés :
-   seul le dégradé de couleur de chaque tache est remplacé (par une teinte
-   de la même famille), pour garder de la profondeur plutôt qu'un aplat. */
-body:has(#screenOnboard.active) .bokeh-light.warm-lg {
-  background: radial-gradient(circle,rgba(157,171,255,.42) 0%,rgba(157,171,255,.12) 50%,transparent 80%) !important;
-}
-body:has(#screenOnboard.active) .bokeh-light.warm-md {
-  background: radial-gradient(circle,rgba(199,188,238,.48) 0%,rgba(199,188,238,.15) 50%,transparent 80%) !important;
-}
-body:has(#screenOnboard.active) .bokeh-light.warm-sm {
-  background: radial-gradient(circle,rgba(200,212,255,.55) 0%,transparent 70%) !important;
-}
-body:has(#screenOnboard.active) .bokeh-light.pink {
-  background: radial-gradient(circle,rgba(108,122,224,.28) 0%,rgba(108,122,224,.06) 50%,transparent 80%) !important;
-}
-body:has(#screenOnboard.active) .bokeh-light.mist {
-  background: radial-gradient(circle,rgba(139,150,224,.22) 0%,rgba(139,150,224,.06) 50%,transparent 80%) !important;
-}
-body:has(#screenOnboard.active) .bokeh-light.front-1 {
-  background: radial-gradient(circle,rgba(212,200,240,.40) 0%,transparent 70%) !important;
 }
 
 /* ── PARTICLES — braises nocturnes ─────────────────────── */

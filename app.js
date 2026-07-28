@@ -32,7 +32,7 @@ document.addEventListener('touchstart', () => { AudioService.init(); AudioServic
 // (onAuthStateChanged) — les clics explicites ("Passer", "← retour", CTA)
 // appellent showScreen() directement ailleurs et ne passent pas par ici.
 const _APP_LOAD_TS = Date.now();
-const _INTRO_MIN_DISPLAY_MS = 1000;
+const _INTRO_MIN_DISPLAY_MS = 2000; // Lot S : porté de 1s à 2s
 function _waitMinIntroDisplay() {
   const remaining = _INTRO_MIN_DISPLAY_MS - (Date.now() - _APP_LOAD_TS);
   return remaining > 0 ? new Promise(r => setTimeout(r, remaining)) : Promise.resolve();
