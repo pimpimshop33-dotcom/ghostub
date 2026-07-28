@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=181"></script>
+<script type="module" src="app.js?v=182"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -1844,6 +1844,28 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .cond-time-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:16px;cursor:pointer;}
 .cond-time-input:focus{border-color:rgba(232,160,48,.35);outline:none;}
 
+/* ── MENU MÉDIA COMPACT (Lot Q) ───────────────────────────
+   Un bouton unique révèle un panneau (réutilise .deposit-advanced-content)
+   listant les 4 types de média ; sélectionner une ligne révèle le bloc
+   correspondant sans toucher à sa logique interne. */
+.media-menu-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:11px 14px;background:var(--surface);border:1px solid var(--border);
+  border-radius:13px;cursor:pointer;text-align:left;
+  font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);color:var(--warm-dim);
+  touch-action:manipulation;transition:all .2s;
+}
+.media-menu-item:hover{border-color:rgba(232,160,48,.2);}
+.media-menu-item .media-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.media-menu-item .badge-premium{margin-left:auto;}
+/* Une fois un média ajouté, l'aperçu remplace le déclencheur d'origine —
+   pur CSS :has(), aucune modification des fonctions handlePhoto/handleVideo/etc.
+   Documents exclu : jusqu'à 3 fichiers s'ajoutent l'un après l'autre, le
+   bouton doit rester utilisable (.attachments-full le grise déjà à 3/3). */
+#step3VocalWrap:has(#audioPreview:not(:empty)) #recordBtn{display:none;}
+#step3PhotoWrap:has(#photoPreview:not(:empty)) .photo-choice{display:none;}
+#step3VideoWrap:has(#videoPreview:not(:empty)) #premSection_video{display:none;}
+
 /* ── PTR / DIVERS ──────────────────────────────────────── */
 .ptr-indicator{height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:var(--text-base);color:var(--spirit-dim);transition:height .2s;gap:6px;}
 .ptr-indicator.visible{height:36px;}
@@ -2381,6 +2403,18 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   -webkit-text-fill-color:rgba(var(--lettre-ink-rgb),.50) !important;
   text-align:right;letter-spacing:.3px;
 }
+/* Lien discret "rester anonyme" (Lot Q) — un vrai second choix pour qui le
+   cherche, volontairement en retrait dans la hiérarchie visuelle. */
+.anon-toggle-link{
+  background:none;border:none;padding:2px 0;
+  font-family:'Instrument Sans',sans-serif;font-size:11px;
+  color:var(--spirit-dim);opacity:.65;cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  text-decoration:underline;text-decoration-color:transparent;
+  transition:all .2s;touch-action:manipulation;
+}
+.anon-toggle-link:hover{opacity:.9;text-decoration-color:currentColor;}
+.anon-toggle-link.active{color:var(--warm);opacity:.9;text-decoration-color:currentColor;}
 
 /* ── Le sceau — CTA principal qui remplace "Déposer ici" ── */
 .lettre-seal-btn{
@@ -2974,6 +3008,14 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
             <div class="lettre-counter"><span id="msgCharCount">0</span>/600</div>
             <div class="lettre-signature" data-i18n="dep_lettre_signature">— ancré ici, à jamais</div>
           </div>
+          <!-- Identité (Lot Q) — pseudo par défaut, l'anonymat est un choix
+               discret plutôt qu'un réglage mis en avant. anon = false tant
+               que ce lien n'est pas activé (cf. depositGhost()). -->
+          <div style="text-align:right;margin-top:8px;">
+            <button type="button" id="anonToggleLink" class="anon-toggle-link" onclick="toggleAnonMode(this)" aria-pressed="false">
+              <span data-i18n="dep_anon_toggle_off">🌫️ rester anonyme</span>
+            </button>
+          </div>
         </div>
 
         <!-- Formulaire Commerce (formulaire dédié) -->
@@ -3149,65 +3191,78 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
         </div>
 
         <!-- ── MÉDIA ─────────────────────────────────────── -->
+        <!-- Lot Q : les 4 blocs médias sont regroupés derrière un bouton
+             unique qui révèle le bloc choisi à la demande (au lieu de tout
+             empiler en permanence). Logique interne de chaque média
+             (enregistrement, compression photo, limites vidéo/documents,
+             gating Premium) totalement inchangée — seule l'entrée change. -->
         <div class="section-label">🎨 <span data-i18n="dep_tool_media">Média</span></div>
-        <div id="step3VocalWrap" class="form-group" style="margin-bottom:14px;">
-          <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
-          <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
-            <span class="media-icon" aria-hidden="true">🎙</span>
-            <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
-            <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
+        <div id="mediaMenuWrap" class="form-group" style="margin-bottom:18px;">
+          <button type="button" class="media-btn" id="mediaAddBtn" onclick="toggleMediaMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="mediaMenuPanel">
+            <span class="media-icon" aria-hidden="true">➕</span>
+            <span data-i18n="dep_media_add_btn">Ajouter un média</span>
           </button>
-          <div id="audioPreview"></div>
-        </div>
-        <div class="form-group" style="margin-bottom:14px;">
-          <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
-          <div class="photo-choice">
-            <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
-              <span class="media-icon" aria-hidden="true">📷</span>
-              <span data-i18n="dep_photo_camera">Appareil photo</span>
-            </button>
-            <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
-              <span class="media-icon" aria-hidden="true">🖼️</span>
-              <span data-i18n="dep_photo_gallery">Galerie</span>
-            </button>
+          <div class="deposit-advanced-content" id="mediaMenuPanel" role="group" aria-label="Choisir un type de média">
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">
+              <button type="button" class="media-menu-item" id="mediaMenuItemVocal" onclick="selectMediaType('vocal')">
+                <span class="media-icon" aria-hidden="true">🎙</span><span data-i18n="dep_vocal_label">Message vocal (optionnel)</span>
+              </button>
+              <button type="button" class="media-menu-item" onclick="selectMediaType('photo')">
+                <span class="media-icon" aria-hidden="true">📷</span><span data-i18n="dep_photo_label">Photo (optionnel)</span>
+              </button>
+              <button type="button" class="media-menu-item" onclick="selectMediaType('video')">
+                <span class="media-icon" aria-hidden="true">🎥</span><span data-i18n="dep_video_optional">Vidéo (optionnel)</span>
+                <span id="mediaMenuVideoBadge" class="badge-premium">✦ Premium</span>
+              </button>
+              <button type="button" class="media-menu-item" onclick="selectMediaType('attach')">
+                <span class="media-icon" aria-hidden="true">📎</span><span data-i18n="dep_attach_label_short">Documents (optionnel)</span>
+                <span id="mediaMenuAttachBadge" class="badge-premium">✦ Premium</span>
+              </button>
+            </div>
           </div>
-          <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-          <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-          <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-          <div id="photoPreview"></div>
-        </div>
-        <div class="form-group" id="step3VideoWrap" style="margin-bottom:14px;">
-          <div id="premSection_video"></div>
-          <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
-          <div id="videoPreview"></div>
-        </div>
-        <!-- Phase 1d v103 — Galerie de fichiers Premium -->
-        <div class="form-group" id="step3AttachmentsWrap" style="margin-bottom:18px;">
-          <div id="premSection_attachments"></div>
-          <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
-          <div id="attachmentsContent" style="display:none;">
-            <div class="attachments-list" id="attachmentsList"></div>
-            <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
+
+          <div id="step3VocalWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+            <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
+            <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
+              <span class="media-icon" aria-hidden="true">🎙</span>
+              <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
+              <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
+            </button>
+            <div id="audioPreview"></div>
+          </div>
+          <div id="step3PhotoWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+            <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
+            <div class="photo-choice">
+              <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
+                <span class="media-icon" aria-hidden="true">📷</span>
+                <span data-i18n="dep_photo_camera">Appareil photo</span>
+              </button>
+              <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
+                <span class="media-icon" aria-hidden="true">🖼️</span>
+                <span data-i18n="dep_photo_gallery">Galerie</span>
+              </button>
+            </div>
+            <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+            <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+            <div id="photoPreview"></div>
+          </div>
+          <div id="step3VideoWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+            <div id="premSection_video"></div>
+            <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
+            <div id="videoPreview"></div>
+          </div>
+          <!-- Phase 1d v103 — Galerie de fichiers Premium -->
+          <div id="step3AttachmentsWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+            <div id="premSection_attachments"></div>
+            <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
+            <div id="attachmentsContent" style="display:none;">
+              <div class="attachments-list" id="attachmentsList"></div>
+              <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
+            </div>
           </div>
         </div>
 
-        <!-- ── IDENTITÉ ──────────────────────────────────── -->
-        <div class="section-label">👤 <span data-i18n="dep_tool_identity">Identité</span></div>
-        <div id="step3IdentityWrap" style="margin-bottom:18px;">
-          <div class="form-group">
-            <label class="form-label">Identité</label>
-            <div class="deposit-advanced-toggle" id="identityAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="identityAccordionContent" onclick="toggleIdentityAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleIdentityAccordion();}">
-              <span id="identityAccordionSummary">👻 Anon</span>
-              <span class="toggle-arrow" aria-hidden="true">▼</span>
-            </div>
-            <div class="deposit-advanced-content" id="identityAccordionContent">
-              <div class="type-selector" role="group" aria-label="Mode d'identité" style="margin-top:10px;">
-                <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anon</button>
-                <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
-              </div>
-            </div>
-          </div>
-        </div>
         <!-- Conservé pour compat — textes basculés par toggleBusinessMode() -->
         <div id="step3Title" style="display:none;" data-i18n="dep_pane3_title">Récapitulatif</div>
         <div id="step3Sub" style="display:none;" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>

@@ -170,7 +170,6 @@ const LANGS = {
     dep_tool_lieu: 'Lieu',
     dep_tool_rules: 'Règles',
     dep_tool_media: 'Média',
-    dep_tool_identity: 'Identité',
     dep_sheet_title: 'Réglages du fantôme',
     dep_sheet_back: 'Retour au message',
     dep_sheet_done: 'Terminer',
@@ -229,8 +228,13 @@ const LANGS = {
     dep_duration_label: 'Durée de vie',
     dep_radius_label: 'Rayon de détection',
     dep_identity_label: 'Identité',
+    dep_anon_toggle_off: '🌫️ rester anonyme',
+    dep_anon_toggle_on: '👻 anonyme',
+    dep_media_add_btn: 'Ajouter un média',
     dep_vocal_label: 'Message vocal (optionnel)',
     dep_photo_label: 'Photo (optionnel)',
+    dep_video_optional: 'Vidéo (optionnel)',
+    dep_attach_label_short: 'Documents (optionnel)',
     profile_code_question: 'Vous avez un code d\'activation ?',
     dep_dedicated_hint: 'Laisse vide pour que n\'importe qui puisse l\'ouvrir.',
     dep_future_hint: 'Le fantôme sera invisible jusqu\'à cette date — comme un message dans une bouteille',
@@ -767,7 +771,6 @@ const LANGS = {
     dep_tool_lieu: 'Place',
     dep_tool_rules: 'Rules',
     dep_tool_media: 'Media',
-    dep_tool_identity: 'Identity',
     dep_sheet_title: 'Ghost settings',
     dep_sheet_back: 'Back to message',
     dep_sheet_done: 'Done',
@@ -826,8 +829,13 @@ const LANGS = {
     dep_duration_label: 'Lifespan',
     dep_radius_label: 'Detection radius',
     dep_identity_label: 'Identity',
+    dep_anon_toggle_off: '🌫️ stay anonymous',
+    dep_anon_toggle_on: '👻 anonymous',
+    dep_media_add_btn: 'Add media',
     dep_vocal_label: 'Voice message (optional)',
     dep_photo_label: 'Photo (optional)',
+    dep_video_optional: 'Video (optional)',
+    dep_attach_label_short: 'Documents (optional)',
     profile_code_question: 'Do you have an activation code?',
     dep_dedicated_hint: 'Leave empty so anyone can open it.',
     dep_future_hint: 'The ghost will be invisible until this date — like a message in a bottle',
@@ -3661,34 +3669,56 @@ document.getElementById('maxOpenAccordionContent')?.addEventListener('click', (e
   window.toggleMaxOpenAccordion(false);
 });
 
-// ── Accordéons "Identité", "Type d'offre" (Lot O, Visibilité retirée au Lot P) ──
-// Même modèle que ci-dessus — généralisation du Lot N au reste des
-// réglages de la page Déposer.
-window.toggleIdentityAccordion   = (forceOpen) => _toggleDepositAccordion('identityAccordionToggle', 'identityAccordionContent', forceOpen);
+// ── Accordéon "Type d'offre" (Lot O) ──
+// Même modèle que ci-dessus — Identité a été retirée en tant que réglage
+// visible au Lot Q (remplacée par le lien discret "rester anonyme").
 window.toggleBizTypeAccordion    = (forceOpen) => _toggleDepositAccordion('bizTypeAccordionToggle', 'bizTypeAccordionContent', forceOpen);
 
-function _updateIdentityAccordionSummary() {
-  const el = document.getElementById('identityAccordionSummary');
-  const btn = document.querySelector('#identityAccordionContent .type-btn.active');
-  if (el && btn) el.textContent = btn.textContent.trim();
-}
 function _updateBizTypeAccordionSummary() {
   const el = document.getElementById('bizTypeAccordionSummary');
   const btn = document.querySelector('#bizTypeAccordionContent .type-btn.active');
   if (el && btn) el.textContent = btn.textContent.trim();
 }
-document.getElementById('identityAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.type-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateIdentityAccordionSummary();
-  window.toggleIdentityAccordion(false);
-});
 document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e) => {
   const btn = e.target.closest('.type-btn');
   if (!btn || !btn.classList.contains('active')) return;
   _updateBizTypeAccordionSummary();
   window.toggleBizTypeAccordion(false);
 });
+
+// ── Menu média compact (Lot Q) ──────────────────────────────
+// Un bouton unique révèle un menu ; choisir une ligne révèle SEULEMENT le
+// bloc média correspondant, à la place des 4 blocs empilés en permanence.
+// La logique propre à chaque média (record/photo/vidéo/documents) n'est
+// pas touchée — seule l'entrée change. L'aperçu qui remplace le bouton
+// d'origine une fois un média ajouté est géré en CSS pur (:has()).
+const MEDIA_PANEL_IDS = { vocal: 'step3VocalWrap', photo: 'step3PhotoWrap', video: 'step3VideoWrap', attach: 'step3AttachmentsWrap' };
+window.toggleMediaMenu = (forceOpen) => _toggleDepositAccordion('mediaAddBtn', 'mediaMenuPanel', forceOpen);
+window.selectMediaType = (type) => {
+  const panel = document.getElementById(MEDIA_PANEL_IDS[type]);
+  if (panel) panel.style.display = 'block';
+  window.toggleMediaMenu(false);
+};
+
+// ── Lien discret "rester anonyme" (Lot Q) ──────────────────
+// Remplace le dropdown Identité : pseudo par défaut, l'anonymat est un
+// simple toggle texte, pas un réglage mis en avant.
+window.toggleAnonMode = (btn) => {
+  const active = btn.classList.toggle('active');
+  btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+  const label = btn.querySelector('span');
+  if (label) label.textContent = active
+    ? (t.dep_anon_toggle_on || '👻 anonyme')
+    : (t.dep_anon_toggle_off || '🌫️ rester anonyme');
+};
+function _resetAnonToggle() {
+  const btn = document.getElementById('anonToggleLink');
+  if (!btn) return;
+  btn.classList.remove('active');
+  btn.setAttribute('aria-pressed', 'false');
+  const label = btn.querySelector('span');
+  if (label) label.textContent = t.dep_anon_toggle_off || '🌫️ rester anonyme';
+}
 
 // ── Proximity data attribute helper ────────────────────────
 function getProximityClass(distM) {
@@ -4089,6 +4119,11 @@ function updatePremiumUI() {
     el.innerHTML = isPremium
       ? (premiumHtml || '')
       : _freeBtn(icon, label, sub);
+  });
+  // Badges Premium du menu média compact (Lot Q)
+  ['mediaMenuVideoBadge', 'mediaMenuAttachBadge'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = isPremium ? 'none' : '';
   });
 
   // Afficher/masquer chainContent et dedicatedContent
@@ -7276,11 +7311,9 @@ window.depositGhost = async () => {
     const duration = document.querySelector('.dur-btn.active:not([data-maxopen])')?.textContent || t.dep_dur_7d;
     const maxOpenCount = parseInt(document.querySelector('.dur-btn.active[data-maxopen]')?.dataset.maxopen || '0');
     const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
-    // Ciblage direct par id (Lot P) — l'ancien lookup positionnel via
-    // `#screenDeposit .type-selector` s'appuyait sur l'ordre DOM Identité/
-    // Visibilité et lisait le mauvais bloc (bug repéré au Lot O).
-    // Visibilité a été retirée (Lot P) : seule Identité subsiste.
-    const anon     = document.querySelector('#identityAccordionContent .type-btn.active')?.dataset.val === 'anon';
+    // Pseudo par défaut, anonymat via le lien discret (Lot Q) — remplace
+    // l'ancien dropdown Identité et son bug d'indexation (Lot O/P).
+    const anon     = document.getElementById('anonToggleLink')?.classList.contains('active') || false;
     const err      = document.getElementById('depositError');
 
     // Le message dépend du mode : Commerce le reconstruit depuis titre/description/
@@ -7416,6 +7449,12 @@ window.depositGhost = async () => {
       window._chainNextCoords = null;
       setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
       clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
+      // Replier le menu média et le lien anonyme (Lot Q)
+      _resetAnonToggle();
+      ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
       document.getElementById('depositSuccess').classList.add('show');
       _maybeShowSuccessNotifPrompt();
       // Ghost dédié sans UID : afficher le lien de partage
@@ -8095,10 +8134,14 @@ window.showScreen = (id, fromPopstate = false) => {
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id2 => {
       const el = document.getElementById(id2); if (el) el.style.display = '';
     });
-    // Reset step 3 sections + titre + bouton
-    ['step3IdentityWrap','step3VocalWrap',].forEach(id2 => {
-      const el = document.getElementById(id2); if (el) el.style.display = '';
+    // Reset step 3 (Lot Q : Identité retirée, menu média replié par défaut)
+    _resetAnonToggle();
+    ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id2 => {
+      const el = document.getElementById(id2); if (el) el.style.display = 'none';
     });
+    if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
+    const vocalMenuItem = document.getElementById('mediaMenuItemVocal');
+    if (vocalMenuItem) vocalMenuItem.style.display = '';
     const t3 = document.getElementById('step3Title');
     const s3 = document.getElementById('step3Sub');
     const depBtn = document.getElementById('depositBtn');
@@ -8222,11 +8265,13 @@ window.toggleBusinessMode = () => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
-    // Masquer identité/vocal/chaîne dans step 3, adapter titre
-    ['step3IdentityWrap','step3VocalWrap',].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = 'none';
-    });
+    // Masquer vocal/chaîne dans step 3 (Lot Q : retiré du menu média, pas
+    // seulement de l'affichage — pas de message vocal pour une offre Commerce),
+    // adapter titre
+    const vocalMenuItemBiz = document.getElementById('mediaMenuItemVocal');
+    if (vocalMenuItemBiz) vocalMenuItemBiz.style.display = 'none';
+    const vocalPanelBiz = document.getElementById('step3VocalWrap');
+    if (vocalPanelBiz) vocalPanelBiz.style.display = 'none';
     const t3 = document.getElementById('step3Title');
     const s3 = document.getElementById('step3Sub');
     if (t3) t3.textContent = t.dep_biz_visual_title || 'Ajouter un visuel';
@@ -8274,11 +8319,10 @@ window.toggleBusinessMode = () => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
-    // Réafficher les sections step 3
-    ['step3IdentityWrap','step3VocalWrap',].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = '';
-    });
+    // Réafficher le message vocal dans le menu média (Lot Q) — le panneau
+    // lui-même reste replié tant qu'il n'est pas choisi dans le menu.
+    const vocalMenuItemNorm = document.getElementById('mediaMenuItemVocal');
+    if (vocalMenuItemNorm) vocalMenuItemNorm.style.display = '';
     const t3b = document.getElementById('step3Title');
     const s3b = document.getElementById('step3Sub');
     if (t3b) t3b.textContent = t.dep_pane3_title;
