@@ -6098,7 +6098,7 @@ window.loadEmpreinteMap = async () => {
       });
       L.marker([p.lat, p.lng], { icon })
         .addTo(_empreinteMap)
-        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👻 <b>${p.location}</b><br><span style="opacity:.6;font-size:10px;">Votre dépôt</span></div>`);
+        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👻 <b>${escapeHTML(p.location)}</b><br><span style="opacity:.6;font-size:10px;">Votre dépôt</span></div>`);
     });
 
     // 5. Marqueurs découvertes — doré
@@ -6109,7 +6109,7 @@ window.loadEmpreinteMap = async () => {
       });
       L.marker([p.lat, p.lng], { icon })
         .addTo(_empreinteMap)
-        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👁 <b>${p.location}</b><br><span style="opacity:.6;font-size:10px;">Découverte</span></div>`);
+        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👁 <b>${escapeHTML(p.location)}</b><br><span style="opacity:.6;font-size:10px;">Découverte</span></div>`);
     });
 
     // Ajuster zoom pour tout voir
