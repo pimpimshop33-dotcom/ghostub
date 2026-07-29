@@ -216,6 +216,7 @@ const LANGS = {
     dep_err_denied: 'Dépôt refusé — certains champs ne sont pas autorisés. Réessaie ou contacte le support.',
     dep_upload_failed: "L'envoi a échoué — vérifie ta connexion et réessaie.",
     misc_error_generic: 'Erreur — réessaie plus tard.',
+    open_quota_network_err: 'Connexion instable — impossible de vérifier ton quota. Réessaie dans un instant.',
     stripe_btn_premium: '✦ Devenir Chasseur Premium',
     stripe_btn_commerce: '🏪 Activer le Plan Commerce',
     stripe_pending_premium: 'Paiement en ligne bientôt disponible — utilise un code pour l’instant.',
@@ -831,6 +832,7 @@ const LANGS = {
     dep_err_denied: 'Deposit rejected — some fields aren\'t allowed. Try again or contact support.',
     dep_upload_failed: 'Upload failed — check your connection and try again.',
     misc_error_generic: 'Error — please try again later.',
+    open_quota_network_err: 'Unstable connection — couldn\'t check your quota. Try again in a moment.',
     stripe_btn_premium: '✦ Become a Premium Hunter',
     stripe_btn_commerce: '🏪 Activate Commerce Plan',
     stripe_pending_premium: 'Online payment coming soon — use a code for now.',
@@ -7194,14 +7196,24 @@ async function consumeOpenQuota() {
     _incrementLocal();
     return { allowed: getDailyOpenCountLocal() <= DAILY_OPEN_LIMIT, remaining: Math.max(0, DAILY_OPEN_LIMIT - getDailyOpenCountLocal()) };
   }
-  try {
-    const res = await _checkAndConsumeOpenCallable();
-    return res.data; // { allowed, remaining }
-  } catch (e) {
-    // Cloud Function indisponible (offline, erreur réseau...) : dégradation douce,
-    // on ne bloque pas l'expérience plutôt que de pénaliser un souci technique.
-    console.error('checkAndConsumeOpen error', e);
-    return { allowed: true, remaining: null };
+  // Un échec (réseau, timeout, Cloud Function indisponible) ne doit JAMAIS se
+  // traduire par une ouverture gratuite illimitée (cf. LOT-AUDIT-4) : on
+  // retente une fois après une courte pause pour absorber les micro-coupures
+  // réseau (fréquent en usage mobile/extérieur), puis on bloque (fail-closed)
+  // si l'échec persiste, avec un message clair plutôt qu'un blocage silencieux.
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await _checkAndConsumeOpenCallable();
+      return res.data; // { allowed, remaining }
+    } catch (e) {
+      console.error(`checkAndConsumeOpen error (tentative ${attempt}/2)`, e);
+      if (attempt === 1) {
+        await new Promise(r => setTimeout(r, 800));
+        continue;
+      }
+      Analytics.track('quota_check_failed', { code: e.code || 'unknown' });
+      return { allowed: false, remaining: null, networkError: true };
+    }
   }
 }
 
@@ -7806,7 +7818,11 @@ async function _doOpenEnvelope() {
   // même si le client a été manipulé (variable isPremium locale falsifiée, etc.)
   const _quota = await consumeOpenQuota();
   if (!_quota.allowed) {
-    showOpenLimitWarning(0, () => {});
+    if (_quota.networkError) {
+      showToast('error', t.open_quota_network_err);
+    } else {
+      showOpenLimitWarning(0, () => {});
+    }
     return;
   }
   // FIX: Enregistrer la découverte ICI, seulement quand l'enveloppe est vraiment ouverte
