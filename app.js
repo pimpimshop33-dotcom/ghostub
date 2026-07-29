@@ -2880,6 +2880,11 @@ async function _notifyNearbyUsers(newGhostId, lat, lng, location) {
       type: 'nearby_new',
       toUid: g.authorUid,
       ghostId: newGhostId,
+      // theirGhostId : le fantôme du destinataire qui a matché la recherche de
+      // proximité — permet à firestore.rules de vérifier une vraie proximité
+      // entre les deux fantômes plutôt que de faire confiance à toUid seul
+      // (cf. Audit-5).
+      theirGhostId: d.id,
       ghostLocation: location,
       notified: false,
       createdAt: serverTimestamp()
@@ -7694,7 +7699,7 @@ window.sendReply = async () => {
   const btn = document.querySelector('#screenReply .btn-primary');
   if (btn) setLoading(btn, true);
   try {
-    await addDoc(collection(db, COLL.REPLIES), {
+    const _replyRef = await addDoc(collection(db, COLL.REPLIES), {
       ghostId: selectedGhost.id,
       message: msg,
       anonymous: anon,
@@ -7710,6 +7715,9 @@ window.sendReply = async () => {
         type: 'reply',
         toUid: selectedGhost.authorUid,
         ghostId: selectedGhost.id,
+        // replyId : preuve d'une interaction réelle exigée par firestore.rules
+        // (cf. Audit-5) — sans ça, la notif référence une réponse fantoche.
+        replyId: _replyRef.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: anon ? '👻 Anonyme' : (currentUser.displayName || 'Quelqu\'un'),
         reactionContent: msg.slice(0, 40),
@@ -7747,7 +7755,7 @@ window.sendMicroReply = async () => {
   const sendBtn = document.getElementById('microReplySend');
   if (sendBtn) sendBtn.disabled = true;
   try {
-    await addDoc(collection(db, COLL.REPLIES), {
+    const _replyRef = await addDoc(collection(db, COLL.REPLIES), {
       ghostId: selectedGhost.id,
       message: msg,
       anonymous: true,
@@ -7760,6 +7768,7 @@ window.sendMicroReply = async () => {
         type: 'reply',
         toUid: selectedGhost.authorUid,
         ghostId: selectedGhost.id,
+        replyId: _replyRef.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: '👻 Anonyme',
         reactionContent: msg.slice(0, 40),
@@ -7783,7 +7792,7 @@ window.sendQuickReaction = async (emoji, btn) => {
   if (!selectedGhost || !currentUser) return;
   if (btn) btn.disabled = true;
   try {
-    await addDoc(collection(db, COLL.REPLIES), {
+    const _replyRef = await addDoc(collection(db, COLL.REPLIES), {
       ghostId: selectedGhost.id,
       message: emoji,
       anonymous: true,
@@ -7796,6 +7805,7 @@ window.sendQuickReaction = async (emoji, btn) => {
         type: 'reply',
         toUid: selectedGhost.authorUid,
         ghostId: selectedGhost.id,
+        replyId: _replyRef.id,
         ghostLocation: selectedGhost.location || t.detail_location_unknown,
         fromAuthor: '👻 Anonyme',
         reactionContent: emoji,

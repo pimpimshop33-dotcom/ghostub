@@ -44,6 +44,12 @@ service cloud.firestore {
       let lastCreated = exists(uPath) ? get(uPath).data.get('lastGhostCreatedAt', null) : null;
       return lastCreated == null || request.time.toMillis() - lastCreated.toMillis() >= 900000;
     }
+    // Propriétaire réel d'un fantôme référencé — utilisé pour vérifier qu'une
+    // notification/découverte pointe vers une véritable interaction plutôt que
+    // vers un UID/fantôme choisis arbitrairement (cf. Audit-5).
+    function ghostAuthor(gid) {
+      return get(/databases/$(database)/documents/ghosts/$(gid)).data.authorUid;
+    }
 
     // ── Ghosts ────────────────────────────────────────
     match /ghosts/{ghostId} {
@@ -192,17 +198,58 @@ service cloud.firestore {
 
     // ── Notifications ─────────────────────────────────
     // Schéma établi depuis les 4 sites d'écriture client dans app.js
-    // (_notifyNearbyUsers, sendReply, sendMicroReply, sendQuickReaction, _doOpenEnvelope) :
-    // aucun champ d'identité d'émetteur (pas de fromUid, seulement fromAuthor en
-    // texte libre) — hasOnly() limite donc la forme du document mais ne peut pas
-    // empêcher l'usurpation d'émetteur avec le schéma actuel (voir rapport).
+    // (_notifyNearbyUsers, sendReply, sendMicroReply, sendQuickReaction, _doOpenEnvelope).
+    // ⚠️ AUDIT-5 : l'ancienne règle ne vérifiait que la FORME du document (types/
+    // clés), jamais sa relation à une interaction réelle — n'importe quel compte
+    // authentifié connaissant l'UID d'une victime pouvait lui fabriquer une fausse
+    // notification (fromAuthor/reactionContent en texte libre, ghostId/toUid non
+    // vérifiés). Corrigé : toUid doit être le véritable propriétaire du fantôme
+    // référencé, et pour type=reply, un vrai document /replies doit prouver
+    // l'interaction (pas seulement la forme).
     match /notifications/{notifId} {
       allow read: if isAuth() && resource.data.toUid == request.auth.uid;
       allow create: if isAuth()
         && request.resource.data.keys().hasOnly([
-             'type', 'toUid', 'ghostId', 'ghostLocation',
+             'type', 'toUid', 'ghostId', 'theirGhostId', 'replyId', 'ghostLocation',
              'fromAuthor', 'reactionContent', 'notified', 'createdAt'
-           ]);
+           ])
+        && request.resource.data.type in ['reply', 'open', 'biz_open', 'nearby_new']
+        && request.resource.data.toUid != request.auth.uid
+        && request.resource.data.get('fromAuthor', '').size() <= 100
+        && request.resource.data.get('reactionContent', '').size() <= 200
+        && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
+        && (
+          // reply : le fantôme référencé appartient bien au destinataire, ET un
+          // vrai document /replies (même auteur, même fantôme) prouve l'interaction.
+          (
+            request.resource.data.type == 'reply'
+            && ghostAuthor(request.resource.data.ghostId) == request.resource.data.toUid
+            && exists(/databases/$(database)/documents/replies/$(request.resource.data.replyId))
+            && get(/databases/$(database)/documents/replies/$(request.resource.data.replyId)).data.authorUid == request.auth.uid
+            && get(/databases/$(database)/documents/replies/$(request.resource.data.replyId)).data.ghostId == request.resource.data.ghostId
+          )
+          // open / biz_open : le fantôme référencé appartient bien au destinataire.
+          // Ne prouve pas l'ouverture physique elle-même (déjà filtrée en amont par
+          // la vérification GPS cliente + le quota serveur, cf. Audit-4) — résiduel
+          // documenté dans le rapport du lot.
+          || (
+            request.resource.data.type in ['open', 'biz_open']
+            && ghostAuthor(request.resource.data.ghostId) == request.resource.data.toUid
+          )
+          // nearby_new : le fantôme cité (ghostId) appartient bien à l'émetteur, le
+          // fantôme du destinataire (theirGhostId) lui appartient bien, et les deux
+          // sont réellement proches (~300m — cf. delta ~150m dans _notifyNearbyUsers).
+          || (
+            request.resource.data.type == 'nearby_new'
+            && ghostAuthor(request.resource.data.ghostId) == request.auth.uid
+            && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.theirGhostId))
+            && ghostAuthor(request.resource.data.theirGhostId) == request.resource.data.toUid
+            && math.abs(get(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId)).data.lat
+                        - get(/databases/$(database)/documents/ghosts/$(request.resource.data.theirGhostId)).data.lat) < 0.003
+            && math.abs(get(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId)).data.lng
+                        - get(/databases/$(database)/documents/ghosts/$(request.resource.data.theirGhostId)).data.lng) < 0.003
+          )
+        );
       allow update: if isAuth() && resource.data.toUid == request.auth.uid;
     }
 
@@ -211,15 +258,25 @@ service cloud.firestore {
     // (destinataire de la notif « ton fantôme a été découvert », cf.
     // checkDiscoveries() qui filtre where('authorUid','==',currentUser.uid)),
     // PAS l'auteur du document. Le vrai créateur (celui qui fait la découverte)
-    // est discoveredByUid — seul point d'écriture : app.js:4972.
+    // est discoveredByUid — seul point d'écriture : app.js loadNearbyGhosts().
+    // ⚠️ AUDIT-5 : même faille que Notifications — authorUid/ghostId n'étaient pas
+    // vérifiés contre un vrai fantôme secret. Corrigé : le fantôme référencé doit
+    // exister, appartenir réellement à authorUid, et être marqué secret (seul cas
+    // où l'app écrit dans cette collection).
     match /discoveries/{discId} {
       allow read: if isAuth() && resource.data.authorUid == request.auth.uid;
       allow create: if isAuth()
         && request.resource.data.discoveredByUid == request.auth.uid
+        && request.resource.data.discoveredByUid != request.resource.data.authorUid
         && request.resource.data.keys().hasOnly([
              'ghostId', 'ghostLocation', 'ghostMessage', 'authorUid',
              'discoveredBy', 'discoveredByUid', 'discoveredAt', 'notified'
-           ]);
+           ])
+        && request.resource.data.get('discoveredBy', '').size() <= 100
+        && request.resource.data.get('ghostMessage', '').size() <= 100
+        && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
+        && ghostAuthor(request.resource.data.ghostId) == request.resource.data.authorUid
+        && get(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId)).data.secret == true;
       allow update: if isAuth() && resource.data.authorUid == request.auth.uid;
     }
 
