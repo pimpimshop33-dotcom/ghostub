@@ -14,7 +14,7 @@ function _promptSignUp(toastKey) {
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=3';
 import GhostService from './services/ghost.service.js';
@@ -1441,7 +1441,7 @@ const firebaseConfig = {
   appId: "1:62498675696:web:9df717cdcda47a84d1db35"
 };
 
-let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable;
+let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable, _activatePremiumSecureCallable;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
@@ -1449,6 +1449,7 @@ try {
   // Région europe-west9 : doit correspondre à la région de déploiement de la Cloud Function
   functionsInstance = getFunctions(app, 'europe-west9');
   _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
+  _activatePremiumSecureCallable = httpsCallable(functionsInstance, 'activatePremiumSecure');
 } catch (e) {
   console.error('[ghostub:init]', e);
   document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#ddd;background:#0a0a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"><div style="font-size:40px;">😶</div><div style="font-size:17px;">Ghostub n\'a pas pu démarrer.</div><div style="font-size:14px;opacity:.7;">Vérifie ta connexion internet et réessaie.</div></div>';
@@ -4461,17 +4462,11 @@ window.activatePremium = async () => {
   btn.textContent = t.profile_activating;
   btn.disabled = true;
   try {
-    // Transaction atomique : lecture + écriture en une seule opération
-    // → impossible d'activer le même code deux fois simultanément
-    await runTransaction(db, async (txn) => {
-      const codeRef = doc(db, COLL.PREMIUM_CODES, code);
-      const codeSnap = await txn.get(codeRef);
-      if (!codeSnap.exists()) throw { code: 'not-found' };
-      if (codeSnap.data().used) throw { code: 'already-used' };
-      const userRef = doc(db, COLL.USERS, currentUser.uid);
-      txn.update(codeRef, { used: true, usedBy: currentUser.uid, usedAt: serverTimestamp() });
-      txn.set(userRef, { premium: true, premiumSince: serverTimestamp(), premiumCodeUsed: code }, { merge: true });
-    });
+    // La lecture de premiumCodes et l'écriture de users.premium sont bloquées
+    // pour le client par firestore.rules — l'activation passe donc par la
+    // Cloud Function admin SDK (transaction atomique côté serveur, anti
+    // double-activation d'un même code).
+    await _activatePremiumSecureCallable({ code });
     isPremium = true;
     updatePremiumUI();
     input.value = '';
@@ -4480,8 +4475,8 @@ window.activatePremium = async () => {
     Analytics.track('premium_activated');
   } catch(e) {
     console.error('activatePremium error:', e);
-    if (e.code === 'not-found') errEl.textContent = t.profile_code_invalid;
-    else if (e.code === 'already-used') errEl.textContent = t.profile_code_used;
+    if (e.code === 'functions/not-found') errEl.textContent = t.profile_code_invalid;
+    else if (e.code === 'functions/already-exists') errEl.textContent = t.profile_code_used;
     else errEl.textContent = t.profile_code_error_generic;
     btn.textContent = t.profile_activate_btn;
     btn.disabled = false;
