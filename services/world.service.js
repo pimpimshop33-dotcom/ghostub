@@ -2,19 +2,6 @@
  * world.service.js
  */
 
-export const GHOST_DURATIONS = {
-  '24h':    86_400_000,
-  '7 jours': 604_800_000,
-  '1 mois': 2_592_000_000,
-};
-
-export const ACTIVITY = {
-  VERY_ACTIVE_SCORE : 10,
-  VERY_ACTIVE_RECENT: 5,
-  ACTIVE_SCORE      : 3,
-  RECENT_WINDOW_MS  : 3_600_000,
-};
-
 export const DEPOSIT = {
   COOLDOWN_MS : 15 * 60 * 1000,
   MAX_ACTIVE  : 5,
@@ -202,20 +189,6 @@ const WorldService = {
     }
   },
 
-  getActivityLevel(ghost) {
-    const score  = ghost.activityScore || 0;
-    const lp     = ghost.lastPresenceAt;
-    const recent = lp && (Date.now() - lp.seconds * 1000) < ACTIVITY.RECENT_WINDOW_MS;
-
-    if (score >= ACTIVITY.VERY_ACTIVE_SCORE || (score >= ACTIVITY.VERY_ACTIVE_RECENT && recent)) {
-      return { label: 'très actif', color: 'rgba(255,140,60,.85)' };
-    }
-    if (score >= ACTIVITY.ACTIVE_SCORE || recent) {
-      return { label: 'agité', color: 'rgba(168,180,255,.75)' };
-    }
-    return { label: 'calme', color: 'rgba(168,180,255,.3)' };
-  },
-
   async checkDepositCooldown(uid, isExpiredFn) {
     this._requireInit();
     const { doc, getDoc, getDocs, query, collection, where } = this._fns;
@@ -269,17 +242,6 @@ const WorldService = {
       );
     } catch (e) {
       console.warn('[WorldService] recordDepositTimestamp:', e);
-    }
-  },
-
-  async syncLifecycleState(ghostId, newState, currentState) {
-    if (newState === currentState) return;
-    this._requireInit();
-    const { doc, updateDoc } = this._fns;
-    try {
-      await updateDoc(doc(this._db, 'ghosts', ghostId), { state: newState });
-    } catch (e) {
-      console.warn('[WorldService] syncLifecycleState:', e);
     }
   },
 

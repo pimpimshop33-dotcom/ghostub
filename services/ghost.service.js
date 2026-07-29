@@ -100,51 +100,6 @@ export function computeLifetime(g) {
   return { state, pct };
 }
 
-/**
- * Retourne la classe CSS correspondant à l'état.
- * @param {string} state
- * @returns {string}
- */
-export function stateClass(state) {
-  const map = {
-    [LIFECYCLE.FRESH]:   'ghost-state-fresh',
-    [LIFECYCLE.STABLE]:  'ghost-state-stable',
-    [LIFECYCLE.WEAK]:    'ghost-state-weak',
-    [LIFECYCLE.EXPIRED]: 'ghost-state-expired',
-  };
-  return map[state] || '';
-}
-
-// ── VISIBILITÉ ────────────────────────────────────────────────────────────────
-
-/**
- * Vérifie si un fantôme est visible pour un utilisateur.
- * Règles :
- *  - Non expiré
- *  - Dans le radius du fantôme
- *  - Conditions horaires respectées (si openCondition = 'night' ou 'hour')
- *
- * @param {object} g          — document fantôme
- * @param {number} distMeters — distance utilisateur→fantôme en mètres
- * @returns {boolean}
- */
-export function isVisible(g, distMeters) {
-  if (isExpired(g)) return false;
-  const radius = g.radius ? parseFloat(g.radius) : 500;
-  if (distMeters > radius) return false;
-
-  // Condition temporelle
-  if (g.openCondition === 'night') {
-    const h = new Date().getHours();
-    if (h >= 6 && h < 21) return false; // visible uniquement 21h–6h
-  }
-  if (g.openCondition === 'hour' && g.openHour != null) {
-    if (new Date().getHours() !== parseInt(g.openHour)) return false;
-  }
-
-  return true;
-}
-
 // ── FORMATAGE ─────────────────────────────────────────────────────────────────
 
 /**
@@ -176,8 +131,6 @@ const GhostService = {
   isExpired,
   timeRemaining,
   computeLifetime,
-  stateClass,
-  isVisible,
   formatDistance,
   timeAgo,
   LIFECYCLE,

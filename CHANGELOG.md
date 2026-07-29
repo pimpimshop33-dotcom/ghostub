@@ -104,6 +104,16 @@
 - `activatePremiumSecure` : activation codes Premium
 - Migration Spark → Blaze, Node 20 → 22
 
+> **Correctif (2026-07-29, audit) :** ces trois fonctions n'ont en réalité
+> jamais existé dans `functions/index.js` malgré cette entrée — un audit les
+> a trouvées absentes du code source ET non déployées (`firebase
+> functions:list`), ce qui avait induit en erreur un rapport d'audit
+> antérieur. `activatePremiumSecure` et `cleanExpiredGhosts` ont depuis été
+> réellement implémentées et déployées (Lots Audit-2 et Audit-3).
+> `autoModerateGhost` reste absente à ce jour — `ghosts.reportCount`
+> s'incrémente désormais correctement (Audit-Reste, Batch B) mais aucune
+> action de modération automatique n'est déclenchée dessus.
+
 ---
 
 ## v1.0.0 — 10 mars 2026
