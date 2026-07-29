@@ -50,6 +50,14 @@ service cloud.firestore {
     function ghostAuthor(gid) {
       return get(/databases/$(database)/documents/ghosts/$(gid)).data.authorUid;
     }
+    // Valide une valeur de traceColor (Lot K) : doit être une des 6 teintes
+    // connues, et une teinte Premium (amber/rose/crimson) exige isPremium()
+    // — sinon un compte gratuit pourrait forcer une teinte réservée en
+    // écrivant directement Firestore (contournement de l'UI).
+    function isValidTraceColorValue(color) {
+      return color in ['spirit', 'violet', 'mist', 'amber', 'rose', 'crimson']
+        && (!(color in ['amber', 'rose', 'crimson']) || isPremium());
+    }
 
     // ── Ghosts ────────────────────────────────────────
     match /ghosts/{ghostId} {
@@ -159,17 +167,30 @@ service cloud.firestore {
       // lastGhostCreatedAt (utilisé pour le cooldown de dépôt) ne peut être écrit
       // qu'avec l'horloge serveur — sinon un client pourrait forger une ancienne
       // date pour toujours paraître "refroidi" et contourner le cooldown.
+      // traceColor (Lot K) : seul le propriétaire peut l'écrire (déjà garanti par
+      // isOwner ci-dessous), et uniquement parmi les 6 teintes connues — les 3
+      // Premium (amber/rose/crimson) exigent isPremium() côté serveur, l'ancienne
+      // règle ne validait que la forme du document, pas cette valeur (finalisation
+      // Lots K/L). ⚠️ Liste à garder synchronisée avec TRACE_COLORS dans app.js.
       allow create: if isOwner(userId)
         && !request.resource.data.keys().hasAny(['premium'])
         && (
           !request.resource.data.keys().hasAny(['lastGhostCreatedAt'])
           || request.resource.data.lastGhostCreatedAt == request.time
+        )
+        && (
+          !request.resource.data.keys().hasAny(['traceColor'])
+          || isValidTraceColorValue(request.resource.data.traceColor)
         );
       allow update: if isOwner(userId)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['premium'])
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastGhostCreatedAt'])
           || request.resource.data.lastGhostCreatedAt == request.time
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['traceColor'])
+          || isValidTraceColorValue(request.resource.data.traceColor)
         );
     }
 

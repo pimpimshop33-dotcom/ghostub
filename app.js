@@ -297,10 +297,6 @@ const LANGS = {
     trace_color_locked: '🔒 Teinte réservée aux membres Premium',
     // Collection de cartes (Lot L)
     collection_title: 'Ma collection',
-    collection_track_discovered: 'Découvertes',
-    collection_track_deposited: 'Dépôts',
-    collection_track_resonances: 'Résonances',
-    collection_track_streak: 'Série',
     profile_resonances: 'Résonances',
     profile_first_reader: 'Premiers lecteurs',
     profile_favorites: 'Favoris',
@@ -914,10 +910,6 @@ const LANGS = {
     trace_color_locked: '🔒 Premium-only tint',
     // Card collection (Lot L)
     collection_title: 'My collection',
-    collection_track_discovered: 'Discoveries',
-    collection_track_deposited: 'Drops',
-    collection_track_resonances: 'Resonances',
-    collection_track_streak: 'Streak',
     profile_first_reader: 'First reads',
     profile_favorites: 'Favorites',
     profile_notif_on: 'Notifications enabled ✓',
@@ -3617,45 +3609,42 @@ function getRank(n) {
 
 // ══════════════════════════════════════════════════════════
 // COLLECTION DE CARTES (Lot L)
-// Une carte par palier atteint, répartie sur 4 pistes distinctes plutôt
-// qu'un total unique et ambigu (L3, décision produit non tranchée — cf.
-// résumé de session) : Découvertes ET Dépôts restent deux pistes séparées,
-// chacune avec ses propres cartes, au lieu de les fusionner. Toutes les
-// stats utilisées (découvertes, dépôts, résonances, série) sont déjà
-// trackées ailleurs dans l'app — la collection est entièrement dérivée à
-// l'affichage, sans nouveau champ Firestore ni état "débloqué" à persister
-// (ces compteurs ne font que croître, jamais rétrograder).
-const CARD_STREAK_MILESTONES = [3, 7, 14, 30];
-const CARD_TIER_NAMES_FR = { 1:'Premier pas', 3:'Régulier', 5:'Habitué', 7:'Assidu', 10:'Confirmé', 14:'Endurant', 25:'Expert', 30:'Vétéran', 50:'Maître', 100:'Légende' };
-const CARD_TIER_NAMES_EN = { 1:'First step', 3:'Regular', 5:'Habitué', 7:'Dedicated', 10:'Confirmed', 14:'Enduring', 25:'Expert', 30:'Veteran', 50:'Master', 100:'Legend' };
-const CARD_TRACKS = [
-  { id: 'discovered', icon: '🔍', labelKey: 'collection_track_discovered', thresholds: MILESTONES },
-  { id: 'deposited',  icon: '👻', labelKey: 'collection_track_deposited',  thresholds: MILESTONES },
-  { id: 'resonances', icon: '💫', labelKey: 'collection_track_resonances', thresholds: RESO_MILESTONES },
-  { id: 'streak',     icon: '🔥', labelKey: 'collection_track_streak',     thresholds: CARD_STREAK_MILESTONES },
-];
+// Progression combinée unique (L3, tranché — finalisation Lots K/L) : une
+// seule piste de cartes plutôt que 4 pistes séparées par stat. Les stats déjà
+// trackées (découvertes, dépôts, résonances, série de jours actifs) sont
+// agrégées en un score unique — la série est pondérée ×3 car elle est
+// rate-limitée à un jour par jour (donc plus rare/dure à accumuler que les
+// autres actions, qui peuvent se répéter plusieurs fois par session) ;
+// discoveries/dépôts/résonances comptent à égalité (même ordre de grandeur
+// d'effort, une action = un point). Toujours entièrement dérivé à
+// l'affichage, aucun nouveau champ Firestore, aucun état à persister (le
+// score ne peut que croître).
+const CARD_COMBINED_MILESTONES = [3, 8, 15, 25, 40, 60, 90, 130, 180, 250];
+const CARD_TIER_NAMES_FR = ['Premier pas', 'Régulier', 'Habitué', 'Assidu', 'Confirmé', 'Endurant', 'Expert', 'Vétéran', 'Maître', 'Légende'];
+const CARD_TIER_NAMES_EN = ['First step', 'Regular', 'Habitué', 'Dedicated', 'Confirmed', 'Enduring', 'Expert', 'Veteran', 'Master', 'Legend'];
+
+function _combinedCollectionScore(stats) {
+  return (stats.discovered || 0) + (stats.deposited || 0) + (stats.resonances || 0) + (stats.streak || 0) * 3;
+}
+
 function _renderTraceCollection(stats) {
   const grid = document.getElementById('traceCollectionGrid');
   const progressEl = document.getElementById('collectionProgress');
   if (!grid) return;
   const tierNames = _currentLang === 'en' ? CARD_TIER_NAMES_EN : CARD_TIER_NAMES_FR;
-  let unlockedCount = 0, totalCount = 0, html = '';
-  CARD_TRACKS.forEach(track => {
-    const value = stats[track.id] || 0;
-    const label = t[track.labelKey] || track.id;
-    track.thresholds.forEach(threshold => {
-      totalCount++;
-      const unlocked = value >= threshold;
-      if (unlocked) unlockedCount++;
-      const tier = tierNames[threshold] || threshold;
-      html += `<div class="trace-card ${unlocked ? 'unlocked' : 'locked'}" title="${escapeHTML(label)} · ${threshold} · ${escapeHTML(tier)}">` +
-        `<div class="trace-card-icon" aria-hidden="true">${unlocked ? track.icon : '🔒'}</div>` +
-        `<div class="trace-card-count">${threshold}</div>` +
-        `</div>`;
-    });
-  });
+  const score = _combinedCollectionScore(stats);
+  let unlockedCount = 0;
+  const html = CARD_COMBINED_MILESTONES.map((threshold, i) => {
+    const unlocked = score >= threshold;
+    if (unlocked) unlockedCount++;
+    const tier = tierNames[i] || threshold;
+    return `<div class="trace-card ${unlocked ? 'unlocked' : 'locked'}" title="${escapeHTML(tier)} · ${threshold}">` +
+      `<div class="trace-card-icon" aria-hidden="true">${unlocked ? '✦' : '🔒'}</div>` +
+      `<div class="trace-card-count">${threshold}</div>` +
+      `</div>`;
+  }).join('');
   grid.innerHTML = html;
-  if (progressEl) progressEl.textContent = unlockedCount + ' / ' + totalCount;
+  if (progressEl) progressEl.textContent = unlockedCount + ' / ' + CARD_COMBINED_MILESTONES.length;
 }
 
 // ── Update rank bar in radar ──────────────────────────────
