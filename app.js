@@ -1625,7 +1625,6 @@ function _categoryIconHTML(emoji, { size = 20 } = {}) {
 
 let currentUser = null;
 let isPremium = false;
-window._dbg = () => console.log('isPremium:', isPremium, '| pendingVideo:', !!window._pendingVideoFile);
 let userLat = null;
 let userLng = null;
 let nearbyGhosts = [];
