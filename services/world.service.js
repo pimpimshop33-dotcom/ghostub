@@ -163,6 +163,7 @@ const WorldService = {
       const snap = await getDocs(query(
         collection(this._db, 'ghosts'),
         where('geohash', 'in', hashes),
+        where('expired', '==', false),
         limit(QUERY_LIMIT)
       ));
 

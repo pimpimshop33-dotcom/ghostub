@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { initializeApp, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 if (!getApps().length) initializeApp();
@@ -90,4 +91,67 @@ exports.activatePremiumSecure = onCall({ region: 'europe-west9' }, async (reques
     console.error('activatePremiumSecure failed', { uid, code, error: e.message });
     throw new HttpsError('internal', 'Erreur serveur — réessayez.');
   }
+});
+
+// ⚠️ Doit rester identique à DURATIONS_MS / isExpired() dans services/ghost.service.js
+const GHOST_DURATIONS_MS = {
+  '24h': 86_400_000,
+  '7 jours': 604_800_000,
+  '1 mois': 2_592_000_000,
+};
+function ghostIsExpired(g, now) {
+  if (!g.createdAt) return false;
+  if (!g.duration || g.duration === '♾ Éternel') return false;
+  const maxAge = GHOST_DURATIONS_MS[g.duration];
+  if (!maxAge) return false;
+  return now - g.createdAt.toMillis() > maxAge;
+}
+// Suppression définitive 60 jours après expiration — même seuil que l'ancienne
+// logique client dans loadNearbyGhosts() (app.js), qui ne s'exécutait que si
+// l'auteur rouvrait l'app sur son propre fantôme expiré. Reproduit ici côté
+// serveur pour que ça s'applique à tous les fantômes, pas seulement ceux
+// qu'un client charge par hasard.
+const HARD_DELETE_AFTER_EXPIRY_MS = 60 * 24 * 3600 * 1000;
+
+/**
+ * Nettoyage périodique : marque `expired: true` sur les fantômes dont la
+ * durée est dépassée (pour que getVisibleGhosts() puisse les filtrer côté
+ * Firestore), puis supprime définitivement ceux expirés depuis plus de 60
+ * jours. Remplace l'ancienne dépendance à un client qui "tombe" sur le
+ * fantôme expiré pour déclencher sa mise à jour — voir D3-expired-field-not-updated.md.
+ */
+exports.cleanExpiredGhosts = onSchedule({ region: 'europe-west9', schedule: 'every 60 minutes' }, async () => {
+  const now = Date.now();
+  const snap = await db.collection('ghosts').where('expired', '==', false).get();
+
+  let batch = db.batch();
+  let batchOps = 0;
+  let markedCount = 0;
+  let deletedCount = 0;
+
+  const commitBatch = async () => {
+    if (batchOps > 0) {
+      await batch.commit();
+      batch = db.batch();
+      batchOps = 0;
+    }
+  };
+
+  for (const docSnap of snap.docs) {
+    const g = docSnap.data();
+    if (!ghostIsExpired(g, now)) continue;
+    const expiredAtMs = g.createdAt.toMillis() + GHOST_DURATIONS_MS[g.duration];
+    if (now - expiredAtMs > HARD_DELETE_AFTER_EXPIRY_MS) {
+      batch.delete(docSnap.ref);
+      deletedCount++;
+    } else {
+      batch.update(docSnap.ref, { expired: true });
+      markedCount++;
+    }
+    batchOps++;
+    if (batchOps >= 450) await commitBatch();
+  }
+  await commitBatch();
+
+  console.log(`cleanExpiredGhosts: ${snap.size} fantômes actifs examinés, ${markedCount} marqués expirés, ${deletedCount} supprimés définitivement.`);
 });
