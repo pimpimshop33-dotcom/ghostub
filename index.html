@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=193"></script>
+<script type="module" src="app.js?v=194"></script>
 
 <style>
 /* ══════════════════════════════════════════════════════════
@@ -3141,10 +3141,10 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
           </div>
           <div class="deposit-advanced-content" id="durAccordionContent">
             <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme" style="margin-top:10px;">
-              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false">24h</button>
-              <button class="dur-btn active" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
-              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-              <button class="dur-btn" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+              <button class="dur-btn" data-dur="24h" onclick="selectDur(this)" aria-pressed="false">24h</button>
+              <button class="dur-btn active" data-dur="7d" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
+              <button class="dur-btn" data-dur="1m" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
+              <button class="dur-btn" data-dur="eternal" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
             </div>
           </div>
         </div>

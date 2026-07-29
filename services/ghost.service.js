@@ -13,10 +13,20 @@
 
 // ── CONSTANTES ────────────────────────────────────────────────────────────────
 
+// ⚠️ Le champ `duration` stocké sur un ghost est le libellé affiché au moment
+// du dépôt (pas un code canonique) — donc FR *et* EN selon la langue active
+// de l'auteur au moment du dépôt (cf. depositGhost() dans app.js). Sans les
+// clés anglaises, DURATIONS_MS[g.duration] était undefined pour tout fantôme
+// déposé en anglais : la barre de vie restait bloquée à 0% et ne progressait
+// jamais (computeLifetime), sans que timeRemaining() n'affiche d'erreur
+// visible (audit 1.3 — écart trouvé entre ce fichier, FR seulement, et le
+// isExpired() dupliqué d'app.js qui gérait déjà les deux langues).
 export const DURATIONS_MS = {
   '24h':    86_400_000,
   '7 jours':604_800_000,
+  '7 days': 604_800_000,
   '1 mois': 2_592_000_000,
+  '1 month':2_592_000_000,
 };
 
 export const LIFECYCLE = {
@@ -35,7 +45,7 @@ export const LIFECYCLE = {
  */
 export function isExpired(g) {
   if (!g.createdAt) return false;
-  if (!g.duration || g.duration === '♾ Éternel') return false;
+  if (!g.duration || g.duration === '♾ Éternel' || g.duration === 'Eternal') return false;
   const maxAge = DURATIONS_MS[g.duration];
   if (!maxAge) return false;
   return Date.now() - g.createdAt.seconds * 1000 > maxAge;
@@ -47,7 +57,7 @@ export function isExpired(g) {
  * @returns {string}
  */
 export function timeRemaining(g) {
-  if (!g.createdAt || !g.duration || g.duration === '♾ Éternel') return '♾ Éternel';
+  if (!g.createdAt || !g.duration || g.duration === '♾ Éternel' || g.duration === 'Eternal') return '♾ Éternel';
   const maxAge = DURATIONS_MS[g.duration];
   if (!maxAge) return '♾ Éternel';
   const remaining = maxAge - (Date.now() - g.createdAt.seconds * 1000);

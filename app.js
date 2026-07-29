@@ -8443,11 +8443,16 @@ window.toggleBusinessMode = () => {
     const depBtn = document.getElementById('depositBtn');
     if (depBtn) depBtn.textContent = t.dep_biz_deposit || '🏪 Publier cette offre';
     // Forcer durée 1 mois + rayon 50m
+    // ⚠️ Matché via data-dur (marqueur interne stable), pas via .textContent
+    // comparé à t.dep_dur_1m (chaîne traduite) : une course avec le rendu
+    // i18n ou un simple écart d'espace faisait échouer silencieusement TOUT
+    // le bloc — aucun bouton ne devenait actif, et depositGhost() retombait
+    // alors sur '7 jours' par défaut pour un dépôt Commerce (audit 1.4).
     setTimeout(() => {
       document.querySelectorAll('.dur-btn:not([data-maxopen])').forEach(b => {
         b.classList.remove('active');
         b.setAttribute('aria-pressed', 'false');
-        if (b.textContent.trim() === t.dep_dur_1m) {
+        if (b.dataset.dur === '1m') {
           b.classList.add('active');
           b.setAttribute('aria-pressed', 'true');
         }
@@ -8464,6 +8469,10 @@ window.toggleBusinessMode = () => {
       // forcés ne passent pas par le clic délégué qui les met à jour d'habitude.
       if (typeof _updateDurAccordionSummary === 'function') _updateDurAccordionSummary();
       if (typeof _updateRadiusAccordionSummary === 'function') _updateRadiusAccordionSummary();
+      // Le chemin forcé contourne _selectRadius() (qui l'appelle normalement) —
+      // sans ça, l'aperçu du rayon sur la mini-carte restait visuellement
+      // périmé après un forçage à 50m (audit 1.4).
+      if (typeof _updateRadiusCircle === 'function') _updateRadiusCircle();
     }, 100);
     showToast('success', t.dep_biz_toast);
   } else {
