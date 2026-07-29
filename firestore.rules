@@ -15,14 +15,32 @@ service cloud.firestore {
     }
     function isNewGhost() {
       // Champs obligatoires présents + types/plages valides
+      // ⚠️ 600 = même plafond que le textarea #depositMsg (maxlength="600" +
+      // compteur "/600" dans index.html) — pas 280 (ancien plafond désynchronisé
+      // de l'UI, qui aurait fait échouer tout dépôt de message entre 281 et 600
+      // caractères).
       return request.resource.data.keys().hasAll(['message', 'authorUid', 'lat', 'lng'])
         && request.resource.data.authorUid == request.auth.uid
         && request.resource.data.message.size() > 0
-        && request.resource.data.message.size() <= 280
+        && request.resource.data.message.size() <= 600
         && request.resource.data.lat is number
         && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
         && request.resource.data.lng is number
         && request.resource.data.lng >= -180 && request.resource.data.lng <= 180;
+    }
+    // Plafonds de taille sur les champs texte libres optionnels d'un ghost —
+    // aucune contrainte n'existait auparavant, un client malveillant pouvait
+    // pousser des chaînes proches du plafond Firestore par champ (audit 4.7).
+    // Les valeurs `null` (sentinel utilisé par WorldService.createGhost() pour
+    // un champ non renseigné) sont explicitement laissées passer.
+    function hasValidTextFieldSizes() {
+      return (request.resource.data.get('location', null) == null || request.resource.data.location.size() <= 120)
+        && (request.resource.data.get('author', null) == null || request.resource.data.author.size() <= 100)
+        && (request.resource.data.get('chainHint', null) == null || request.resource.data.chainHint.size() <= 120)
+        && (request.resource.data.get('promoCode', null) == null || request.resource.data.promoCode.size() <= 40)
+        && (request.resource.data.get('dedicatedTo', null) == null || request.resource.data.dedicatedTo.size() <= 100)
+        && (request.resource.data.get('radius', null) == null || request.resource.data.radius.size() <= 10)
+        && (request.resource.data.get('duration', null) == null || request.resource.data.duration.size() <= 20);
     }
     function isPremiumOnlyField() {
       // Champs réservés Premium dans un ghost
@@ -91,6 +109,7 @@ service cloud.firestore {
              '_welcome'
            ])
         && (!isPremiumOnlyField() || isPremium())
+        && hasValidTextFieldSizes()
         // A2-bis : maxOpenCount > 1 (5/10 lectures) réservé Premium — 1 (ou absence
         // du champ, cas gratuit) reste ouvert à tous. Règle séparée de
         // isPremiumOnlyField() car la valeur par défaut ne doit pas bloquer le gratuit.
@@ -101,31 +120,40 @@ service cloud.firestore {
         )
         && (isPremium() || cooldownOk());
 
-      // Mise à jour : propriétaire uniquement (sauf openCount/resonances mis à jour par tous)
+      // Mise à jour : propriétaire uniquement (sauf openCount/resonances/reportCount mis à jour par tous)
       allow update: if isAuth() && (
         // Propriétaire peut modifier son fantôme, mais :
-        //  - authorUid/lat/lng ne peuvent plus changer après la création
+        //  - authorUid/lat/lng/message ne peuvent plus changer après la création
+        //    (message : contenu du "message laissé derrière soi", immuable une
+        //    fois déposé — aucun code de l'app ne le modifie après coup)
         //  - si des champs Premium sont touchés par cette mise à jour, la même
         //    vérification qu'à la création s'applique (pas de contournement via update)
+        //  - les plafonds de taille des champs texte libres (4.7) s'appliquent
+        //    aussi en mise à jour, pas seulement à la création
         (
           resource.data.authorUid == request.auth.uid
           && request.resource.data.authorUid == resource.data.authorUid
           && request.resource.data.lat == resource.data.lat
           && request.resource.data.lng == resource.data.lng
+          && request.resource.data.message == resource.data.message
+          && hasValidTextFieldSizes()
           && (
             !request.resource.data.diff(resource.data).affectedKeys()
               .hasAny(['videoUrl', 'duration', 'chainHint', 'openCondition', 'businessMode', 'promoCode'])
             || (!isPremiumOnlyField() || isPremium())
           )
         )
-        // Tout utilisateur peut incrémenter openCount/resonances/viewCount, et un
-        // visiteur non-propriétaire qui découvre le fantôme peut mettre à jour sa
-        // présence (WorldService.registerPresence()) : activityScore (+1 exactement),
-        // lastPresenceAt (horloge serveur uniquement, anti-forgerie), discoveriesCount
-        // (+1 exactement, optionnel — seulement à la toute première découverte).
+        // Tout utilisateur peut incrémenter openCount/resonances/viewCount/
+        // reportCount, et un visiteur non-propriétaire qui découvre le fantôme
+        // peut mettre à jour sa présence (WorldService.registerPresence()) :
+        // activityScore (+1 exactement), lastPresenceAt (horloge serveur
+        // uniquement, anti-forgerie), discoveriesCount (+1 exactement, optionnel
+        // — seulement à la toute première découverte). reportCount (audit 1.2)
+        // était absent de cette liste blanche : chaque signalement échouait
+        // silencieusement, le seuil de modération ne pouvait jamais compter.
         || (
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount'])
+            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount', 'reportCount'])
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['openCount'])
             || request.resource.data.openCount == resource.data.get('openCount', 0) + 1
@@ -149,6 +177,10 @@ service cloud.firestore {
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['discoveriesCount'])
             || request.resource.data.discoveriesCount == resource.data.get('discoveriesCount', 0) + 1
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['reportCount'])
+            || request.resource.data.reportCount == resource.data.get('reportCount', 0) + 1
           )
         )
       );
@@ -182,7 +214,8 @@ service cloud.firestore {
           !request.resource.data.keys().hasAny(['traceColor'])
           || isValidTraceColorValue(request.resource.data.traceColor)
         );
-      allow update: if isOwner(userId)
+      allow update: if (
+        isOwner(userId)
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['premium'])
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastGhostCreatedAt'])
@@ -191,7 +224,19 @@ service cloud.firestore {
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['traceColor'])
           || isValidTraceColorValue(request.resource.data.traceColor)
-        );
+        )
+      )
+      // Non-owner : incrément dénormalisé de totalResonances lors d'une résonance
+      // sur un fantôme de cet utilisateur (window.resonate() dans app.js) — audit
+      // 1.2, ce compteur alimentant le classement "Top chasseurs" ne pouvait
+      // jamais s'incrémenter faute de règle, faussant silencieusement le
+      // classement en permanence.
+      || (
+        isAuth()
+        && request.auth.uid != userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalResonances'])
+        && request.resource.data.totalResonances == resource.data.get('totalResonances', 0) + 1
+      );
     }
 
     // ── UserStats ─────────────────────────────────────
@@ -302,9 +347,73 @@ service cloud.firestore {
     }
 
     // ── Reports ───────────────────────────────────────
+    // ⚠️ AUDIT 4.8 : ni hasOnly() ni vérification d'identité — un utilisateur
+    // pouvait écrire un document de forme arbitraire et usurper l'identité du
+    // signaleur (reporterUid). Impact limité (lecture admin uniquement) mais
+    // corrigé par cohérence avec le reste du fichier.
     match /reports/{reportId} {
       allow read: if false; // lecture admin uniquement
-      allow create: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.reporterUid == request.auth.uid
+        && request.resource.data.reason in ['spam', 'harcèlement', 'photo_inappropriée', 'contenu_inapproprié', 'fausses_informations', 'autre']
+        && request.resource.data.keys().hasOnly(['ghostId', 'ghostLocation', 'ghostAuthorUid', 'reporterUid', 'reason', 'createdAt'])
+        && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
+        && ghostAuthor(request.resource.data.ghostId) == request.resource.data.ghostAuthorUid;
+    }
+
+    // ── Whispers ──────────────────────────────────────
+    // Ping éphémère "quelqu'un a résonné sur ton fantôme" (Ghost Whisper),
+    // un seul document par destinataire (clé = son UID), écouté en temps réel
+    // par _startWhisperListener() dans app.js. ⚠️ AUDIT 1.2 : collection non
+    // déclarée → refusée par le deny-all par défaut, fonctionnalité
+    // entièrement morte malgré un code client complet et câblé. Corrigé :
+    // écriture ouverte à tout auteur (≠ destinataire) d'une résonance réelle
+    // sur un vrai fantôme appartenant au destinataire.
+    match /whispers/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isAuth()
+        && request.auth.uid != uid
+        && request.resource.data.keys().hasOnly(['lastWhisper', 'ghostId', 'ghostEmoji', 'ghostLocation', 'count'])
+        && request.resource.data.lastWhisper == request.time
+        && request.resource.data.get('ghostEmoji', '').size() <= 8
+        && request.resource.data.get('ghostLocation', '').size() <= 120
+        && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
+        && ghostAuthor(request.resource.data.ghostId) == uid
+        && request.resource.data.count == 1;
+      allow update: if isAuth()
+        && request.auth.uid != uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastWhisper', 'ghostId', 'ghostEmoji', 'ghostLocation', 'count'])
+        && request.resource.data.lastWhisper == request.time
+        && request.resource.data.get('ghostEmoji', '').size() <= 8
+        && request.resource.data.get('ghostLocation', '').size() <= 120
+        && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
+        && ghostAuthor(request.resource.data.ghostId) == uid
+        && request.resource.data.count == resource.data.get('count', 0) + 1;
+    }
+
+    // ── GhostStats ────────────────────────────────────
+    // Repli d'écriture pour openCount/expired quand un visiteur non-
+    // propriétaire ouvre un fantôme qui expire pile à ce moment-là (le champ
+    // `expired` n'est pas dans la liste blanche non-propriétaire de /ghosts,
+    // cf. _doOpenEnvelope() dans app.js). ⚠️ AUDIT 1.2 : collection non
+    // déclarée → refusée par le deny-all par défaut. Impact désormais limité
+    // (cleanExpiredGhosts, Lot Audit-2, marque `expired` de façon fiable
+    // indépendamment de ce repli) mais corrigé pour que ce chemin fonctionne
+    // comme prévu plutôt que d'échouer silencieusement.
+    match /ghostStats/{ghostId} {
+      allow read: if isAuth() && resource.data.get('authorUid', null) == request.auth.uid;
+      allow create: if isAuth()
+        && request.resource.data.keys().hasOnly(['openCount', 'ghostId', 'authorUid', 'expired'])
+        && request.resource.data.ghostId == ghostId
+        && exists(/databases/$(database)/documents/ghosts/$(ghostId))
+        && ghostAuthor(ghostId) == request.resource.data.get('authorUid', null)
+        && request.resource.data.openCount == 1;
+      allow update: if isAuth()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['openCount', 'ghostId', 'authorUid', 'expired'])
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['openCount'])
+          || request.resource.data.openCount == resource.data.get('openCount', 0) + 1
+        );
     }
 
     // ── PremiumCodes ──────────────────────────────────
