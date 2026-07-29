@@ -81,6 +81,7 @@ const LANGS = {
     radar_searching: '🔍 Recherche de fantômes…',
     radar_no_gps: 'Géolocalisation refusée — autorisez-la dans les réglages de votre navigateur pour découvrir les fantômes proches.',
     radar_retry_btn: '↻ Réessayer',
+    map_load_err: '⚠️ Impossible de charger la carte — vérifiez votre connexion.',
     radar_no_ghosts: 'Aucun fantôme proche — soyez le premier !',
     radar_no_ghosts_widened: 'Aucun fantôme à 5km — affichage élargi 50km',
     radar_firestore_err: 'Impossible de charger les fantômes — vérifiez votre connexion.',
@@ -99,6 +100,7 @@ const LANGS = {
     radar_new_ghost: '👻 {n} nouveau{x} fantôme{s} à proximité',
     // Detail
     detail_first_reader: '🥇 Vous êtes le premier à lire ce message',
+    detail_ghost_gone: 'Ce fantôme n\'existe plus.',
     detail_location_unknown: 'Lieu inconnu',
     detail_sealed_label: 'Une trace vous attend ici',
     detail_anonymous: 'Anonyme',
@@ -693,6 +695,7 @@ const LANGS = {
     radar_searching: '🔍 Searching for ghosts…',
     radar_no_gps: 'Location denied — enable it in your browser settings to discover nearby ghosts.',
     radar_retry_btn: '↻ Try again',
+    map_load_err: '⚠️ Could not load the map — check your connection.',
     radar_no_ghosts: 'No ghosts nearby — be the first!',
     radar_no_ghosts_widened: 'No ghosts within 5km — showing up to 50km',
     radar_firestore_err: 'Could not load ghosts — check your connection.',
@@ -710,6 +713,7 @@ const LANGS = {
     radar_filter_empty: 'No ghosts match this filter.',
     radar_new_ghost: '👻 {n} new ghost{s} nearby',
     // Detail
+    detail_ghost_gone: 'This ghost no longer exists.',
     detail_location_unknown: 'Unknown place',
     detail_sealed_label: 'A trace is waiting here',
     detail_anonymous: 'Anonymous',
@@ -1895,10 +1899,27 @@ window.renderStaticMap = () => {
   if (window.L) {
     buildLeafletMap(centerLat, centerLng);
   } else {
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-    script.onload = () => buildLeafletMap(centerLat, centerLng);
-    document.head.appendChild(script);
+    // Audit 2.3 : ni onerror ni verrou anti-doublon — un CDN injoignable
+    // (hors-ligne, portail captif, bloqueur de contenu) laissait l'écran
+    // Carte vide indéfiniment sans message, et chaque revisite pendant
+    // l'échec réinjectait une nouvelle balise <script>. id="leafletScript"
+    // partagé avec _initDepositMiniMap() (même schéma déjà en place là-bas)
+    // pour dédupliquer entre tous les points de chargement de Leaflet.
+    let script = document.getElementById('leafletScript');
+    if (!script) {
+      script = document.createElement('script');
+      script.id = 'leafletScript';
+      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+      document.head.appendChild(script);
+    }
+    script.addEventListener('load', () => buildLeafletMap(centerLat, centerLng), { once: true });
+    script.addEventListener('error', () => {
+      script.remove(); // permet une vraie nouvelle tentative au prochain appel
+      const container = document.getElementById('mapContainer');
+      if (container) {
+        container.innerHTML = `<div style="padding:40px 24px;text-align:center;color:var(--spirit-dim);font-size:13px;">${escapeHTML(t.map_load_err)}<br><button onclick="renderStaticMap()" style="margin-top:12px;padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.08);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.7);border:none;font-family:inherit;font-size:12px;cursor:pointer;">${escapeHTML(t.radar_retry_btn)}</button></div>`;
+      }
+    }, { once: true });
   }
 };
 
@@ -2265,6 +2286,21 @@ window._dismissGeoPrimer = (accepted) => {
   if (window._geoPrimerResolve) { window._geoPrimerResolve(accepted); window._geoPrimerResolve = null; }
 };
 
+// Signale une coupure de localisation EN COURS DE SESSION (watch continu, pas
+// le tout premier chargement — déjà couvert par radar_no_gps/env_gps_denied).
+// Audit 2.1 : jusqu'ici seul un console.warn signalait ces erreurs ; un
+// utilisateur qui coupe la localisation dans les réglages en cours d'usage
+// (fréquent en extérieur) voyait le radar se figer silencieusement sur la
+// dernière position connue, sans indice que distances/pings devenaient faux.
+// Dédupliquée par session (pas de spam à chaque tick du watch en échec).
+let _geoWatchErrorShown = false;
+function _handleGeoWatchError(error) {
+  console.warn('[ghostub] geoloc error', error);
+  if (_geoWatchErrorShown) return;
+  _geoWatchErrorShown = true;
+  showToast('warning', t.radar_no_gps, 6000);
+}
+
 // Démarre le GPS watch (avec priming) si ce n'est pas déjà fait. Appelée une
 // fois l'onboarding quitté (radar affiché) — jamais pendant screenOnboard,
 // sinon la modale de priming s'affiche en superposition et masque le carrousel
@@ -2278,7 +2314,7 @@ async function _ensureLocationReady() {
       // onAuthStateChanged si l'utilisateur s'inscrit ensuite (cf. _locationUnsub).
       if (window._locationUnsub) window._locationUnsub();
       window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy, error }) => {
-        if (error) { console.warn('[ghostub] geoloc error', error); return; }
+        if (error) { _handleGeoWatchError(error); return; }
         if (accuracy && accuracy > 5000) return;
         userLat = lat; userLng = lng;
       });
@@ -2364,7 +2400,7 @@ onAuthStateChanged(auth, async user => {
       if (window._locationUnsub) window._locationUnsub();
       let _firstAccuratePosition = false;
       window._locationUnsub = LocationService.onPositionUpdate(({ lat, lng, accuracy, error }) => {
-      if (error) { console.warn('[ghostub] geoloc error', error); return; }
+      if (error) { _handleGeoWatchError(error); return; }
       // Ignorer les positions trop imprécises (IP-based = Paris, accuracy > 5000m)
       if (accuracy && accuracy > 5000) return;
       // Recentrer la carte si c'est la première position réelle reçue
@@ -2550,7 +2586,14 @@ window.login = async () => {
     await signInWithEmailAndPassword(auth, email, pass);
     Analytics.track('login');
   } catch(e) {
-    err.textContent = t.auth_err_wrong;
+    console.warn('login error:', e);
+    // Même mapping que register() (audit 2.2) : ne pas affirmer "mot de passe
+    // incorrect" sur une panne réseau/rate-limit — un utilisateur avec les
+    // bons identifiants mais une connexion instable se voyait dire le
+    // contraire, l'incitant à tort à réinitialiser son mot de passe.
+    err.textContent = (e.code === 'auth/network-request-failed' || e.code === 'auth/too-many-requests')
+      ? t.auth_err_network
+      : t.auth_err_wrong;
     if (btn) { btn.textContent = t.auth_login_btn; btn.disabled = false; }
   }
 };
@@ -6957,9 +7000,15 @@ window.openGhost = async (id) => {
   if (!selectedGhost) {
     try {
       const docSnap = await getDoc(doc(db, COLL.GHOSTS, id));
-      if (!docSnap.exists()) return;
+      if (!docSnap.exists()) { showToast('info', t.detail_ghost_gone); return; }
       selectedGhost = { id: docSnap.id, ...docSnap.data(), distance: 0 };
-    } catch(e) { return; }
+    } catch(e) {
+      // Erreur réseau/permission distincte d'un fantôme réellement supprimé —
+      // message générique plutôt que d'affirmer à tort qu'il n'existe plus.
+      console.warn('[ghostub:openGhost]', e);
+      showToast('error', t.misc_error_generic);
+      return;
+    }
   }
 
   document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
