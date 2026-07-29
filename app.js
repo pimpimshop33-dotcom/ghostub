@@ -307,7 +307,7 @@ const LANGS = {
     profile_notif_blocked: '🔕 Notifications bloquées — autorisez-les dans les réglages de votre navigateur.',
     profile_notif_enabled: '🔔 Notifications activées !',
     profile_notif_disabled: '🔕 Notifications désactivées.',
-    profile_premium_label: '👑 Spectre Premium',
+    profile_premium_label: '✦ Spectre Premium',
     profile_premium_sub: 'Toutes les fonctionnalités débloquées',
     profile_free_label: 'Plan gratuit',
     profile_premium_plan: 'Spectre Premium',
@@ -322,7 +322,7 @@ const LANGS = {
     profile_code_invalid: 'Code invalide.',
     profile_code_used: 'Code déjà utilisé.',
     profile_code_error_generic: 'Erreur lors de l\'activation — réessayez.',
-    profile_premium_toast: '👑 Premium activé ! Toutes les fonctionnalités sont débloquées.',
+    profile_premium_toast: '✦ Premium activé ! Toutes les fonctionnalités sont débloquées.',
     profile_discovery_btn: '📜 Mes découvertes',
     profile_deposited_btn: '👻 Mes fantômes déposés',
     profile_fav_btn: '★ Mes favoris',
@@ -921,7 +921,7 @@ const LANGS = {
     profile_notif_blocked: '🔕 Notifications blocked — allow them in your browser settings.',
     profile_notif_enabled: '🔔 Notifications enabled!',
     profile_notif_disabled: '🔕 Notifications disabled.',
-    profile_premium_label: '👑 Premium Spectre',
+    profile_premium_label: '✦ Premium Spectre',
     profile_premium_sub: 'All features unlocked',
     profile_free_label: 'Free plan',
     profile_premium_plan: 'Spectre Premium',
@@ -936,7 +936,7 @@ const LANGS = {
     profile_code_invalid: 'Invalid code.',
     profile_code_used: 'Code already used.',
     profile_code_error_generic: 'Error activating the code — try again.',
-    profile_premium_toast: '👑 Premium activated! All features are unlocked.',
+    profile_premium_toast: '✦ Premium activated! All features are unlocked.',
     profile_discovery_btn: '📜 My discoveries',
     profile_deposited_btn: '👻 My dropped ghosts',
     profile_fav_btn: '★ My favorites',
@@ -4292,14 +4292,14 @@ function updatePremiumUI() {
   // Sections Premium — injection directe dans les wrappers
   const _premSections = [
     { id: 'premSection_video',     icon: '🎥', label: t.prem_video_label || 'Vidéo', sub: t.prem_video_sub || 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
+      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">✦ Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
     { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
     // Phase 1d v103 — Galerie de fichiers
     { id: 'premSection_attachments', icon: '📎', label: t.prem_attach_label || 'Documents', sub: t.prem_attach_sub || 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">👑 Premium</span></label><button class="media-btn" onclick="triggerAttachments()" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">PDF, JPG, PNG</span></button>` },
+      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">✦ Premium</span></label><button class="media-btn" onclick="triggerAttachments()" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">PDF, JPG, PNG</span></button>` },
   ];
 
   const _badge = (txt) => `<span class="badge-premium">✦ Premium</span>`;
@@ -4353,7 +4353,7 @@ function updatePremiumUI() {
   const pricingSection = document.getElementById('pricingSection');
   if (isPremium) {
     planEl.style.display = 'block';
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;">👑 ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
+    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;">✦ ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
     if (pricingSection) pricingSection.style.display = 'none';
   } else {
@@ -4411,7 +4411,7 @@ function _renderPricingCards() {
     <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">👑 ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">✦ ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
           <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
         </div>
         <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">${_BRAND_MARK_HTML}</div>

@@ -5,8 +5,6 @@
  * Responsabilités :
  *  - Calcul d'expiration et de temps restant
  *  - Cycle de vie (fresh / stable / weak / expired)
- *  - Règles de visibilité
- *  - Rendu des métadonnées (distance, timeAgo, timeRemaining)
  *
  * Zéro dépendance Firebase — reçoit les données, retourne des résultats.
  */
@@ -100,39 +98,17 @@ export function computeLifetime(g) {
   return { state, pct };
 }
 
-// ── FORMATAGE ─────────────────────────────────────────────────────────────────
-
-/**
- * Formate une distance en mètres en texte lisible.
- * @param {number} m
- * @returns {string}
- */
-export function formatDistance(m) {
-  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
-}
-
-/**
- * Formate un timestamp Firestore en "il y a X".
- * @param {{ seconds: number } | null} ts
- * @returns {string}
- */
-export function timeAgo(ts) {
-  if (!ts) return '';
-  const s = Math.floor((Date.now() - ts.seconds * 1000) / 1000);
-  if (s < 60)     return 'à l\'instant';
-  if (s < 3600)   return `il y a ${Math.floor(s / 60)} min`;
-  if (s < 86400)  return `il y a ${Math.floor(s / 3600)}h`;
-  return `il y a ${Math.floor(s / 86400)} jours`;
-}
-
 // ── EXPORT DEFAULT (objet façade optionnel) ───────────────────────────────────
+// ⚠️ formatDistance()/timeAgo() ont existé ici mais n'étaient jamais appelées
+// (audit 6.2/6.3) — app.js a ses propres versions, seules réellement utilisées
+// (timeAgo() y est bilingue FR/EN selon _currentLang, contrairement à celle-ci
+// qui était figée en français — même défaut que 1.3 sur les durées). Retirées
+// plutôt que consolidées : rien ne consommait la version de ce fichier.
 
 const GhostService = {
   isExpired,
   timeRemaining,
   computeLifetime,
-  formatDistance,
-  timeAgo,
   LIFECYCLE,
   DURATIONS_MS,
 };
