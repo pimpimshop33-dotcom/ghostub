@@ -85,51 +85,6 @@ const WorldService = {
     if (!this._db) throw new Error('[WorldService] non initialisé — appeler init() en premier');
   },
 
-  async createGhost(data, lat, lng, author) {
-    this._requireInit();
-    const { collection, addDoc, serverTimestamp } = this._fns;
-
-    const ghost = {
-      message         : data.message,
-      location        : data.location || 'Lieu sans nom',
-      emoji           : data.secret ? '🔮' : (data.chainHint || data.chainLat ? '🔗' : (data.emoji || '👻')),
-      duration        : data.duration || '7 jours',
-      radius          : data.secret ? '3m' : (data.radius || '10m'),
-      audioUrl        : data.audioUrl  || null,
-      photoUrl        : data.photoUrl  || null,
-      videoUrl        : data.videoUrl  || null,
-      openCondition   : data.openCondition   || 'always',
-      openHour        : data.openHour        || null,
-      openAfterGhostId: data.openAfterGhostId || null,
-      openDate        : data.openDate        || null,
-      businessMode    : data.businessMode    || false,
-      promoCode       : data.promoCode       || null,
-      maxOpenCount    : data.maxOpenCount    ?? null,
-      anonymous       : data.anonymous || false,
-      secret          : data.secret    || false,
-      chainHint       : data.chainHint || null,
-      chainLat        : data.chainLat  || null,
-      chainLng        : data.chainLng  || null,
-      author          : author.displayName || author.email,
-      authorUid       : author.uid,
-      lat,
-      lng,
-      ...buildGeohashFields(lat, lng),
-      resonances      : 0,
-      activityScore   : 0,
-      discoveriesCount: 0,
-      openCount       : 0,
-      lastPresenceAt  : serverTimestamp(),
-      state           : 'fresh',
-      expired         : false,
-      createdAt       : serverTimestamp(),
-    };
-
-    const ref = await addDoc(collection(this._db, 'ghosts'), ghost);
-    this._track('ghost_created', { secret: ghost.secret, anonymous: ghost.anonymous });
-    return ref.id;
-  },
-
   async getVisibleGhosts(lat, lng) {
     this._requireInit();
     const { collection, getDocs, query, where, limit } = this._fns;
@@ -189,6 +144,10 @@ const WorldService = {
     }
   },
 
+  // ⚠️ Précontrôle UX uniquement (retour immédiat avant même l'upload média) —
+  // l'application réelle du cooldown et du plafond de 5 fantômes actifs se
+  // fait désormais côté serveur dans la Cloud Function createGhostSecure
+  // (audit 4.3), seule habilitée à écrire réellement le fantôme.
   async checkDepositCooldown(uid, isExpiredFn) {
     this._requireInit();
     const { doc, getDoc, getDocs, query, collection, where } = this._fns;
@@ -228,20 +187,6 @@ const WorldService = {
     } catch (e) {
       console.warn('[WorldService] checkDepositCooldown:', e);
       return { ok: true };
-    }
-  },
-
-  async recordDepositTimestamp(uid) {
-    this._requireInit();
-    const { doc, setDoc, serverTimestamp } = this._fns;
-    try {
-      await setDoc(
-        doc(this._db, 'users', uid),
-        { lastGhostCreatedAt: serverTimestamp() },
-        { merge: true }
-      );
-    } catch (e) {
-      console.warn('[WorldService] recordDepositTimestamp:', e);
     }
   },
 

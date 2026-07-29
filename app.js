@@ -16,7 +16,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
-import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=5';
+import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=6';
 import GhostService from './services/ghost.service.js';
 import LocationService from './services/location.service.js';
 import AudioService from './services/audio.service.js';
@@ -1439,7 +1439,7 @@ const firebaseConfig = {
   appId: "1:62498675696:web:9df717cdcda47a84d1db35"
 };
 
-let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable, _activatePremiumSecureCallable;
+let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable, _activatePremiumSecureCallable, _createGhostSecureCallable;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
@@ -1448,6 +1448,7 @@ try {
   functionsInstance = getFunctions(app, 'europe-west9');
   _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
   _activatePremiumSecureCallable = httpsCallable(functionsInstance, 'activatePremiumSecure');
+  _createGhostSecureCallable = httpsCallable(functionsInstance, 'createGhostSecure');
 } catch (e) {
   console.error('[ghostub:init]', e);
   document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#ddd;background:#0a0a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"><div style="font-size:40px;">😶</div><div style="font-size:17px;">Ghostub n\'a pas pu démarrer.</div><div style="font-size:14px;opacity:.7;">Vérifie ta connexion internet et réessaie.</div></div>';
@@ -7598,10 +7599,14 @@ window.depositGhost = async () => {
       const chainNext = isPremium ? (window._chainNextCoords || null) : null;
       const openCondition = getSelectedCond();
       const openHour = openCondition === 'hour' ? document.getElementById('condHourInput').value : null;
-      // v105 : feature 'after' supprimée
-      const openAfterGhostId = null;
       const openDate = openCondition === 'future' ? document.getElementById('condFutureInput').value : null;
-      // ── Dépôt via WorldService.createGhost() ────────────────────────────
+      // ── Dépôt via la Cloud Function createGhostSecure (audit 4.3) ───────
+      // Le document est désormais créé côté serveur (admin SDK) plutôt que
+      // par écriture directe du SDK client : c'est ce qui permet d'appliquer
+      // enfin DEPOSIT.MAX_ACTIVE (5 fantômes actifs max) de façon fiable —
+      // un comptage agrégé n'est pas possible dans firestore.rules seules.
+      // ghostCount et lastGhostCreatedAt sont mis à jour dans la même
+      // transaction côté fonction ; plus besoin de les écrire séparément ici.
       const ghostData = {
         message, location: location || 'Lieu sans nom', emoji, duration, radius, maxOpenCount: maxOpenCount || 0,
         anonymous: anon,
@@ -7613,22 +7618,29 @@ window.depositGhost = async () => {
         chainLng: chainNext ? chainNext.lng : null,
         openCondition: openCondition || 'always',
         openHour: openHour || null,
-        openAfterGhostId: openAfterGhostId || null,
         openDate: openDate || null,
         businessMode: (isPremium && _depositMode === 'business') || false,
         promoCode: (isPremium && _depositMode === 'business') ? (document.getElementById('promoCode')?.value.trim() || null) : null,
+        author: currentUser.displayName || currentUser.email,
+        lat: userLat, lng: userLng,
       };
-      const ghostId = await WorldService.createGhost(ghostData, userLat, userLng,
-        { uid: currentUser.uid, displayName: currentUser.displayName, email: currentUser.email }
-      );
-      // Secours : forcer videoUrl dans Firestore si présent
-      if (videoUrl && ghostId) {
-        updateDoc(doc(db, COLL.GHOSTS, ghostId), { videoUrl }).catch(e => console.warn('videoUrl update:', e));
+      let ghostId;
+      try {
+        const res = await _createGhostSecureCallable(ghostData);
+        ghostId = res.data.ghostId;
+      } catch (e) {
+        console.warn('[ghostub:createGhostSecure]', e);
+        setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
+        // resource-exhausted couvre à la fois le cooldown et le plafond de 5
+        // fantômes actifs — le message précis vient du serveur (e.message),
+        // les autres cas retombent sur un message générique traduit.
+        err.textContent = (e.code === 'functions/resource-exhausted' && e.message)
+          ? e.message
+          : (e.code === 'functions/permission-denied')
+            ? t.dep_err_denied
+            : t.dep_err_generic;
+        return;
       }
-      await WorldService.recordDepositTimestamp(currentUser.uid);
-      // Compteur dénormalisé ghostCount
-      setDoc(doc(db, COLL.USERS, currentUser.uid), { ghostCount: increment(1) }, { merge: true })
-        .catch(e => console.warn('ghostCount increment:', e));
       // Déposer un fantôme compte aussi comme une action significative pour le streak
       const _suDep = _updateStreak();
       _renderStreak();
