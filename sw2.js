@@ -1,11 +1,16 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v94';
+const CACHE_NAME = 'ghostub-v95';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
+// Audit 1.7 : addAll() sans .catch() — si ce seul fetch échouait (blip
+// réseau, 404 après un déploiement raté), toute la chaîne install() était
+// rejetée, skipWaiting() ne s'exécutait jamais, et le nouveau SW n'activait
+// jamais — utilisateurs bloqués silencieusement sur l'ancienne version.
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE_NAME)
       .then(c => c.addAll(['/ghostub/manifest.json']))
+      .catch(err => console.warn('[SW] pré-cache manifest.json échoué:', err))
       .then(() => self.skipWaiting())
   );
 });

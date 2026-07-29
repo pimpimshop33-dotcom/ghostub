@@ -1968,7 +1968,6 @@ function buildLeafletMap(centerLat, centerLng) {
   // suffisait pas ici : un enfant direct d'un item flex n'hérite pas
   // toujours une hauteur définie en pourcentage de façon fiable.
   container.innerHTML = `<div id="leafletMap" style="position:absolute;inset:0;width:100%;height:100%;"></div>`;
-  if (map) { try { map.remove(); } catch(e){ console.warn('[ghostub:buildLeafletMap]', e); } map = null; }
 
   map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
           .setView([centerLat, centerLng], 16);
@@ -8299,7 +8298,11 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-window.showScreen = (id, fromPopstate = false) => {
+// Audit 6.4 : nommée explicitement (au lieu d'un window.showScreen anonyme
+// capturé plus bas dans _showScreenOrig) — le pattern "capture puis écrase"
+// dépendait entièrement de l'ordre d'exécution du script ; un futur
+// déplacement de code entre les deux définitions l'aurait cassé en silence.
+function _showScreenBase(id, fromPopstate = false) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   // Reset scroll
@@ -8438,7 +8441,8 @@ window.showScreen = (id, fromPopstate = false) => {
     screenReply:   t.misc_screen_reply   || 'Ghostub',
   };
   document.title = screenTitles[id] || 'Ghostub';
-};
+}
+window.showScreen = _showScreenBase;
 
 
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
@@ -8738,7 +8742,6 @@ function animateScreenTransition(newId) {
 }
 
 // Patch showScreen pour ajouter les animations
-const _showScreenOrig = window.showScreen;
 window.showScreen = (id, fromPopstate = false) => {
   // Écrans réservés aux comptes réels — rediriger les anonymes vers l'inscription
   if (_isGuestUser() && (id === 'screenDeposit' || id === 'screenProfile')) {
@@ -8750,7 +8753,7 @@ window.showScreen = (id, fromPopstate = false) => {
   // pendant qu'on y est déjà), et s'arrêter net dès qu'on le quitte.
   const _wasRadarActive = document.getElementById('screenRadar')?.classList.contains('active');
   animateScreenTransition(id);
-  _showScreenOrig(id, fromPopstate);
+  _showScreenBase(id, fromPopstate);
   if (id === 'screenRadar' && !_wasRadarActive) _startRadarPingLoop();
   else if (id !== 'screenRadar' && _wasRadarActive) _stopRadarPingLoop();
 
