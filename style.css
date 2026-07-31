@@ -1409,6 +1409,9 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 #mapContainer{width:100%;flex:1;min-height:550px;background:var(--deep);display:block;}
 .map-screen-wrap{flex:1;display:flex;flex-direction:column;height:100%;position:relative;}
 .map-header{padding:12px 20px 10px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+/* CSP audit 4.6 : ex-style="" inline de l'écran Map */
+.map-header-actions{display:flex;align-items:center;gap:8px;}
+#mapContainer{position:relative;}
 .map-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);}
 .map-count{font-size:var(--text-sm);color:var(--spirit-dim);}
 /* ── Lot I4 : filtres sur la Carte (mêmes filtres que le Radar, réutilise
@@ -1425,6 +1428,35 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .map-ghost-halo{position:absolute;top:50%;left:50%;width:70%;height:70%;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:0;}
 .map-ghost-halo-rare{opacity:1;background:radial-gradient(circle,rgba(var(--tier-gold-rgb),.38) 0%,rgba(var(--tier-gold-rgb),.1) 55%,transparent 75%);animation:dotHaloPulse 3s ease-in-out infinite;}
 .map-ghost-halo-secret{opacity:1;background:radial-gradient(circle,rgba(200,130,255,.4) 0%,rgba(200,130,255,.12) 55%,transparent 75%);animation:dotHaloPulse 3s ease-in-out infinite;}
+/* CSP audit 4.6 : ex-style="" inline des marqueurs Leaflet (buildLeafletMap).
+   animation-delay (continu, par marqueur) reste posé en JS via une vraie
+   écriture .style — hors périmètre CSP — cf. le hydrate="delay" sur chaque
+   marqueur dans app.js. Même principe pour l'opacité du marqueur "loin"
+   (continue selon la distance). */
+.leaflet-map-fill{position:absolute;inset:0;width:100%;height:100%;}
+.map-load-err-block{padding:40px 24px;text-align:center;color:var(--spirit-dim);font-size:13px;}
+.map-load-err-retry{margin-top:12px;padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.08);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.7);border:none;font-family:inherit;font-size:12px;cursor:pointer;}
+.hunt-marker-opened{position:relative;font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;}
+.hunt-marker-inrange{position:relative;font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;}
+.hunt-marker-locked{position:relative;display:flex;align-items:center;justify-content:center;width:76px;height:76px;cursor:pointer;}
+.hunt-marker-locked-emoji{font-size:52px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;}
+.hunt-marker-lock-badge{position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.ghost-marker-near{position:relative;font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;}
+.ghost-marker-close{position:relative;font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;}
+.ghost-marker-far{position:relative;font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;}
+/* Légende zones hantées (injectée en JS, cf. legendEl.style.cssText — hors
+   périmètre CSP, écriture .style directe) — seuls les items internes en
+   innerHTML avaient besoin de classes. */
+.legend-item{display:inline-flex;align-items:center;gap:4px;}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.legend-dot-spot{background:rgba(var(--premium-rgb),0.5);border:1.5px solid rgba(var(--premium-rgb),.7);}
+.legend-dot-haunted{background:rgba(168,100,255,0.5);border:1.5px solid rgba(168,100,255,.7);}
+.legend-dot-infest{background:rgba(255,80,60,0.5);border:1.5px solid rgba(255,80,60,.7);}
+.legend-label{font-size:10px;}
+.legend-label-spot{color:rgba(255,210,80,.9);}
+.legend-label-haunted{color:rgba(200,140,255,.9);}
+.legend-label-infest{color:rgba(255,120,100,.9);}
+.legend-sep{color:rgba(var(--ghost-blue-rgb),.2);margin:0 6px;}
 /* ── Lot I2 : halo de zone qui pulse doucement (cluster "il y a du monde ici") ── */
 @keyframes zoneHaloPulse{0%,100%{opacity:.55;transform:scale(1);}50%{opacity:.9;transform:scale(1.08);}}
 .zone-halo-pulse{animation:zoneHaloPulse 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center;}

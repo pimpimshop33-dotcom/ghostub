@@ -1565,6 +1565,18 @@ function _hydrateTraceMarks(root) {
     el.style.filter = `saturate(${el.dataset.traceSat}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5))`;
   });
 }
+// Hydrate un marqueur Leaflet créé par buildLeafletMap() : animation-delay
+// et opacité (continus, par marqueur) posés en JS sur le DOM déjà créé,
+// jamais en style="" — CSP audit 4.6. Voir .hunt-marker-*/.ghost-marker-*
+// dans style.css pour les parties statiques.
+function _hydrateMapMarker(root) {
+  if (!root) return;
+  const delayEl = root.querySelector('[data-mark-delay]');
+  if (delayEl) delayEl.style.animationDelay = delayEl.dataset.markDelay + 's';
+  const opacityEl = root.querySelector('[data-mark-opacity]');
+  if (opacityEl) opacityEl.style.opacity = opacityEl.dataset.markOpacity;
+  _hydrateTraceMarks(root);
+}
 
 // ══════════════════════════════════════════════════════════
 // TEINTE DU TRACE DE PROFIL — personnalisation par utilisateur (Lot K)
@@ -1939,7 +1951,7 @@ window.renderStaticMap = () => {
       script.remove(); // permet une vraie nouvelle tentative au prochain appel
       const container = document.getElementById('mapContainer');
       if (container) {
-        container.innerHTML = `<div style="padding:40px 24px;text-align:center;color:var(--spirit-dim);font-size:13px;">${escapeHTML(t.map_load_err)}<br><button onclick="renderStaticMap()" style="margin-top:12px;padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.08);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.7);border:none;font-family:inherit;font-size:12px;cursor:pointer;">${escapeHTML(t.radar_retry_btn)}</button></div>`;
+        container.innerHTML = `<div class="map-load-err-block">${escapeHTML(t.map_load_err)}<br><button data-action="renderStaticMap" class="map-load-err-retry">${escapeHTML(t.radar_retry_btn)}</button></div>`;
       }
     }, { once: true });
   }
@@ -1989,7 +2001,7 @@ function buildLeafletMap(centerLat, centerLng) {
   // barre de filtres au-dessus (cf. renderStaticMap()). height:100% seul ne
   // suffisait pas ici : un enfant direct d'un item flex n'hérite pas
   // toujours une hauteur définie en pourcentage de façon fiable.
-  container.innerHTML = `<div id="leafletMap" style="position:absolute;inset:0;width:100%;height:100%;"></div>`;
+  container.innerHTML = `<div id="leafletMap" class="leaflet-map-fill"></div>`;
 
   map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
           .setView([centerLat, centerLng], 16);
@@ -2045,7 +2057,7 @@ function buildLeafletMap(centerLat, centerLng) {
     // FEATURE-TRACE-COLORE-FANAGE.md) — plus d'icône de catégorie brute sur
     // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
     // d'équivalent badge séparé ici contrairement au radar.
-    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false });
+    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false, hydrate: true });
     // Halo de rareté (Lot I1) : même logique que le Radar (Lot G2) — doré
     // pour rare/légendaire, lavande pour secret, rien pour commun/uncommon.
     let _haloClass = '';
@@ -2060,13 +2072,13 @@ function buildLeafletMap(centerLat, centerLng) {
       // quasi doublée par rapport à l'original pour être visible d'un coup d'œil.
       const huntIcon = L.divIcon({
         html: alreadyOpened
-          ? `<div style="position:relative;font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${haloHTML}${emojiAt(52)}</div>`
+          ? `<div class="hunt-marker-opened">${haloHTML}${emojiAt(52)}</div>`
           : isInRange
-          ? `<div style="position:relative;font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;">${haloHTML}${emojiAt(56)}</div>`
-          : `<div style="position:relative;display:flex;align-items:center;justify-content:center;width:76px;height:76px;cursor:pointer;">
+          ? `<div class="hunt-marker-inrange" data-mark-delay="${delay}">${haloHTML}${emojiAt(56)}</div>`
+          : `<div class="hunt-marker-locked">
                ${haloHTML}
-               <div style="font-size:52px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;">${emojiAt(52)}</div>
-               <div style="position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔒</div>
+               <div class="hunt-marker-locked-emoji" data-mark-delay="${delay}">${emojiAt(52)}</div>
+               <div class="hunt-marker-lock-badge">🔒</div>
              </div>`,
         iconSize: [76, 76], iconAnchor: [38, 38], className: ''
       });
@@ -2083,9 +2095,12 @@ function buildLeafletMap(centerLat, centerLng) {
         }).addTo(map);
       }
 
-      L.marker([g.lat, g.lng], { icon: huntIcon })
-        .addTo(map)
-        .on('click', () => {
+      const huntMarker = L.marker([g.lat, g.lng], { icon: huntIcon }).addTo(map);
+      // animation-delay (continu, par marqueur) posé en JS sur le DOM créé par
+      // Leaflet — vraie écriture .style, pas un style="" du markup, hors
+      // périmètre CSP (cf. commentaire sur .hunt-marker-* dans style.css).
+      _hydrateMapMarker(huntMarker.getElement());
+      huntMarker.on('click', () => {
           if (alreadyOpened) {
             showToast('info', t.map_hunt_already);
           } else if (isInRange) {
@@ -2106,22 +2121,22 @@ function buildLeafletMap(centerLat, centerLng) {
       let ghostHtml;
       if (dist <= 30) {
         // Très proche : pleine lueur + pulse
-        ghostHtml = `<div style="position:relative;font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;animation-delay:${delay}s,${delay}s;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;">${haloHTML}${emojiAt(64)}</div>`;
+        ghostHtml = `<div class="ghost-marker-near" data-mark-delay="${delay}">${haloHTML}${emojiAt(64)}</div>`;
       } else if (dist <= 100) {
         // Proche : lueur modérée
-        ghostHtml = `<div style="position:relative;font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;animation-delay:${delay}s;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;">${haloHTML}${emojiAt(58)}</div>`;
+        ghostHtml = `<div class="ghost-marker-close" data-mark-delay="${delay}">${haloHTML}${emojiAt(58)}</div>`;
       } else {
         // Loin : flou, quasi fantomatique
         const farOpacity = Math.max(0.25, 0.6 - (dist / 1000));
-        ghostHtml = `<div style="position:relative;font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;animation-delay:${delay}s;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;opacity:${farOpacity.toFixed(2)};">${haloHTML}${emojiAt(50)}</div>`;
+        ghostHtml = `<div class="ghost-marker-far" data-mark-delay="${delay}" data-mark-opacity="${farOpacity.toFixed(2)}">${haloHTML}${emojiAt(50)}</div>`;
       }
       const ghostIcon = L.divIcon({
         html: ghostHtml,
         iconSize: [78, 78], iconAnchor: [39, 39], className: ''
       });
-      L.marker([g.lat, g.lng], { icon: ghostIcon })
-        .addTo(map)
-        .on('click', () => _openMapGhostSheet(g, dist));
+      const ghostMarker = L.marker([g.lat, g.lng], { icon: ghostIcon }).addTo(map);
+      _hydrateMapMarker(ghostMarker.getElement());
+      ghostMarker.on('click', () => _openMapGhostSheet(g, dist));
     }
   });
 
@@ -2205,10 +2220,10 @@ function buildLeafletMap(centerLat, centerLng) {
     const hasAny = zones.spot || zones.haunted || zones.infest;
     if (hasAny) {
       const items = [];
-      if (zones.spot)    items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(var(--premium-rgb),0.5);border:1.5px solid rgba(var(--premium-rgb),.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(255,210,80,.9);">Ghost Spot · ${zoneGhosts.spot}👻</span></span>`);
-      if (zones.haunted) items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(168,100,255,0.5);border:1.5px solid rgba(168,100,255,.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(200,140,255,.9);">${_currentLang==='en'?'Haunted':'Hantée'} · ${zoneGhosts.haunted}👻</span></span>`);
-      if (zones.infest)  items.push(`<span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:rgba(255,80,60,0.5);border:1.5px solid rgba(255,80,60,.7);display:inline-block;"></span><span style="font-size:10px;color:rgba(255,120,100,.9);">Infestation · ${zoneGhosts.infest}👻</span></span>`);
-      legendEl.innerHTML = items.join('<span style="color:rgba(var(--ghost-blue-rgb),.2);margin:0 6px;">·</span>');
+      if (zones.spot)    items.push(`<span class="legend-item"><span class="legend-dot legend-dot-spot"></span><span class="legend-label legend-label-spot">Ghost Spot · ${zoneGhosts.spot}👻</span></span>`);
+      if (zones.haunted) items.push(`<span class="legend-item"><span class="legend-dot legend-dot-haunted"></span><span class="legend-label legend-label-haunted">${_currentLang==='en'?'Haunted':'Hantée'} · ${zoneGhosts.haunted}👻</span></span>`);
+      if (zones.infest)  items.push(`<span class="legend-item"><span class="legend-dot legend-dot-infest"></span><span class="legend-label legend-label-infest">Infestation · ${zoneGhosts.infest}👻</span></span>`);
+      legendEl.innerHTML = items.join('<span class="legend-sep">·</span>');
       legendEl.style.display = 'flex';
     } else {
       legendEl.style.display = 'none';
@@ -2234,7 +2249,8 @@ function _openMapGhostSheet(g, dist) {
   _mapSheetGhostId = g.id;
   const iconEl = document.getElementById('mapSheetIcon');
   const alreadyOpened = getDiscoveredIds().includes(g.id);
-  iconEl.innerHTML = g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size: 40, discovered: alreadyOpened, fadeOpacity: false });
+  iconEl.innerHTML = g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size: 40, discovered: alreadyOpened, fadeOpacity: false, hydrate: true });
+  _hydrateTraceMarks(iconEl);
   document.getElementById('mapSheetTitle').textContent = g.location || (_currentLang === 'en' ? 'Unknown place' : 'Lieu inconnu');
   const tier = g.secret ? null : getGhostTier(g.id);
   const tierLabel = tier ? getTierLabel(tier) : '';
@@ -2259,7 +2275,12 @@ function _openMapClusterSheet(level, n, labelFr, labelEn) {
 }
 
 window.closeMapSheet = (e) => {
-  if (e && e.target !== e.currentTarget) return;
+  // CSP audit 4.6 : ex-onclick="closeMapSheet(event)" direct sur le modal —
+  // e.currentTarget pointait alors le modal lui-même. Le dispatcher délégué
+  // (zone 0b) écoute sur document, donc e.currentTarget est désormais
+  // toujours document — comparaison contre l'élément réel à la place, même
+  // schéma que closeShareModal/closeReportModal.
+  if (e && e.target !== document.getElementById('mapSheetModal')) return;
   closeModal('mapSheetModal');
 };
 
@@ -9802,6 +9823,14 @@ const ACTIONS = {
   handleAttachments: (el) => handleAttachments(el),
   depositGhost: () => depositGhost(),
   toggleBusinessMode: () => toggleBusinessMode(),
+
+  // Zone 7 — Map
+  shareMapLocation: () => shareMapLocation(),
+  toggleHuntMode: () => toggleHuntMode(),
+  setMapFilter: (el) => setMapFilter(el.dataset.arg, el),
+  closeMapSheet: (el, event) => closeMapSheet(event),
+  mapSheetAction: () => _mapSheetAction(),
+  renderStaticMap: () => renderStaticMap(),
 };
 
 function _dispatchAction(el, event) {

@@ -772,33 +772,33 @@
     <div class="map-screen-wrap">
       <div class="map-header">
         <div class="map-title" data-i18n="map_title">Carte des fantômes</div>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div class="map-header-actions">
           <div class="map-count" id="mapCount" aria-live="polite">0 ghost(s)</div>
-          <button id="mapShareBtn" onclick="shareMapLocation()" class="map-header-btn" aria-label="Partager ce lieu" data-i18n="map_share_btn">↗ Partager</button>
-          <button id="huntModeBtn" onclick="toggleHuntMode()" class="map-header-btn" aria-label="Activer le mode chasse" data-i18n="map_hunt_off">🎯 Chasse</button>
+          <button id="mapShareBtn" data-action="shareMapLocation" class="map-header-btn" aria-label="Partager ce lieu" data-i18n="map_share_btn">↗ Partager</button>
+          <button id="huntModeBtn" data-action="toggleHuntMode" class="map-header-btn" aria-label="Activer le mode chasse" data-i18n="map_hunt_off">🎯 Chasse</button>
         </div>
       </div>
       <!-- Filtres flottants (Lot I4) — mêmes filtres que le Radar, fond semi-transparent -->
       <div class="map-filter-bar" role="group" aria-label="Filtres de la carte">
-        <button class="filter-btn active" onclick="setMapFilter('all',this)" data-i18n="filter_all">🌫️ Toutes</button>
-        <button class="filter-btn" onclick="setMapFilter('recent',this)" data-i18n="filter_recent">✨ Récentes</button>
-        <button class="filter-btn" onclick="setMapFilter('photo',this)" data-i18n="filter_photo">📷 Visions</button>
-        <button class="filter-btn" onclick="setMapFilter('audio',this)" data-i18n="filter_audio">🎙 Voix</button>
-        <button class="filter-btn" onclick="setMapFilter('video',this)" data-i18n="filter_video">🎥 Vidéos</button>
+        <button class="filter-btn active" data-action="setMapFilter" data-arg="all" data-i18n="filter_all">🌫️ Toutes</button>
+        <button class="filter-btn" data-action="setMapFilter" data-arg="recent" data-i18n="filter_recent">✨ Récentes</button>
+        <button class="filter-btn" data-action="setMapFilter" data-arg="photo" data-i18n="filter_photo">📷 Visions</button>
+        <button class="filter-btn" data-action="setMapFilter" data-arg="audio" data-i18n="filter_audio">🎙 Voix</button>
+        <button class="filter-btn" data-action="setMapFilter" data-arg="video" data-i18n="filter_video">🎥 Vidéos</button>
       </div>
-      <div id="mapContainer" role="region" aria-label="Carte interactive des fantômes proches" style="position:relative;"></div>
+      <div id="mapContainer" role="region" aria-label="Carte interactive des fantômes proches"></div>
     </div>
   </div>
 
   <!-- CARTE — Fiche fantôme/cluster au tap (bottom sheet, Lot I3) —
        remplace la navigation directe / le popup Leaflet par défaut. -->
-  <div class="map-sheet-modal" id="mapSheetModal" onclick="closeMapSheet(event)" role="dialog" aria-modal="true" aria-labelledby="mapSheetTitle">
+  <div class="map-sheet-modal" id="mapSheetModal" data-action="closeMapSheet" role="dialog" aria-modal="true" aria-labelledby="mapSheetTitle">
     <div class="map-sheet">
       <div class="sheet-handle" aria-hidden="true"></div>
       <div class="map-sheet-icon" id="mapSheetIcon" aria-hidden="true"></div>
       <div class="map-sheet-title" id="mapSheetTitle">…</div>
       <div class="map-sheet-sub" id="mapSheetSub">…</div>
-      <button class="map-sheet-btn" id="mapSheetActionBtn" onclick="_mapSheetAction()">✉ Ouvrir</button>
+      <button class="map-sheet-btn" id="mapSheetActionBtn" data-action="mapSheetAction">✉ Ouvrir</button>
     </div>
   </div>
 
