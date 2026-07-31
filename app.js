@@ -3498,13 +3498,16 @@ window.clearAttachments = () => {
 
 
 async function uploadMedia(uid) {
-  let audioUrl = null;
-  let photoUrl = null;
-  let videoUrl = null;
+  let audioUrl = null, audioPublicId = null, audioResourceType = null;
+  let photoUrl = null, photoPublicId = null, photoResourceType = null;
+  let videoUrl = null, videoPublicId = null, videoResourceType = null;
 
   // FIX: Helper avec retry x2 sur erreur réseau + timeout (AbortController) —
   // sans timeout, un fetch qui stalle sur mobile ne rejette jamais et bloque
   // le dépôt indéfiniment (spinner infini), retry inclus.
+  // Retourne { url, publicId, resourceType } — public_id/resource_type sont
+  // capturés en plus de secure_url pour permettre la suppression Cloudinary
+  // ciblée au moment où le fantôme expire (réconciliation, audit 3.2).
   async function uploadToCloudinary(fd, resourceType, timeoutMs = 30000) {
     for (let attempt = 0; attempt < 2; attempt++) {
       const controller = new AbortController();
@@ -3514,7 +3517,7 @@ async function uploadMedia(uid) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         if (data.error) throw new Error(data.error.message);
-        return data.secure_url || null;
+        return { url: data.secure_url || null, publicId: data.public_id || null, resourceType: data.resource_type || null };
       } catch(e) {
         if (attempt === 1) throw e;
         await new Promise(r => setTimeout(r, 1000));
@@ -3529,21 +3532,24 @@ async function uploadMedia(uid) {
     fd.append('file', window._pendingAudioBlob, 'audio.webm');
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/audio');
-    audioUrl = await uploadToCloudinary(fd, 'video', 30000);
+    const r = await uploadToCloudinary(fd, 'video', 30000);
+    audioUrl = r.url; audioPublicId = r.publicId; audioResourceType = r.resourceType;
   }
   if (window._pendingPhotoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingPhotoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/photos');
-    photoUrl = await uploadToCloudinary(fd, 'image', 30000);
+    const r = await uploadToCloudinary(fd, 'image', 30000);
+    photoUrl = r.url; photoPublicId = r.publicId; photoResourceType = r.resourceType;
   }
   if (window._pendingVideoFile) {
     const fd = new FormData();
     fd.append('file', window._pendingVideoFile);
     fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     fd.append('folder', 'ghostub/videos');
-    videoUrl = await uploadToCloudinary(fd, 'video', 120000);
+    const r = await uploadToCloudinary(fd, 'video', 120000);
+    videoUrl = r.url; videoPublicId = r.publicId; videoResourceType = r.resourceType;
   }
   // Phase 1d v103 — upload des fichiers joints (PDF + images), max 3
   let attachments = null;
@@ -3556,15 +3562,20 @@ async function uploadMedia(uid) {
         fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         fd.append('folder', 'ghostub/files');
         // 'auto' laisse Cloudinary détecter le type (image vs raw pour PDF)
-        const url = await uploadToCloudinary(fd, 'auto', 30000);
-        if (url) attachments.push({ url, name: a.name, type: a.type, size: a.size });
+        const r = await uploadToCloudinary(fd, 'auto', 30000);
+        if (r.url) attachments.push({ url: r.url, name: a.name, type: a.type, size: a.size, publicId: r.publicId, resourceType: r.resourceType });
       } catch (e) {
         console.warn('attachment upload failed:', a.name, e);
       }
     }
     if (attachments.length === 0) attachments = null;
   }
-  return { audioUrl, photoUrl, videoUrl, attachments };
+  return {
+    audioUrl, audioPublicId, audioResourceType,
+    photoUrl, photoPublicId, photoResourceType,
+    videoUrl, videoPublicId, videoResourceType,
+    attachments,
+  };
 }
 
 
@@ -7593,7 +7604,12 @@ window.depositGhost = async () => {
     }
 
     try {
-      const { audioUrl, photoUrl, videoUrl, attachments } = uploadResult;
+      const {
+        audioUrl, audioPublicId, audioResourceType,
+        photoUrl, photoPublicId, photoResourceType,
+        videoUrl, videoPublicId, videoResourceType,
+        attachments,
+      } = uploadResult;
       if (hasMedia) depositBtn.textContent = t.dep_btn_saving;
       const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
       const chainNext = isPremium ? (window._chainNextCoords || null) : null;
@@ -7612,6 +7628,9 @@ window.depositGhost = async () => {
         anonymous: anon,
         dedicatedTo: (isPremium && document.getElementById('dedicatedUidInput')?.value.trim()) || null,
         audioUrl: audioUrl || null, photoUrl: photoUrl || null, videoUrl: videoUrl || null,
+        audioPublicId: audioPublicId || null, audioResourceType: audioResourceType || null,
+        photoPublicId: photoPublicId || null, photoResourceType: photoResourceType || null,
+        videoPublicId: videoPublicId || null, videoResourceType: videoResourceType || null,
         attachments: (isPremium && Array.isArray(attachments) && attachments.length > 0) ? attachments : null,
         chainHint: (isPremium && chainHint) || null,
         chainLat: chainNext ? chainNext.lat : null,

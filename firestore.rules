@@ -40,7 +40,22 @@ service cloud.firestore {
         && (request.resource.data.get('promoCode', null) == null || request.resource.data.promoCode.size() <= 40)
         && (request.resource.data.get('dedicatedTo', null) == null || request.resource.data.dedicatedTo.size() <= 100)
         && (request.resource.data.get('radius', null) == null || request.resource.data.radius.size() <= 10)
-        && (request.resource.data.get('duration', null) == null || request.resource.data.duration.size() <= 20);
+        && (request.resource.data.get('duration', null) == null || request.resource.data.duration.size() <= 20)
+        // Réconciliation Cloudinary (audit 3.2) : public_id/resource_type
+        // capturés à l'upload, utilisés par le trigger onDelete pour supprimer
+        // le média associé quand le fantôme expire ou est effacé.
+        // ⚠️ Ces champs restent entièrement contrôlés par le client à la
+        // création (comme audioUrl/photoUrl/videoUrl déjà aujourd'hui) : un
+        // client malveillant pourrait en théorie y placer le public_id d'un
+        // autre asset Ghostub, pour en déclencher la suppression quand SON
+        // propre fantôme expire. Risque préexistant (déjà vrai pour les *Url
+        // eux-mêmes), pas introduit par ce chantier, non traité ici.
+        && (request.resource.data.get('audioPublicId', null) == null || request.resource.data.audioPublicId.size() <= 150)
+        && (request.resource.data.get('audioResourceType', null) == null || request.resource.data.audioResourceType.size() <= 150)
+        && (request.resource.data.get('photoPublicId', null) == null || request.resource.data.photoPublicId.size() <= 150)
+        && (request.resource.data.get('photoResourceType', null) == null || request.resource.data.photoResourceType.size() <= 150)
+        && (request.resource.data.get('videoPublicId', null) == null || request.resource.data.videoPublicId.size() <= 150)
+        && (request.resource.data.get('videoResourceType', null) == null || request.resource.data.videoResourceType.size() <= 150);
     }
     function isPremiumOnlyField() {
       // Champs réservés Premium dans un ghost
@@ -98,6 +113,9 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
              'message', 'location', 'emoji', 'duration', 'radius',
              'audioUrl', 'photoUrl', 'videoUrl', 'attachments',
+             'audioPublicId', 'audioResourceType',
+             'photoPublicId', 'photoResourceType',
+             'videoPublicId', 'videoResourceType',
              'openCondition', 'openHour', 'openAfterGhostId', 'openDate',
              'businessMode', 'promoCode', 'maxOpenCount',
              'anonymous', 'secret', 'dedicatedTo',
@@ -126,6 +144,8 @@ service cloud.firestore {
         //  - authorUid/lat/lng/message ne peuvent plus changer après la création
         //    (message : contenu du "message laissé derrière soi", immuable une
         //    fois déposé — aucun code de l'app ne le modifie après coup)
+        //  - idem pour les *PublicId/*ResourceType Cloudinary (audit 3.2) :
+        //    immuables après création, comme les champs ci-dessus
         //  - si des champs Premium sont touchés par cette mise à jour, la même
         //    vérification qu'à la création s'applique (pas de contournement via update)
         //  - les plafonds de taille des champs texte libres (4.7) s'appliquent
@@ -136,6 +156,12 @@ service cloud.firestore {
           && request.resource.data.lat == resource.data.lat
           && request.resource.data.lng == resource.data.lng
           && request.resource.data.message == resource.data.message
+          && request.resource.data.get('audioPublicId', null) == resource.data.get('audioPublicId', null)
+          && request.resource.data.get('audioResourceType', null) == resource.data.get('audioResourceType', null)
+          && request.resource.data.get('photoPublicId', null) == resource.data.get('photoPublicId', null)
+          && request.resource.data.get('photoResourceType', null) == resource.data.get('photoResourceType', null)
+          && request.resource.data.get('videoPublicId', null) == resource.data.get('videoPublicId', null)
+          && request.resource.data.get('videoResourceType', null) == resource.data.get('videoResourceType', null)
           && hasValidTextFieldSizes()
           && (
             !request.resource.data.diff(resource.data).affectedKeys()

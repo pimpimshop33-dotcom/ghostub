@@ -1,9 +1,13 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { defineSecret } = require('firebase-functions/params');
 const { initializeApp, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const cloudinary = require('cloudinary').v2;
 if (!getApps().length) initializeApp();
 const db = getFirestore();
+const cloudinaryApiSecret = defineSecret('CLOUDINARY_API_SECRET');
 // ⚠️ Doit rester identique à DAILY_OPEN_LIMIT dans app.js (côté client,
 // utilisé uniquement pour l'affichage/aperçu — la vraie limite, c'est ici).
 const DAILY_OPEN_LIMIT = 3;
@@ -161,6 +165,82 @@ exports.cleanExpiredGhosts = onSchedule({ region: 'europe-west9', schedule: 'eve
   console.log(`cleanExpiredGhosts: ${snap.size} fantômes actifs examinés, ${markedCount} marqués expirés, ${deletedCount} supprimés définitivement.`);
 });
 
+// ── Réconciliation Cloudinary (audit constat 3.2) ───────────────────────────
+// Un fantôme supprimé (par cleanExpiredGhosts, ou manuellement par son auteur
+// depuis l'app) laissait jusqu'ici ses médias Cloudinary (audio/photo/vidéo/
+// pièces jointes) orphelins indéfiniment. Ce trigger onDelete centralise le
+// nettoyage pour toutes les sources de suppression du doc, sans avoir à
+// modifier chaque site d'appel client (deleteDoc) ni cleanExpiredGhosts.
+
+// Extrait { publicId, resourceType } d'une secure_url Cloudinary classique
+// (…/​<resource_type>/upload/[transformations/]v<version>/<public_id>.<ext>).
+// Fallback utilisé quand le doc ne porte pas de *PublicId stocké — cas des
+// fantômes créés avant ce chantier.
+function extractCloudinaryAssetFromUrl(url) {
+  if (typeof url !== 'string') return null;
+  const m = url.match(/^https?:\/\/res\.cloudinary\.com\/[^/]+\/(image|video|raw)\/upload\/(?:[^/]+\/)*v\d+\/(.+)$/i);
+  if (!m) return null;
+  const resourceType = m[1];
+  const publicId = m[2].replace(/\.[^./]+$/, '');
+  return { publicId, resourceType };
+}
+
+// Priorité au public_id stocké sur le doc ; sinon on retombe sur le parsing
+// de l'URL (fantômes legacy).
+function resolveCloudinaryAsset(url, publicId, resourceType) {
+  if (typeof publicId === 'string' && publicId) {
+    return { publicId, resourceType: (typeof resourceType === 'string' && resourceType) || 'image' };
+  }
+  return extractCloudinaryAssetFromUrl(url);
+}
+
+// Suppression signée, best-effort : une erreur (asset déjà supprimé,
+// public_id absent, etc.) est loguée mais ne doit jamais interrompre le
+// nettoyage des autres médias du même fantôme.
+async function destroyCloudinaryAsset(publicId, resourceType) {
+  if (typeof publicId !== 'string' || !publicId.startsWith('ghostub/')) return;
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType || 'image', invalidate: true });
+  } catch (e) {
+    console.warn('[cloudinary] destroy échoué (best-effort)', { publicId, resourceType, error: e.message });
+  }
+}
+
+exports.onGhostMediaCleanup = onDocumentDeleted(
+  { region: 'europe-west9', document: 'ghosts/{ghostId}', secrets: [cloudinaryApiSecret] },
+  async (event) => {
+    const before = event.data?.data();
+    if (!before) return;
+
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: cloudinaryApiSecret.value(),
+    });
+
+    const assets = [];
+    const collect = (url, publicId, resourceType) => {
+      const resolved = resolveCloudinaryAsset(url, publicId, resourceType);
+      if (resolved) assets.push(resolved);
+    };
+    collect(before.audioUrl, before.audioPublicId, before.audioResourceType);
+    collect(before.photoUrl, before.photoPublicId, before.photoResourceType);
+    collect(before.videoUrl, before.videoPublicId, before.videoResourceType);
+    if (Array.isArray(before.attachments)) {
+      for (const a of before.attachments) {
+        if (a) collect(a.url, a.publicId, a.resourceType);
+      }
+    }
+
+    for (const asset of assets) {
+      await destroyCloudinaryAsset(asset.publicId, asset.resourceType);
+    }
+    if (assets.length > 0) {
+      console.log(`onGhostMediaCleanup: ${assets.length} média(s) traité(s) pour ghosts/${event.params.ghostId}.`);
+    }
+  }
+);
+
 // ── Geohash (précision 5) — porté depuis services/world.service.js ─────────
 // ⚠️ Troisième copie de cet algorithme dans le dépôt (la première vit dans
 // world.service.js, la deuxième dans patch_geohash.js — déjà documenté ainsi
@@ -196,6 +276,11 @@ const DEPOSIT_MAX_ACTIVE = 5;
 const TEXT_FIELD_LIMITS = {
   location: 120, author: 100, chainHint: 120, promoCode: 40,
   dedicatedTo: 100, radius: 10, duration: 20,
+  // Réconciliation Cloudinary (audit 3.2) — public_id Cloudinary le plus long
+  // observé (dossier + nom généré) reste bien en-deçà de 150 caractères.
+  audioPublicId: 150, audioResourceType: 150,
+  photoPublicId: 150, photoResourceType: 150,
+  videoPublicId: 150, videoResourceType: 150,
 };
 
 function isPremiumOnlyInput(d) {
@@ -296,8 +381,14 @@ exports.createGhostSecure = onCall({ region: 'europe-west9' }, async (request) =
         duration: (typeof d.duration === 'string' && d.duration) || '7 jours',
         radius: (typeof d.radius === 'string' && d.radius) || '10m',
         audioUrl: d.audioUrl || null,
+        audioPublicId: d.audioPublicId || null,
+        audioResourceType: d.audioResourceType || null,
         photoUrl: d.photoUrl || null,
+        photoPublicId: d.photoPublicId || null,
+        photoResourceType: d.photoResourceType || null,
         videoUrl: d.videoUrl || null,
+        videoPublicId: d.videoPublicId || null,
+        videoResourceType: d.videoResourceType || null,
         attachments: Array.isArray(d.attachments) && d.attachments.length > 0 ? d.attachments : null,
         openCondition: (typeof d.openCondition === 'string' && d.openCondition) || 'always',
         openHour: d.openHour ?? null,
