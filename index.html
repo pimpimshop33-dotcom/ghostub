@@ -433,7 +433,7 @@
 
   <!-- DEPOSIT -->
   <div class="screen" id="screenDeposit" aria-label="Déposer un fantôme">
-    <div class="scroll" style="padding-bottom:32px;">
+    <div class="scroll dep-scroll">
       <div class="wizard-header">
         <div class="wizard-steps" role="list" aria-label="Étapes du dépôt">
           <div class="wizard-step active" id="ws1" role="listitem" aria-current="step">
@@ -465,14 +465,14 @@
                  dans app.js, garder synchronisé si ces tracés changent. -->
             <div class="lettre-stamp-strip emoji-picker" role="group" aria-label="Choisir un Sceau">
               <span class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">Sceau :</span>
-              <button class="emoji-opt active" onclick="pickEmoji(this,'👻')" aria-label="Sceau fantôme" aria-pressed="true"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v10l2-2 2 2 2-2 2 2 2-2 2 2V9a6 6 0 0 0-6-6z"/><circle cx="9.5" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'💬')" aria-label="Sceau message" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'❤️')" aria-label="Sceau cœur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🌙')" aria-label="Sceau lune" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'✨')" aria-label="Sceau étincelle" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🔥')" aria-label="Sceau feu" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/></svg></button>
-              <button class="emoji-opt" onclick="pickEmoji(this,'🌸')" aria-label="Sceau fleur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/></svg></button>
-              <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" oninput="pickEmojiCustom(this)">
+              <button class="emoji-opt active" data-action="pickEmoji" data-arg="👻" aria-label="Sceau fantôme" aria-pressed="true"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3a6 6 0 0 0-6 6v10l2-2 2 2 2-2 2 2 2-2 2 2V9a6 6 0 0 0-6-6z"/><circle cx="9.5" cy="10" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10" r=".9" fill="currentColor" stroke="none"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="💬" aria-label="Sceau message" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="❤️" aria-label="Sceau cœur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="🌙" aria-label="Sceau lune" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="✨" aria-label="Sceau étincelle" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="🔥" aria-label="Sceau feu" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/></svg></button>
+              <button class="emoji-opt" data-action="pickEmoji" data-arg="🌸" aria-label="Sceau fleur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/></svg></button>
+              <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" data-input-action="pickEmojiCustom">
             </div>
             <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="600" aria-required="true" aria-describedby="msgCharCount"></textarea>
             <div class="lettre-counter"><span id="msgCharCount">0</span>/600</div>
@@ -481,50 +481,50 @@
           <!-- Identité (Lot Q) — pseudo par défaut, l'anonymat est un choix
                discret plutôt qu'un réglage mis en avant. anon = false tant
                que ce lien n'est pas activé (cf. depositGhost()). -->
-          <div style="text-align:right;margin-top:8px;">
-            <button type="button" id="anonToggleLink" class="anon-toggle-link" onclick="toggleAnonMode(this)" aria-pressed="false">
+          <div class="dep-anon-toggle-wrap">
+            <button type="button" id="anonToggleLink" class="anon-toggle-link" data-action="toggleAnonMode" aria-pressed="false">
               <span data-i18n="dep_anon_toggle_off">🌫️ rester anonyme</span>
             </button>
           </div>
         </div>
 
         <!-- Formulaire Commerce (formulaire dédié) -->
-        <div id="businessDepositForm" style="display:none;">
-          <div style="background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;">
-            <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:10px;">🏪 Type d'offre</div>
-            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" onclick="toggleBizTypeAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleBizTypeAccordion();}">
+        <div id="businessDepositForm" class="u-hidden">
+          <div class="dep-biz-type-box">
+            <div class="dep-biz-type-label">🏪 Type d'offre</div>
+            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" data-action="toggleBizTypeAccordion">
               <span id="bizTypeAccordionSummary">🏷 Promo</span>
               <span class="toggle-arrow" aria-hidden="true">▼</span>
             </div>
             <div class="deposit-advanced-content" id="bizTypeAccordionContent">
-              <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
-                <button class="type-btn active" data-val="Promo" onclick="selectType(this)" aria-pressed="true" style="flex:1;min-width:70px;">🏷 Promo</button>
-                <button class="type-btn" data-val="Événement" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🎉 Événement</button>
-                <button class="type-btn" data-val="Nouveauté" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">✨ Nouveauté</button>
-                <button class="type-btn" data-val="Service" onclick="selectType(this)" aria-pressed="false" style="flex:1;min-width:70px;">🛎 Service</button>
+              <div class="dep-biz-type-selector" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
+                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true">🏷 Promo</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false">🎉 Événement</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false">✨ Nouveauté</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false">🛎 Service</button>
               </div>
             </div>
           </div>
-          <div class="form-group" style="margin-bottom:10px;">
-            <label class="form-label" for="bizTitle">Titre de l'offre <span style="color:rgba(255,100,100,.7);">*</span></label>
+          <div class="form-group u-mb10">
+            <label class="form-label" for="bizTitle">Titre de l'offre <span class="dep-required-mark">*</span></label>
             <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" maxlength="80" aria-required="true">
           </div>
-          <div class="form-group" style="margin-bottom:10px;">
-            <label class="form-label" for="bizDesc">Description <span style="color:var(--spirit-dim);font-weight:400;">(optionnel)</span></label>
-            <textarea class="form-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" style="height:80px;" maxlength="200"></textarea>
+          <div class="form-group u-mb10">
+            <label class="form-label" for="bizDesc">Description <span class="dep-optional-mark">(optionnel)</span></label>
+            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" maxlength="200"></textarea>
           </div>
-          <div class="form-group" style="margin-bottom:6px;">
-            <label class="form-label" for="promoCode">Code promo <span style="color:var(--spirit-dim);font-weight:400;">(optionnel)</span></label>
-            <input class="form-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40" style="font-size:13px !important;letter-spacing:.5px;">
+          <div class="form-group u-mb6">
+            <label class="form-label" for="promoCode">Code promo <span class="dep-optional-mark">(optionnel)</span></label>
+            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40">
           </div>
-          <div style="display:flex;align-items:center;gap:8px;background:rgba(var(--premium-rgb),.05);border:1px solid rgba(var(--premium-rgb),.15);border-radius:10px;padding:10px 12px;margin-top:6px;">
-            <span style="font-size:16px;">📡</span>
-            <span style="font-size:11px;color:rgba(var(--premium-rgb),.7);line-height:1.5;">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+          <div class="dep-biz-radius-banner">
+            <span class="dep-biz-radius-emoji">📡</span>
+            <span class="dep-biz-radius-text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
           </div>
         </div>
 
         <!-- Champ caché businessExtra pour compatibilité depositGhost -->
-        <div id="businessExtra" style="display:none;"></div>
+        <div id="businessExtra" class="u-hidden"></div>
 
         <!-- Réglages du fantôme — fusionnés en sections empilées dans le
              même scroll (Lot H, juillet 2026) : Lieu → Durée de vie →
@@ -539,92 +539,92 @@
         <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
           <div id="depositMiniMap"></div>
           <div class="dep-map-scan" aria-hidden="true"></div>
-          <div id="depositMiniLoader" style="position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;background:rgba(6,4,16,.5);font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);letter-spacing:.5px;backdrop-filter:blur(2px);transition:opacity .3s;">📡 Localisation…</div>
+          <div id="depositMiniLoader" class="dep-mini-loader">📡 Localisation…</div>
         </div>
-        <div class="form-group" style="margin-bottom:14px;">
+        <div class="form-group u-mb14">
           <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
           <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true" maxlength="120">
         </div>
-        <div id="step2RadiusWrap" class="form-group" style="margin-bottom:18px;">
+        <div id="step2RadiusWrap" class="form-group u-mb18">
           <label class="form-label" data-i18n="dep_radius_label">Rayon de détection</label>
-          <div class="deposit-advanced-toggle" id="radiusAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="radiusAccordionContent" onclick="toggleRadiusAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleRadiusAccordion();}">
+          <div class="deposit-advanced-toggle" id="radiusAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="radiusAccordionContent" data-action="toggleRadiusAccordion">
             <span id="radiusAccordionSummary">📡 10m</span>
             <span class="toggle-arrow" aria-hidden="true">▼</span>
           </div>
           <div class="deposit-advanced-content" id="radiusAccordionContent">
-            <div class="radius-selector" role="group" aria-label="Rayon de détection" style="margin-top:10px;">
-              <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">3m</button>
-              <button class="radius-btn active" onclick="_selectRadius(this)" aria-pressed="true">10m</button>
-              <button class="radius-btn" onclick="_selectRadius(this)" aria-pressed="false">50m</button>
+            <div class="radius-selector u-mt10" role="group" aria-label="Rayon de détection">
+              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">3m</button>
+              <button class="radius-btn active" data-action="selectRadius" aria-pressed="true">10m</button>
+              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">50m</button>
             </div>
           </div>
         </div>
 
         <!-- ── DURÉE DE VIE ──────────────────────────────── -->
-        <div id="step2DurWrap" class="form-group" style="margin-bottom:18px;">
+        <div id="step2DurWrap" class="form-group u-mb18">
           <label class="form-label" data-i18n="dep_duration_label">Durée de vie</label>
-          <div class="deposit-advanced-toggle" id="durAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="durAccordionContent" onclick="toggleDurAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleDurAccordion();}">
+          <div class="deposit-advanced-toggle" id="durAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="durAccordionContent" data-action="toggleDurAccordion">
             <span id="durAccordionSummary">⏳ 7 jours</span>
             <span class="toggle-arrow" aria-hidden="true">▼</span>
           </div>
           <div class="deposit-advanced-content" id="durAccordionContent">
-            <div class="duration-selector" role="group" aria-label="Durée de vie du fantôme" style="margin-top:10px;">
-              <button class="dur-btn" data-dur="24h" onclick="selectDur(this)" aria-pressed="false">24h</button>
-              <button class="dur-btn active" data-dur="7d" onclick="selectDur(this)" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
-              <button class="dur-btn" data-dur="1m" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-              <button class="dur-btn" data-dur="eternal" onclick="selectDur(this)" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+            <div class="duration-selector u-mt10" role="group" aria-label="Durée de vie du fantôme">
+              <button class="dur-btn" data-dur="24h" data-action="selectDur" aria-pressed="false">24h</button>
+              <button class="dur-btn active" data-dur="7d" data-action="selectDur" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
+              <button class="dur-btn" data-dur="1m" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
+              <button class="dur-btn" data-dur="eternal" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
             </div>
           </div>
         </div>
 
         <!-- ── DISPARAÎT APRÈS ───────────────────────────── -->
-        <div id="step2MaxOpenWrap" class="form-group" style="margin-bottom:18px;">
+        <div id="step2MaxOpenWrap" class="form-group u-mb18">
           <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
-          <div class="deposit-advanced-toggle" id="maxOpenAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="maxOpenAccordionContent" onclick="toggleMaxOpenAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMaxOpenAccordion();}">
+          <div class="deposit-advanced-toggle" id="maxOpenAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="maxOpenAccordionContent" data-action="toggleMaxOpenAccordion">
             <span id="maxOpenAccordionSummary">👁️ ∞ Illimité</span>
             <span class="toggle-arrow" aria-hidden="true">▼</span>
           </div>
           <div class="deposit-advanced-content" id="maxOpenAccordionContent">
-            <div class="duration-selector" role="group" aria-label="Nombre de découvertes avant disparition" style="margin-top:10px;">
-              <button class="dur-btn active" data-maxopen="0" onclick="selectMaxOpen(this)" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
-              <button class="dur-btn" data-maxopen="1" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
-              <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
-              <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" onclick="selectMaxOpen(this)" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+            <div class="duration-selector u-mt10" role="group" aria-label="Nombre de découvertes avant disparition">
+              <button class="dur-btn active" data-maxopen="0" data-action="selectMaxOpen" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
+              <button class="dur-btn" data-maxopen="1" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
+              <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
+              <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
             </div>
           </div>
         </div>
 
         <!-- ── CONDITION D'OUVERTURE — accordéon replié par défaut (Lot H3) ── -->
-        <div id="step2CondWrap" class="form-group" style="margin-bottom:18px;">
+        <div id="step2CondWrap" class="form-group u-mb18">
           <label class="form-label" data-i18n="dep_cond_label">Condition d'ouverture</label>
-          <div class="deposit-advanced-toggle" id="condAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="condAccordionContent" onclick="toggleCondAccordion()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCondAccordion();}">
+          <div class="deposit-advanced-toggle" id="condAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="condAccordionContent" data-action="toggleCondAccordion">
             <span id="condAccordionSummary">✉ Toujours accessible</span>
             <span class="toggle-arrow" aria-hidden="true">▼</span>
           </div>
           <div class="deposit-advanced-content" id="condAccordionContent">
-          <div class="cond-selector" role="group" aria-label="Condition d'ouverture du fantôme" style="margin-top:10px;">
-            <button class="cond-btn active" data-cond="always" onclick="selectCond(this)" type="button">
+          <div class="cond-selector u-mt10" role="group" aria-label="Condition d'ouverture du fantôme">
+            <button class="cond-btn active" data-cond="always" data-action="selectCond" type="button">
               <span class="cond-btn-icon">✉</span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
               </span>
             </button>
-            <button class="cond-btn" data-cond="night" onclick="selectCond(this)" type="button">
+            <button class="cond-btn" data-cond="night" data-action="selectCond" type="button">
               <span class="cond-btn-icon">🌙</span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
               </span>
             </button>
-            <button class="cond-btn" data-cond="hour" onclick="selectCond(this)" type="button">
+            <button class="cond-btn" data-cond="hour" data-action="selectCond" type="button">
               <span class="cond-btn-icon">⏰</span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
               </span>
             </button>
-            <button class="cond-btn" data-cond="future" onclick="selectCond(this)" type="button" id="condFutureBtn">
+            <button class="cond-btn" data-cond="future" data-action="selectCond" type="button" id="condFutureBtn">
               <span class="cond-btn-icon">📅</span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
@@ -632,30 +632,30 @@
               </span>
             </button>
             <div id="premSection_chain"></div>
-            <div id="chainContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;flex-direction:column;gap:10px;">
+            <div id="chainContent" class="u-hidden dep-chain-content">
               <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
-              <button type="button" onclick="setChainMarker()" class="media-btn" style="width:100%;">
+              <button type="button" data-action="setChainMarker" class="media-btn dep-chain-btn">
                 <span class="media-icon" aria-hidden="true">🗺</span>
                 <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
               </button>
-              <div id="chainMapPreview" style="display:none;height:120px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);"></div>
+              <div id="chainMapPreview" class="u-hidden dep-chain-map-preview"></div>
             </div>
             <div id="premSection_dedicated"></div>
-            <div id="dedicatedContent" style="display:none;background:rgba(var(--ghost-blue-rgb),.04);border:1px solid rgba(var(--ghost-blue-rgb),.1);border-radius:14px;padding:12px;">
-              <div style="font-size:12px;color:var(--warm-dim);margin-bottom:10px;line-height:1.5;">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
-              <input class="form-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" style="font-size:13px !important;margin-bottom:8px;" aria-label="Email du destinataire">
-              <div style="font-size:10px;color:var(--spirit-dim);" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
+            <div id="dedicatedContent" class="u-hidden dep-dedicated-content">
+              <div class="dep-dedicated-intro">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
+              <input class="form-input dep-dedicated-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" aria-label="Email du destinataire">
+              <div class="dep-hint-xs" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
             </div>
           </div>
           <div class="cond-extra" id="condExtraHour">
-            <label class="form-label" style="margin-bottom:6px;" for="condHourInput">Heure d'ouverture</label>
+            <label class="form-label u-mb6" for="condHourInput">Heure d'ouverture</label>
             <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
-            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;">Le fantôme sera accessible 15 min avant et après cette heure</div>
+            <div class="dep-hint-xs-mt">Le fantôme sera accessible 15 min avant et après cette heure</div>
           </div>
           <div class="cond-extra" id="condExtraFuture">
-            <label class="form-label" style="margin-bottom:6px;" for="condFutureInput">Date d'ouverture</label>
+            <label class="form-label u-mb6" for="condFutureInput">Date d'ouverture</label>
             <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
-            <div style="font-size:10px;color:var(--spirit-dim);margin-top:6px;" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
+            <div class="dep-hint-xs-mt" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
           </div>
           </div>
         </div>
@@ -667,66 +667,66 @@
              (enregistrement, compression photo, limites vidéo/documents,
              gating Premium) totalement inchangée — seule l'entrée change. -->
         <div class="section-label">🎨 <span data-i18n="dep_tool_media">Média</span></div>
-        <div id="mediaMenuWrap" class="form-group" style="margin-bottom:18px;">
-          <button type="button" class="media-btn" id="mediaAddBtn" onclick="toggleMediaMenu()" aria-haspopup="true" aria-expanded="false" aria-controls="mediaMenuPanel">
+        <div id="mediaMenuWrap" class="form-group u-mb18">
+          <button type="button" class="media-btn" id="mediaAddBtn" data-action="toggleMediaMenu" aria-haspopup="true" aria-expanded="false" aria-controls="mediaMenuPanel">
             <span class="media-icon" aria-hidden="true">➕</span>
             <span data-i18n="dep_media_add_btn">Ajouter un média</span>
           </button>
           <div class="deposit-advanced-content" id="mediaMenuPanel" role="group" aria-label="Choisir un type de média">
-            <div style="margin-top:10px;display:flex;flex-direction:column;gap:7px;">
-              <button type="button" class="media-menu-item" id="mediaMenuItemVocal" onclick="selectMediaType('vocal')">
+            <div class="dep-media-menu-inner">
+              <button type="button" class="media-menu-item" id="mediaMenuItemVocal" data-action="selectMediaType" data-arg="vocal">
                 <span class="media-icon" aria-hidden="true">🎙</span><span data-i18n="dep_vocal_label">Message vocal (optionnel)</span>
               </button>
-              <button type="button" class="media-menu-item" onclick="selectMediaType('photo')">
+              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="photo">
                 <span class="media-icon" aria-hidden="true">📷</span><span data-i18n="dep_photo_label">Photo (optionnel)</span>
               </button>
-              <button type="button" class="media-menu-item" onclick="selectMediaType('video')">
+              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="video">
                 <span class="media-icon" aria-hidden="true">🎥</span><span data-i18n="dep_video_optional">Vidéo (optionnel)</span>
                 <span id="mediaMenuVideoBadge" class="badge-premium">✦ Premium</span>
               </button>
-              <button type="button" class="media-menu-item" onclick="selectMediaType('attach')">
+              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="attach">
                 <span class="media-icon" aria-hidden="true">📎</span><span data-i18n="dep_attach_label_short">Documents (optionnel)</span>
                 <span id="mediaMenuAttachBadge" class="badge-premium">✦ Premium</span>
               </button>
             </div>
           </div>
 
-          <div id="step3VocalWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+          <div id="step3VocalWrap" class="media-type-panel u-hidden">
             <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
-            <button class="media-btn" id="recordBtn" onclick="toggleRecording()" type="button" aria-label="Enregistrer un message vocal">
+            <button class="media-btn" id="recordBtn" data-action="toggleRecording" type="button" aria-label="Enregistrer un message vocal">
               <span class="media-icon" aria-hidden="true">🎙</span>
               <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
-              <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" style="margin-left:auto;font-size:11px;opacity:.5;">00:00</span>
+              <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" class="dep-record-timer">00:00</span>
             </button>
             <div id="audioPreview"></div>
           </div>
-          <div id="step3PhotoWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+          <div id="step3PhotoWrap" class="media-type-panel u-hidden">
             <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
             <div class="photo-choice">
-              <button class="media-btn photo-choice-btn" onclick="triggerPhotoCamera()" type="button" aria-label="Prendre une photo avec l'appareil photo">
+              <button class="media-btn photo-choice-btn" data-action="triggerPhotoCamera" type="button" aria-label="Prendre une photo avec l'appareil photo">
                 <span class="media-icon" aria-hidden="true">📷</span>
                 <span data-i18n="dep_photo_camera">Appareil photo</span>
               </button>
-              <button class="media-btn photo-choice-btn" onclick="triggerPhotoGallery()" type="button" aria-label="Choisir une photo depuis la galerie">
+              <button class="media-btn photo-choice-btn" data-action="triggerPhotoGallery" type="button" aria-label="Choisir une photo depuis la galerie">
                 <span class="media-icon" aria-hidden="true">🖼️</span>
                 <span data-i18n="dep_photo_gallery">Galerie</span>
               </button>
             </div>
-            <input type="file" id="photoInputCamera" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-            <input type="file" id="photoInputGallery" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
-            <input type="file" id="photoInput" accept="image/*" style="display:none" onchange="handlePhoto(this)" aria-hidden="true">
+            <input type="file" id="photoInputCamera" accept="image/*" capture="environment" class="u-hidden" data-change-action="handlePhoto" aria-hidden="true">
+            <input type="file" id="photoInputGallery" accept="image/*" class="u-hidden" data-change-action="handlePhoto" aria-hidden="true">
+            <input type="file" id="photoInput" accept="image/*" class="u-hidden" data-change-action="handlePhoto" aria-hidden="true">
             <div id="photoPreview"></div>
           </div>
-          <div id="step3VideoWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+          <div id="step3VideoWrap" class="media-type-panel u-hidden">
             <div id="premSection_video"></div>
-            <input type="file" id="videoInput" accept="video/*" style="display:none" onchange="handleVideo(this)" aria-hidden="true">
+            <input type="file" id="videoInput" accept="video/*" class="u-hidden" data-change-action="handleVideo" aria-hidden="true">
             <div id="videoPreview"></div>
           </div>
           <!-- Phase 1d v103 — Galerie de fichiers Premium -->
-          <div id="step3AttachmentsWrap" class="media-type-panel" style="display:none;margin-top:10px;">
+          <div id="step3AttachmentsWrap" class="media-type-panel u-hidden">
             <div id="premSection_attachments"></div>
-            <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple style="display:none" onchange="handleAttachments(this)" aria-hidden="true">
-            <div id="attachmentsContent" style="display:none;">
+            <input type="file" id="attachmentsInput" accept=".pdf,application/pdf,image/jpeg,image/png" multiple class="u-hidden" data-change-action="handleAttachments" aria-hidden="true">
+            <div id="attachmentsContent" class="u-hidden">
               <div class="attachments-list" id="attachmentsList"></div>
               <div class="attachments-count-hint" id="attachmentsCountHint" data-i18n="dep_attach_count_hint">3 fichiers maximum · 10 Mo chacun</div>
             </div>
@@ -734,36 +734,36 @@
         </div>
 
         <!-- Conservé pour compat — textes basculés par toggleBusinessMode() -->
-        <div id="step3Title" style="display:none;" data-i18n="dep_pane3_title">Récapitulatif</div>
-        <div id="step3Sub" style="display:none;" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
+        <div id="step3Title" class="u-hidden" data-i18n="dep_pane3_title">Récapitulatif</div>
+        <div id="step3Sub" class="u-hidden" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
 
-        <button class="lettre-seal-btn" onclick="depositGhost()" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
+        <button class="lettre-seal-btn" data-action="depositGhost" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
         <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
 
         <!-- Bouton toggle Mode Commerce — déplacé sous "Sceller le fantôme" (juin 2026) -->
-        <div id="businessToggleWrap" style="margin:14px 0 0;">
-          <button id="businessToggleBtn" onclick="toggleBusinessMode()" type="button" style="display:flex;align-items:center;gap:10px;width:100%;background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;">
-            <span style="flex:1;">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:20px;-webkit-text-fill-color:initial!important;filter:none!important;flex-shrink:0;">🏪</span>
-                <span style="font-size:13px;color:rgba(255,230,150,1);font-weight:600;-webkit-text-fill-color:rgba(255,230,150,1)!important;" data-i18n="dep_biz_btn">Mode Commerce</span>
-                <span id="bizPremiumBadge" style="font-size:10px;background:rgba(var(--premium-rgb),.25);color:rgba(var(--premium-rgb),1);-webkit-text-fill-color:rgba(var(--premium-rgb),1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(var(--premium-rgb),.3);">✦ Premium</span>
+        <div id="businessToggleWrap" class="dep-biz-toggle-wrap">
+          <button id="businessToggleBtn" data-action="toggleBusinessMode" type="button" class="dep-biz-toggle-btn">
+            <span class="dep-biz-toggle-main">
+              <div class="dep-biz-toggle-row">
+                <span class="dep-biz-toggle-emoji">🏪</span>
+                <span class="dep-biz-toggle-label" data-i18n="dep_biz_btn">Mode Commerce</span>
+                <span id="bizPremiumBadge" class="dep-biz-premium-badge">✦ Premium</span>
               </div>
-              <div style="font-size:11px;color:rgba(255,235,180,.8);" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
+              <div class="dep-biz-toggle-sub" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
             </span>
-            <span id="businessToggleIcon" style="font-size:16px;color:rgba(var(--premium-rgb),.6);">○</span>
+            <span id="businessToggleIcon" class="dep-biz-toggle-icon">○</span>
           </button>
         </div>
         <!-- Erreur de dépôt remontée ici pour visibilité immédiate -->
-        <div class="deposit-error" id="depositError" role="alert" aria-live="polite" style="margin-top:8px;"></div>
-        <div style="font-size:10px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;display:none;">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
+        <div class="deposit-error dep-error-spacing" id="depositError" role="alert" aria-live="polite"></div>
+        <div class="dep-gps-hint u-hidden">⚡ Déposer utilise ta position GPS et les réglages par défaut</div>
       </div>
 
       <!-- ÉTAPE 2 (vidée — obsolète depuis la fusion en une seule page, Lot H) -->
-      <div class="wizard-pane" id="wizardStep2" style="display:none;"></div>
+      <div class="wizard-pane u-hidden" id="wizardStep2"></div>
 
       <!-- ÉTAPE 3 (vidée — obsolète depuis la fusion en une seule page, Lot H) -->
-      <div class="wizard-pane" id="wizardStep3" style="display:none;"></div>
+      <div class="wizard-pane u-hidden" id="wizardStep3"></div>
       </div><!-- fin scroll -->
   </div><!-- fin screenDeposit -->
 

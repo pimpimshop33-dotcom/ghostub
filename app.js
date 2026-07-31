@@ -9777,6 +9777,31 @@ const ACTIONS = {
   updateReplyCount: (el) => updateReplyCount(el),
   selectType: (el) => selectType(el),
   sendReply: () => sendReply(),
+
+  // Zone 6 — Deposit
+  pickEmoji: (el) => pickEmoji(el, el.dataset.arg),
+  pickEmojiCustom: (el) => pickEmojiCustom(el),
+  toggleAnonMode: (el) => toggleAnonMode(el),
+  toggleBizTypeAccordion: () => toggleBizTypeAccordion(),
+  toggleRadiusAccordion: () => toggleRadiusAccordion(),
+  selectRadius: (el) => _selectRadius(el),
+  toggleDurAccordion: () => toggleDurAccordion(),
+  selectDur: (el) => selectDur(el),
+  toggleMaxOpenAccordion: () => toggleMaxOpenAccordion(),
+  selectMaxOpen: (el) => selectMaxOpen(el),
+  toggleCondAccordion: () => toggleCondAccordion(),
+  selectCond: (el) => selectCond(el),
+  setChainMarker: () => setChainMarker(),
+  toggleMediaMenu: () => toggleMediaMenu(),
+  selectMediaType: (el) => selectMediaType(el.dataset.arg),
+  toggleRecording: () => toggleRecording(),
+  triggerPhotoCamera: () => triggerPhotoCamera(),
+  triggerPhotoGallery: () => triggerPhotoGallery(),
+  handlePhoto: (el) => handlePhoto(el),
+  handleVideo: (el) => handleVideo(el),
+  handleAttachments: (el) => handleAttachments(el),
+  depositGhost: () => depositGhost(),
+  toggleBusinessMode: () => toggleBusinessMode(),
 };
 
 function _dispatchAction(el, event) {
