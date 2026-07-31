@@ -9721,6 +9721,15 @@ const ACTIONS = {
   forgotPassword: () => forgotPassword(),
   togglePasswordVisibility: (el) => togglePasswordVisibility(el.dataset.id, el),
   guestExplore: () => guestExplore(),
+
+  // Zone 3 — nav du bas + modales partagées
+  closeShareModal: (el, event) => closeShareModal(event),
+  copyShareLink: () => copyShareLink(),
+  nativeShare: () => nativeShare(),
+  closeModal: (el) => closeModal(el.dataset.arg),
+  closeReportModal: (el, event) => closeReportModal(event),
+  submitReport: (el) => submitReport(el.dataset.arg),
+  dismissGeoPrimer: (el) => _dismissGeoPrimer(el.dataset.arg === 'true'),
 };
 
 function _dispatchAction(el, event) {
@@ -9735,14 +9744,16 @@ document.addEventListener('click', (e) => {
   if (el) _dispatchAction(el, e);
 });
 
-// Entrée/Espace sur un élément data-action avec role="button" (remplace les
-// onkeydown="if(event.key==='Enter'||event.key===' ')fn()" du markup — un
-// <button> natif gère déjà Entrée/Espace nativement, donc exclu ici pour ne
-// pas déclencher l'action deux fois). Entrée seule (jamais Espace, qui doit
-// rester une espace tapée) sur data-enter-action pour les champs texte.
+// Entrée/Espace sur un élément data-action focusable au clavier (tabindex="0"
+// — remplace les onkeydown="if(event.key==='Enter'||event.key===' ')fn()" du
+// markup, qu'il porte role="button" (nav, accordéons) ou un autre rôle comme
+// role="listitem" (report-reason). Un <button> natif gère déjà Entrée/Espace
+// nativement, donc exclu ici pour ne pas déclencher l'action deux fois.
+// Entrée seule (jamais Espace, qui doit rester une espace tapée) sur
+// data-enter-action pour les champs texte.
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') {
-    const el = e.target.closest('[data-action][role="button"]');
+    const el = e.target.closest('[data-action][tabindex="0"]');
     if (el && el.tagName !== 'BUTTON') {
       e.preventDefault();
       _dispatchAction(el, e);

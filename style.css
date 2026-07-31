@@ -1458,6 +1458,8 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
   display:block;
   transition:filter .25s,transform .25s cubic-bezier(.34,1.56,.64,1);
 }
+/* CSP audit 4.6 : conteneur positionné pour .nav-badge (ex-style="" inline) */
+.nav-icon-badge-wrap{position:relative;display:inline-block;}
 /* Badge de notification — pulsation ambre */
 .nav-badge{
   position:absolute;top:-4px;right:-8px;
@@ -1788,6 +1790,13 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .confirm-ok-btn{flex:1;padding:12px;background:rgba(255,80,80,.1);border:1px solid rgba(255,80,80,.3);border-radius:12px;color:rgba(255,110,110,.9);font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);cursor:pointer;transition:all .2s;touch-action:manipulation;}
 .confirm-ok-btn:hover{background:rgba(255,80,80,.18);}
 .sheet-handle{width:36px;height:4px;border-radius:2px;background:rgba(232,160,48,.2);margin:0 auto 14px;cursor:grab;flex-shrink:0;}
+/* CSP audit 4.6 : ex-style="" inline de la modale confirmation "SUPPRIMER" */
+.confirm-typed-wrap{margin-top:12px;}
+.confirm-typed-warning{font-size:12px;color:rgba(255,100,100,.7);margin-bottom:6px;}
+.confirm-typed-input{width:100%;box-sizing:border-box;background:rgba(255,80,80,.06);border:1px solid rgba(255,100,100,.3);border-radius:10px;padding:10px 12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;letter-spacing:1px;text-transform:uppercase;outline:none;}
+/* Modale priming géolocalisation */
+.geo-primer-cta{margin-top:18px;}
+.geo-primer-later-btn{margin-top:10px;width:100%;background:none;border:none;padding:8px;color:var(--warm-dim);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;}
 
 /* ── MODALE LIMITE OUVERTURES ───────────────────────────── */
 .open-limit-modal{position:fixed;inset:0;z-index:10200;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .22s;}
@@ -1795,6 +1804,7 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .open-limit-sheet{width:100%;max-width:390px;background:var(--surface2);border:1px solid rgba(232,160,48,.18);border-radius:24px 24px 0 0;border-bottom:none;padding:24px;padding-bottom:calc(32px + var(--sab));transform:translateY(100%);transition:transform .3s cubic-bezier(.25,.46,.45,.94);box-shadow:0 -8px 40px rgba(0,0,0,.8),0 0 60px rgba(232,160,48,.04);}
 .open-limit-modal.show .open-limit-sheet{transform:translateY(0);}
 .open-limit-icon{font-size:44px;text-align:center;margin-bottom:10px;filter:drop-shadow(0 0 18px rgba(232,160,48,.6));}
+.open-limit-icon-img{width:1em;height:1em;}
 .open-limit-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);text-align:center;margin-bottom:6px;}
 .open-limit-sub{font-size:var(--text-base);color:var(--warm-dim);text-align:center;line-height:1.6;margin-bottom:6px;}
 .open-limit-counter{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0;}
