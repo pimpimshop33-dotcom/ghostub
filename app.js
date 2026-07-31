@@ -9713,6 +9713,14 @@ const ACTIONS = {
   // Zone 1 — Onboard/Intro
   goAuth: () => goAuth(),
   goObScene: (el) => goObScene(Number(el.dataset.arg)),
+
+  // Zone 2 — Auth (login/register)
+  showTab: (el) => showTab(el.dataset.arg),
+  login: () => login(),
+  register: () => register(),
+  forgotPassword: () => forgotPassword(),
+  togglePasswordVisibility: (el) => togglePasswordVisibility(el.dataset.id, el),
+  guestExplore: () => guestExplore(),
 };
 
 function _dispatchAction(el, event) {

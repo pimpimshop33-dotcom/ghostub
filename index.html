@@ -180,16 +180,16 @@
   <!-- AUTH -->
   <div class="screen" id="screenAuth" aria-label="Connexion ou inscription">
     <div class="auth-scroll">
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:8px;">
-          <div style="position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.28) 0%,transparent 70%);pointer-events:none;"></div>
-          <img src="assets/brand/ghostub-mark-trace.svg" style="width:64px;height:64px;position:relative;" aria-hidden="true">
+      <div class="auth-logo-block">
+        <div class="auth-logo-badge">
+          <div class="auth-logo-glow"></div>
+          <img src="assets/brand/ghostub-mark-trace.svg" class="auth-logo-img" aria-hidden="true">
         </div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">Ghostub</div>
+        <div class="auth-logo-title">Ghostub</div>
       </div>
       <div class="auth-tabs" role="tablist" aria-label="Choisir connexion ou inscription">
-        <button class="auth-tab active" id="tab-login" onclick="showTab('login')" role="tab" aria-selected="true" aria-controls="tabLogin" data-i18n="auth_login_tab">Connexion</button>
-        <button class="auth-tab" id="tab-register" onclick="showTab('register')" role="tab" aria-selected="false" aria-controls="tabRegister" data-i18n="auth_register_tab">Inscription</button>
+        <button class="auth-tab active" id="tab-login" data-action="showTab" data-arg="login" role="tab" aria-selected="true" aria-controls="tabLogin" data-i18n="auth_login_tab">Connexion</button>
+        <button class="auth-tab" id="tab-register" data-action="showTab" data-arg="register" role="tab" aria-selected="false" aria-controls="tabRegister" data-i18n="auth_register_tab">Inscription</button>
       </div>
       <!-- Formulaire connexion -->
       <div class="auth-form" id="tabLogin" role="tabpanel" aria-labelledby="tab-login">
@@ -200,18 +200,18 @@
         <div class="form-group">
           <label class="form-label" for="loginPass" data-i18n="auth_password">Mot de passe</label>
           <div class="form-input-wrap">
-            <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true" onkeydown="if(event.key==='Enter')login()">
-            <button type="button" class="pass-toggle-btn" onclick="togglePasswordVisibility('loginPass', this)" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
+            <input class="form-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" aria-required="true" data-enter-action="login">
+            <button type="button" class="pass-toggle-btn" data-action="togglePasswordVisibility" data-id="loginPass" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-          <button type="button" class="auth-forgot-link" onclick="forgotPassword()" data-i18n="auth_forgot_link">Mot de passe oublié ?</button>
+          <button type="button" class="auth-forgot-link" data-action="forgotPassword" data-i18n="auth_forgot_link">Mot de passe oublié ?</button>
         </div>
         <div class="auth-error" id="loginAuthError" role="alert" aria-live="polite"></div>
-        <button class="btn-primary" onclick="login()" data-i18n="auth_login_btn">Se connecter</button>
+        <button class="btn-primary" data-action="login" data-i18n="auth_login_btn">Se connecter</button>
       </div>
       <!-- Formulaire inscription -->
-      <div class="auth-form" id="tabRegister" style="display:none;" role="tabpanel" aria-labelledby="tab-register">
+      <div class="auth-form u-hidden" id="tabRegister" role="tabpanel" aria-labelledby="tab-register">
         <div class="form-group">
           <label class="form-label" for="regPseudo" data-i18n="auth_pseudo">Pseudo</label>
           <input class="form-input" id="regPseudo" type="text" placeholder="ex: Spectre_47" autocomplete="nickname" aria-required="true" minlength="2" maxlength="30">
@@ -223,25 +223,25 @@
         <div class="form-group">
           <label class="form-label" for="regPass" data-i18n="auth_password">Mot de passe</label>
           <div class="form-input-wrap">
-            <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint" onkeydown="if(event.key==='Enter')register()">
-            <button type="button" class="pass-toggle-btn" onclick="togglePasswordVisibility('regPass', this)" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
+            <input class="form-input" id="regPass" type="password" placeholder="6 caractères minimum" autocomplete="new-password" aria-required="true" minlength="6" aria-describedby="passHint" data-enter-action="register">
+            <button type="button" class="pass-toggle-btn" data-action="togglePasswordVisibility" data-id="regPass" data-i18n-aria-label="auth_show_password" aria-label="Afficher le mot de passe">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </div>
-          <div id="passHint" style="font-size:10px;color:var(--spirit-dim);margin-top:3px;" data-i18n="auth_pass_hint">6 caractères minimum</div>
+          <div id="passHint" class="auth-pass-hint" data-i18n="auth_pass_hint">6 caractères minimum</div>
         </div>
         <div class="auth-error" id="regAuthError" role="alert" aria-live="polite"></div>
-        <button class="btn-primary" onclick="register()" data-i18n="auth_register_btn">Créer mon compte</button>
+        <button class="btn-primary" data-action="register" data-i18n="auth_register_btn">Créer mon compte</button>
       </div>
       <!-- Séparateur -->
-      <div style="display:flex;align-items:center;gap:12px;margin:16px 0 4px;">
-        <div style="flex:1;height:1px;background:rgba(var(--ghost-blue-rgb),.1);"></div>
-        <span style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);letter-spacing:.5px;">ou</span>
-        <div style="flex:1;height:1px;background:rgba(var(--ghost-blue-rgb),.1);"></div>
+      <div class="auth-divider">
+        <div class="auth-divider-line"></div>
+        <span class="auth-divider-text">ou</span>
+        <div class="auth-divider-line"></div>
       </div>
       <!-- Explorer sans compte -->
-      <button onclick="window.guestExplore()" style="width:100%;padding:11px;background:transparent;border-radius:13px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;letter-spacing:.2px;">
-        🌫️ Explorer sans compte <span style="opacity:.6;font-size:11px;">(lecture seule)</span>
+      <button data-action="guestExplore" class="auth-guest-btn">
+        🌫️ Explorer sans compte <span class="auth-guest-btn-sub">(lecture seule)</span>
       </button>
     </div>
   </div>

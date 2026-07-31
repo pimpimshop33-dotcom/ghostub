@@ -104,6 +104,13 @@ button,[role="button"],.nav-item,.auth-tab,.type-btn,.dur-btn,.radius-btn{min-he
 .wizard-back-btn:hover{color:var(--spirit);-webkit-text-fill-color:var(--spirit) !important;}
 input,textarea,select{font-size:16px !important;}
 
+/* ── UTILITAIRES ───────────────────────────────────────── */
+/* CSP audit 4.6 : remplace les style="display:none;" inline statiques (état
+   initial du markup) qu'un JS bascule ensuite via .style.display directement
+   (ce JS-là n'est pas concerné par le retrait de unsafe-inline — l'inline
+   style qu'il pose au clic écrase de toute façon cette classe). */
+.u-hidden{display:none;}
+
 /* ── BANNERS ───────────────────────────────────────────── */
 .offline-banner{
   display:none;position:fixed;top:calc(var(--sat)+8px);left:50%;transform:translateX(-50%);
@@ -362,6 +369,18 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .pass-toggle-btn:active{color:var(--warm);}
 .auth-forgot-link{align-self:flex-end;margin-top:6px;padding:6px 2px;background:none;border:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--spirit-dim);cursor:pointer;touch-action:manipulation;}
 .auth-forgot-link:active{color:var(--warm);}
+/* CSP audit 4.6 : ex-style="" inline de l'écran Auth */
+.auth-logo-block{text-align:center;margin-bottom:24px;}
+.auth-logo-badge{position:relative;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:8px;}
+.auth-logo-glow{position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.28) 0%,transparent 70%);pointer-events:none;}
+.auth-logo-img{width:64px;height:64px;position:relative;}
+.auth-logo-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);}
+.auth-pass-hint{font-size:10px;color:var(--spirit-dim);margin-top:3px;}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0 4px;}
+.auth-divider-line{flex:1;height:1px;background:rgba(var(--ghost-blue-rgb),.1);}
+.auth-divider-text{font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);letter-spacing:.5px;}
+.auth-guest-btn{width:100%;padding:11px;background:transparent;border-radius:13px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;letter-spacing:.2px;}
+.auth-guest-btn-sub{opacity:.6;font-size:11px;}
 
 /* ── BOUTONS ───────────────────────────────────────────── */
 .btn-primary{
