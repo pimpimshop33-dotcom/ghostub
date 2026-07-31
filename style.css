@@ -2171,10 +2171,15 @@ button, [role="button"], input, textarea, select,
 .ob-dot.active{background:rgba(var(--ghost-blue-rgb),.9);width:18px;border-radius:4px;}
 
 /* CTA bouton final */
-.ob-cta{width:100%;padding:0 0 12px;flex-shrink:0;}
+.ob-cta{width:100%;padding:0 0 12px;flex-shrink:0;opacity:0;pointer-events:none;}
+#obCta .btn-primary{margin-bottom:10px;}
+.ob-free-hint{font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;}
 .ob-swipe-hint{font-size:var(--text-sm);color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.5px;padding-bottom:8px;text-align:center;animation:obHintFade 2s ease-in-out infinite;flex-shrink:0;}
 body.light-theme .ob-swipe-hint{color:rgba(58,42,148,.45) !important;}
+/* Bouton "Passer →" — CSP audit 4.6 : propriétés reprises depuis l'ancien style="" inline */
+.ob-skip{position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;}
 body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
+.ob-back-btn-hidden{display:none;flex-shrink:0;}
 @keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
 
 /* Texte des slides */
@@ -2189,7 +2194,9 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 .ob-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,rgba(var(--ghost-blue-rgb),.14) 14%,transparent 16%);animation:sweep 4s linear infinite;}
 .ob-radar-center{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--spirit);transform:translate(-50%,-50%);box-shadow:0 0 12px var(--spirit);}
 .ob-ghost-dot{position:absolute;font-size:var(--serif-sm);animation:ghostReveal 4s linear infinite;}
-.ob-dot2{animation-delay:1.3s;}.ob-dot3{animation-delay:2.6s;}
+.ob-dot1{left:62%;top:28%;}
+.ob-dot2{animation-delay:1.3s;left:35%;top:55%;}
+.ob-dot3{animation-delay:2.6s;left:70%;top:65%;}
 
 /* Enveloppe */
 .ob-envelope{width:200px;background:rgba(8,8,20,.85);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;overflow:hidden;}

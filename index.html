@@ -104,8 +104,8 @@
 
   <!-- ONBOARDING -->
   <div class="screen active" id="screenOnboard" aria-label="Introduction à Ghostub">
-    <button class="back-btn" id="obBackBtn" aria-label="Retour au radar" style="display:none;flex-shrink:0;" onclick="showScreen('screenRadar');setNav('nav-radar')" data-i18n="help_back">← retour</button>
-    <button class="ob-skip" onclick="window.goAuth()" style="position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;" data-i18n="ob_skip">Passer →</button>
+    <button class="back-btn ob-back-btn-hidden" id="obBackBtn" aria-label="Retour au radar" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" data-i18n="help_back">← retour</button>
+    <button class="ob-skip" data-action="goAuth" data-i18n="ob_skip">Passer →</button>
     <div class="ob-carousel" id="obCarousel" aria-roledescription="carousel" aria-label="Présentation de l'application">
       <div class="ob-scene active" id="obScene0" role="group" aria-roledescription="slide" aria-label="Slide 1 : Ghostub" aria-hidden="false">
         <div class="ob-scene-visual" aria-hidden="true">
@@ -126,9 +126,9 @@
           <div class="ob-radar">
             <div class="ob-radar-ring"></div><div class="ob-radar-ring ob-rring2"></div><div class="ob-radar-ring ob-rring3"></div>
             <div class="ob-radar-sweep"></div><div class="ob-radar-center"></div>
-            <img class="ob-ghost-dot" src="assets/brand/ghostub-mark-trace.svg" style="left:62%;top:28%;" aria-hidden="true">
-            <div class="ob-ghost-dot ob-dot2" style="left:35%;top:55%;">🔮</div>
-            <div class="ob-ghost-dot ob-dot3" style="left:70%;top:65%;">💬</div>
+            <img class="ob-ghost-dot ob-dot1" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
+            <div class="ob-ghost-dot ob-dot2">🔮</div>
+            <div class="ob-ghost-dot ob-dot3">💬</div>
           </div>
         </div>
         <div class="ob-scene-text">
@@ -165,14 +165,14 @@
       </div>
     </div>
     <div class="ob-dots" role="tablist" aria-label="Navigation entre les slides">
-      <button class="ob-dot active" role="tab" onclick="goObScene(0)" aria-label="Slide 1 : Ghostub" aria-selected="true"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(1)" aria-label="Slide 2 : Découvrir" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(2)" aria-label="Slide 3 : Ouvrir" aria-selected="false"></button>
-      <button class="ob-dot" role="tab" onclick="goObScene(3)" aria-label="Slide 4 : Résonner" aria-selected="false"></button>
+      <button class="ob-dot active" role="tab" data-action="goObScene" data-arg="0" aria-label="Slide 1 : Ghostub" aria-selected="true"></button>
+      <button class="ob-dot" role="tab" data-action="goObScene" data-arg="1" aria-label="Slide 2 : Découvrir" aria-selected="false"></button>
+      <button class="ob-dot" role="tab" data-action="goObScene" data-arg="2" aria-label="Slide 3 : Ouvrir" aria-selected="false"></button>
+      <button class="ob-dot" role="tab" data-action="goObScene" data-arg="3" aria-label="Slide 4 : Résonner" aria-selected="false"></button>
     </div>
-    <div class="ob-cta" id="obCta" style="opacity:0;pointer-events:none;">
-      <button class="btn-primary" onclick="goAuth()" style="margin-bottom:10px;" data-i18n="ob_cta">Entrer dans les lieux ›</button>
-      <div style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;" data-i18n="ob_free">Gratuit · Sans pub</div>
+    <div class="ob-cta" id="obCta">
+      <button class="btn-primary" data-action="goAuth" data-i18n="ob_cta">Entrer dans les lieux ›</button>
+      <div class="ob-free-hint" data-i18n="ob_free">Gratuit · Sans pub</div>
     </div>
     <div class="ob-swipe-hint" id="obSwipeHint" aria-hidden="true" data-i18n="ob_swipe_hint">Glissez pour découvrir →</div>
   </div>

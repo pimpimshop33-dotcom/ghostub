@@ -9709,6 +9709,10 @@ const ACTIONS = {
     if (el.dataset.extra === 'hideDepositBadge') hideDepositBadge();
   },
   goBack: () => history.back(),
+
+  // Zone 1 — Onboard/Intro
+  goAuth: () => goAuth(),
+  goObScene: (el) => goObScene(Number(el.dataset.arg)),
 };
 
 function _dispatchAction(el, event) {
