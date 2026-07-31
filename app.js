@@ -1459,7 +1459,7 @@ const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 
 const _brandImg = new Image();
 _brandImg.src = 'assets/brand/ghostub-mark-trace.svg';
-const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;" aria-hidden="true">';
+const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" class="brand-mark-icon" aria-hidden="true">';
 function _ghostEmojiHTML(g) {
   if (g.secret)       return '🔮';
   if (g.businessMode) return '🏪';
@@ -1506,7 +1506,13 @@ let _traceIdSeq = 0;
  * @param {object} g - document fantôme (createdAt/duration/lastPresenceAt pour computeLifetime)
  * @param {{size?:number, discovered?:boolean}} opts
  */
-function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
+// CSP audit 4.6 : opacité/saturation/taille sont continues, calculées par
+// fantôme (fanage temporel) — impossible à réduire en classes discrètes.
+// hydrate=false (défaut) garde l'ancien contrat (style="" inline) pour les
+// appelants pas encore migrés (marqueurs Carte, fiche Carte — zone 7).
+// hydrate=true pose des data-* à la place, à appliquer ensuite via de vraies
+// écritures JS sur .style (hors périmètre CSP) avec _hydrateTraceMarks().
+function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true, hydrate = false } = {}) {
   const [c1, c2] = discovered
     ? TRACE_DISCOVERED_COLORS
     : (TRACE_CATEGORY_COLORS[g.emoji] || TRACE_DEFAULT_COLORS);
@@ -1530,7 +1536,10 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // du Trace sont quasi invisibles sur un fond clair (thème clair, tuiles
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
-  return `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));flex-shrink:0;" aria-hidden="true"><svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
+  const openTag = hydrate
+    ? `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`
+    : `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));flex-shrink:0;" aria-hidden="true">`;
+  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
     `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
     `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
@@ -1543,6 +1552,18 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
     `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
     `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
     `</svg></span>`;
+}
+// Applique les data-trace-* posés par _traceMarkHTML({hydrate:true}) — de
+// vraies écritures JS sur .style, jamais un style="" du markup, donc hors
+// périmètre CSP (cf. commentaire sur _traceMarkHTML).
+function _hydrateTraceMarks(root) {
+  (root || document).querySelectorAll('.trace-mark[data-trace-w]').forEach(el => {
+    const w = el.dataset.traceW;
+    el.style.width = w + 'px';
+    el.style.height = w + 'px';
+    el.style.opacity = el.dataset.traceOp;
+    el.style.filter = `saturate(${el.dataset.traceSat}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5))`;
+  });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -6620,15 +6641,15 @@ function _renderDistantGhostsTeaser() {
   if (real.length === 0) return '';
   const label = _currentLang === 'en' ? 'Real presences exist nearby — get closer' : 'De vraies présences existent aux alentours — approche-toi';
   const items = real.map(d => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(var(--ghost-blue-rgb),.04);border-radius:12px;opacity:.45;filter:blur(0.4px);">
-      <span style="font-size:20px;">${d.emoji && d.emoji !== '👻' ? escapeHTML(d.emoji) : _BRAND_MARK_HTML}</span>
-      <span style="flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;">??? — ${_bearingToCardinal(d.bearing)}</span>
-      <span style="font-size:11px;color:var(--spirit-dim);">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : Math.round(d.dist)+'m'}</span>
+    <div class="distant-teaser-row">
+      <span class="distant-teaser-emoji">${d.emoji && d.emoji !== '👻' ? escapeHTML(d.emoji) : _BRAND_MARK_HTML}</span>
+      <span class="distant-teaser-label">??? — ${_bearingToCardinal(d.bearing)}</span>
+      <span class="distant-teaser-dist">${d.dist > 999 ? (d.dist/1000).toFixed(1)+'km' : Math.round(d.dist)+'m'}</span>
     </div>`).join('');
   return `
-    <div style="margin-top:4px;">
-      <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.3);margin-bottom:8px;">${label}</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">${items}</div>
+    <div class="distant-teaser-block">
+      <div class="distant-teaser-heading">${label}</div>
+      <div class="distant-teaser-list">${items}</div>
     </div>`;
 }
 
@@ -6640,33 +6661,33 @@ function renderGhostList() {
     const isFirstTime = getDiscoveryCount() === 0;
     if (wrap) wrap.classList.toggle('is-welcome', isFirstTime);
     list.innerHTML = isFirstTime ? `
-      <div style="text-align:center;padding:32px 16px 20px;">
-        <div style="font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;">${_BRAND_MARK_HTML}</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:8px;">${t.radar_welcome_title}</div>
-        <div style="font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;">${t.radar_welcome_sub}</div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;text-align:left;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;">${t.radar_how_title}</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">📍</span><span>${t.radar_how1}</span>
+      <div class="radar-welcome-block">
+        <div class="radar-welcome-icon">${_BRAND_MARK_HTML}</div>
+        <div class="radar-welcome-title">${t.radar_welcome_title}</div>
+        <div class="radar-welcome-sub">${t.radar_welcome_sub}</div>
+        <div class="radar-welcome-howto-box">
+          <div class="radar-welcome-howto-label">${t.radar_how_title}</div>
+          <div class="radar-welcome-howto-list">
+            <div class="radar-welcome-howto-row">
+              <span class="radar-welcome-howto-icon">📍</span><span>${t.radar_how1}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">🌫️</span><span>${t.radar_how2}</span>
+            <div class="radar-welcome-howto-row">
+              <span class="radar-welcome-howto-icon">🌫️</span><span>${t.radar_how2}</span>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);">
-              <span style="font-size:18px;">✉</span><span>${t.radar_how3}</span>
+            <div class="radar-welcome-howto-row">
+              <span class="radar-welcome-howto-icon">✉</span><span>${t.radar_how3}</span>
             </div>
           </div>
         </div>
-        <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:12px 24px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.2),rgba(var(--ghost-blue-rgb),.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;">${t.radar_first_btn}</button>
+        <button data-action="nav" data-screen="screenDeposit" data-nav="nav-deposit" class="radar-welcome-cta-btn">${t.radar_first_btn}</button>
       </div>` : `
-      <div style="text-align:center;padding:20px 16px 12px;">
-        <div style="font-size:40px;margin-bottom:10px;opacity:.4;filter:blur(1px);animation:ghostFloat 3.5s ease-in-out infinite;">${_BRAND_MARK_HTML}</div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;">${t.radar_empty_title}</div>
-        <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:14px;">${t.radar_empty_sub}</div>
-        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;">
-          <button onclick="loadNearbyGhosts()" style="padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.06);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.6);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">↻ ${_currentLang === 'en' ? 'Refresh' : 'Actualiser'}</button>
-          <button onclick="showScreen('screenDeposit');setNav('nav-deposit')" style="padding:8px 18px;background:rgba(var(--ghost-blue-rgb),.14);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;">👻 ${_currentLang === 'en' ? 'Be first to haunt' : 'Hanter en premier'}</button>
+      <div class="radar-empty-block">
+        <div class="radar-empty-icon">${_BRAND_MARK_HTML}</div>
+        <div class="radar-empty-title">${t.radar_empty_title}</div>
+        <div class="radar-empty-sub">${t.radar_empty_sub}</div>
+        <div class="radar-empty-actions">
+          <button data-action="loadNearbyGhosts" class="radar-empty-refresh-btn">↻ ${_currentLang === 'en' ? 'Refresh' : 'Actualiser'}</button>
+          <button data-action="nav" data-screen="screenDeposit" data-nav="nav-deposit" class="radar-empty-deposit-btn">👻 ${_currentLang === 'en' ? 'Be first to haunt' : 'Hanter en premier'}</button>
         </div>
         ${_renderDistantGhostsTeaser()}
       </div>`;
@@ -6674,7 +6695,7 @@ function renderGhostList() {
   }
   if (wrap) wrap.classList.remove('is-welcome');
   if (filtered.length === 0) {
-    list.innerHTML = `<div style="text-align:center;padding:30px 0;font-size:13px;color:var(--spirit-dim);">${t.radar_filter_empty}</div>`;
+    list.innerHTML = `<div class="radar-filter-empty">${t.radar_filter_empty}</div>`;
     return;
   }
   list.innerHTML = filtered.map(g => {
@@ -6682,22 +6703,22 @@ function renderGhostList() {
     // l'ancien _ghostEmojiHTML() qui n'était pas encore migré ici
     // (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 2).
     const emoji = g.secret ? '🔮' : g.businessMode ? '🏪'
-      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id) });
+      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id), hydrate: true });
     // Âge du fantôme
     const ageMs = g.createdAt ? Date.now() - g.createdAt.seconds * 1000 : 0;
     const ageDays = ageMs / 86400000;
     const isAncient = ageDays > 180;
     const isOld = ageDays > 30;
-    const ageStyle = isAncient ? 'filter:sepia(.6) opacity(.85);' : isOld ? 'filter:sepia(.25) opacity(.92);' : '';
-    const ageBadge = isAncient ? `<span style="font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;">${t.ghost_badge_archive}</span>`
-                   : isOld ? `<span style="font-size:9px;background:rgba(var(--ghost-blue-rgb),.06);border:1px solid rgba(var(--ghost-blue-rgb),.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;">${t.ghost_badge_old}</span>` : '';
+    const ageClass = isAncient ? ' ghost-age-ancient' : isOld ? ' ghost-age-old' : '';
+    const ageBadge = isAncient ? `<span class="ghost-badge-archive">${t.ghost_badge_archive}</span>`
+                   : isOld ? `<span class="ghost-badge-old">${t.ghost_badge_old}</span>` : '';
     // Résonances visuelles (étoiles)
     const resoCount = g.resonances || 0;
     const resoStars = resoCount > 0 ? '✦'.repeat(Math.min(resoCount, 5)) : '✦ 0';
-    const resoStyle = resoCount >= 5 ? 'color:rgba(var(--premium-rgb),.9);text-shadow:0 0 8px rgba(var(--premium-rgb),.4);' : resoCount >= 2 ? 'color:rgba(var(--ghost-blue-rgb),.8);' : '';
+    const resoClass = resoCount >= 5 ? ' reso-high' : resoCount >= 2 ? ' reso-mid' : '';
     const neverOpened = !g.openCount || g.openCount === 0;
     const virginBadge = neverOpened
-      ? `<span style="font-size:9px;background:rgba(122,184,245,.14);border:1px solid rgba(122,184,245,.38);border-radius:20px;padding:1px 6px;color:rgba(122,184,245,.95);margin-left:4px;">${t.ghost_badge_virgin}</span>`
+      ? `<span class="ghost-badge-virgin">${t.ghost_badge_virgin}</span>`
       : '';
     // Hint dynamique selon état
     const hintText = neverOpened && ageDays > 30
@@ -6710,16 +6731,17 @@ function renderGhostList() {
       : t.ghost_hint_default;
     // Surnom poétique
     const authorDisplay = g.anonymous ? getPoeticName(g.id) : escapeHTML(g.author || '');
-    const _cardIdx = filtered.indexOf(g);
-    const _cardDelay = ((_cardIdx % 5) * 0.8).toFixed(1);
     const _distClass = g.distance <= 80 ? 'dist-near' : g.distance <= 300 ? 'dist-mid' : 'dist-far';
+    // Seuils de bordure distincts de _distClass ci-dessus — voir commentaire
+    // dans style.css (.edist-border-*) : incohérence préexistante conservée.
+    const _distBorderClass = g.distance <= 50 ? 'edist-border-near' : g.distance <= 200 ? 'edist-border-mid' : 'edist-border-far';
     const _tier = getGhostTier(g.id);
     const _tierAttr = _tier.name !== 'common' ? ` data-tier="${_tier.name}"` : '';
     const _tierBadge = getTierBadgeHTML(_tier);
     const _proxClass = getProximityClass(g.distance);
     const _proxAttr = _proxClass ? ` data-proximity="${_proxClass}"` : '';
     return `
-    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}" style="${ageStyle};--card-delay:${_cardDelay}s"${_tierAttr}${_proxAttr} onclick="openGhost('${escapeHTML(g.id)}')" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || t.detail_location_unknown)}, ${formatDistance(g.distance)}" onkeydown="if(event.key==='Enter'||event.key===' ')openGhost('${escapeHTML(g.id)}')">
+    <div class="ghost-envelope${g.secret ? ' ghost-envelope-secret' : ''}${ageClass}"${_tierAttr}${_proxAttr} data-action="openGhost" data-id="${escapeHTML(g.id)}" role="button" tabindex="0" aria-label="Trace à ${escapeHTML(g.location || t.detail_location_unknown)}, ${formatDistance(g.distance)}">
       <div class="envelope-flap" aria-hidden="true"><div class="envelope-flap-inner"></div></div>
       <div class="envelope-body">
         <div class="envelope-emoji" aria-hidden="true">${emoji}</div>
@@ -6728,12 +6750,8 @@ function renderGhostList() {
           <div class="envelope-hint">${hintText}</div>
         </div>
         <div class="envelope-meta">
-          <div class="envelope-dist ${_distClass}" style="${
-            g.distance <= 50  ? 'background:rgba(var(--accent-green-rgb),.1);border:1px solid rgba(var(--accent-green-rgb),.25);color:rgba(var(--accent-green-rgb),.9);' :
-            g.distance <= 200 ? 'background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.2);color:rgba(var(--premium-rgb),.8);' :
-                                'background:rgba(var(--ghost-blue-rgb),.08);border:1px solid rgba(var(--ghost-blue-rgb),.12);color:rgba(var(--ghost-blue-rgb),.6);'
-          }">${formatDistance(g.distance)}</div>
-          <div class="envelope-reso" style="${resoStyle}" aria-label="${resoCount} résonances">${resoStars}</div>
+          <div class="envelope-dist ${_distClass} ${_distBorderClass}">${formatDistance(g.distance)}</div>
+          <div class="envelope-reso${resoClass}" aria-label="${resoCount} résonances">${resoStars}</div>
           ${g.openCount > 0 ? `<div class="envelope-views" aria-label="${g.openCount} vues">👁 ${g.openCount}</div>` : ''}
         </div>
       </div>
@@ -6744,6 +6762,7 @@ function renderGhostList() {
       </div>
     </div>`;
   }).join('');
+  _hydrateTraceMarks(list);
 }
 
 // Rayon de détection du radar, réglable par l'utilisateur (50/200/1000 m)
@@ -6820,14 +6839,15 @@ function renderRadarDots() {
     let _tierDotClass = '';
     // Couleur EXACTE de la maquette (ghostub-nocturne-precieux.html) par
     // rareté — sert de `color` au Trace pour le drop-shadow(currentColor)
-    // de .ghost-dot-emoji (cf. @keyframes ghostReveal).
-    let _traceGlowColor = '#9DABFF'; // commun
+    // de .ghost-dot-emoji (cf. @keyframes ghostReveal). Portée en CSS
+    // (.ghost-dot-secret/.ghost-dot-rare .ghost-dot-emoji, style.css) plutôt
+    // qu'en style="" inline — CSP audit 4.6 — d'où _tierDotClass qui pilote
+    // maintenant aussi cette couleur, pas seulement le halo.
     if (g.secret) {
       _tierDotClass = ' ghost-dot-secret';
-      _traceGlowColor = '#C7BCEE';
     } else {
       const _tier = getGhostTier(g.id);
-      if (_tier.name === 'rare' || _tier.name === 'legendary') { _tierDotClass = ' ghost-dot-rare'; _traceGlowColor = '#F4D998'; }
+      if (_tier.name === 'rare' || _tier.name === 'legendary') { _tierDotClass = ' ghost-dot-rare'; }
     }
     dot.className = 'ghost-dot' + _tierDotClass;
     dot.style.left = cx + '%';
@@ -6854,7 +6874,7 @@ function renderRadarDots() {
     // — plus d'icône de catégorie brute sur le radar, uniquement le Trace.
     // Les secrets gardent leur 🔮 dédié (mécanique de révélation distincte).
     // Taille ~10% du diamètre du radar (34px/300px maquette) — cf. .ghost-dot-emoji
-    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id) });
+    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id), hydrate: true });
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -6864,10 +6884,16 @@ function renderRadarDots() {
 
     dot.innerHTML = `
       <div class="ghost-dot-halo" aria-hidden="true"></div>
-      <div class="ghost-dot-emoji" style="animation-delay:${delay.toFixed(2)}s;color:${_traceGlowColor}" aria-hidden="true">${emoji}</div>
+      <div class="ghost-dot-emoji" aria-hidden="true">${emoji}</div>
       <div class="ghost-dot-inner" aria-hidden="true"></div>
       <div class="ghost-dot-label" aria-hidden="true">${label} · ${formatDistance(g.distance)}</div>
     `;
+    // animation-delay reste posé en JS (propriété DOM .style, pas un
+    // style="" du markup — hors périmètre CSP, valeur continue par fantôme
+    // impossible à réduire en classes discrètes).
+    const _dotEmojiEl = dot.querySelector('.ghost-dot-emoji');
+    if (_dotEmojiEl) _dotEmojiEl.style.animationDelay = delay.toFixed(2) + 's';
+    _hydrateTraceMarks(dot);
     // FIX (bug pré-existant, hors Lot G-bis mais bloquant pour l'indicateur de
     // média) : appendChild() doit venir APRÈS dot.innerHTML= ci-dessus, sinon
     // innerHTML remplace tout le contenu et efface silencieusement les badges
@@ -9730,6 +9756,13 @@ const ACTIONS = {
   closeReportModal: (el, event) => closeReportModal(event),
   submitReport: (el) => submitReport(el.dataset.arg),
   dismissGeoPrimer: (el) => _dismissGeoPrimer(el.dataset.arg === 'true'),
+
+  // Zone 4 — Radar
+  toggleAudioEnabled: () => toggleAudioEnabled(),
+  setRadarRadius: (el) => setRadarRadius(Number(el.dataset.arg)),
+  setFilter: (el) => setFilter(el.dataset.arg, el),
+  loadNearbyGhosts: () => loadNearbyGhosts(),
+  openGhost: (el) => openGhost(el.dataset.id),
 };
 
 function _dispatchAction(el, event) {

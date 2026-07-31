@@ -105,6 +105,13 @@ button,[role="button"],.nav-item,.auth-tab,.type-btn,.dur-btn,.radius-btn{min-he
 input,textarea,select{font-size:16px !important;}
 
 /* ── UTILITAIRES ───────────────────────────────────────── */
+/* CSP audit 4.6 : ex-style="" inline de _BRAND_MARK_HTML (app.js), constante
+   partagée réutilisée dans ~16 rendus dynamiques à travers l'app. */
+.brand-mark-icon{width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;}
+/* .trace-mark : parties statiques du Trace coloré (_traceMarkHTML) — le
+   reste (width/height/opacity/filter, continus par fantôme) est posé en JS
+   par _hydrateTraceMarks(), pas en style="" — CSP audit 4.6. */
+.trace-mark{display:inline-flex;flex-shrink:0;}
 /* CSP audit 4.6 : remplace les style="display:none;" inline statiques (état
    initial du markup) qu'un JS bascule ensuite via .style.display directement
    (ce JS-là n'est pas concerné par le retrait de unsafe-inline — l'inline
@@ -431,6 +438,15 @@ body.light-theme #screenRadar{
    face à un ID, un ID bat toujours une classe en CSS. */
 #screenRadar, #screenRadar * { font-family: 'Inter', sans-serif !important; }
 .radar-header{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 20px 0;}
+/* CSP audit 4.6 : ex-style="" inline de l'en-tête radar */
+.main-content-anchor{position:absolute;top:0;}
+#userCoords{font-size:10px;color:var(--spirit-dim);opacity:.55;margin-top:2px;letter-spacing:.5px;font-family:'Instrument Sans',sans-serif;}
+.radar-header-actions{display:flex;gap:6px;align-items:center;}
+.vibe-emoji{font-size:15px;}
+.vibe-label{font-size:12px;color:var(--warm-dim);flex:1;}
+#radarInRangeCount{color:var(--spirit-dim);font-size:11px;}
+#radarFilterBar{display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.ghost-list-loading{text-align:center;color:var(--spirit-dim);padding:20px 0;font-size:13px;}
 #screenRadar .radar-title{
   font-family:'Cormorant Garamond',serif !important;font-size:var(--serif-sm);font-style:italic;
   color:var(--ether);letter-spacing:.2px;
@@ -454,6 +470,10 @@ body.light-theme #screenRadar{
   border-radius:12px;padding:10px 14px;margin:12px 20px;
   backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
 }
+/* CSP audit 4.6 : ex-style="" inline — couleur/bordure restent pilotées en JS
+   (resoEl.style.color/.borderColor) au-dessus de ce défaut, hors périmètre CSP */
+.reso-status{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(var(--ghost-blue-rgb),.15);color:rgba(var(--ghost-blue-rgb),.5);cursor:default;}
+.streak-display{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,150,50,.25);color:rgba(255,150,50,.8);cursor:default;}
 /* Dot de présence — pulsation ambre */
 .vibe-dot{
   width:7px;height:7px;border-radius:50%;
@@ -571,7 +591,10 @@ body.light-theme #screenRadar{
   pointer-events:none;
   opacity:0;
   animation:ghostReveal 4s linear infinite;
+  color:#9DABFF; /* commun — CSP audit 4.6, ex-style="" inline de renderRadarDots() */
 }
+.ghost-dot-secret .ghost-dot-emoji{color:#C7BCEE;}
+.ghost-dot-rare .ghost-dot-emoji{color:#F4D998;}
 /* Pic recalé sur 0%/100% (au lieu de 17%) : le nouveau .radar-sweep (valeurs
    exactes de la maquette) a son pic angulaire à 0deg — RADAR_SWEEP_PEAK_FRACTION
    dans app.js est passé de .17 à 0 en conséquence, même décalage relatif
@@ -596,6 +619,34 @@ body.light-theme #screenRadar{
 }
 .radar-status{font-size:var(--text-sm);color:var(--spirit-dim);text-align:center;padding:4px 20px 6px;}
 .ghost-count-line{font-family:'Cormorant Garamond',serif;font-size:var(--text-base);color:var(--warm-dim);text-align:center;margin-bottom:10px;}
+/* CSP audit 4.6 : ex-style="" inline de renderGhostList() (états liste vide) */
+.radar-welcome-block,.radar-empty-block{text-align:center;padding:32px 16px 20px;}
+.radar-empty-block{padding:20px 16px 12px;}
+.radar-welcome-icon{font-size:52px;margin-bottom:14px;animation:ghostFloat 2.8s ease-in-out infinite;}
+.radar-empty-icon{font-size:40px;margin-bottom:10px;opacity:.4;filter:blur(1px);animation:ghostFloat 3.5s ease-in-out infinite;}
+.radar-welcome-title,.radar-empty-title{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ether);}
+.radar-welcome-title{font-size:22px;margin-bottom:8px;}
+.radar-empty-title{font-size:20px;margin-bottom:4px;}
+.radar-welcome-sub{font-size:13px;color:var(--warm-dim);line-height:1.65;margin-bottom:20px;}
+.radar-empty-sub{font-size:12px;color:var(--spirit-dim);margin-bottom:14px;}
+.radar-welcome-howto-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;margin-bottom:16px;text-align:left;}
+.radar-welcome-howto-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;}
+.radar-welcome-howto-list{display:flex;flex-direction:column;gap:8px;}
+.radar-welcome-howto-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--warm-dim);}
+.radar-welcome-howto-icon{font-size:18px;}
+.radar-welcome-cta-btn{padding:12px 24px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.2),rgba(var(--ghost-blue-rgb),.08));border:1px solid var(--border-bright);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;cursor:pointer;touch-action:manipulation;}
+.radar-empty-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.radar-empty-refresh-btn{padding:8px 16px;background:rgba(var(--ghost-blue-rgb),.06);border-radius:20px;color:rgba(var(--ghost-blue-rgb),.6);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;}
+.radar-empty-deposit-btn{padding:8px 18px;background:rgba(var(--ghost-blue-rgb),.14);border-radius:20px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;touch-action:manipulation;}
+.radar-filter-empty{text-align:center;padding:30px 0;font-size:13px;color:var(--spirit-dim);}
+/* Teaser "présences lointaines" (_renderDistantGhostsTeaser) */
+.distant-teaser-block{margin-top:4px;}
+.distant-teaser-heading{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.3);margin-bottom:8px;}
+.distant-teaser-list{display:flex;flex-direction:column;gap:5px;}
+.distant-teaser-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(var(--ghost-blue-rgb),.04);border-radius:12px;opacity:.45;filter:blur(0.4px);}
+.distant-teaser-emoji{font-size:20px;}
+.distant-teaser-label{flex:1;font-size:12px;color:var(--warm-dim);font-family:'Cormorant Garamond',serif;font-style:italic;}
+.distant-teaser-dist{font-size:11px;color:var(--spirit-dim);}
 .ghost-count-line span{color:var(--amber);font-size:18px;text-shadow:0 0 12px var(--amber);}
 .section-label{font-size:var(--text-sm);text-transform:uppercase;letter-spacing:2px;color:var(--spirit-dim);margin-bottom:10px;}
 
@@ -761,7 +812,25 @@ body.light-theme #screenRadar{
 .envelope-dist.dist-near { background:rgba(var(--mist-rgb),.18); color:rgba(80,220,140,.95); -webkit-text-fill-color:rgba(80,220,140,.95)!important; }
 .envelope-dist.dist-mid  { background:rgba(var(--ghost-blue-rgb),.12); color:rgba(180,200,255,.85); -webkit-text-fill-color:rgba(180,200,255,.85)!important; }
 .envelope-dist.dist-far  { background:rgba(var(--ghost-blue-rgb),.05); color:rgba(var(--ghost-blue-rgb),.50); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.50)!important; }
+/* CSP audit 4.6 : la bordure venait d'un style="" inline avec des seuils de
+   distance DIFFÉRENTS (50/200m) de .dist-near/mid/far ci-dessus (80/300m,
+   déjà en !important donc déjà seuls maîtres de background/color — la
+   bordure était la seule propriété encore réellement pilotée par l'inline).
+   Incohérence préexistante, non introduite ici, volontairement PAS
+   harmonisée : classes distinctes pour reproduire exactement le rendu
+   actuel plutôt que de changer le comportement au passage. */
+.envelope-dist.edist-border-near{border:1px solid rgba(var(--accent-green-rgb),.25);}
+.envelope-dist.edist-border-mid{border:1px solid rgba(var(--premium-rgb),.2);}
+.envelope-dist.edist-border-far{border:1px solid rgba(var(--ghost-blue-rgb),.12);}
 .envelope-reso  { font-size:var(--text-sm); color:rgba(var(--ghost-blue-rgb),.40); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.40)!important; }
+/* Variantes calculées par ghost (ex-style="" inline dans renderGhostList()) */
+.ghost-age-ancient{filter:sepia(.6) opacity(.85);}
+.ghost-age-old{filter:sepia(.25) opacity(.92);}
+.ghost-badge-archive{font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;}
+.ghost-badge-old{font-size:9px;background:rgba(var(--ghost-blue-rgb),.06);border:1px solid rgba(var(--ghost-blue-rgb),.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;}
+.ghost-badge-virgin{font-size:9px;background:rgba(122,184,245,.14);border:1px solid rgba(122,184,245,.38);border-radius:20px;padding:1px 6px;color:rgba(122,184,245,.95);margin-left:4px;}
+.envelope-reso.reso-high{color:rgba(var(--premium-rgb),.9);text-shadow:0 0 8px rgba(var(--premium-rgb),.4);-webkit-text-fill-color:rgba(var(--premium-rgb),.9)!important;}
+.envelope-reso.reso-mid{color:rgba(var(--ghost-blue-rgb),.8);-webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.8)!important;}
 
 .envelope-footer { display:flex; gap:5px; padding:0 14px 8px; border-top:1px solid rgba(var(--ghost-blue-rgb),.06); margin-top:2px; }
 .envelope-tag   { font-size:var(--text-xs); letter-spacing:.4px; border-radius:20px; padding:2px 8px; color:rgba(var(--ghost-blue-rgb),.35); -webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.35)!important; }
@@ -2033,7 +2102,7 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
 .rank-progress-wrap{flex:1;height:4px;background:rgba(var(--spirit-rgb),.08);border-radius:2px;overflow:hidden;position:relative;}
 /* Dégradé indigo → lavande → doré (maquette "Nocturne Précieux"), pas
    ambre → vert comme avant. */
-.rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;background:linear-gradient(90deg,rgba(108,122,224,.85) 0%,rgba(199,188,238,.85) 50%,rgba(244,217,152,.9) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(199,188,238,.25);}
+.rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;width:0%;background:linear-gradient(90deg,rgba(108,122,224,.85) 0%,rgba(199,188,238,.85) 50%,rgba(244,217,152,.9) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(199,188,238,.25);}
 /* Scintillement continu (Lot G3) : bande claire qui balaie le dégradé en boucle lente */
 .rank-progress-fill::after{
   content:'';position:absolute;inset:0;
