@@ -9763,6 +9763,20 @@ const ACTIONS = {
   setFilter: (el) => setFilter(el.dataset.arg, el),
   loadNearbyGhosts: () => loadNearbyGhosts(),
   openGhost: (el) => openGhost(el.dataset.id),
+
+  // Zone 5 — Detail + Reply
+  swipeGhost: (el) => swipeGhost(Number(el.dataset.arg)),
+  openEnvelope: () => openEnvelope(),
+  openReportModal: () => openReportModal(),
+  resonate: () => resonate(),
+  sendQuickReaction: (el) => sendQuickReaction(el.dataset.arg, el),
+  sendMicroReply: () => sendMicroReply(),
+  toggleFavorite: () => toggleFavorite(),
+  generateGhostCard: () => generateGhostCard(),
+  openShareModal: () => openShareModal(),
+  updateReplyCount: (el) => updateReplyCount(el),
+  selectType: (el) => selectType(el),
+  sendReply: () => sendReply(),
 };
 
 function _dispatchAction(el, event) {

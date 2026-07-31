@@ -319,12 +319,12 @@
   <!-- DETAIL -->
   <div class="screen" id="screenDetail" aria-label="Détail du fantôme">
     <div class="swipe-nav">
-      <button class="back-btn" style="padding:12px 0 0;" onclick="showScreen('screenRadar');setNav('nav-radar')" aria-label="Retour au radar">← retour</button>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <button class="back-btn detail-back-btn" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" aria-label="Retour au radar">← retour</button>
+      <div class="detail-swipe-info">
         <span class="swipe-counter" id="swipeCounter" aria-live="polite"></span>
         <div class="swipe-arrows" role="group" aria-label="Navigation entre fantômes">
-          <button class="swipe-arrow" id="swipePrev" onclick="swipeGhost(-1)" aria-label="Fantôme précédent">‹</button>
-          <button class="swipe-arrow" id="swipeNext" onclick="swipeGhost(1)" aria-label="Fantôme suivant">›</button>
+          <button class="swipe-arrow" id="swipePrev" data-action="swipeGhost" data-arg="-1" aria-label="Fantôme précédent">‹</button>
+          <button class="swipe-arrow" id="swipeNext" data-action="swipeGhost" data-arg="1" aria-label="Fantôme suivant">›</button>
         </div>
       </div>
     </div>
@@ -336,27 +336,27 @@
         <div class="blocked-icon" id="blockedIcon">🌙</div>
         <div class="blocked-title" id="blockedTitle" data-i18n="blocked_default_title">Ce fantôme dort encore</div>
         <div class="blocked-sub" id="blockedSub" data-i18n="blocked_default_sub">Il se réveillera bientôt.</div>
-        <div class="blocked-timer" id="blockedTimer" style="display:none;"></div>
-        <div class="blocked-timer-label" id="blockedTimerLabel" style="display:none;"></div>
-        <button class="btn-secondary" onclick="history.back()" style="margin-top:4px;" data-i18n="blocked_back">← Revenir</button>
+        <div class="blocked-timer u-hidden" id="blockedTimer"></div>
+        <div class="blocked-timer-label u-hidden" id="blockedTimerLabel"></div>
+        <button class="btn-secondary blocked-back-btn" data-action="goBack" data-i18n="blocked_back">← Revenir</button>
       </div>
 
       <div id="envelopeSealed" class="envelope-sealed">
         <div class="envelope-sealed-flap" aria-hidden="true"><div class="envelope-sealed-triangle"></div></div>
         <div class="envelope-sealed-body">
-          <div class="envelope-sealed-emoji" id="sealedEmoji" aria-hidden="true"><img src="assets/brand/ghostub-mark-trace.svg" style="width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;" aria-hidden="true"></div>
+          <div class="envelope-sealed-emoji" id="sealedEmoji" aria-hidden="true"><img src="assets/brand/ghostub-mark-trace.svg" class="brand-mark-icon" aria-hidden="true"></div>
           <div class="envelope-sealed-text">
             <div class="envelope-sealed-label" data-i18n="detail_sealed_label">Une trace vous attend ici</div>
             <div class="envelope-sealed-hint" id="sealedHint" data-i18n="detail_sealed_hint">Approchez-vous pour briser le sceau</div>
           </div>
         </div>
         <button class="envelope-open-btn" id="envelopeOpenBtn"
-          onclick="openEnvelope()"
-          data-i18n-aria-label="detail_open_aria" style="position:relative;overflow:hidden;">
-          <span data-i18n="detail_open_btn" style="position:relative;z-index:1;">✉ Briser le sceau</span>
+          data-action="openEnvelope"
+          data-i18n-aria-label="detail_open_aria">
+          <span data-i18n="detail_open_btn" class="envelope-open-btn-label">✉ Briser le sceau</span>
         </button>
       </div>
-      <div id="envelopeContent" style="display:none;">
+      <div id="envelopeContent" class="u-hidden">
         <!-- Infos du fantôme — déplacées AU-DESSUS du message (juin 2026) pour éviter l'encombrement sous le cadre-lettre -->
         <div class="detail-info">
           <div class="detail-badge" id="detailAuthor"></div>
@@ -365,45 +365,45 @@
           <div class="detail-badge" id="detailRadius"></div>
         </div>
         <!-- scratchZone : le canvas de grattage est injecté ICI, borné à ce div -->
-        <div id="scratchZone" style="position:relative;min-height:160px;">
-          <div style="position:relative;">
+        <div id="scratchZone">
+          <div class="detail-msg-wrap">
             <div class="detail-message" id="detailMessage" tabindex="-1"></div>
-            <button id="msgReportBtn" onclick="openReportModal()" aria-label="Signaler ce message comme inapproprié" title="Signaler ce message" style="display:none;position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:11px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:4px;touch-action:manipulation;transition:all .2s;" onmouseover="this.style.background='rgba(255,60,60,.18)'" onmouseout="this.style.background='rgba(10,8,20,.75)'">⚑</button>
+            <button id="msgReportBtn" data-action="openReportModal" aria-label="Signaler ce message comme inapproprié" title="Signaler ce message" class="msg-report-btn">⚑</button>
           </div>
           <div id="detailAudio"></div>
           <div id="detailPhoto"></div>
           <!-- Annotation "vu par X personnes" -->
-          <div id="detailReadCount" style="display:none;text-align:center;font-size:12px;padding:8px 0 4px;font-family:'Instrument Sans',sans-serif;letter-spacing:.3px;"></div>
+          <div id="detailReadCount" class="u-hidden detail-read-count"></div>
         </div>
-        <div id="detailChain" style="display:none;"></div>
+        <div id="detailChain" class="u-hidden"></div>
         <!-- Résonner — fusionné visuellement au bas du cadre-lettre -->
-        <button class="resonance-btn resonance-btn--fused" id="resonanceBtn" onclick="resonate()">
+        <button class="resonance-btn resonance-btn--fused" id="resonanceBtn" data-action="resonate">
           <span id="resonanceCount">✦ Résonner</span>
         </button>
         <!-- Réactions des autres — affichées AVANT la barre de saisie (juin 2026) -->
         <div id="repliesList" class="micro-reply-list"></div>
         <div class="quick-react-row" id="quickReactRow">
-          <button class="quick-react-btn" onclick="sendQuickReaction('😂', this)" aria-label="Rire">😂</button>
-          <button class="quick-react-btn" onclick="sendQuickReaction('😢', this)" aria-label="Pleurer">😢</button>
-          <button class="quick-react-btn" onclick="sendQuickReaction('🥹', this)" aria-label="Touché">🥹</button>
-          <button class="quick-react-btn" onclick="sendQuickReaction('🤨', this)" aria-label="Suspect">🤨</button>
-          <button class="quick-react-btn" onclick="sendQuickReaction('😮', this)" aria-label="Surpris">😮</button>
-          <button class="quick-react-btn" onclick="sendQuickReaction('❤️', this)" aria-label="J'aime">❤️</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="😂" aria-label="Rire">😂</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="😢" aria-label="Pleurer">😢</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="🥹" aria-label="Touché">🥹</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="🤨" aria-label="Suspect">🤨</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="😮" aria-label="Surpris">😮</button>
+          <button class="quick-react-btn" data-action="sendQuickReaction" data-arg="❤️" aria-label="J'aime">❤️</button>
         </div>
         <div class="micro-reply-row">
-          <input type="text" id="microReplyInput" class="micro-reply-input" data-i18n-placeholder="micro_reply_placeholder" placeholder="Réagir en un mot…" maxlength="30" data-i18n-aria-label="micro_reply_aria" aria-label="Réagir en quelques mots, 3 maximum" onkeydown="if(event.key==='Enter')sendMicroReply()">
-          <button type="button" id="microReplySend" onclick="sendMicroReply()" data-i18n-aria-label="micro_reply_send_aria" aria-label="Envoyer la réaction" class="micro-reply-send">✦</button>
+          <input type="text" id="microReplyInput" class="micro-reply-input" data-i18n-placeholder="micro_reply_placeholder" placeholder="Réagir en un mot…" maxlength="30" data-i18n-aria-label="micro_reply_aria" aria-label="Réagir en quelques mots, 3 maximum" data-enter-action="sendMicroReply">
+          <button type="button" id="microReplySend" data-action="sendMicroReply" data-i18n-aria-label="micro_reply_send_aria" aria-label="Envoyer la réaction" class="micro-reply-send">✦</button>
         </div>
         <div class="detail-actions-row">
-          <button id="favoriteBtn" onclick="toggleFavorite()" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
-          <button class="ghost-card-btn" id="ghostCardBtn" onclick="generateGhostCard()" aria-label="Créer une Ghost Card partageable">
+          <button id="favoriteBtn" data-action="toggleFavorite" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
+          <button class="ghost-card-btn" id="ghostCardBtn" data-action="generateGhostCard" aria-label="Créer une Ghost Card partageable">
             <span>👻 Créer une Ghost Card</span>
           </button>
         </div>
         <div class="detail-links-row">
-          <button class="detail-link-btn" id="ghostShareBtn" onclick="openShareModal()" aria-label="Partager la position de ce fantôme" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
-          <button class="detail-link-btn" id="secretBtn" aria-label="Passer ce fantôme en mode secret" style="display:none;">🔮 Passer en secret</button>
-          <button class="detail-link-btn detail-link-btn--danger" id="reportBtn" onclick="openReportModal()" data-i18n="detail_report_btn">⚑ Signaler ce fantôme</button>
+          <button class="detail-link-btn" id="ghostShareBtn" data-action="openShareModal" aria-label="Partager la position de ce fantôme" data-i18n="detail_share_ghost_btn">↗ Partager ce fantôme</button>
+          <button class="detail-link-btn u-hidden" id="secretBtn" aria-label="Passer ce fantôme en mode secret">🔮 Passer en secret</button>
+          <button class="detail-link-btn detail-link-btn--danger" id="reportBtn" data-action="openReportModal" data-i18n="detail_report_btn">⚑ Signaler ce fantôme</button>
         </div>
       </div>
     </div>
@@ -411,23 +411,23 @@
 
   <!-- REPLY -->
   <div class="screen" id="screenReply" aria-label="Laisser une réponse">
-    <button class="back-btn" onclick="showScreen('screenDetail')" aria-label="Retour au détail">← retour</button>
+    <button class="back-btn" data-action="nav" data-screen="screenDetail" aria-label="Retour au détail">← retour</button>
     <div class="scroll">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-style:italic;color:var(--ether);margin-bottom:4px;" data-i18n="reply_screen_title">Répondre ici</div>
-      <div style="font-size:12px;color:var(--warm-dim);margin-bottom:18px;" data-i18n="reply_screen_sub">Votre réponse restera ancrée au même endroit.</div>
-      <div class="form-group" style="margin-bottom:4px;">
+      <div class="reply-screen-title" data-i18n="reply_screen_title">Répondre ici</div>
+      <div class="reply-screen-sub" data-i18n="reply_screen_sub">Votre réponse restera ancrée au même endroit.</div>
+      <div class="form-group u-mb4">
         <label class="form-label" for="replyMsg" data-i18n="reply_msg_label">Votre message</label>
-        <textarea class="form-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" style="height:110px;" maxlength="280" aria-required="true" oninput="updateReplyCount(this)"></textarea>
+        <textarea class="form-textarea reply-msg-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" maxlength="280" aria-required="true" data-input-action="updateReplyCount"></textarea>
       </div>
       <div class="reply-char-count" id="replyCharCount">0 / 280</div>
-      <div class="form-group" style="margin-bottom:16px;">
+      <div class="form-group u-mb16">
         <label class="form-label" data-i18n="dep_identity_label">Identité</label>
         <div class="type-selector">
-          <button class="type-btn active" data-val="anon" onclick="selectType(this)" aria-pressed="true">👻 Anonyme</button>
-          <button class="type-btn" data-val="named" onclick="selectType(this)" aria-pressed="false">🌫️ Pseudo</button>
+          <button class="type-btn active" data-val="anon" data-action="selectType" aria-pressed="true">👻 Anonyme</button>
+          <button class="type-btn" data-val="named" data-action="selectType" aria-pressed="false">🌫️ Pseudo</button>
         </div>
       </div>
-      <button class="btn-primary" id="sendReplyBtn" onclick="sendReply()" data-i18n="reply_btn">Déposer la réponse</button>
+      <button class="btn-primary" id="sendReplyBtn" data-action="sendReply" data-i18n="reply_btn">Déposer la réponse</button>
     </div>
   </div>
 
