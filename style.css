@@ -1467,6 +1467,101 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .help-list-row-plain{font-size:12px;color:var(--warm-dim);display:flex;gap:8px;}
 .help-hint{margin-top:10px;font-size:12px;color:var(--spirit-dim);}
 .help-premium-list{font-size:12px;color:var(--warm-dim);line-height:1.8;}
+/* CSP audit 4.6 : bannière update + bouton notif succès dépôt (zone 10) */
+.success-notif-btn{display:none;margin-top:18px;padding:10px 22px;background:rgba(122,184,245,.10);border:1px solid rgba(122,184,245,.28);border-radius:20px;color:rgba(122,184,245,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:opacity .3s,color .3s,border-color .3s,background .3s;}
+/* Nuances du Trace de profil (TRACE_COLORS, app.js) — ensemble fixe et connu,
+   pas besoin de style="" par swatch. */
+.trace-color-swatch-spirit{background:#9DABFF;}
+.trace-color-swatch-violet{background:#B478E8;}
+.trace-color-swatch-mist{background:#6EE0B0;}
+.trace-color-swatch-amber{background:#F0C868;}
+.trace-color-swatch-rose{background:#FF9DC4;}
+.trace-color-swatch-crimson{background:#E85A6E;}
+/* Prévisualisations média du dépôt (handlePhoto/handleVideo/toggleRecording, app.js) */
+.dep-preview-audio-row{display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:14px;padding:10px 12px;margin-top:8px;}
+.dep-preview-audio-icon{font-size:18px;}
+.dep-preview-audio-el{flex:1;height:32px;}
+.dep-preview-clear-btn{background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.3);color:rgba(255,120,120,.8);cursor:pointer;font-size:13px;border-radius:8px;width:32px;height:32px;min-width:32px;}
+.dep-preview-media-wrap{position:relative;margin-top:8px;}
+.dep-preview-img{width:100%;border-radius:14px;border:1px solid rgba(var(--ghost-blue-rgb),.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.dep-preview-clear-btn-overlay{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;}
+.dep-preview-size-badge{position:absolute;bottom:8px;left:8px;font-size:10px;background:rgba(0,0,0,.6);color:rgba(var(--accent-green-rgb),.8);border-radius:8px;padding:2px 7px;}
+.dep-preview-video-wrap{position:relative;margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);}
+.dep-preview-video-el{width:100%;max-height:200px;display:block;background:#000;}
+/* Sections Premium injectées (updatePremiumUI, app.js) */
+.prem-label-row{display:flex;align-items:center;justify-content:space-between;}
+.prem-badge-inline{font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);}
+.prem-btn-hint{margin-left:auto;font-size:10px;opacity:.45;}
+.free-btn-full{width:100%;}
+/* _renderPricingCards() réutilise les classes .plan-card-* de la zone 8
+   (même container #pricingSection, réécrit en JS avec un badge "Bientôt"). */
+.plan-card-icon-wrap{font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));}
+.plan-card-icon-wrap-gold{font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));}
+.plan-card-cta--stub{position:relative;opacity:.85;}
+.plan-cta-soon-badge{display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;}
+.no-gps-msg{font-size:12px;color:rgba(255,100,100,.6);}
+.no-gps-retry-btn{background:none;border:none;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;padding:0;}
+/* Chaîne + média du détail (renderDetail, app.js) */
+.detail-chain-box{background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;padding:14px 16px;margin-bottom:14px;}
+.detail-chain-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(var(--ghost-blue-rgb),.5);margin-bottom:8px;}
+.detail-chain-hint{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--ether);margin-bottom:10px;}
+.detail-chain-follow-btn{width:100%;padding:10px;background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
+.detail-media-block{margin-bottom:12px;}
+.detail-media-block-rel{margin-bottom:12px;position:relative;}
+.detail-media-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;}
+.detail-audio-el{width:100%;border-radius:12px;}
+.detail-video-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.detail-video-el{width:100%;max-height:320px;display:block;background:#000;}
+.detail-media-report-btn{position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:12px;padding:5px 9px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:5px;touch-action:manipulation;transition:all .2s;}
+/* Seule la version "photo" avait le hover JS d'origine — pas la vidéo,
+   incohérence préexistante reproduite volontairement, pas harmonisée. */
+.detail-media-report-btn--hover:hover{background:rgba(255,60,60,.18);}
+.detail-photo-wrap{position:relative;display:inline-block;width:100%;}
+.detail-photo-img{width:100%;border-radius:12px;border:1px solid var(--border);max-height:240px;object-fit:cover;display:block;}
+.dedicated-link-hint{font-size:11px;opacity:.7;}
+.dedicated-link-btn{font-size:10px;color:rgba(var(--ghost-blue-rgb),.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;}
+/* Écran de secours si l'initialisation Firebase échoue entièrement (app.js) */
+.fatal-error-screen{padding:60px 24px;text-align:center;font-family:sans-serif;color:#ddd;background:#0a0a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.fatal-error-icon{font-size:40px;}
+.fatal-error-title{font-size:17px;}
+.fatal-error-sub{font-size:14px;opacity:.7;}
+/* États du compteur radar (.ghost-count-line, app.js) */
+.ghost-count-msg{font-size:13px;color:var(--spirit-dim);}
+.ghost-count-msg-err{font-size:12px;color:rgba(255,100,100,.6);}
+/* Carte empreinte (loadEmpreinteMap, app.js) */
+.empreinte-loader-empty-icon{font-size:32px;}
+.empreinte-loader-empty-text{font-size:12px;color:var(--spirit-dim);text-align:center;}
+.empreinte-loader-err-icon{font-size:24px;}
+.empreinte-loader-err-text{font-size:11px;color:var(--spirit-dim);}
+.empreinte-deposit-marker{font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),1));animation:ghostFloat 2.5s ease-in-out infinite;}
+.empreinte-popup{font-size:12px;font-family:'Instrument Sans',sans-serif;}
+.empreinte-popup-sub{opacity:.6;font-size:10px;}
+.empreinte-discovery-marker{width:10px;height:10px;background:rgba(var(--premium-rgb),.9);border-radius:50%;border:2px solid rgba(255,220,120,.8);box-shadow:0 0 8px rgba(var(--premium-rgb),.7);}
+.empreinte-stat-box{flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);}
+.empreinte-stat-box-last{flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;}
+.empreinte-stat-num{font-size:16px;font-weight:600;}
+.empreinte-stat-num-ether{color:var(--ether);}
+.empreinte-stat-num-gold{color:rgba(var(--premium-rgb),.9);}
+.empreinte-stat-num-green{color:rgba(var(--accent-green-rgb),.9);}
+.empreinte-stat-num-blue{color:rgba(var(--ghost-blue-rgb),.9);}
+.empreinte-stat-label{font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;}
+/* Reste divers (sceau, promo, mini-carte chaîne, lecture, grattage, toasts) */
+.sealed-emoji-wrap{color:var(--ether);display:inline-flex;}
+.promo-code-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:8px;}
+.promo-code-value{font-size:20px;font-weight:700;color:rgba(var(--premium-rgb),.95);letter-spacing:1px;}
+.promo-code-hint{font-size:11px;color:var(--spirit-dim);margin-top:6px;}
+.chain-minimap{width:100%;height:120px;}
+.chain-user-pin{font-size:16px;}
+.chain-next-marker{font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),.9));}
+.chain-existing-marker{font-size:28px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.9));animation:floatG 2s ease-in-out infinite;}
+.first-reader-badge{color:rgba(var(--accent-green-rgb),.9);}
+.already-read-badge{color:var(--spirit-dim);}
+.scratch-hint-hand{font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;}
+.scratch-hint-text{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(var(--ghost-blue-rgb),1),0 1px 4px rgba(0,0,0,1);}
+.scratch-locked-hint{color:rgba(255,120,80,.9);font-size:13px;}
+.scratch-locked-hint-sub{font-size:11px;opacity:.7;}
+.dep-mini-map-user-dot{width:14px;height:14px;background:#f5d491;border-radius:50%;border:2px solid rgba(255,240,200,.9);box-shadow:0 0 12px rgba(232,160,48,.8);}
+.ob-particle-mark-icon{width:1em;height:1em;display:block;}
 .help-badge{border-radius:20px;padding:1px 8px;font-size:10px;}
 .help-badge-spot{background:rgba(var(--ghost-blue-rgb),.15);border:1px solid rgba(var(--ghost-blue-rgb),.4);color:rgba(var(--ghost-blue-rgb),.9);}
 .help-badge-haunted{background:rgba(var(--ghost-blue-rgb),.2);border:1px solid rgba(var(--ghost-blue-rgb),.5);color:rgba(var(--ghost-blue-rgb),1);}

@@ -625,7 +625,7 @@ const LANGS = {
     help_faq_q4: 'Combien de fantômes puis-je ouvrir par jour ?',
     help_faq_a4: '3 ouvertures gratuites par jour. Passez en Premium pour un accès illimité.',
     help_legal_title: '📋 Mentions légales & RGPD',
-    help_legal_body: '<strong>Éditeur :</strong> Ghostub — application indépendante<br><strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">appghostub@gmail.com</a><br><br><strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l\'utilisation), messages déposés.<br><br><strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l\'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br><strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br><strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">📄 Consulter notre politique de confidentialité complète →</a><br><br>En utilisant Ghostub, vous acceptez que vos messages soient visibles par d\'autres utilisateurs à proximité géographique.',
+    help_legal_body: '<strong>Éditeur :</strong> Ghostub — application indépendante<br><strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br><strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l\'utilisation), messages déposés.<br><br><strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l\'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br><strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br><strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" class="help-legal-link">📄 Consulter notre politique de confidentialité complète →</a><br><br>En utilisant Ghostub, vous acceptez que vos messages soient visibles par d\'autres utilisateurs à proximité géographique.',
     help_version: 'Ghostub v1.0 — Géocaching émotionnel',
     help_cond_night: 'Certains ne s\'ouvrent que la nuit (22h–6h)',
     help_cond_hour: 'D\'autres à une heure précise (±15 min)',
@@ -1239,7 +1239,7 @@ const LANGS = {
     help_faq_q4: 'How many ghosts can I open per day?',
     help_faq_a4: '3 free opens a day. Go Premium for unlimited access.',
     help_legal_title: '📋 Legal & GDPR',
-    help_legal_body: '<strong>Publisher:</strong> Ghostub — independent application<br><strong>Contact:</strong> <a href="mailto:appghostub@gmail.com" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">appghostub@gmail.com</a><br><br><strong>Data collected:</strong> email address, GPS position (only during use), deposited messages.<br><br><strong>Use:</strong> your data is used exclusively for the application to function. It is neither sold nor shared with third parties.<br><br><strong>Deletion:</strong> you can delete your ghosts and account at any time from your profile.<br><br><strong>Hosting:</strong> Firebase (Google) — European servers (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" style="color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;">📄 Read our full privacy policy →</a><br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
+    help_legal_body: '<strong>Publisher:</strong> Ghostub — independent application<br><strong>Contact:</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br><strong>Data collected:</strong> email address, GPS position (only during use), deposited messages.<br><br><strong>Use:</strong> your data is used exclusively for the application to function. It is neither sold nor shared with third parties.<br><br><strong>Deletion:</strong> you can delete your ghosts and account at any time from your profile.<br><br><strong>Hosting:</strong> Firebase (Google) — European servers (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" class="help-legal-link">📄 Read our full privacy policy →</a><br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
     help_version: 'Ghostub v1.0 — Emotional geocaching',
     help_cond_night: 'Some only open at night (10pm–6am)',
     help_cond_hour: 'Others at a specific time (±15 min)',
@@ -1450,7 +1450,7 @@ try {
   _createGhostSecureCallable = httpsCallable(functionsInstance, 'createGhostSecure');
 } catch (e) {
   console.error('[ghostub:init]', e);
-  document.body.innerHTML = '<div style="padding:60px 24px;text-align:center;font-family:sans-serif;color:#ddd;background:#0a0a14;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;"><div style="font-size:40px;">😶</div><div style="font-size:17px;">Ghostub n\'a pas pu démarrer.</div><div style="font-size:14px;opacity:.7;">Vérifie ta connexion internet et réessaie.</div></div>';
+  document.body.innerHTML = '<div class="fatal-error-screen"><div class="fatal-error-icon">😶</div><div class="fatal-error-title">Ghostub n\'a pas pu démarrer.</div><div class="fatal-error-sub">Vérifie ta connexion internet et réessaie.</div></div>';
 }
 
 const CLOUDINARY_CLOUD = 'dcarogsye';
@@ -1507,11 +1507,11 @@ let _traceIdSeq = 0;
  */
 // CSP audit 4.6 : opacité/saturation/taille sont continues, calculées par
 // fantôme (fanage temporel) — impossible à réduire en classes discrètes.
-// hydrate=false (défaut) garde l'ancien contrat (style="" inline) pour les
-// appelants pas encore migrés (marqueurs Carte, fiche Carte — zone 7).
-// hydrate=true pose des data-* à la place, à appliquer ensuite via de vraies
-// écritures JS sur .style (hors périmètre CSP) avec _hydrateTraceMarks().
-function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true, hydrate = false } = {}) {
+// Pose des data-trace-* plutôt qu'un style="" inline ; l'appelant doit passer
+// le span à _hydrateTraceMarks() une fois inséré dans le DOM pour que ces
+// valeurs soient appliquées via de vraies écritures JS sur .style (hors
+// périmètre CSP). Tous les appelants actuels le font déjà.
+function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
   const [c1, c2] = discovered
     ? TRACE_DISCOVERED_COLORS
     : (TRACE_CATEGORY_COLORS[g.emoji] || TRACE_DEFAULT_COLORS);
@@ -1535,9 +1535,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true, 
   // du Trace sont quasi invisibles sur un fond clair (thème clair, tuiles
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
-  const openTag = hydrate
-    ? `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`
-    : `<span style="display:inline-flex;width:${size}px;height:${size}px;opacity:${opacity.toFixed(2)};filter:saturate(${saturation.toFixed(0)}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));flex-shrink:0;" aria-hidden="true">`;
+  const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
   return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
     `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
@@ -1552,9 +1550,9 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true, 
     `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
     `</svg></span>`;
 }
-// Applique les data-trace-* posés par _traceMarkHTML({hydrate:true}) — de
-// vraies écritures JS sur .style, jamais un style="" du markup, donc hors
-// périmètre CSP (cf. commentaire sur _traceMarkHTML).
+// Applique les data-trace-* posés par _traceMarkHTML() — de vraies écritures
+// JS sur .style, jamais un style="" du markup, donc hors périmètre CSP
+// (cf. commentaire sur _traceMarkHTML).
 function _hydrateTraceMarks(root) {
   (root || document).querySelectorAll('.trace-mark[data-trace-w]').forEach(el => {
     const w = el.dataset.traceW;
@@ -1612,7 +1610,7 @@ function _renderTraceColorPicker() {
   wrap.innerHTML = TRACE_COLORS.map(c => {
     const locked = c.premium && !isPremium;
     const active = c.id === userTraceColor;
-    return `<button type="button" class="trace-color-swatch${active ? ' active' : ''}${locked ? ' locked' : ''}" style="background:${c.swatch};" onclick="setTraceColor('${c.id}')" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">🔒</span>' : ''}</button>`;
+    return `<button type="button" class="trace-color-swatch trace-color-swatch-${c.id}${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">🔒</span>' : ''}</button>`;
   }).join('');
 }
 
@@ -2056,7 +2054,7 @@ function buildLeafletMap(centerLat, centerLng) {
     // FEATURE-TRACE-COLORE-FANAGE.md) — plus d'icône de catégorie brute sur
     // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
     // d'équivalent badge séparé ici contrairement au radar.
-    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false, hydrate: true });
+    const emojiAt = (size) => g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size, discovered: alreadyOpened, fadeOpacity: false });
     // Halo de rareté (Lot I1) : même logique que le Radar (Lot G2) — doré
     // pour rare/légendaire, lavande pour secret, rien pour commun/uncommon.
     let _haloClass = '';
@@ -2248,7 +2246,7 @@ function _openMapGhostSheet(g, dist) {
   _mapSheetGhostId = g.id;
   const iconEl = document.getElementById('mapSheetIcon');
   const alreadyOpened = getDiscoveredIds().includes(g.id);
-  iconEl.innerHTML = g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size: 40, discovered: alreadyOpened, fadeOpacity: false, hydrate: true });
+  iconEl.innerHTML = g.secret ? '🔮' : g.businessMode ? '🏪' : _traceMarkHTML(g, { size: 40, discovered: alreadyOpened, fadeOpacity: false });
   _hydrateTraceMarks(iconEl);
   document.getElementById('mapSheetTitle').textContent = g.location || (_currentLang === 'en' ? 'Unknown place' : 'Lieu inconnu');
   const tier = g.secret ? null : getGhostTier(g.id);
@@ -3322,10 +3320,10 @@ function showAudioPreview(blob) {
   window._pendingAudioBlobUrl = url;
   const preview = document.getElementById('audioPreview');
   preview.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(145deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:14px;padding:10px 12px;margin-top:8px;">
-      <span style="font-size:18px;" aria-hidden="true">🎙</span>
-      <audio controls src="${url}" style="flex:1;height:32px;" aria-label="Aperçu de l'enregistrement vocal"></audio>
-      <button onclick="clearAudio()" aria-label="Supprimer l'enregistrement" style="background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.3);color:rgba(255,120,120,.8);cursor:pointer;font-size:13px;border-radius:8px;width:32px;height:32px;min-width:32px;">✕</button>
+    <div class="dep-preview-audio-row">
+      <span class="dep-preview-audio-icon" aria-hidden="true">🎙</span>
+      <audio controls src="${url}" class="dep-preview-audio-el" aria-label="Aperçu de l'enregistrement vocal"></audio>
+      <button data-action="clearAudio" aria-label="Supprimer l'enregistrement" class="dep-preview-clear-btn">✕</button>
     </div>`;
   preview.dataset.blob = 'pending';
   window._pendingAudioBlob = blob;
@@ -3373,10 +3371,10 @@ window.handlePhoto = (input) => {
         window._pendingPhotoBlobUrl = url;
         window._pendingPhotoFile = new File([blob], file.name, { type: 'image/jpeg' });
         document.getElementById('photoPreview').innerHTML = `
-          <div style="position:relative;margin-top:8px;">
-            <img src="${url}" alt="Aperçu de la photo" style="width:100%;border-radius:14px;border:1px solid rgba(var(--ghost-blue-rgb),.2);max-height:200px;object-fit:cover;box-shadow:0 4px 20px rgba(0,0,0,.5);" loading="lazy">
-            <button onclick="clearPhoto()" aria-label="Supprimer la photo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
-            <div style="position:absolute;bottom:8px;left:8px;font-size:10px;background:rgba(0,0,0,.6);color:rgba(var(--accent-green-rgb),.8);border-radius:8px;padding:2px 7px;">${(blob.size/1024).toFixed(0)}ko</div>
+          <div class="dep-preview-media-wrap">
+            <img src="${url}" alt="Aperçu de la photo" class="dep-preview-img" loading="lazy">
+            <button data-action="clearPhoto" aria-label="Supprimer la photo" class="dep-preview-clear-btn-overlay">✕</button>
+            <div class="dep-preview-size-badge">${(blob.size/1024).toFixed(0)}ko</div>
           </div>`;
         document.getElementById('depositError').textContent = '';
       }, 'image/jpeg', 0.82);
@@ -3416,9 +3414,9 @@ window.handleVideo = (input) => {
   window._pendingVideoFile = file;
   const preview = document.getElementById('videoPreview');
   preview.innerHTML = `
-    <div style="position:relative;margin-top:8px;border-radius:12px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.2);">
-      <video src="${url}" controls playsinline style="width:100%;max-height:200px;display:block;background:#000;"></video>
-      <button onclick="clearVideo()" aria-label="Supprimer la vidéo" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.15);color:white;border-radius:50%;width:32px;height:32px;min-width:32px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;">✕</button>
+    <div class="dep-preview-video-wrap">
+      <video src="${url}" controls playsinline class="dep-preview-video-el"></video>
+      <button data-action="clearVideo" aria-label="Supprimer la vidéo" class="dep-preview-clear-btn-overlay">✕</button>
     </div>`;
   input.value = '';
 };
@@ -3463,7 +3461,7 @@ function _renderAttachmentsList() {
         <div class="attachment-name">${safeName}</div>
         <div class="attachment-meta">${_humanSize(a.size || 0)}</div>
       </div>
-      <button type="button" class="attachment-remove" onclick="removeAttachment(${i})" aria-label="Retirer ce fichier">✕</button>
+      <button type="button" class="attachment-remove" data-action="removeAttachment" data-arg="${i}" aria-label="Retirer ce fichier">✕</button>
     </div>`;
   }).join('');
   if (wrap) wrap.classList.toggle('attachments-full', items.length >= ATTACH_MAX_COUNT);
@@ -4345,18 +4343,18 @@ function updatePremiumUI() {
   // Sections Premium — injection directe dans les wrappers
   const _premSections = [
     { id: 'premSection_video',     icon: '🎥', label: t.prem_video_label || 'Vidéo', sub: t.prem_video_sub || 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">✦ Premium</span></label><button class="media-btn" onclick="triggerVideo()" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">max 50 Mo · 20 sec</span></button>` },
+      premiumHtml: `<label class="form-label prem-label-row"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerVideo" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span class="prem-btn-hint">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
     { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
     // Phase 1d v103 — Galerie de fichiers
     { id: 'premSection_attachments', icon: '📎', label: t.prem_attach_label || 'Documents', sub: t.prem_attach_sub || 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
-      premiumHtml: `<label class="form-label" style="display:flex;align-items:center;justify-content:space-between;"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span style="font-size:9px;background:rgba(var(--premium-rgb),.15);border:1px solid rgba(var(--premium-rgb),.3);border-radius:8px;padding:2px 6px;color:rgba(var(--premium-rgb),.8);">✦ Premium</span></label><button class="media-btn" onclick="triggerAttachments()" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span style="margin-left:auto;font-size:10px;opacity:.45;">PDF, JPG, PNG</span></button>` },
+      premiumHtml: `<label class="form-label prem-label-row"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerAttachments" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span class="prem-btn-hint">PDF, JPG, PNG</span></button>` },
   ];
 
   const _badge = (txt) => `<span class="badge-premium">✦ Premium</span>`;
-  const _freeBtn = (icon, label, sub) => `<button class="cond-btn" onclick="showScreen('screenProfile');setNav('nav-profile')" type="button" style="width:100%;"><span class="cond-btn-icon">${icon}</span><span class="cond-btn-text"><div class="cond-btn-label">${label} ${_badge()}</div><div class="cond-btn-sub">${sub}</div></span></button>`;
+  const _freeBtn = (icon, label, sub) => `<button class="cond-btn free-btn-full" data-action="nav" data-screen="screenProfile" data-nav="nav-profile" type="button"><span class="cond-btn-icon">${icon}</span><span class="cond-btn-text"><div class="cond-btn-label">${label} ${_badge()}</div><div class="cond-btn-sub">${sub}</div></span></button>`;
 
   _premSections.forEach(({ id, icon, label, sub, premiumHtml }) => {
     const el = document.getElementById(id);
@@ -4406,7 +4404,7 @@ function updatePremiumUI() {
   const pricingSection = document.getElementById('pricingSection');
   if (isPremium) {
     planEl.style.display = 'block';
-    planEl.innerHTML = '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;">✦ ' + t.profile_premium_plan + '</div><div style="font-size:13px;color:var(--warm-dim);">' + t.profile_premium_sub + '</div>';
+    planEl.innerHTML = '<div class="profile-panel-label-premium">✦ ' + t.profile_premium_plan + '</div><div class="profile-panel-content">' + t.profile_premium_sub + '</div>';
     if (codeSection) codeSection.style.display = 'none';
     if (pricingSection) pricingSection.style.display = 'none';
   } else {
@@ -4461,50 +4459,50 @@ function _renderPricingCards() {
   const isEn = _currentLang === 'en';
   section.innerHTML = `
     <!-- Premium — bordure légèrement lumineuse bleu spirit (Lot J2) -->
-    <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div class="plan-card plan-card-premium">
+      <div class="plan-card-header">
         <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">✦ ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
+          <div class="plan-card-label plan-card-label-premium">✦ ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
+          <div class="plan-card-price">0,99€ <span class="plan-card-price-period">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));">${_BRAND_MARK_HTML}</div>
+        <div class="plan-card-icon-wrap">${_BRAND_MARK_HTML}</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Instant drop' : 'Dépôt immédiat'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Video + audio 🎥' : 'Vidéo + vocal 🎥'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Dedicated ghost 💌' : 'Ghost dédié 💌'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Ghost chain 🔗' : 'Chaîne fantômes 🔗'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> ${isEn ? 'Future message 📅' : 'Message futur 📅'}</div>
+      <div class="plan-card-features">
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Instant drop' : 'Dépôt immédiat'}</div>
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Video + audio 🎥' : 'Vidéo + vocal 🎥'}</div>
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Dedicated ghost 💌' : 'Ghost dédié 💌'}</div>
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Ghost chain 🔗' : 'Chaîne fantômes 🔗'}</div>
+        <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Future message 📅' : 'Message futur 📅'}</div>
       </div>
-      <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_premium || '✦ Become Premium Hunter'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
+      <button id="stripeBtn" data-action="startStripeCheckout" data-arg="premium" class="plan-card-cta plan-card-cta-premium plan-card-cta--stub">${t.stripe_btn_premium || '✦ Become Premium Hunter'}<span class="plan-cta-soon-badge">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
     </div>
     <!-- Commerce — bordure légèrement lumineuse dorée (Lot J2) -->
-    <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--premium-rgb),.08);">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div class="plan-card plan-card-commerce">
+      <div class="plan-card-header">
         <div>
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>
-          <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">4,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">${isEn ? '/month' : '/mois'}</span></div>
+          <div class="plan-card-label plan-card-label-commerce">🏪 ${isEn ? 'Commerce Plan' : 'Plan Commerce'}</div>
+          <div class="plan-card-price">4,99€ <span class="plan-card-price-period">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));">🏪</div>
+        <div class="plan-card-icon-wrap-gold">🏪</div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'All Premium included' : 'Tout Premium inclus'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Commerce ghosts' : 'Ghosts Commerce'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Promo code built-in' : 'Code promo intégré'}</div>
-        <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> ${isEn ? 'Openings dashboard' : 'Dashboard ouvertures'}</div>
+      <div class="plan-card-features">
+        <div class="plan-feature-row"><span class="plan-check-gold">✓</span> ${isEn ? 'All Premium included' : 'Tout Premium inclus'}</div>
+        <div class="plan-feature-row"><span class="plan-check-gold">✓</span> ${isEn ? 'Commerce ghosts' : 'Ghosts Commerce'}</div>
+        <div class="plan-feature-row"><span class="plan-check-gold">✓</span> ${isEn ? 'Promo code built-in' : 'Code promo intégré'}</div>
+        <div class="plan-feature-row"><span class="plan-check-gold">✓</span> ${isEn ? 'Openings dashboard' : 'Dashboard ouvertures'}</div>
       </div>
-      <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="position:relative;width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.2),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:13px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;opacity:.85;">${t.stripe_btn_commerce || '🏪 Activate Commerce Plan'}<span style="display:inline-block;margin-left:8px;font-size:10px;background:rgba(var(--premium-rgb),.2);color:rgba(255,220,140,.95);border:1px solid rgba(var(--premium-rgb),.35);border-radius:6px;padding:2px 7px;font-weight:600;letter-spacing:.5px;vertical-align:middle;">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
+      <button id="stripeBtnCommerce" data-action="startStripeCheckout" data-arg="commerce" class="plan-card-cta plan-card-cta-commerce plan-card-cta--stub">${t.stripe_btn_commerce || '🏪 Activate Commerce Plan'}<span class="plan-cta-soon-badge">🔜 ${isEn ? 'Soon' : 'Bientôt'}</span></button>
     </div>
     <!-- Code promo discret -->
-    <div id="codeSection" style="padding:4px 0;">
-      <details style="cursor:pointer;">
-        <summary style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.3px;list-style:none;padding:6px 0;">${isEn ? 'Have an activation code?' : 'Vous avez un code d\'activation ?'}</summary>
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
-          <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;">${t.profile_activate_btn || 'Activer'}</button>
+    <div id="codeSection" class="profile-code-section">
+      <details class="profile-code-details">
+        <summary class="profile-code-summary">${isEn ? 'Have an activation code?' : 'Vous avez un code d\'activation ?'}</summary>
+        <div class="profile-code-row">
+          <input id="premiumCode" class="form-input profile-code-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium">
+          <button id="activateBtn" data-action="activatePremium" class="profile-code-activate-btn">${t.profile_activate_btn || 'Activer'}</button>
         </div>
-        <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
+        <div id="premiumError" class="profile-code-error" role="alert" aria-live="polite"></div>
       </details>
     </div>
   `;
@@ -5281,7 +5279,7 @@ window.deleteMyGhosts = async () => {
 // ── EXPORT RGPD (Art. 20 — Portabilité des données) ─────
 window.exportMyData = async () => {
   if (!currentUser) return;
-  const btn = document.querySelector('[onclick="exportMyData()"]');
+  const btn = document.querySelector('[data-action="exportMyData"]');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Préparation…'; }
   try {
     // 1. Mes fantômes déposés
@@ -5559,7 +5557,7 @@ window.loadNearbyGhosts = async () => {
     showToast('warning', t.radar_offline);
   }
   const _gc = document.getElementById('ghostCount'); if (_gc) _gc.textContent = '';
-  document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_locating + '</span>';
+  document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_locating + '</span>';
   skeletonGhostList();
   try {
     // Ne déclenche la popup GPS native que si le priming a déjà été accepté
@@ -5570,13 +5568,13 @@ window.loadNearbyGhosts = async () => {
       if (!userLat || !userLng) { userLat = 46.6034; userLng = 1.8883; window._gpsIsFallback = true; }
     } else {
       await getLocation();
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_searching + '</span>';
+      document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_searching + '</span>';
       window._gpsIsFallback = false;
       document.getElementById('userCoords').textContent =
         userLat.toFixed(4) + '° N, ' + userLng.toFixed(4) + '° E';
     }
   } catch(e) {
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_no_gps + ' <button onclick="loadNearbyGhosts()" style="background:none;border:none;color:inherit;text-decoration:underline;font:inherit;cursor:pointer;padding:0;">' + t.radar_retry_btn + '</button></span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span class="no-gps-msg">' + t.radar_no_gps + ' <button data-action="loadNearbyGhosts" class="no-gps-retry-btn">' + t.radar_retry_btn + '</button></span>';
     // Utiliser la dernière position connue si disponible, sinon centre de France
     if (!userLat || !userLng) {
       userLat = 46.6034; userLng = 1.8883;
@@ -5594,7 +5592,7 @@ window.loadNearbyGhosts = async () => {
   } catch(firestoreErr) {
     console.error('Firestore error:', firestoreErr);
     showToast('error', t.radar_firestore_err || 'Erreur de chargement.');
-    document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:12px;color:rgba(255,100,100,.6)">' + t.radar_firestore_err + '</span>';
+    document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg-err">' + t.radar_firestore_err + '</span>';
     renderGhostList(); renderRadarDots(); return;
   }
   nearbyGhosts = [];
@@ -5682,9 +5680,9 @@ window.loadNearbyGhosts = async () => {
   }
   if (count === 0) {
     if (widened && nearbyGhosts.length > 0) {
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_no_ghosts_widened + '</span>';
+      document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_no_ghosts_widened + '</span>';
     } else {
-      document.querySelector('.ghost-count-line').innerHTML = '<span style="font-size:13px;color:var(--spirit-dim)">' + t.radar_no_ghosts + '</span>';
+      document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_no_ghosts + '</span>';
     }
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
@@ -6161,7 +6159,7 @@ window.loadEmpreinteMap = async () => {
 
     if (allPoints.length === 0) {
       if (loader) loader.style.display = 'flex';
-      loader.innerHTML = '<div style="font-size:32px;">' + _BRAND_MARK_HTML + '</div><div style="font-size:12px;color:var(--spirit-dim);text-align:center;">' + t.profile_map_empty + '</div>';
+      loader.innerHTML = '<div class="empreinte-loader-empty-icon">' + _BRAND_MARK_HTML + '</div><div class="empreinte-loader-empty-text">' + t.profile_map_empty + '</div>';
       return;
     }
 
@@ -6180,23 +6178,23 @@ window.loadEmpreinteMap = async () => {
     // 4. Marqueurs dépôts — violet lumineux
     deposits.forEach(p => {
       const icon = L.divIcon({
-        html: `<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),1));animation:ghostFloat 2.5s ease-in-out infinite;">${p.emoji}</div>`,
+        html: `<div class="empreinte-deposit-marker">${p.emoji}</div>`,
         iconSize: [28, 28], iconAnchor: [14, 14], className: ''
       });
       L.marker([p.lat, p.lng], { icon })
         .addTo(_empreinteMap)
-        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👻 <b>${escapeHTML(p.location)}</b><br><span style="opacity:.6;font-size:10px;">Votre dépôt</span></div>`);
+        .bindPopup(`<div class="empreinte-popup">👻 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Votre dépôt</span></div>`);
     });
 
     // 5. Marqueurs découvertes — doré
     discoveries.forEach(p => {
       const icon = L.divIcon({
-        html: `<div style="width:10px;height:10px;background:rgba(var(--premium-rgb),.9);border-radius:50%;border:2px solid rgba(255,220,120,.8);box-shadow:0 0 8px rgba(var(--premium-rgb),.7);"></div>`,
+        html: `<div class="empreinte-discovery-marker"></div>`,
         iconSize: [10, 10], iconAnchor: [5, 5], className: ''
       });
       L.marker([p.lat, p.lng], { icon })
         .addTo(_empreinteMap)
-        .bindPopup(`<div style="font-size:12px;font-family:'Instrument Sans',sans-serif;">👁 <b>${escapeHTML(p.location)}</b><br><span style="opacity:.6;font-size:10px;">Découverte</span></div>`);
+        .bindPopup(`<div class="empreinte-popup">👁 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Découverte</span></div>`);
     });
 
     // Ajuster zoom pour tout voir
@@ -6242,21 +6240,21 @@ window.loadEmpreinteMap = async () => {
 
     if (loader) loader.style.display = 'none';
     statsEl.innerHTML = `
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
-        <div style="font-size:16px;color:var(--ether);font-weight:600;">${deposits.length}</div>
-        <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_deposits || 'Dépôts'}</div>
+      <div class="empreinte-stat-box">
+        <div class="empreinte-stat-num empreinte-stat-num-ether">${deposits.length}</div>
+        <div class="empreinte-stat-label">${t.profile_map_deposits || 'Dépôts'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
-        <div style="font-size:16px;color:rgba(var(--premium-rgb),.9);font-weight:600;">${discoveries.length}</div>
-        <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_discoveries || 'Découvertes'}</div>
+      <div class="empreinte-stat-box">
+        <div class="empreinte-stat-num empreinte-stat-num-gold">${discoveries.length}</div>
+        <div class="empreinte-stat-label">${t.profile_map_discoveries || 'Découvertes'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;border-right:1px solid rgba(var(--ghost-blue-rgb),.1);">
-        <div style="font-size:16px;color:rgba(var(--accent-green-rgb),.9);font-weight:600;">${cities}</div>
-        <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_places || 'Lieux'}</div>
+      <div class="empreinte-stat-box">
+        <div class="empreinte-stat-num empreinte-stat-num-green">${cities}</div>
+        <div class="empreinte-stat-label">${t.profile_map_places || 'Lieux'}</div>
       </div>
-      <div style="flex:1;background:rgba(10,10,20,.75);backdrop-filter:blur(6px);padding:8px 10px;text-align:center;">
-        <div style="font-size:16px;color:rgba(var(--ghost-blue-rgb),.9);font-weight:600;">✦${score}</div>
-        <div style="font-size:9px;color:var(--spirit-dim);letter-spacing:.5px;text-transform:uppercase;">${t.profile_map_score || 'Score'}</div>
+      <div class="empreinte-stat-box-last">
+        <div class="empreinte-stat-num empreinte-stat-num-blue">✦${score}</div>
+        <div class="empreinte-stat-label">${t.profile_map_score || 'Score'}</div>
       </div>`;
 
     // Afficher bouton partage si Web Share API dispo
@@ -6266,7 +6264,7 @@ window.loadEmpreinteMap = async () => {
   } catch(e) {
     console.error('Empreinte error:', e);
     if (loader) loader.style.display = 'none';
-    if (loader) { loader.style.display = 'flex'; loader.innerHTML = `<div style="font-size:24px;">⚠️</div><div style="font-size:11px;color:var(--spirit-dim);">${t.profile_map_error || 'Impossible de charger'}</div>`; }
+    if (loader) { loader.style.display = 'flex'; loader.innerHTML = `<div class="empreinte-loader-err-icon">⚠️</div><div class="empreinte-loader-err-text">${t.profile_map_error || 'Impossible de charger'}</div>`; }
   }
 };
 
@@ -6723,7 +6721,7 @@ function renderGhostList() {
     // l'ancien _ghostEmojiHTML() qui n'était pas encore migré ici
     // (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 2).
     const emoji = g.secret ? '🔮' : g.businessMode ? '🏪'
-      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id), hydrate: true });
+      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id) });
     // Âge du fantôme
     const ageMs = g.createdAt ? Date.now() - g.createdAt.seconds * 1000 : 0;
     const ageDays = ageMs / 86400000;
@@ -6894,7 +6892,7 @@ function renderRadarDots() {
     // — plus d'icône de catégorie brute sur le radar, uniquement le Trace.
     // Les secrets gardent leur 🔮 dédié (mécanique de révélation distincte).
     // Taille ~10% du diamètre du radar (34px/300px maquette) — cf. .ghost-dot-emoji
-    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id), hydrate: true });
+    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id) });
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -7077,7 +7075,7 @@ window.openGhost = async (id) => {
     : null;
   if (_sv) { sealedEl.textContent = _sv; }
   else if (selectedGhost.emoji && selectedGhost.emoji !== '👻') {
-    sealedEl.innerHTML = `<span style="color:var(--ether);display:inline-flex;">${_categoryIconHTML(selectedGhost.emoji, { size: 32 })}</span>`;
+    sealedEl.innerHTML = `<span class="sealed-emoji-wrap">${_categoryIconHTML(selectedGhost.emoji, { size: 32 })}</span>`;
   }
   else { sealedEl.innerHTML = _BRAND_MARK_HTML; }
   const readCountEl = document.getElementById('detailReadCount');
@@ -7164,9 +7162,9 @@ window.openGhost = async (id) => {
       promoBlock.id = 'detailPromoBlock';
       promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.35);border-radius:14px;padding:14px 16px;text-align:center;';
       promoBlock.innerHTML =
-        '<div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:8px;">&#x1F3EA; Offre exclusive</div>' +
-        '<div style="font-size:20px;font-weight:700;color:rgba(var(--premium-rgb),.95);letter-spacing:1px;">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
-        '<div style="font-size:11px;color:var(--spirit-dim);margin-top:6px;">Présentez ce message en caisse pour en bénéficier</div>';
+        '<div class="promo-code-label">&#x1F3EA; Offre exclusive</div>' +
+        '<div class="promo-code-value">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
+        '<div class="promo-code-hint">Présentez ce message en caisse pour en bénéficier</div>';
       document.getElementById('detailMessage').after(promoBlock);
     }
     document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
@@ -7186,10 +7184,10 @@ window.openGhost = async (id) => {
     if (selectedGhost.chainHint || selectedGhost.chainLat) {
       chainDiv.style.display = 'block';
       chainDiv.innerHTML = `
-        <div style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.08),rgba(var(--ghost-blue-rgb),.03));border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;padding:14px 16px;margin-bottom:14px;">
-          <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(var(--ghost-blue-rgb),.5);margin-bottom:8px;">🔗 La piste continue…</div>
-          ${selectedGhost.chainHint ? `<div style="font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--ether);margin-bottom:10px;">"${escapeHTML(selectedGhost.chainHint)}"</div>` : ''}
-          ${selectedGhost.chainLat ? `<button onclick="followChain()" style="width:100%;padding:10px;background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;">🗺 Suivre la piste →</button>` : ''}
+        <div class="detail-chain-box">
+          <div class="detail-chain-label">🔗 La piste continue…</div>
+          ${selectedGhost.chainHint ? `<div class="detail-chain-hint">"${escapeHTML(selectedGhost.chainHint)}"</div>` : ''}
+          ${selectedGhost.chainLat ? `<button data-action="followChain" class="detail-chain-follow-btn">🗺 Suivre la piste →</button>` : ''}
         </div>`;
     } else {
       chainDiv.style.display = 'none';
@@ -7218,29 +7216,29 @@ window.openGhost = async (id) => {
     const audioEl = document.getElementById('detailAudio');
     if (selectedGhost.audioUrl) {
       audioEl.innerHTML = `
-        <div style="margin-bottom:12px;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;">🎙 Message vocal</div>
-          <audio controls src="${escapeHTML(selectedGhost.audioUrl)}" style="width:100%;border-radius:12px;" aria-label="Message vocal du fantôme"></audio>
+        <div class="detail-media-block">
+          <div class="detail-media-label">🎙 Message vocal</div>
+          <audio controls src="${escapeHTML(selectedGhost.audioUrl)}" class="detail-audio-el" aria-label="Message vocal du fantôme"></audio>
         </div>`;
     } else { audioEl.innerHTML = ''; }
 
     const photoEl = document.getElementById('detailPhoto');
     if (selectedGhost.videoUrl) {
       photoEl.innerHTML = `
-        <div style="margin-bottom:12px;position:relative;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;">🎥 Vidéo</div>
-          <div style="position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);">
-            <video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" style="width:100%;max-height:320px;display:block;background:#000;" aria-label="Vidéo du fantôme"></video>
-            <button onclick="openReportModal()" aria-label="Signaler cette vidéo" title="Signaler cette vidéo" style="position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:12px;padding:5px 9px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:5px;touch-action:manipulation;transition:all .2s;">⚑ Signaler</button>
+        <div class="detail-media-block-rel">
+          <div class="detail-media-label">🎥 Vidéo</div>
+          <div class="detail-video-wrap">
+            <video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" class="detail-video-el" aria-label="Vidéo du fantôme"></video>
+            <button data-action="openReportModal" aria-label="Signaler cette vidéo" title="Signaler cette vidéo" class="detail-media-report-btn">⚑ Signaler</button>
           </div>
         </div>`;
     } else if (selectedGhost.photoUrl) {
       photoEl.innerHTML = `
-        <div style="margin-bottom:12px;position:relative;">
-          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;">📷 Photo</div>
-          <div style="position:relative;display:inline-block;width:100%;">
-            <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" style="width:100%;border-radius:12px;border:1px solid var(--border);max-height:240px;object-fit:cover;display:block;" loading="lazy">
-            <button onclick="openReportModal()" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" style="position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:12px;padding:5px 9px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:5px;touch-action:manipulation;transition:all .2s;" onmouseover="this.style.background='rgba(255,60,60,.18)'" onmouseout="this.style.background='rgba(10,8,20,.75)'">⚑ Signaler</button>
+        <div class="detail-media-block-rel">
+          <div class="detail-media-label">📷 Photo</div>
+          <div class="detail-photo-wrap">
+            <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy">
+            <button data-action="openReportModal" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" class="detail-media-report-btn detail-media-report-btn--hover">⚑ Signaler</button>
           </div>
         </div>`;
     } else { photoEl.innerHTML = ''; }
@@ -7518,15 +7516,15 @@ window.setChainMarker = () => {
   if (!userLat) { alert(t.toast_gps_req); return; }
   const preview = document.getElementById('chainMapPreview');
   preview.style.display = 'block';
-  preview.innerHTML = '<div id="chainMiniMap" style="width:100%;height:120px;"></div>';
+  preview.innerHTML = '<div id="chainMiniMap" class="chain-minimap"></div>';
   const initChainMap = () => {
     const cmap = L.map('chainMiniMap', { zoomControl: false, attributionControl: false }).setView([userLat, userLng], 17);
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(cmap);
-    L.marker([userLat, userLng], { icon: L.divIcon({ html: '<div style="font-size:16px;">📍</div>', iconSize:[20,20], iconAnchor:[10,10], className:'' }) }).addTo(cmap);
+    L.marker([userLat, userLng], { icon: L.divIcon({ html: '<div class="chain-user-pin">📍</div>', iconSize:[20,20], iconAnchor:[10,10], className:'' }) }).addTo(cmap);
     let nextMarker = null;
     cmap.on('click', e => {
       if (nextMarker) cmap.removeLayer(nextMarker);
-      nextMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: L.divIcon({ html: '<div style="font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),.9));">🔗</div>', iconSize:[24,24], iconAnchor:[12,12], className:'' }) }).addTo(cmap);
+      nextMarker = L.marker([e.latlng.lat, e.latlng.lng], { icon: L.divIcon({ html: '<div class="chain-next-marker">🔗</div>', iconSize:[24,24], iconAnchor:[12,12], className:'' }) }).addTo(cmap);
       window._chainNextCoords = { lat: e.latlng.lat, lng: e.latlng.lng };
       document.getElementById('chainMapLabel').textContent = '✓ Point placé — retap pour déplacer';
     });
@@ -7551,7 +7549,7 @@ window.followChain = () => {
   setTimeout(() => {
     if (window.map) {
       window.map.setView([selectedGhost.chainLat, selectedGhost.chainLng], 18);
-      L.marker([selectedGhost.chainLat, selectedGhost.chainLng], { icon: L.divIcon({ html: '<div style="font-size:28px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.9));animation:floatG 2s ease-in-out infinite;">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' }) }).addTo(window.map);
+      L.marker([selectedGhost.chainLat, selectedGhost.chainLng], { icon: L.divIcon({ html: '<div class="chain-existing-marker">🔗</div>', iconSize:[32,32], iconAnchor:[16,32], className:'' }) }).addTo(window.map);
     }
   }, 800);
 };
@@ -7743,7 +7741,7 @@ window.depositGhost = async () => {
         if (_dedEl && ghostId) {
           const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
           window._lastDedicatedLink = _link;
-          _dedEl.innerHTML = 'Ton ghost est ancré.<br><span style="font-size:11px;opacity:.7;">Partage ce lien pour le dédier :</span><br><button onclick="navigator.clipboard.writeText(window._lastDedicatedLink).then(()=>showToast(\'link\',\'Lien copié !\'))" style="font-size:10px;color:rgba(var(--ghost-blue-rgb),.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;">' + _link + '</button>';
+          _dedEl.innerHTML = 'Ton ghost est ancré.<br><span class="dedicated-link-hint">Partage ce lien pour le dédier :</span><br><button data-action="copyDedicatedLink" class="dedicated-link-btn">' + _link + '</button>';
         }
       }
       // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
@@ -7774,7 +7772,15 @@ window.depositGhost = async () => {
       Analytics.track('ghost_deposited', { anonymous: anon, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
       // Clic pour fermer manuellement si le timer bloque
       const successEl = document.getElementById('depositSuccess');
-      const dismissSuccess = () => {
+      // CSP audit 4.6 : la protection reposait sur _requestSuccessNotif()
+      // appelant e.stopPropagation() pendant que son onclick="" tournait
+      // directement sur le bouton, avant que l'événement ne remonte jusqu'ici.
+      // Le dispatcher délégué (zone 0b) écoute sur document, donc son propre
+      // gestionnaire tourne APRÈS ce listener-ci dans l'ordre de bulle —
+      // stopPropagation() y arriverait trop tard. Garde plutôt ici, à la
+      // source, indépendante de l'ordre d'écoute.
+      const dismissSuccess = (e) => {
+        if (e.target.closest('#successNotifBtn')) return;
         successEl.classList.remove('show');
         successEl.removeEventListener('click', dismissSuccess);
         showScreen('screenRadar');
@@ -7979,10 +7985,10 @@ async function _doOpenEnvelope() {
       const readCountEl = document.getElementById('detailReadCount');
       if (readCountEl) {
         if (wasFirst) {
-          readCountEl.innerHTML = `<span style="color:rgba(var(--accent-green-rgb),.9);">${t.detail_first_reader || t.detail_first_reader}</span>`;
+          readCountEl.innerHTML = `<span class="first-reader-badge">${t.detail_first_reader || t.detail_first_reader}</span>`;
         } else {
           const prev = selectedGhost.openCount || 0;
-          readCountEl.innerHTML = `<span style="color:var(--spirit-dim);">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;
+          readCountEl.innerHTML = `<span class="already-read-badge">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;
         }
         readCountEl.style.display = 'block';
       }
@@ -8094,7 +8100,7 @@ function _buildScratchCanvas() {
   const hint = document.createElement('div');
   hint.id = 'scratchHint';
   hint.style.cssText = `position:absolute;bottom:0;left:0;width:100%;height:58px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:11;pointer-events:none;background:none;transition:opacity .3s;`;
-  hint.innerHTML = `<span style="font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;">🖐</span><span style="font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(var(--ghost-blue-rgb),1),0 1px 4px rgba(0,0,0,1);">Frottez pour révéler...</span>`;
+  hint.innerHTML = `<span class="scratch-hint-hand">🖐</span><span class="scratch-hint-text">Frottez pour révéler...</span>`;
   zone.appendChild(hint);
 
   // Dessiner le voile
@@ -8197,7 +8203,7 @@ function showDistanceError(dist) {
   setTimeout(() => btn.classList.remove('btn-shake'), 600);
   // Message de distance
   const meters = Math.round(dist);
-  hint.innerHTML = `<span style="color:rgba(255,120,80,.9);font-size:13px;">🌫️ Le sceau résiste encore<br><span style="font-size:11px;opacity:.7;">encore ${meters}m à parcourir</span></span>`;
+  hint.innerHTML = `<span class="scratch-locked-hint">🌫️ Le sceau résiste encore<br><span class="scratch-locked-hint-sub">encore ${meters}m à parcourir</span></span>`;
   // Reset après 4s
   setTimeout(() => {
     hint.textContent = t.detail_sealed_hint;
@@ -8226,7 +8232,7 @@ function showOpenLimitWarning(remaining, onConfirm) {
     okBtn.style.display = 'none';
     premium.style.display = 'block';
   } else {
-    icon.innerHTML = remaining === 1 ? '⚠️' : '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;" aria-hidden="true">';
+    icon.innerHTML = remaining === 1 ? '⚠️' : '<img src="assets/brand/ghostub-mark-trace.svg" class="open-limit-icon-img" aria-hidden="true">';
     document.getElementById('openLimitTitle').textContent = remaining === 1 ? t.open_limit_title_last : t.open_limit_title_remaining.replace('{n}', remaining).replace('{s}', remaining > 1 ? 's' : '');
     sub.innerHTML = remaining === 1
       ? t.open_limit_sub_last
@@ -9316,7 +9322,7 @@ function _initDepositMiniMap() {
   // Marqueur position — version originale, simple et fiable
   L.marker([userLat, userLng], {
     icon: L.divIcon({
-      html: '<div style="width:14px;height:14px;background:#f5d491;border-radius:50%;border:2px solid rgba(255,240,200,.9);box-shadow:0 0 12px rgba(232,160,48,.8);"></div>',
+      html: '<div class="dep-mini-map-user-dot"></div>',
       iconSize: [14, 14], iconAnchor: [7, 7], className: ''
     })
   }).addTo(_depositMiniMap);
@@ -9512,7 +9518,7 @@ function spawnObParticles() {
     p.style.opacity = (0.4 + Math.random() * 0.6).toFixed(2);
     const sym = syms[i % syms.length];
     if (sym === 'mark') {
-      p.innerHTML = '<img src="assets/brand/ghostub-mark-trace.svg" style="width:1em;height:1em;display:block;" aria-hidden="true">';
+      p.innerHTML = '<img src="assets/brand/ghostub-mark-trace.svg" class="ob-particle-mark-icon" aria-hidden="true">';
     } else {
       p.textContent = sym;
     }
@@ -9853,6 +9859,19 @@ const ACTIONS = {
   closePublicProfileModal: () => document.getElementById('publicProfileModal').remove(),
   joinGhostub: () => { window.location.href = 'https://pimpimshop33-dotcom.github.io/ghostub/'; },
   renewBusinessGhost: (el) => renewBusinessGhost(el.dataset.id),
+
+  // Zone 10 — reste (bannières, toasts, notifications)
+  applyUpdate: () => applyUpdate(),
+  requestSuccessNotif: (el, event) => _requestSuccessNotif(event),
+  setTraceColor: (el) => setTraceColor(el.dataset.arg),
+  clearAudio: () => clearAudio(),
+  clearPhoto: () => clearPhoto(),
+  clearVideo: () => clearVideo(),
+  removeAttachment: (el) => removeAttachment(Number(el.dataset.arg)),
+  triggerVideo: () => triggerVideo(),
+  triggerAttachments: () => triggerAttachments(),
+  followChain: () => followChain(),
+  copyDedicatedLink: () => navigator.clipboard.writeText(window._lastDedicatedLink).then(() => showToast('link', 'Lien copié !')),
 };
 
 function _dispatchAction(el, event) {

@@ -69,9 +69,9 @@
 </div>
 
 <!-- Bannière mise à jour -->
-<div class="update-banner" id="updateBanner" role="status" aria-live="polite" style="display:none;">
+<div class="update-banner" id="updateBanner" role="status" aria-live="polite">
   <span data-i18n="misc_update_banner">🔄 Nouvelle version disponible</span>
-  <button class="update-banner-btn" data-i18n="misc_update_btn" onclick="applyUpdate()">Mettre à jour</button>
+  <button class="update-banner-btn" data-i18n="misc_update_btn" data-action="applyUpdate">Mettre à jour</button>
 </div>
 
 <!-- Fond Bokeh urbain — scène nocturne cinématique -->
@@ -96,7 +96,7 @@
     <img class="success-ghost" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
     <div class="success-title" data-i18n="dep_success_title">Fantôme ancré</div>
     <div class="success-sub" id="successSubText" data-i18n="dep_success_sub">Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.</div>
-    <button id="successNotifBtn" onclick="window._requestSuccessNotif(event)" style="display:none;margin-top:18px;padding:10px 22px;background:rgba(122,184,245,.10);border:1px solid rgba(122,184,245,.28);border-radius:20px;color:rgba(122,184,245,.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation;transition:opacity .3s,color .3s,border-color .3s,background .3s;" data-i18n="dep_notif_btn">🔔 Savoir quand il est découvert</button>
+    <button id="successNotifBtn" data-action="requestSuccessNotif" class="success-notif-btn" data-i18n="dep_notif_btn">🔔 Savoir quand il est découvert</button>
     <div class="success-hint" data-i18n="dep_success_hint">Appuie pour continuer</div>
   </div>
 
