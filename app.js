@@ -9677,6 +9677,88 @@ window.guestExplore = async () => {
   }
 };
 
+// ══════════════════════════════════════════════════════════
+// DISPATCHER D'ÉVÉNEMENTS DÉLÉGUÉ (retrait de unsafe-inline, audit 4.6)
+// Remplace les attributs onclick/onkeydown/onchange/oninput inline (interdits
+// une fois 'unsafe-inline' retiré de script-src — GitHub Pages ne peut pas
+// générer de nonce par requête) par une délégation unique sur document.
+// Chaque élément interactif porte data-action="nomAction" (+ des data-*
+// pour ses arguments variables) ; ACTIONS est une whitelist explicite plutôt
+// qu'une résolution dynamique via window[name] — toute action déclenchable
+// depuis le markup reste visible ici en un coup d'œil, plus sûr et plus
+// auditable qu'un lookup générique.
+//
+// Convention data-* par type d'action :
+//   data-action        → un seul argument variable : lu dans data-arg
+//   data-action="nav"  → navigation générique (remplace tous les
+//                         showScreen('x');setNav('y')[;extra()] enchaînés) :
+//                         data-screen, data-nav (optionnel), data-extra
+//                         (optionnel, seule valeur actuelle : "hideDepositBadge")
+//   data-enter-action  → uniquement sur Entrée (jamais Espace), pour les
+//                         champs texte où Entrée valide (login, register…)
+//   data-change-action / data-input-action → événements change/input,
+//                         l'élément lui-même est passé (équivalent de `this`)
+// ══════════════════════════════════════════════════════════
+const ACTIONS = {
+  // Navigation écran générique — voir convention ci-dessus.
+  nav: (el) => {
+    const screen = el.dataset.screen;
+    const navId = el.dataset.nav;
+    if (screen) showScreen(screen);
+    if (navId) setNav(navId);
+    if (el.dataset.extra === 'hideDepositBadge') hideDepositBadge();
+  },
+  goBack: () => history.back(),
+};
 
+function _dispatchAction(el, event) {
+  const name = el.dataset.action;
+  const fn = ACTIONS[name];
+  if (!fn) { console.warn('[ghostub:dispatch] action inconnue:', name); return; }
+  fn(el, event);
+}
 
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-action]');
+  if (el) _dispatchAction(el, e);
+});
+
+// Entrée/Espace sur un élément data-action avec role="button" (remplace les
+// onkeydown="if(event.key==='Enter'||event.key===' ')fn()" du markup — un
+// <button> natif gère déjà Entrée/Espace nativement, donc exclu ici pour ne
+// pas déclencher l'action deux fois). Entrée seule (jamais Espace, qui doit
+// rester une espace tapée) sur data-enter-action pour les champs texte.
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    const el = e.target.closest('[data-action][role="button"]');
+    if (el && el.tagName !== 'BUTTON') {
+      e.preventDefault();
+      _dispatchAction(el, e);
+      return;
+    }
+  }
+  if (e.key === 'Enter') {
+    const enterEl = e.target.closest('[data-enter-action]');
+    if (enterEl) {
+      const fn = ACTIONS[enterEl.dataset.enterAction];
+      if (fn) fn(enterEl, e);
+    }
+  }
+});
+
+document.addEventListener('change', (e) => {
+  const el = e.target.closest('[data-change-action]');
+  if (el) {
+    const fn = ACTIONS[el.dataset.changeAction];
+    if (fn) fn(el, e);
+  }
+});
+
+document.addEventListener('input', (e) => {
+  const el = e.target.closest('[data-input-action]');
+  if (el) {
+    const fn = ACTIONS[el.dataset.inputAction];
+    if (fn) fn(el, e);
+  }
+});
 
