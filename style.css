@@ -1302,6 +1302,146 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 
 /* ── PROFILE ───────────────────────────────────────────── */
 .profile-hdr{text-align:center;padding:16px 0 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+/* CSP audit 4.6 : ex-style="" inline de l'écran Profile (zone 8) */
+.profile-share-row{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;}
+.profile-share-btn{font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;}
+.profile-year-btn{font-size:12px;color:rgba(var(--premium-rgb),.8);background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;}
+.profile-rank-block{text-align:center;margin-bottom:16px;padding:8px 0;}
+.profile-rank-value{font-size:20px;font-weight:700;color:var(--warm);letter-spacing:.3px;}
+.profile-rank-label{font-size:10px;color:var(--spirit-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;}
+.profile-leaderboard-panel{background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;}
+.profile-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
+.profile-panel-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;}
+.profile-panel-label-premium{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:10px;}
+.profile-panel-loading{font-size:12px;color:var(--spirit-dim);opacity:.6;}
+.profile-plan-info{margin-bottom:10px;}
+.profile-plan-info .profile-panel-label-premium{margin-bottom:4px;}
+.profile-panel-loading-italic{font-size:12px;color:var(--spirit-dim);font-style:italic;opacity:.6;text-align:center;padding:12px 0;}
+.profile-panel-content{font-size:13px;color:var(--warm-dim);}
+.profile-section-label{margin-bottom:8px;}
+.empreinte-section{margin-bottom:16px;}
+.empreinte-share-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.empreinte-map-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);}
+.empreinte-share-btn{font-size:11px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif;}
+.empreinte-map-wrap{width:100%;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);position:relative;}
+.empreinte-leaflet-fill{position:absolute;inset:0;z-index:1;}
+.empreinte-loader{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2;}
+.empreinte-loader-icon{font-size:28px;animation:ghostFloat 2s ease-in-out infinite;}
+.empreinte-loader-text{font-size:11px;color:var(--spirit-dim);letter-spacing:.5px;}
+.empreinte-stats-overlay{position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;gap:0;pointer-events:none;}
+.profile-biz-section{margin-bottom:16px;}
+/* Cards plans (Premium/Commerce) */
+.plan-feature-row{font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;}
+.plan-check-blue{color:rgba(var(--accent-green-rgb),.8);}
+.plan-check-gold{color:rgba(var(--premium-rgb),.8);}
+.plan-card{border-radius:16px;padding:16px;margin-bottom:10px;}
+.plan-card-premium{background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);}
+.plan-card-commerce{background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);box-shadow:0 0 22px rgba(var(--premium-rgb),.08);}
+.plan-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.plan-card-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+.plan-card-label-premium{color:rgba(var(--ghost-blue-rgb),.7);}
+.plan-card-label-commerce{color:rgba(var(--premium-rgb),.7);}
+.plan-card-price{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);}
+.plan-card-price-period{font-size:14px;color:var(--spirit-dim);font-style:normal;}
+.plan-card-icon-img{width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));}
+.plan-card-icon-emoji{font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));}
+.plan-card-features{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;}
+.plan-card-cta{width:100%;padding:13px;border-radius:13px;font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;}
+.plan-card-cta-premium{background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);color:var(--ether);}
+.plan-card-cta-commerce{background:linear-gradient(135deg,rgba(var(--premium-rgb),.2),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);color:rgba(var(--premium-rgb),.9);}
+.profile-code-section{padding:4px 0;}
+.profile-code-details{cursor:pointer;}
+.profile-code-summary{font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.3px;list-style:none;padding:6px 0;}
+.profile-code-row{display:flex;gap:8px;margin-top:8px;}
+.profile-code-input{flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;}
+.profile-code-activate-btn{padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;}
+.profile-code-error{font-size:11px;color:var(--red);margin-top:4px;min-height:14px;}
+.profile-settings-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.settings-row-label{flex:1;}
+.profile-lang-row{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;}
+.profile-lang-label{font-size:12px;color:var(--spirit-dim);}
+.lang-btn{padding:4px 12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--warm-dim);cursor:pointer;transition:all .2s;}
+.profile-danger-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding-bottom:8px;}
+.profile-danger-row-2{display:flex;gap:12px;justify-content:center;padding-bottom:24px;}
+.profile-export-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);padding:6px 12px;border-radius:8px;}
+.profile-logout-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;}
+.profile-delete-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.35);padding:6px 12px;border-radius:8px;}
+.profile-danger-sep{color:var(--border);font-size:12px;line-height:28px;}
+/* Liste favoris (toggleFavoritesList/removeFavorite, app.js) */
+.fav-empty{opacity:.5;font-style:italic;}
+.fav-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.fav-emoji{font-size:22px;flex-shrink:0;}
+.fav-info{flex:1;min-width:0;cursor:pointer;}
+.fav-location{font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-message{font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-remove-btn{background:none;border:none;color:rgba(var(--premium-rgb),.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;}
+/* Historique découvertes / fantômes déposés (carnet), app.js */
+.carnet-empty{opacity:.5;font-style:italic;}
+.carnet-loading{opacity:.5;}
+.carnet-reaction-loading{opacity:.4;font-size:11px;}
+.discovery-item{padding:6px 0;border-bottom:1px solid var(--border);}
+.discovery-item-row{display:flex;align-items:center;gap:8px;}
+.discovery-item-emoji{font-size:20px;}
+.discovery-item-info{flex:1;min-width:0;}
+.discovery-item-location{font-size:12px;color:var(--ether);}
+.discovery-item-date{font-size:11px;opacity:.5;}
+.deposited-item{padding:10px 0;border-bottom:1px solid var(--border);}
+.deposited-item-row{display:flex;align-items:center;gap:10px;}
+.deposited-item-emoji{font-size:22px;flex-shrink:0;}
+.deposited-item-info{flex:1;min-width:0;}
+.deposited-item-location{font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.deposited-item-meta{font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+.deposited-meta-expired{color:rgba(255,100,100,.6);}
+.deposited-meta-secret{color:rgba(168,100,255,.7);}
+.deposited-delete-btn{background:rgba(255,80,80,.07);border:1px solid rgba(255,100,100,.25);border-radius:10px;color:rgba(255,100,100,.6);font-size:13px;padding:6px 10px;cursor:pointer;flex-shrink:0;transition:all .2s;}
+.deposited-delete-btn:hover{background:rgba(255,80,80,.15);}
+.deposited-carnet-row{text-align:right;margin-top:4px;}
+/* Modale profil public (showPublicProfileModal, app.js) — CSP audit 4.6 */
+.ppm-close-btn{position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:rgba(var(--ghost-blue-rgb),.5);cursor:pointer;}
+.ppm-avatar-initial{font-size:52px;margin-bottom:12px;}
+.ppm-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);margin-bottom:4px;}
+.ppm-subtitle{font-size:12px;color:var(--spirit-dim);margin-bottom:28px;}
+.ppm-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:340px;margin-bottom:24px;}
+.ppm-stat-box{background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:14px;padding:16px;text-align:center;}
+.ppm-stat-num{font-size:28px;font-weight:700;color:var(--ether);}
+.ppm-stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-top:4px;}
+.ppm-section-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:12px;align-self:flex-start;max-width:340px;width:100%;}
+.ppm-map{width:100%;max-width:340px;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);margin-bottom:24px;}
+.ppm-join-btn{background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.18),rgba(var(--ghost-blue-rgb),.06));border:1px solid rgba(var(--ghost-blue-rgb),.35);border-radius:14px;color:rgba(var(--ghost-blue-rgb),.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;}
+/* Bug préexistant conservé tel quel (non corrigé, hors périmètre CSP) :
+   justify-content:height:100% est une valeur invalide, silencieusement
+   ignorée par le parseur CSS — déjà le cas avec l'ancien style="" inline. */
+.ppm-map-empty{display:flex;align-items:center;justify-content:height:100%;font-size:12px;color:rgba(var(--ghost-blue-rgb),.4);}
+.ppm-marker-emoji{font-size:18px;}
+/* Dashboard commerçant (loadBizDashboard, app.js) */
+.biz-card{background:rgba(var(--premium-rgb),.04);border:1px solid rgba(var(--premium-rgb),.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.biz-card-row{display:flex;align-items:flex-start;gap:10px;}
+.biz-card-emoji{font-size:22px;flex-shrink:0;}
+.biz-card-info{flex:1;min-width:0;}
+.biz-card-title{font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.biz-card-location{font-size:11px;color:var(--spirit-dim);margin-top:2px;}
+.biz-card-meta{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
+.biz-opens{font-size:13px;font-weight:600;}
+.biz-opens-high{color:rgba(var(--accent-green-rgb),.9);}
+.biz-opens-mid{color:rgba(var(--premium-rgb),.8);}
+.biz-opens-low{color:var(--spirit-dim);}
+.biz-expiry-soon{color:rgba(255,160,60,.9);font-size:11px;}
+.biz-expiry-expired{color:rgba(255,100,100,.7);font-size:11px;}
+.biz-expiry-normal{color:var(--spirit-dim);font-size:11px;}
+.biz-expired-badge{color:rgba(255,100,100,.6);font-size:11px;}
+.biz-renew-btn{width:100%;margin-top:10px;padding:8px;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.3);border-radius:10px;color:rgba(var(--premium-rgb),.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;}
+.biz-empty{opacity:.5;font-style:italic;text-align:center;padding:12px 0;}
+/* Classement (loadLeaderboard, app.js) */
+.leaderboard-msg{font-size:12px;color:var(--spirit-dim);}
+.leaderboard-msg-italic{font-size:12px;color:var(--spirit-dim);font-style:italic;}
+.leaderboard-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.leaderboard-row--me{background:rgba(var(--ghost-blue-rgb),.05);border-radius:8px;padding:7px 8px;margin:0 -8px;}
+.leaderboard-medal{font-size:16px;width:22px;text-align:center;flex-shrink:0;}
+.leaderboard-info{flex:1;min-width:0;}
+.leaderboard-name{font-size:13px;color:var(--warm-dim);font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.leaderboard-name--me{color:var(--ether);font-weight:600;}
+.leaderboard-ghosts{font-size:11px;color:var(--spirit-dim);}
+.leaderboard-resonances{font-size:13px;color:rgba(var(--ghost-blue-rgb),.7);flex-shrink:0;}
 /* Anneau dégradé animé autour du Trace (Lot J1) — rotation lente en continu,
    indépendante de l'état Premium (cf. le style dynamique appliqué à
    .profile-avatar-big lui-même dans updatePremiumUI()). */
@@ -1399,6 +1539,13 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .stat-card--sm{gap:3px;padding:10px 6px;background:var(--surface);border:1px solid var(--border);border-radius:13px;}
 .stat-card--sm .stat-card-num{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);color:var(--warm);line-height:1;}
 .stat-card--sm .stat-card-label{font-size:var(--text-xs);color:var(--spirit-dim);letter-spacing:.5px;}
+/* CSP audit 4.6 : ex-wrapperStyle/numStyle/labelStyle inline de renderStatCard() */
+.stat-card--clickable{cursor:pointer;}
+.stat-card--green{border-color:rgba(var(--accent-green-rgb),.25);background:rgba(var(--accent-green-rgb),.04);}
+.stat-card-num--green{color:rgba(var(--accent-green-rgb),.9);}
+.stat-card-label--green{color:rgba(var(--accent-green-rgb),.55);}
+.stat-card--gold{border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);}
+.stat-card-label--gold{color:rgba(var(--premium-rgb),.7);}
 .lang-btn.active{background:rgba(var(--spirit-rgb),.12);border-color:rgba(var(--spirit-rgb),.35);color:var(--ether);}
 .logout-btn{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,80,80,.3);border-radius:13px;color:rgba(255,100,100,.7);font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);cursor:pointer;transition:all .2s;margin-top:8px;}
 .logout-btn:hover{background:rgba(255,80,80,.08);}

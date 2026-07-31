@@ -1367,47 +1367,46 @@ window.setLang = (lang) => {
 function renderStatCard({ variant='lg', highlight=false, id=null, count=0,
                            icon, iconType='text', i18nKey, label,
                            onClick=null, ariaLabel=null,
-                           wrapperStyle='', numStyle='', labelStyle='' }) {
+                           wrapperClass='', numClass='', labelClass='' }) {
   const numContent = count == null ? '&nbsp;' : count;
   const iconHTML = iconType === 'img'
     ? `<img class="stat-card-icon" src="${icon}" aria-hidden="true">`
     : `<div class="stat-card-icon" aria-hidden="true">${icon}</div>`;
-  const style = (onClick ? 'cursor:pointer;' : '') + wrapperStyle;
+  const wrapperClasses = `stat-card stat-card--${variant}${highlight ? ' stat-card--highlight' : ''}${onClick ? ' stat-card--clickable' : ''}${wrapperClass ? ' ' + wrapperClass : ''}`;
   return `
-    <div class="stat-card stat-card--${variant}${highlight ? ' stat-card--highlight' : ''}"
+    <div class="${wrapperClasses}"
          role="listitem"
-         ${onClick ? `onclick="${onClick}"` : ''}
-         ${style ? `style="${style}"` : ''}
+         ${onClick ? `data-action="${onClick}"` : ''}
          ${ariaLabel ? `aria-label="${ariaLabel}"` : ''}>
-      <div class="stat-card-num"${id ? ` id="${id}"` : ''}${numStyle ? ` style="${numStyle}"` : ''}>${numContent}</div>
+      <div class="stat-card-num${numClass ? ' ' + numClass : ''}"${id ? ` id="${id}"` : ''}>${numContent}</div>
       ${iconHTML}
-      <div class="stat-card-label" data-i18n="${i18nKey}"${labelStyle ? ` style="${labelStyle}"` : ''}>${label}</div>
+      <div class="stat-card-label${labelClass ? ' ' + labelClass : ''}" data-i18n="${i18nKey}">${label}</div>
     </div>`;
 }
 
 const EMPREINTE_CARDS = [
   { variant:'lg', id:'statDeposited', count:0, iconType:'img',
     icon:'assets/brand/ghostub-mark-trace.svg', i18nKey:'empreinte_invoques',
-    label:'Invoqués', onClick:'toggleDepositedList()',
+    label:'Invoqués', onClick:'toggleDepositedList',
     ariaLabel:'Voir mes fantômes déposés' },
   { variant:'lg', highlight:true, id:'statDiscovered', count:0, iconType:'text',
     icon:'🔮', i18nKey:'empreinte_sceaux', label:'Sceaux brisés',
-    onClick:'toggleDiscoveryHistory()', ariaLabel:'Voir les fantômes découverts' },
+    onClick:'toggleDiscoveryHistory', ariaLabel:'Voir les fantômes découverts' },
   { variant:'lg', id:'statResonances', count:0, iconType:'text',
     icon:'✦', i18nKey:'empreinte_resonances', label:'Résonances' },
   { variant:'sm', id:'statFavorites', count:0, iconType:'text',
     icon:'★', i18nKey:'empreinte_favoris', label:'Favoris',
-    onClick:'toggleFavoritesList()', ariaLabel:'Mes favoris' },
+    onClick:'toggleFavoritesList', ariaLabel:'Mes favoris' },
   { variant:'sm', id:'statFirstReader', count:0, iconType:'text',
     icon:'🥇', i18nKey:'empreinte_premier', label:'Premier lecteur',
-    wrapperStyle:'border-color:rgba(var(--accent-green-rgb),.25);background:rgba(var(--accent-green-rgb),.04);',
-    numStyle:'color:rgba(var(--accent-green-rgb),.9);',
-    labelStyle:'color:rgba(var(--accent-green-rgb),.55);' },
+    wrapperClass:'stat-card--green',
+    numClass:'stat-card-num--green',
+    labelClass:'stat-card-label--green' },
   { variant:'sm', id:null, count:null, iconType:'text',
     icon:'🏆', i18nKey:'empreinte_classement', label:'Classement',
-    onClick:'toggleLeaderboard()', ariaLabel:'Classement',
-    wrapperStyle:'border-color:rgba(var(--premium-rgb),.25);background:rgba(var(--premium-rgb),.04);',
-    labelStyle:'color:rgba(var(--premium-rgb),.7);' },
+    onClick:'toggleLeaderboard', ariaLabel:'Classement',
+    wrapperClass:'stat-card--gold',
+    labelClass:'stat-card-label--gold' },
 ];
 
 function renderEmpreinteCards() {
@@ -4131,35 +4130,35 @@ async function loadBizDashboard() {
       const msExpiry  = msCreated + 30 * 24 * 3600 * 1000; // 1 mois
       const daysLeft  = Math.ceil((msExpiry - Date.now()) / 86400000);
       if (daysLeft <= 7 && daysLeft > 0) {
-        expiryHtml = `<span style="color:rgba(255,160,60,.9);font-size:11px;">⏰ ${_currentLang === 'fr' ? 'Expire dans' : 'Expires in'} ${daysLeft}${_currentLang === 'fr' ? 'j' : 'd'}</span>`;
+        expiryHtml = `<span class="biz-expiry-soon">⏰ ${_currentLang === 'fr' ? 'Expire dans' : 'Expires in'} ${daysLeft}${_currentLang === 'fr' ? 'j' : 'd'}</span>`;
       } else if (daysLeft <= 0) {
-        expiryHtml = `<span style="color:rgba(255,100,100,.7);font-size:11px;">⏳ ${_currentLang === 'fr' ? 'Expirée' : 'Expired'}</span>`;
+        expiryHtml = `<span class="biz-expiry-expired">⏳ ${_currentLang === 'fr' ? 'Expirée' : 'Expired'}</span>`;
       } else {
-        expiryHtml = `<span style="color:var(--spirit-dim);font-size:11px;">⏳ ${daysLeft}${_currentLang === 'fr' ? 'j restants' : 'd left'}</span>`;
+        expiryHtml = `<span class="biz-expiry-normal">⏳ ${daysLeft}${_currentLang === 'fr' ? 'j restants' : 'd left'}</span>`;
       }
     }
 
     // Badge ouvertures
-    const opensColor = opens >= 10 ? 'rgba(var(--accent-green-rgb),.9)' : opens >= 3 ? 'rgba(var(--premium-rgb),.8)' : 'var(--spirit-dim)';
+    const opensClass = opens >= 10 ? 'biz-opens-high' : opens >= 3 ? 'biz-opens-mid' : 'biz-opens-low';
 
     html += `
-      <div style="background:rgba(var(--premium-rgb),.04);border:1px solid rgba(var(--premium-rgb),.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
-        <div style="display:flex;align-items:flex-start;gap:10px;">
-          <span style="font-size:22px;flex-shrink:0;">🏪</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;">${title}</div>
-            <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;">${location}</div>
-            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
-              <span style="color:${opensColor};font-size:13px;font-weight:600;">👁 ${opens} ${_currentLang === 'fr' ? 'ouverture' + (opens > 1 ? 's' : '') : 'open' + (opens > 1 ? 's' : '')}</span>
+      <div class="biz-card">
+        <div class="biz-card-row">
+          <span class="biz-card-emoji">🏪</span>
+          <div class="biz-card-info">
+            <div class="biz-card-title">${title}</div>
+            <div class="biz-card-location">${location}</div>
+            <div class="biz-card-meta">
+              <span class="biz-opens ${opensClass}">👁 ${opens} ${_currentLang === 'fr' ? 'ouverture' + (opens > 1 ? 's' : '') : 'open' + (opens > 1 ? 's' : '')}</span>
               ${expiryHtml}
-              ${expired ? (_currentLang === 'fr' ? '<span style="color:rgba(255,100,100,.6);font-size:11px;">Expirée</span>' : '<span style="color:rgba(255,100,100,.6);font-size:11px;">Expired</span>') : ''}
+              ${expired ? (_currentLang === 'fr' ? '<span class="biz-expired-badge">Expirée</span>' : '<span class="biz-expired-badge">Expired</span>') : ''}
             </div>
           </div>
         </div>
-        ${!expired ? `<button onclick="renewBusinessGhost('${escapeHTML(id)}')" style="width:100%;margin-top:10px;padding:8px;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.3);border-radius:10px;color:rgba(var(--premium-rgb),.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;">${_currentLang === 'fr' ? '↻ Renouveler pour 1 mois' : '↻ Renew for 1 month'}</button>` : ''}
+        ${!expired ? `<button data-action="renewBusinessGhost" data-id="${escapeHTML(id)}" class="biz-renew-btn">${_currentLang === 'fr' ? '↻ Renouveler pour 1 mois' : '↻ Renew for 1 month'}</button>` : ''}
       </div>`;
   });
-  content.innerHTML = html || `<div style="opacity:.5;font-style:italic;text-align:center;padding:12px 0;">${_currentLang === 'fr' ? 'Aucune offre commerce active' : 'No active commerce offers'}</div>`;
+  content.innerHTML = html || `<div class="biz-empty">${_currentLang === 'fr' ? 'Aucune offre commerce active' : 'No active commerce offers'}</div>`;
 }
 
 window.renewBusinessGhost = async (ghostId) => {
@@ -4194,7 +4193,7 @@ window.toggleCarnetEntry = async (id, withReactions, btn) => {
   const reactEl = document.getElementById('carnet-reactions-' + id);
   if (!reactEl) return;
   if (_carnetReactionsCache[id]) { reactEl.innerHTML = _carnetReactionsCache[id]; return; }
-  reactEl.innerHTML = `<span style="opacity:.4;font-size:11px;">${t.loading || 'Chargement…'}</span>`;
+  reactEl.innerHTML = `<span class="carnet-reaction-loading">${t.loading || 'Chargement…'}</span>`;
   try {
     const snap = await getDocs(query(collection(db, COLL.REPLIES), where('ghostId', '==', id)));
     const counts = {};
@@ -4205,7 +4204,7 @@ window.toggleCarnetEntry = async (id, withReactions, btn) => {
     const entries = Object.entries(counts);
     const html = entries.length
       ? entries.map(([txt, n]) => `<span class="carnet-reaction-pill">✦ ${escapeHTML(txt)}${n > 1 ? ' ×' + n : ''}</span>`).join('')
-      : `<span style="opacity:.4;font-size:11px;">${t.carnet_no_reactions}</span>`;
+      : `<span class="carnet-reaction-loading">${t.carnet_no_reactions}</span>`;
     _carnetReactionsCache[id] = html;
     reactEl.innerHTML = html;
   } catch(e) {
@@ -4222,8 +4221,8 @@ window.toggleDiscoveryHistory = async () => {
   document.getElementById('depositedList').style.display = 'none';
   panel.style.display = 'block';
   const ids = getDiscoveredIds();
-  if (ids.length === 0) { list.innerHTML = `<div style="opacity:.5;font-style:italic;">${t.profile_no_discoveries || 'Aucune découverte encore…'}</div>`; return; }
-  list.innerHTML = `<div style="opacity:.5;">${t.loading || 'Chargement…'}</div>`;
+  if (ids.length === 0) { list.innerHTML = `<div class="carnet-empty">${t.profile_no_discoveries || 'Aucune découverte encore…'}</div>`; return; }
+  list.innerHTML = `<div class="carnet-loading">${t.loading || 'Chargement…'}</div>`;
   try {
     const results = [];
     for (const id of ids.slice(-20).reverse()) { // 20 dernières
@@ -4231,22 +4230,22 @@ window.toggleDiscoveryHistory = async () => {
         const d = await getDoc(doc(db, COLL.GHOSTS, id));
         if (d.exists()) {
           const g = d.data();
-          results.push(`<div style="padding:6px 0;border-bottom:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:20px;">${_ghostEmojiHTML(g)}</span>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12px;color:var(--ether);">${escapeHTML(g.location||t.detail_location_unknown)}</div>
-                <div style="font-size:11px;opacity:.5;">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB') : ''}</div>
+          results.push(`<div class="discovery-item">
+            <div class="discovery-item-row">
+              <span class="discovery-item-emoji">${_ghostEmojiHTML(g)}</span>
+              <div class="discovery-item-info">
+                <div class="discovery-item-location">${escapeHTML(g.location||t.detail_location_unknown)}</div>
+                <div class="discovery-item-date">${g.createdAt ? new Date(g.createdAt.seconds*1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-GB') : ''}</div>
               </div>
-              <button class="carnet-toggle" onclick="toggleCarnetEntry('${escapeHTML(id)}', false, this)">${t.carnet_read_btn}</button>
+              <button class="carnet-toggle" data-action="toggleCarnetEntry" data-id="${escapeHTML(id)}" data-reactions="false">${t.carnet_read_btn}</button>
             </div>
-            <div class="carnet-reading" id="carnet-${escapeHTML(id)}" style="display:none;">${escapeHTML(g.message || '')}</div>
+            <div class="carnet-reading u-hidden" id="carnet-${escapeHTML(id)}">${escapeHTML(g.message || '')}</div>
           </div>`);
         }
       } catch(e) { console.warn('[ghostub:toggleDiscoveryHistory]', e); }
     }
-    list.innerHTML = results.length ? results.join('') : '<div style="opacity:.5;font-style:italic;">Données indisponibles</div>';
-  } catch(e) { list.innerHTML = '<div style="opacity:.5;">Erreur de chargement</div>'; }
+    list.innerHTML = results.length ? results.join('') : '<div class="carnet-empty">Données indisponibles</div>';
+  } catch(e) { list.innerHTML = '<div class="carnet-loading">Erreur de chargement</div>'; }
 };
 
 // ── MES FANTÔMES DÉPOSÉS ────────────────────────────────
@@ -4258,7 +4257,7 @@ window.toggleDepositedList = async () => {
   document.getElementById('discoveryHistory').style.display = 'none';
   panel.style.display = 'block';
   if (!currentUser) return;
-  content.innerHTML = `<div style="opacity:.5;">${t.loading || 'Chargement…'}</div>`;
+  content.innerHTML = `<div class="carnet-loading">${t.loading || 'Chargement…'}</div>`;
   try {
     const snap = await getDocs(query(
       collection(db, COLL.GHOSTS),
@@ -4267,7 +4266,7 @@ window.toggleDepositedList = async () => {
       limit(30)
     ));
     if (snap.empty) {
-      content.innerHTML = `<div style="opacity:.5;font-style:italic;">${t.profile_no_deposits || t.profile_no_ghost_deposited || 'Aucun fantôme déposé encore…'}</div>`;
+      content.innerHTML = `<div class="carnet-empty">${t.profile_no_deposits || t.profile_no_ghost_deposited || 'Aucun fantôme déposé encore…'}</div>`;
       return;
     }
     let html = '';
@@ -4278,25 +4277,25 @@ window.toggleDepositedList = async () => {
       const resonances = g.resonances || 0;
       const expired = isExpired(g);
       html += `
-        <div id="deposited-item-${escapeHTML(id)}" style="padding:10px 0;border-bottom:1px solid var(--border);">
-          <div style="display:flex;align-items:center;gap:10px;">
-            <span style="font-size:22px;flex-shrink:0;">${_ghostEmojiHTML(g)}</span>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(g.location||t.detail_location_unknown)}</div>
-              <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;">
+        <div id="deposited-item-${escapeHTML(id)}" class="deposited-item">
+          <div class="deposited-item-row">
+            <span class="deposited-item-emoji">${_ghostEmojiHTML(g)}</span>
+            <div class="deposited-item-info">
+              <div class="deposited-item-location">${escapeHTML(g.location||t.detail_location_unknown)}</div>
+              <div class="deposited-item-meta">
                 <span>${date}</span>
                 <span>✦ ${resonances} résonance${resonances > 1 ? 's' : ''}</span>
                 <span>👁 ${g.openCount || 0} ${_currentLang === 'fr' ? 'ouverture' + ((g.openCount || 0) > 1 ? 's' : '') : 'open' + ((g.openCount || 0) > 1 ? 's' : '')}</span>
-                ${expired ? '<span style="color:rgba(255,100,100,.6);">⏳ Expiré</span>' : ''}
-                ${g.secret ? '<span style="color:rgba(168,100,255,.7);">🔮 Secret</span>' : ''}
+                ${expired ? '<span class="deposited-meta-expired">⏳ Expiré</span>' : ''}
+                ${g.secret ? '<span class="deposited-meta-secret">🔮 Secret</span>' : ''}
               </div>
             </div>
-            <button onclick="deleteOneGhost('${escapeHTML(id)}')" aria-label="Supprimer ce fantôme" style="background:rgba(255,80,80,.07);border:1px solid rgba(255,100,100,.25);border-radius:10px;color:rgba(255,100,100,.6);font-size:13px;padding:6px 10px;cursor:pointer;flex-shrink:0;transition:all .2s;" onmouseover="this.style.background='rgba(255,80,80,.15)'" onmouseout="this.style.background='rgba(255,80,80,.07)'">🗑</button>
+            <button data-action="deleteOneGhost" data-id="${escapeHTML(id)}" aria-label="Supprimer ce fantôme" class="deposited-delete-btn">🗑</button>
           </div>
-          <div style="text-align:right;margin-top:4px;">
-            <button class="carnet-toggle" onclick="toggleCarnetEntry('${escapeHTML(id)}', true, this)">${t.carnet_read_btn}</button>
+          <div class="deposited-carnet-row">
+            <button class="carnet-toggle" data-action="toggleCarnetEntry" data-id="${escapeHTML(id)}" data-reactions="true">${t.carnet_read_btn}</button>
           </div>
-          <div class="carnet-reading" id="carnet-${escapeHTML(id)}" style="display:none;">
+          <div class="carnet-reading u-hidden" id="carnet-${escapeHTML(id)}">
             ${escapeHTML(g.message || '')}
             <div class="carnet-reactions" id="carnet-reactions-${escapeHTML(id)}"></div>
           </div>
@@ -4304,7 +4303,7 @@ window.toggleDepositedList = async () => {
     });
     content.innerHTML = html;
   } catch(e) {
-    content.innerHTML = '<div style="opacity:.5;">Erreur de chargement</div>';
+    content.innerHTML = '<div class="carnet-loading">Erreur de chargement</div>';
   }
 };
 
@@ -6037,17 +6036,17 @@ window.toggleFavoritesList = async () => {
   panel.style.display = 'block';
   const favs = getFavorites();
   if (favs.length === 0) {
-    content.innerHTML = `<div style="opacity:.5;font-style:italic;">${t.misc_no_favorites || 'Aucun favori encore'}</div>`;
+    content.innerHTML = `<div class="fav-empty">${t.misc_no_favorites || 'Aucun favori encore'}</div>`;
     return;
   }
   content.innerHTML = favs.map(f => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:22px;flex-shrink:0;">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
-      <div style="flex:1;min-width:0;cursor:pointer;" onclick="openGhost('${escapeHTML(f.id)}')">
-        <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
-        <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
+    <div class="fav-row">
+      <span class="fav-emoji">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
+      <div class="fav-info" data-action="openGhost" data-id="${escapeHTML(f.id)}">
+        <div class="fav-location">${escapeHTML(f.location)}</div>
+        <div class="fav-message">"${escapeHTML(f.message)}"</div>
       </div>
-      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(var(--premium-rgb),.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
+      <button data-action="removeFavorite" data-id="${escapeHTML(f.id)}" aria-label="Retirer des favoris" class="fav-remove-btn">★</button>
     </div>`).join('');
 };
 
@@ -6059,16 +6058,16 @@ window.removeFavorite = (ghostId) => {
   const content = document.getElementById('favoritesListContent');
   if (!content) return;
   if (favs.length === 0) {
-    content.innerHTML = `<div style="opacity:.5;font-style:italic;">${t.misc_no_favorites || 'Aucun favori encore'}</div>`;
+    content.innerHTML = `<div class="fav-empty">${t.misc_no_favorites || 'Aucun favori encore'}</div>`;
   } else {
     content.innerHTML = favs.map(f => `
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-      <span style="font-size:22px;flex-shrink:0;">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
-      <div style="flex:1;min-width:0;cursor:pointer;" onclick="openGhost('${escapeHTML(f.id)}')">
-        <div style="font-size:13px;color:var(--ether);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(f.location)}</div>
-        <div style="font-size:11px;color:var(--spirit-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">"${escapeHTML(f.message)}"</div>
+    <div class="fav-row">
+      <span class="fav-emoji">${f.emoji && f.emoji !== '👻' ? escapeHTML(f.emoji) : _BRAND_MARK_HTML}</span>
+      <div class="fav-info" data-action="openGhost" data-id="${escapeHTML(f.id)}">
+        <div class="fav-location">${escapeHTML(f.location)}</div>
+        <div class="fav-message">"${escapeHTML(f.message)}"</div>
       </div>
-      <button onclick="removeFavorite('${escapeHTML(f.id)}')" aria-label="Retirer des favoris" style="background:none;border:none;color:rgba(var(--premium-rgb),.5);font-size:18px;cursor:pointer;flex-shrink:0;padding:4px;">★</button>
+      <button data-action="removeFavorite" data-id="${escapeHTML(f.id)}" aria-label="Retirer des favoris" class="fav-remove-btn">★</button>
     </div>`).join('');
   }
 };
@@ -6493,36 +6492,36 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs) =
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(6,6,14,.95);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;padding:32px 20px;overflow-y:auto;';
   const initial = name.charAt(0).toUpperCase();
   modal.innerHTML = `
-    <button onclick="document.getElementById('publicProfileModal').remove()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;color:rgba(var(--ghost-blue-rgb),.5);cursor:pointer;">✕</button>
-    <div style="font-size:52px;margin-bottom:12px;">${initial}</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);margin-bottom:4px;">${escapeHTML(name)}</div>
-    <div style="font-size:12px;color:var(--spirit-dim);margin-bottom:28px;">Chasseur de fantômes</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;max-width:340px;margin-bottom:24px;">
-      <div style="background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:14px;padding:16px;text-align:center;">
-        <div style="font-size:28px;font-weight:700;color:var(--ether);">${ghostCount}</div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-top:4px;">${t.profile_stat_deposited_label || 'Fantômes déposés'}</div>
+    <button data-action="closePublicProfileModal" class="ppm-close-btn">✕</button>
+    <div class="ppm-avatar-initial">${initial}</div>
+    <div class="ppm-name">${escapeHTML(name)}</div>
+    <div class="ppm-subtitle">Chasseur de fantômes</div>
+    <div class="ppm-stats-grid">
+      <div class="ppm-stat-box">
+        <div class="ppm-stat-num">${ghostCount}</div>
+        <div class="ppm-stat-label">${t.profile_stat_deposited_label || 'Fantômes déposés'}</div>
       </div>
-      <div style="background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:14px;padding:16px;text-align:center;">
-        <div style="font-size:28px;font-weight:700;color:var(--ether);">${totalOpens}</div>
-        <div style="font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-top:4px;">${t.profile_stat_opens_label || 'Ouvertures totales'}</div>
+      <div class="ppm-stat-box">
+        <div class="ppm-stat-num">${totalOpens}</div>
+        <div class="ppm-stat-label">${t.profile_stat_opens_label || 'Ouvertures totales'}</div>
       </div>
     </div>
-    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:12px;align-self:flex-start;max-width:340px;width:100%;">${t.profile_public_footprint || '🗺 Empreinte publique'}</div>
-    <div id="publicEmpreinteMap" style="width:100%;max-width:340px;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);margin-bottom:24px;"></div>
-    <button onclick="window.location.href='https://pimpimshop33-dotcom.github.io/ghostub/'" style="background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.18),rgba(var(--ghost-blue-rgb),.06));border:1px solid rgba(var(--ghost-blue-rgb),.35);border-radius:14px;color:rgba(var(--ghost-blue-rgb),.95);font-size:14px;padding:14px 24px;cursor:pointer;font-family:'Instrument Sans',sans-serif;width:100%;max-width:340px;">${t.profile_join_ghostub || '👻 Rejoindre Ghostub'}</button>
+    <div class="ppm-section-label">${t.profile_public_footprint || '🗺 Empreinte publique'}</div>
+    <div id="publicEmpreinteMap" class="ppm-map"></div>
+    <button data-action="joinGhostub" class="ppm-join-btn">${t.profile_join_ghostub || '👻 Rejoindre Ghostub'}</button>
   `;
   document.body.appendChild(modal);
   setTimeout(() => {
     const mapEl = document.getElementById('publicEmpreinteMap');
     if (!mapEl || !ghostDocs.length) return;
     const coords = ghostDocs.filter(d => d.data().lat && d.data().lng).map(d => [d.data().lat, d.data().lng]);
-    if (!coords.length) { mapEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:height:100%;font-size:12px;color:rgba(var(--ghost-blue-rgb),.4);">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
+    if (!coords.length) { mapEl.innerHTML = `<div class="ppm-map-empty">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
     const pubMap = L.map('publicEmpreinteMap', { zoomControl: false, attributionControl: false }).setView(coords[0], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM France' }).addTo(pubMap);
     coords.forEach(([lat, lng], i) => {
       const g = ghostDocs[i] && ghostDocs[i].data ? ghostDocs[i].data() : {};
       const emHtml = _ghostEmojiHTML(g);
-      L.marker([lat, lng], { icon: L.divIcon({ html: '<div style="font-size:18px;">' + emHtml + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(pubMap);
+      L.marker([lat, lng], { icon: L.divIcon({ html: '<div class="ppm-marker-emoji">' + emHtml + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(pubMap);
     });
     if (coords.length > 1) pubMap.fitBounds(coords, { padding: [20, 20], maxZoom: 14 });
     setTimeout(() => pubMap.invalidateSize(), 300);
@@ -6542,7 +6541,7 @@ window.toggleLeaderboard = async () => {
 window.loadLeaderboard = async () => {
   const el = document.getElementById('leaderboardContent');
   if (!el) return;
-  el.innerHTML = `<div style="font-size:12px;color:var(--spirit-dim);">${t.loading || 'Chargement…'}</div>`;
+  el.innerHTML = `<div class="leaderboard-msg">${t.loading || 'Chargement…'}</div>`;
   try {
     // Lire directement les compteurs dénormalisés sur users (1 requête légère)
     const snap = await getDocs(query(
@@ -6562,23 +6561,23 @@ window.loadLeaderboard = async () => {
       });
     });
     if (sorted.length === 0) {
-      el.innerHTML = `<div style="font-size:12px;color:var(--spirit-dim);font-style:italic;">${t.profile_no_hunters || 'Aucun chasseur encore…'}</div>`;
+      el.innerHTML = `<div class="leaderboard-msg-italic">${t.profile_no_hunters || 'Aucun chasseur encore…'}</div>`;
       return;
     }
     const medals = ['🥇','🥈','🥉'];
     el.innerHTML = sorted.map((s, i) => {
       const isMe = currentUser && s.name === (currentUser.displayName || currentUser.email);
-      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);${isMe ? 'background:rgba(var(--ghost-blue-rgb),.05);border-radius:8px;padding:7px 8px;margin:0 -8px;' : ''}">
-        <span style="font-size:16px;width:22px;text-align:center;flex-shrink:0;">${medals[i] || (i+1)+'.'}</span>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:13px;color:${isMe ? 'var(--ether)' : 'var(--warm-dim)'};font-weight:${isMe ? '600' : '400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(s.name)}${isMe ? ' (' + (t.profile_you || 'vous') + ')' : ''}</div>
-          <div style="font-size:11px;color:var(--spirit-dim);">${s.ghosts} ${_currentLang === 'fr' ? 'fantôme' + (s.ghosts > 1 ? 's' : '') : 'ghost' + (s.ghosts > 1 ? 's' : '')}</div>
+      return `<div class="leaderboard-row${isMe ? ' leaderboard-row--me' : ''}">
+        <span class="leaderboard-medal">${medals[i] || (i+1)+'.'}</span>
+        <div class="leaderboard-info">
+          <div class="leaderboard-name${isMe ? ' leaderboard-name--me' : ''}">${escapeHTML(s.name)}${isMe ? ' (' + (t.profile_you || 'vous') + ')' : ''}</div>
+          <div class="leaderboard-ghosts">${s.ghosts} ${_currentLang === 'fr' ? 'fantôme' + (s.ghosts > 1 ? 's' : '') : 'ghost' + (s.ghosts > 1 ? 's' : '')}</div>
         </div>
-        <div style="font-size:13px;color:rgba(var(--ghost-blue-rgb),.7);flex-shrink:0;">✦ ${s.resonances}</div>
+        <div class="leaderboard-resonances">✦ ${s.resonances}</div>
       </div>`;
     }).join('');
   } catch(e) {
-    el.innerHTML = `<div style="font-size:12px;color:var(--spirit-dim);">${t.profile_leaderboard_error || 'Impossible de charger le classement.'}</div>`;
+    el.innerHTML = `<div class="leaderboard-msg">${t.profile_leaderboard_error || 'Impossible de charger le classement.'}</div>`;
   }
 };
 
@@ -9831,6 +9830,29 @@ const ACTIONS = {
   closeMapSheet: (el, event) => closeMapSheet(event),
   mapSheetAction: () => _mapSheetAction(),
   renderStaticMap: () => renderStaticMap(),
+
+  // Zone 8 — Profile
+  shareMyProfile: () => shareMyProfile(),
+  generateYearCard: () => generateYearCard(),
+  shareEmpreinte: () => shareEmpreinte(),
+  startStripeCheckout: (el) => startStripeCheckout(el.dataset.arg),
+  activatePremium: () => activatePremium(),
+  toggleTheme: () => toggleTheme(),
+  enableNotifications: () => enableNotifications(),
+  setLang: (el) => setLang(el.dataset.arg),
+  exportMyData: () => exportMyData(),
+  logout: () => logout(),
+  deleteMyGhosts: () => deleteMyGhosts(),
+  toggleDepositedList: () => toggleDepositedList(),
+  toggleDiscoveryHistory: () => toggleDiscoveryHistory(),
+  toggleFavoritesList: () => toggleFavoritesList(),
+  toggleLeaderboard: () => toggleLeaderboard(),
+  removeFavorite: (el) => removeFavorite(el.dataset.id),
+  toggleCarnetEntry: (el) => toggleCarnetEntry(el.dataset.id, el.dataset.reactions === 'true', el),
+  deleteOneGhost: (el) => deleteOneGhost(el.dataset.id),
+  closePublicProfileModal: () => document.getElementById('publicProfileModal').remove(),
+  joinGhostub: () => { window.location.href = 'https://pimpimshop33-dotcom.github.io/ghostub/'; },
+  renewBusinessGhost: (el) => renewBusinessGhost(el.dataset.id),
 };
 
 function _dispatchAction(el, event) {

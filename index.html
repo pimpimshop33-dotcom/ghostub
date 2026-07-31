@@ -812,15 +812,15 @@
         <div class="profile-name-big" id="profileName">…</div>
         <!-- Teinte du Trace (Lot K) — personnalisation de l'avatar profil -->
         <div class="trace-color-picker" id="traceColorPicker" role="group" aria-label="Teinte de mon Trace"></div>
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap;">
-          <button onclick="shareMyProfile()" style="font-size:12px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_share_profile">↗ Partager mon profil</button>
-          <button onclick="generateYearCard()" id="yearCardBtn" style="font-size:12px;color:rgba(var(--premium-rgb),.8);background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:6px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;" data-i18n="profile_year_btn">✦ Mon année</button>
+        <div class="profile-share-row">
+          <button data-action="shareMyProfile" class="profile-share-btn" data-i18n="profile_share_profile">↗ Partager mon profil</button>
+          <button data-action="generateYearCard" id="yearCardBtn" class="profile-year-btn" data-i18n="profile_year_btn">✦ Mon année</button>
         </div>
       </div>
       <!-- ── RANG sous le nom ─────────────────────────── -->
-      <div style="text-align:center;margin-bottom:16px;padding:8px 0;">
-        <span id="statRank" style="font-size:20px;font-weight:700;color:var(--warm);letter-spacing:.3px;">—</span>
-        <div style="font-size:10px;color:var(--spirit-dim);text-transform:uppercase;letter-spacing:1.5px;margin-top:2px;" data-i18n="profile_rank">Rang</div>
+      <div class="profile-rank-block">
+        <span id="statRank" class="profile-rank-value">—</span>
+        <div class="profile-rank-label" data-i18n="profile_rank">Rang</div>
       </div>
 
       <!-- ── COLLECTION DE CARTES (Lot L) ────────────────── -->
@@ -838,146 +838,146 @@
       <div class="empreinte-trio" id="empreinteTrio"></div>
       <div class="empreinte-row" id="empreinteRow"></div>
       <!-- Panel classement inline -->
-      <div id="leaderboardPanel" style="display:none;background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:10px;" data-i18n="profile_top_hunters">🏆 Top chasseurs</div>
-        <div id="leaderboardContent"><div style="font-size:12px;color:var(--spirit-dim);opacity:.6;" data-i18n="loading">Chargement…</div></div>
+      <div id="leaderboardPanel" class="u-hidden profile-leaderboard-panel">
+        <div class="profile-panel-label-premium" data-i18n="profile_top_hunters">🏆 Top chasseurs</div>
+        <div id="leaderboardContent"><div class="profile-panel-loading" data-i18n="loading">Chargement…</div></div>
       </div>
 
       <!-- ── CARTE EMPREINTE ─────────────────────────── -->
-      <div id="empreinteSection" style="margin-bottom:16px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);" data-i18n="profile_map_section">🗺 Mon empreinte fantôme</div>
-          <button id="empreinteShareBtn" onclick="shareEmpreinte()" style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.7);background:rgba(var(--ghost-blue-rgb),.07);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;padding:4px 10px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:none;" data-i18n="profile_share_map_btn">↗ Partager</button>
+      <div id="empreinteSection" class="empreinte-section">
+        <div class="empreinte-share-row">
+          <div class="empreinte-map-label" data-i18n="profile_map_section">🗺 Mon empreinte fantôme</div>
+          <button id="empreinteShareBtn" data-action="shareEmpreinte" class="empreinte-share-btn u-hidden" data-i18n="profile_share_map_btn">↗ Partager</button>
         </div>
-        <div id="empreinteMap" style="width:100%;height:200px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--ghost-blue-rgb),.15);background:rgba(10,10,20,.8);position:relative;">
+        <div id="empreinteMap" class="empreinte-map-wrap">
           <!-- Div leaflet persistant — ne pas écraser avec innerHTML -->
-          <div id="empreinteLeaflet" style="position:absolute;inset:0;z-index:1;"></div>
-          <div id="empreinteLoader" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;z-index:2;">
-            <div style="font-size:28px;animation:ghostFloat 2s ease-in-out infinite;"><img src="assets/brand/ghostub-mark-trace.svg" style="width:1.5em;height:1.5em;display:inline-block;vertical-align:middle;" aria-hidden="true"></div>
-            <div style="font-size:11px;color:var(--spirit-dim);letter-spacing:.5px;" data-i18n="profile_map_loading">Chargement de votre empreinte…</div>
+          <div id="empreinteLeaflet" class="empreinte-leaflet-fill"></div>
+          <div id="empreinteLoader" class="empreinte-loader">
+            <div class="empreinte-loader-icon"><img src="assets/brand/ghostub-mark-trace.svg" class="brand-mark-icon" aria-hidden="true"></div>
+            <div class="empreinte-loader-text" data-i18n="profile_map_loading">Chargement de votre empreinte…</div>
           </div>
           <!-- Stats overlay en bas de la carte -->
-          <div id="empreinteStats" style="position:absolute;bottom:0;left:0;right:0;z-index:3;display:flex;gap:0;pointer-events:none;"></div>
+          <div id="empreinteStats" class="empreinte-stats-overlay"></div>
         </div>
       </div>
       <!-- ── TABLEAU DE BORD COMMERÇANT (Premium) ──────── -->
-      <div id="bizDashboardSection" style="display:none;margin-bottom:16px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.6);margin-bottom:8px;" data-i18n="profile_biz_section">🏪 Mes offres Commerce</div>
+      <div id="bizDashboardSection" class="u-hidden profile-biz-section">
+        <div class="profile-panel-label-premium" data-i18n="profile_biz_section">🏪 Mes offres Commerce</div>
         <div id="bizDashboardContent">
-          <div style="font-size:12px;color:var(--spirit-dim);font-style:italic;opacity:.6;text-align:center;padding:12px 0;" data-i18n="loading">Chargement…</div>
+          <div class="profile-panel-loading-italic" data-i18n="loading">Chargement…</div>
         </div>
       </div>
-      <div id="discoveryHistory" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;" data-i18n="profile_discoveries_panel">Mes découvertes</div>
-        <div id="discoveryHistoryList" style="font-size:13px;color:var(--warm-dim);"></div>
+      <div id="discoveryHistory" class="u-hidden profile-panel">
+        <div class="profile-panel-label" data-i18n="profile_discoveries_panel">Mes découvertes</div>
+        <div id="discoveryHistoryList" class="profile-panel-content"></div>
       </div>
       <!-- Liste des fantômes déposés -->
-      <div id="depositedList" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;" data-i18n="profile_deposited_panel">Mes fantômes déposés</div>
-        <div id="depositedListContent" style="font-size:13px;color:var(--warm-dim);"></div>
+      <div id="depositedList" class="u-hidden profile-panel">
+        <div class="profile-panel-label" data-i18n="profile_deposited_panel">Mes fantômes déposés</div>
+        <div id="depositedListContent" class="profile-panel-content"></div>
       </div>
       <!-- Favoris -->
-      <div id="favoritesList" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;" data-i18n="profile_favorites_panel">★ Mes favoris</div>
-        <div id="favoritesListContent" style="font-size:13px;color:var(--warm-dim);"></div>
+      <div id="favoritesList" class="u-hidden profile-panel">
+        <div class="profile-panel-label" data-i18n="profile_favorites_panel">★ Mes favoris</div>
+        <div id="favoritesListContent" class="profile-panel-content"></div>
       </div>
-      <div class="section-label" style="margin-bottom:8px;" data-i18n="profile_account_section">Mon compte</div>
+      <div class="section-label profile-section-label" data-i18n="profile_account_section">Mon compte</div>
 
       <!-- ── PLAN ACTUEL ─────────────────────────────────── -->
-      <div id="planInfo" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:4px;" data-i18n="profile_free_plan">Plan gratuit</div>
-        <div style="font-size:13px;color:var(--warm-dim);" data-i18n="profile_free_sub">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
+      <div id="planInfo" class="u-hidden profile-panel profile-plan-info">
+        <div class="profile-panel-label-premium" data-i18n="profile_free_plan">Plan gratuit</div>
+        <div class="profile-panel-content" data-i18n="profile_free_sub">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
       </div>
 
       <!-- ── CARDS PLANS (visibles si Free) ─────────────────── -->
-      <div id="pricingSection" style="margin-bottom:10px;">
+      <div id="pricingSection" class="u-mb10">
         <!-- Premium — bordure légèrement lumineuse bleu spirit (Lot J2) -->
-        <div style="background:linear-gradient(160deg,rgba(var(--ghost-blue-rgb),.07),rgba(var(--ghost-blue-rgb),.02));border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--ghost-blue-rgb),.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="plan-card plan-card-premium">
+          <div class="plan-card-header">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--ghost-blue-rgb),.7);margin-bottom:2px;">✦ Chasseur Premium</div>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">0,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
+              <div class="plan-card-label plan-card-label-premium">✦ Chasseur Premium</div>
+              <div class="plan-card-price">0,99€ <span class="plan-card-price-period">/mois</span></div>
             </div>
-            <img src="assets/brand/ghostub-mark-trace.svg" style="width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.4));" aria-hidden="true">
+            <img src="assets/brand/ghostub-mark-trace.svg" class="plan-card-icon-img" aria-hidden="true">
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ouvertures illimitées</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Dépôt immédiat</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Vidéo + vocal 🎥</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Ghost dédié 💌</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Chaîne fantômes 🔗</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--accent-green-rgb),.8);">✓</span> Message futur 📅</div>
+          <div class="plan-card-features">
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Ouvertures illimitées</div>
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Dépôt immédiat</div>
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Vidéo + vocal 🎥</div>
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Ghost dédié 💌</div>
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Chaîne fantômes 🔗</div>
+            <div class="plan-feature-row"><span class="plan-check-blue">✓</span> Message futur 📅</div>
           </div>
-          <button id="stripeBtn" onclick="startStripeCheckout('premium')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.25),rgba(var(--ghost-blue-rgb),.1));border:1px solid rgba(var(--ghost-blue-rgb),.5);border-radius:13px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">✦ Devenir Chasseur Premium</button>
+          <button id="stripeBtn" data-action="startStripeCheckout" data-arg="premium" class="plan-card-cta plan-card-cta-premium">✦ Devenir Chasseur Premium</button>
         </div>
 
         <!-- Commerce — bordure légèrement lumineuse dorée (Lot J2) -->
-        <div style="background:linear-gradient(160deg,rgba(var(--premium-rgb),.06),rgba(var(--premium-rgb),.02));border:1px solid rgba(var(--premium-rgb),.25);border-radius:16px;padding:16px;margin-bottom:10px;box-shadow:0 0 22px rgba(var(--premium-rgb),.08);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div class="plan-card plan-card-commerce">
+          <div class="plan-card-header">
             <div>
-              <div style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:2px;">🏪 Plan Commerce</div>
-              <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);">4,99€ <span style="font-size:14px;color:var(--spirit-dim);font-style:normal;">/mois</span></div>
+              <div class="plan-card-label plan-card-label-commerce">🏪 Plan Commerce</div>
+              <div class="plan-card-price">4,99€ <span class="plan-card-price-period">/mois</span></div>
             </div>
-            <div style="font-size:32px;filter:drop-shadow(0 0 12px rgba(var(--premium-rgb),.4));">🏪</div>
+            <div class="plan-card-icon-emoji">🏪</div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:12px;">
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Tout Premium inclus</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Ghosts Commerce</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Code promo intégré</div>
-            <div style="font-size:11px;color:var(--warm-dim);display:flex;align-items:center;gap:5px;"><span style="color:rgba(var(--premium-rgb),.8);">✓</span> Dashboard ouvertures</div>
+          <div class="plan-card-features">
+            <div class="plan-feature-row"><span class="plan-check-gold">✓</span> Tout Premium inclus</div>
+            <div class="plan-feature-row"><span class="plan-check-gold">✓</span> Ghosts Commerce</div>
+            <div class="plan-feature-row"><span class="plan-check-gold">✓</span> Code promo intégré</div>
+            <div class="plan-feature-row"><span class="plan-check-gold">✓</span> Dashboard ouvertures</div>
           </div>
-          <button id="stripeBtnCommerce" onclick="startStripeCheckout('commerce')" style="width:100%;padding:13px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.2),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:13px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;touch-action:manipulation;">🏪 Activer le Plan Commerce</button>
+          <button id="stripeBtnCommerce" data-action="startStripeCheckout" data-arg="commerce" class="plan-card-cta plan-card-cta-commerce">🏪 Activer le Plan Commerce</button>
         </div>
 
         <!-- Code promo discret en bas -->
-        <div id="codeSection" style="padding:4px 0;">
-          <details style="cursor:pointer;">
-            <summary style="font-size:11px;color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.3px;list-style:none;padding:6px 0;" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
-            <div style="display:flex;gap:8px;margin-top:8px;">
-              <input id="premiumCode" class="form-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium" style="flex:1;font-size:13px !important;text-transform:uppercase;letter-spacing:1px;">
-              <button id="activateBtn" onclick="activatePremium()" style="padding:10px 14px;background:linear-gradient(135deg,rgba(var(--premium-rgb),.15),rgba(var(--premium-rgb),.06));border:1px solid rgba(var(--premium-rgb),.4);border-radius:12px;color:rgba(var(--premium-rgb),.9);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;min-height:44px;" data-i18n="profile_activate_btn">Activer</button>
+        <div id="codeSection" class="profile-code-section">
+          <details class="profile-code-details">
+            <summary class="profile-code-summary" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
+            <div class="profile-code-row">
+              <input id="premiumCode" class="form-input profile-code-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium">
+              <button id="activateBtn" data-action="activatePremium" class="profile-code-activate-btn" data-i18n="profile_activate_btn">Activer</button>
             </div>
-            <div id="premiumError" style="font-size:11px;color:var(--red);margin-top:4px;min-height:14px;" role="alert" aria-live="polite"></div>
+            <div id="premiumError" class="profile-code-error" role="alert" aria-live="polite"></div>
           </details>
         </div>
       </div>
       <!-- Paramètres -->
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px;">
-        <button id="themeToggleBtn" onclick="toggleTheme()" class="settings-row-btn">
+      <div class="profile-settings-panel">
+        <button id="themeToggleBtn" data-action="toggleTheme" class="settings-row-btn">
           <span class="row-icon">🌙</span>
-          <span id="themeToggleLabel" style="flex:1;" data-i18n="profile_day_mode">Mode jour</span>
+          <span id="themeToggleLabel" class="settings-row-label" data-i18n="profile_day_mode">Mode jour</span>
           <span class="row-arrow">›</span>
         </button>
-        <button id="notifBtn" onclick="enableNotifications()" class="settings-row-btn">
+        <button id="notifBtn" data-action="enableNotifications" class="settings-row-btn">
           <span class="row-icon">🔔</span>
-          <span style="flex:1;" data-i18n="profile_notif_off">Activer les notifications</span>
+          <span class="settings-row-label" data-i18n="profile_notif_off">Activer les notifications</span>
           <span class="row-arrow">›</span>
         </button>
-        <button onclick="showScreen('screenOnboard')" class="settings-row-btn" aria-label="Revoir l'introduction">
+        <button data-action="nav" data-screen="screenOnboard" class="settings-row-btn" aria-label="Revoir l'introduction">
           <span class="row-icon">👻</span>
-          <span style="flex:1;" data-i18n="profile_rewatch_intro">Revoir l'intro</span>
+          <span class="settings-row-label" data-i18n="profile_rewatch_intro">Revoir l'intro</span>
           <span class="row-arrow">›</span>
         </button>
-        <button onclick="showScreen('screenHelp')" class="settings-row-btn" aria-label="Aide et informations">
+        <button data-action="nav" data-screen="screenHelp" class="settings-row-btn" aria-label="Aide et informations">
           <span class="row-icon">❓</span>
-          <span style="flex:1;" data-i18n="profile_help_link">Aide & Mentions légales</span>
+          <span class="settings-row-label" data-i18n="profile_help_link">Aide & Mentions légales</span>
           <span class="row-arrow">›</span>
         </button>
       </div>
       <!-- Sélecteur de langue -->
-      <div style="display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 20px;">
-        <span data-i18n="profile_lang_label" style="font-size:12px;color:var(--spirit-dim);">🌐 Langue / Language</span>
-        <button class="lang-btn" data-lang="fr" onclick="setLang('fr')" style="padding:4px 12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--warm-dim);cursor:pointer;transition:all .2s;">FR</button>
-        <button class="lang-btn" data-lang="en" onclick="setLang('en')" style="padding:4px 12px;border-radius:10px;border:1px solid var(--border);background:none;font-family:'Instrument Sans',sans-serif;font-size:12px;color:var(--warm-dim);cursor:pointer;transition:all .2s;">EN</button>
+      <div class="profile-lang-row">
+        <span data-i18n="profile_lang_label" class="profile-lang-label">🌐 Langue / Language</span>
+        <button class="lang-btn" data-lang="fr" data-action="setLang" data-arg="fr">FR</button>
+        <button class="lang-btn" data-lang="en" data-action="setLang" data-arg="en">EN</button>
       </div>
       <!-- Actions danger -->
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding-bottom:8px;">
-        <button onclick="exportMyData()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);padding:6px 12px;border-radius:8px;" data-i18n="profile_export_btn">⬇ Exporter mes données</button>
+      <div class="profile-danger-row">
+        <button data-action="exportMyData" class="profile-export-btn" data-i18n="profile_export_btn">⬇ Exporter mes données</button>
       </div>
-      <div style="display:flex;gap:12px;justify-content:center;padding-bottom:24px;">
-        <button onclick="logout()" id="logoutBtn" data-i18n="profile_logout" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;">🚪 Déconnexion</button>
-        <span style="color:var(--border);font-size:12px;line-height:28px;">·</span>
-        <button id="deleteBtn" onclick="deleteMyGhosts()" style="background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.35);padding:6px 12px;border-radius:8px;" data-i18n="profile_delete_all_btn">🗑 Tout supprimer</button>
+      <div class="profile-danger-row-2">
+        <button data-action="logout" id="logoutBtn" data-i18n="profile_logout" class="profile-logout-btn">🚪 Déconnexion</button>
+        <span class="profile-danger-sep">·</span>
+        <button id="deleteBtn" data-action="deleteMyGhosts" class="profile-delete-btn" data-i18n="profile_delete_all_btn">🗑 Tout supprimer</button>
       </div>
     </div>
   </div>
