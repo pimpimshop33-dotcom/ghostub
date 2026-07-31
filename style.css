@@ -1442,6 +1442,43 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .leaderboard-name--me{color:var(--ether);font-weight:600;}
 .leaderboard-ghosts{font-size:11px;color:var(--spirit-dim);}
 .leaderboard-resonances{font-size:13px;color:rgba(var(--ghost-blue-rgb),.7);flex-shrink:0;}
+
+/* ── HELP ──────────────────────────────────────────────── */
+/* CSP audit 4.6 : ex-style="" inline de l'écran Aide (zone 9) — beaucoup de
+   blocs "carte d'aide" identiques, factorisés en quelques classes réutilisées
+   plutôt qu'un style="" différent par bloc. */
+.help-scroll{padding-bottom:40px;}
+.help-back-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.help-back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;}
+.help-hero{text-align:center;margin-bottom:28px;}
+.help-hero-icon{width:36px;height:36px;margin-bottom:8px;}
+.help-hero-title{font-size:20px;font-weight:700;color:var(--ether);margin-bottom:4px;}
+.help-hero-sub{font-size:13px;color:var(--spirit-dim);}
+.help-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
+.help-card-premium{background:rgba(var(--premium-rgb),.06);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:16px;margin-bottom:12px;}
+.help-card-title{font-size:13px;font-weight:700;color:var(--ether);margin-bottom:10px;}
+.help-card-title-premium{font-size:13px;font-weight:700;color:rgba(var(--premium-rgb),.9);margin-bottom:10px;}
+.help-card-body{font-size:13px;color:var(--warm-dim);line-height:1.6;}
+.help-card-body-mb{font-size:13px;color:var(--warm-dim);line-height:1.6;margin-bottom:10px;}
+.help-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.help-list-nomargin{display:flex;flex-direction:column;gap:6px;}
+.help-list-row{font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:flex-start;}
+.help-list-row-center{font-size:12px;color:var(--warm-dim);display:flex;gap:8px;align-items:center;}
+.help-list-row-plain{font-size:12px;color:var(--warm-dim);display:flex;gap:8px;}
+.help-hint{margin-top:10px;font-size:12px;color:var(--spirit-dim);}
+.help-premium-list{font-size:12px;color:var(--warm-dim);line-height:1.8;}
+.help-badge{border-radius:20px;padding:1px 8px;font-size:10px;}
+.help-badge-spot{background:rgba(var(--ghost-blue-rgb),.15);border:1px solid rgba(var(--ghost-blue-rgb),.4);color:rgba(var(--ghost-blue-rgb),.9);}
+.help-badge-haunted{background:rgba(var(--ghost-blue-rgb),.2);border:1px solid rgba(var(--ghost-blue-rgb),.5);color:rgba(var(--ghost-blue-rgb),1);}
+.help-badge-infest{background:rgba(255,100,80,.15);border:1px solid rgba(255,100,80,.5);color:rgba(255,120,100,.9);}
+.help-faq-title{font-size:13px;font-weight:700;color:var(--ether);margin-bottom:12px;}
+.help-faq-q{font-size:13px;color:rgba(var(--ghost-blue-rgb),.8);font-weight:600;margin-bottom:4px;}
+.help-faq-a{font-size:12px;color:var(--warm-dim);line-height:1.6;margin-bottom:12px;}
+.help-faq-a-last{font-size:12px;color:var(--warm-dim);line-height:1.6;}
+.help-legal-body{font-size:12px;color:var(--warm-dim);line-height:1.7;}
+.help-legal-link{color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;}
+.help-footer{text-align:center;padding:16px 0;}
+.help-footer-text{font-size:12px;color:var(--spirit-dim);opacity:.5;}
 /* Anneau dégradé animé autour du Trace (Lot J1) — rotation lente en continu,
    indépendante de l'état Premium (cf. le style dynamique appliqué à
    .profile-avatar-big lui-même dans updatePremiumUI()). */
