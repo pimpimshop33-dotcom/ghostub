@@ -9352,126 +9352,115 @@ let _depositMiniMap = null;
 let _depositRadiusCircle = null;
 let _depositMiniMapAttempts = 0;
 
-function _initDepositMiniMap() {
-  const loader = document.getElementById('depositMiniLoader');
-  const container = document.getElementById('depositMiniMap');
-
-  // ── DIAGNOSTIC v98 — visible dans console F12 ──
-  console.log('[MiniMap] init appelé', {
-    container: !!container,
-    containerSize: container ? `${container.offsetWidth}x${container.offsetHeight}` : 'no-container',
-    userLat,
-    userLng,
-    leafletLoaded: typeof L !== 'undefined',
-    alreadyInit: !!_depositMiniMap,
-    loader: !!loader
-  });
-
-  if (!container) {
-    console.warn('[MiniMap] ❌ container #depositMiniMap absent du DOM');
-    return;
-  }
-
-  // Si pas de GPS encore, on attend ou on demande
-  if (!userLat || !userLng) {
-    console.warn('[MiniMap] ⚠️ Pas de GPS — userLat/Lng vides');
-    _depositMiniMapAttempts = (_depositMiniMapAttempts || 0) + 1;
-    if (loader) loader.textContent = '📡 Localisation…';
-    // Tenter de récupérer la position si on ne l'a pas
-    if (typeof getLocation === 'function' && _depositMiniMapAttempts === 1) {
-      getLocation().then(() => {
-        // Une fois reçu, retry l'init
-        setTimeout(() => _initDepositMiniMap(), 100);
-      }).catch(() => {
-        // Pas de GPS dispo → afficher message clair, ne pas bloquer le wizard
-        if (loader) {
-          loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
-            ? '📍 Location unavailable'
-            : '📍 Géolocalisation indisponible';
-        }
-      });
-    } else if (_depositMiniMapAttempts < 5) {
-      // Retry périodique (max 5 fois sur 10 secondes)
-      setTimeout(() => _initDepositMiniMap(), 2000);
-    } else {
-      // Abandon : on cache le loader pour ne pas rester bloqué
+// Si pas de GPS encore, on attend ou on demande
+function _handleMiniMapNoGPS(loader) {
+  console.warn('[MiniMap] ⚠️ Pas de GPS — userLat/Lng vides');
+  _depositMiniMapAttempts = (_depositMiniMapAttempts || 0) + 1;
+  if (loader) loader.textContent = '📡 Localisation…';
+  // Tenter de récupérer la position si on ne l'a pas
+  if (typeof getLocation === 'function' && _depositMiniMapAttempts === 1) {
+    getLocation().then(() => {
+      // Une fois reçu, retry l'init
+      setTimeout(() => _initDepositMiniMap(), 100);
+    }).catch(() => {
+      // Pas de GPS dispo → afficher message clair, ne pas bloquer le wizard
       if (loader) {
         loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
           ? '📍 Location unavailable'
           : '📍 Géolocalisation indisponible';
       }
-    }
-    return;
-  }
-
-  // GPS dispo : reset compteur
-  _depositMiniMapAttempts = 0;
-
-  // Invalider si déjà initialisé (retour arrière)
-  // Vérification robuste : Leaflet doit pointer vers le BON container DOM,
-  // sinon on détruit pour recréer (cas où le DOM a été ré-rendu)
-  if (_depositMiniMap) {
-    const linkedContainer = _depositMiniMap.getContainer && _depositMiniMap.getContainer();
-    const isStillValid = linkedContainer === container && container.isConnected;
-    if (isStillValid) {
-      _depositMiniMap.invalidateSize();
-      _depositMiniMap.setView([userLat, userLng], 17);
-      _updateRadiusCircle();
-      if (loader) loader.style.display = 'none';
-      // Re-invalidation après transitions CSS pour cas où le container a été masqué/affiché
-      setTimeout(() => {
-        if (_depositMiniMap) try { _depositMiniMap.invalidateSize(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:invalidate]', _); }
-      }, 350);
-      return;
-    } else {
-      // Container changé ou détaché → on détruit pour recréer proprement
-      try { _depositMiniMap.remove(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:reset]', _); }
-      _depositMiniMap = null;
-      _depositRadiusCircle = null;
-      // Vider le container au cas où Leaflet a laissé des résidus
-      container.innerHTML = '';
-    }
-  }
-
-  if (typeof L === 'undefined') {
-    console.warn('[MiniMap] Leaflet pas encore chargé — chargement dynamique...');
+    });
+  } else if (_depositMiniMapAttempts < 5) {
+    // Retry périodique (max 5 fois sur 10 secondes)
+    setTimeout(() => _initDepositMiniMap(), 2000);
+  } else {
+    // Abandon : on cache le loader pour ne pas rester bloqué
     if (loader) {
-      loader.style.display = 'flex';
       loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
-        ? '⏳ Loading map…'
-        : '⏳ Chargement de la carte…';
+        ? '📍 Location unavailable'
+        : '📍 Géolocalisation indisponible';
     }
-    // Charger CSS Leaflet si pas déjà fait
-    if (!document.getElementById('leafletCSS')) {
-      const css = document.createElement('link');
-      css.id = 'leafletCSS';
-      css.rel = 'stylesheet';
-      css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(css);
-    }
-    // Charger script Leaflet si pas déjà en cours
-    let script = document.getElementById('leafletScript');
-    if (!script) {
-      script = document.createElement('script');
-      script.id = 'leafletScript';
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      document.head.appendChild(script);
-    }
-    // Attendre le chargement puis re-tenter l'init
-    script.addEventListener('load', () => {
-      console.log('[MiniMap] ✅ Leaflet chargé, re-init...');
-      _initDepositMiniMap();
-    }, { once: true });
-    script.addEventListener('error', () => {
-      console.error('[MiniMap] ❌ Échec chargement Leaflet');
-      if (loader) {
-        loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
-          ? '⚠️ Could not load map'
-          : '⚠️ Impossible de charger la carte';
-      }
-    }, { once: true });
-    return;
   }
+}
+
+// Invalider si déjà initialisé (retour arrière). Vérification robuste :
+// Leaflet doit pointer vers le BON container DOM, sinon on détruit pour
+// recréer (cas où le DOM a été ré-rendu). Retourne true si la carte
+// existante a été réutilisée (le caller doit alors sortir), false si elle
+// a été détruite (ou n'existait pas) et qu'il faut en reconstruire une.
+function _reuseOrResetDepositMiniMap(container, loader) {
+  if (!_depositMiniMap) return false;
+
+  const linkedContainer = _depositMiniMap.getContainer && _depositMiniMap.getContainer();
+  const isStillValid = linkedContainer === container && container.isConnected;
+  if (isStillValid) {
+    _depositMiniMap.invalidateSize();
+    _depositMiniMap.setView([userLat, userLng], 17);
+    _updateRadiusCircle();
+    if (loader) loader.style.display = 'none';
+    // Re-invalidation après transitions CSS pour cas où le container a été masqué/affiché
+    setTimeout(() => {
+      if (_depositMiniMap) try { _depositMiniMap.invalidateSize(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:invalidate]', _); }
+    }, 350);
+    return true;
+  }
+
+  // Container changé ou détaché → on détruit pour recréer proprement
+  try { _depositMiniMap.remove(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:reset]', _); }
+  _depositMiniMap = null;
+  _depositRadiusCircle = null;
+  // Vider le container au cas où Leaflet a laissé des résidus
+  container.innerHTML = '';
+  return false;
+}
+
+// Charge Leaflet dynamiquement si pas encore disponible et relance l'init
+// une fois prêt. Retourne true si Leaflet est déjà chargé (le caller doit
+// continuer), false si un chargement async a été déclenché (le caller doit
+// sortir — _initDepositMiniMap() sera rappelée par le listener 'load').
+function _ensureLeafletForMiniMap(loader) {
+  if (typeof L !== 'undefined') return true;
+
+  console.warn('[MiniMap] Leaflet pas encore chargé — chargement dynamique...');
+  if (loader) {
+    loader.style.display = 'flex';
+    loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
+      ? '⏳ Loading map…'
+      : '⏳ Chargement de la carte…';
+  }
+  // Charger CSS Leaflet si pas déjà fait
+  if (!document.getElementById('leafletCSS')) {
+    const css = document.createElement('link');
+    css.id = 'leafletCSS';
+    css.rel = 'stylesheet';
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(css);
+  }
+  // Charger script Leaflet si pas déjà en cours
+  let script = document.getElementById('leafletScript');
+  if (!script) {
+    script = document.createElement('script');
+    script.id = 'leafletScript';
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    document.head.appendChild(script);
+  }
+  // Attendre le chargement puis re-tenter l'init
+  script.addEventListener('load', () => {
+    console.log('[MiniMap] ✅ Leaflet chargé, re-init...');
+    _initDepositMiniMap();
+  }, { once: true });
+  script.addEventListener('error', () => {
+    console.error('[MiniMap] ❌ Échec chargement Leaflet');
+    if (loader) {
+      loader.textContent = (typeof _currentLang !== 'undefined' && _currentLang === 'en')
+        ? '⚠️ Could not load map'
+        : '⚠️ Impossible de charger la carte';
+    }
+  }, { once: true });
+  return false;
+}
+
+function _buildDepositMiniMapInstance(loader) {
   _depositMiniMap = L.map('depositMiniMap', {
     zoomControl: false,
     attributionControl: false,
@@ -9528,6 +9517,38 @@ function _initDepositMiniMap() {
       try { _depositMiniMap.invalidateSize(); } catch(_) { console.warn('[ghostub:_initDepositMiniMap:invalidate]', _); }
     }
   }, 350);
+}
+
+function _initDepositMiniMap() {
+  const loader = document.getElementById('depositMiniLoader');
+  const container = document.getElementById('depositMiniMap');
+
+  // ── DIAGNOSTIC v98 — visible dans console F12 ──
+  console.log('[MiniMap] init appelé', {
+    container: !!container,
+    containerSize: container ? `${container.offsetWidth}x${container.offsetHeight}` : 'no-container',
+    userLat,
+    userLng,
+    leafletLoaded: typeof L !== 'undefined',
+    alreadyInit: !!_depositMiniMap,
+    loader: !!loader
+  });
+
+  if (!container) {
+    console.warn('[MiniMap] ❌ container #depositMiniMap absent du DOM');
+    return;
+  }
+
+  if (!userLat || !userLng) { _handleMiniMapNoGPS(loader); return; }
+
+  // GPS dispo : reset compteur
+  _depositMiniMapAttempts = 0;
+
+  if (_reuseOrResetDepositMiniMap(container, loader)) return;
+
+  if (!_ensureLeafletForMiniMap(loader)) return;
+
+  _buildDepositMiniMapInstance(loader);
 }
 
 function _updateRadiusCircle() {
