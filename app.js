@@ -1982,9 +1982,10 @@ window.toggleHuntMode = () => {
   if (window.map) renderStaticMap();
 };
 
-function buildLeafletMap(centerLat, centerLng) {
-  const container = document.getElementById('mapContainer');
-
+// Crée (ou recrée) l'instance Leaflet et son conteneur DOM — cf.
+// buildLeafletMap() pour le contexte du dimensionnement via CSS et du
+// filet de sécurité ResizeObserver.
+function _setupLeafletMapInstance(container, centerLat, centerLng) {
   // Si la carte existe déjà — réinitialiser pour redessiner marqueurs et zones
   if (map && document.getElementById('leafletMap')) {
     try { map.remove(); } catch(e) { console.warn('[ghostub:buildLeafletMap]', e); }
@@ -2019,7 +2020,10 @@ function buildLeafletMap(centerLat, centerLng) {
   }
 
   L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(map);
+}
 
+// Marqueur "vous êtes ici" + cercle de détection en mode chasse.
+function _addUserPositionMarker(centerLat, centerLng) {
   const userIcon = L.divIcon({
     html: '<div class="user-map-dot"></div>',
     iconSize: [16,16], iconAnchor: [8,8], className: ''
@@ -2037,12 +2041,10 @@ function buildLeafletMap(centerLat, centerLng) {
       dashArray: '4 4'
     }).addTo(map);
   }
+}
 
-  // Filtres flottants (Lot I4) — mêmes filtres Toutes/Récentes/Visions/Voix/
-  // Vidéos que le Radar, appliqués à la liste source avant de dessiner
-  // marqueurs et zones, pour rester cohérents entre eux.
-  const _mapGhosts = _filterGhostsByType(nearbyGhosts, _mapActiveFilter);
-
+// Dessine les marqueurs fantômes (mode chasse ou mode normal) pour la liste déjà filtrée.
+function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
   _mapGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
     const delay = (i * 0.3).toFixed(2);
@@ -2136,8 +2138,10 @@ function buildLeafletMap(centerLat, centerLng) {
       ghostMarker.on('click', () => _openMapGhostSheet(g, dist));
     }
   });
+}
 
-  // ── ZONES HANTÉES : clusters 3+ ghosts dans 80m — 3 niveaux ───────────
+// ── ZONES HANTÉES : clusters 3+ ghosts dans 80m — 3 niveaux ───────────
+function _renderMapHauntedZones(_mapGhosts) {
   const _spotted = new Set();
   _mapGhosts.forEach((g) => {
     if (_spotted.has(g.id) || !g.lat || !g.lng) return;
@@ -2191,8 +2195,10 @@ function buildLeafletMap(centerLat, centerLng) {
       dashArray: level === 'spot' ? '4 5' : ''
     }).addTo(map).on('click', () => _openMapClusterSheet(level, n, labelFr, labelEn));
   });
+}
 
-  // ── LÉGENDE zones hantées — injectée dans le conteneur Leaflet ──
+// ── LÉGENDE zones hantées — injectée dans le conteneur Leaflet ──
+function _renderMapHauntedLegend(_mapGhosts) {
   let legendEl = document.getElementById('mapHauntedLegend');
   if (!legendEl) {
     legendEl = document.createElement('div');
@@ -2226,6 +2232,22 @@ function buildLeafletMap(centerLat, centerLng) {
       legendEl.style.display = 'none';
     }
   }
+}
+
+function buildLeafletMap(centerLat, centerLng) {
+  const container = document.getElementById('mapContainer');
+
+  _setupLeafletMapInstance(container, centerLat, centerLng);
+  _addUserPositionMarker(centerLat, centerLng);
+
+  // Filtres flottants (Lot I4) — mêmes filtres Toutes/Récentes/Visions/Voix/
+  // Vidéos que le Radar, appliqués à la liste source avant de dessiner
+  // marqueurs et zones, pour rester cohérents entre eux.
+  const _mapGhosts = _filterGhostsByType(nearbyGhosts, _mapActiveFilter);
+
+  _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng);
+  _renderMapHauntedZones(_mapGhosts);
+  _renderMapHauntedLegend(_mapGhosts);
 
   // Le compteur reflète le filtre actif (Lot I4), pas le total non filtré
   const mapCountEl = document.getElementById('mapCount');
