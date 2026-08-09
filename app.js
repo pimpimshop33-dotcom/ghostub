@@ -6097,13 +6097,7 @@ window.removeFavorite = (ghostId) => {
 // ── CARTE EMPREINTE PERSONNELLE ──────────────────────────
 let _empreinteMap = null;
 
-window.loadEmpreinteMap = async () => {
-  if (!currentUser) return;
-  const container = document.getElementById('empreinteMap');
-  const loader    = document.getElementById('empreinteLoader');
-  const statsEl   = document.getElementById('empreinteStats');
-  if (!container) return;
-
+function _resetEmpreinteMapContainer(container, loader) {
   // Reset
   if (_empreinteMap) { try { _empreinteMap.remove(); } catch(e){ console.warn('[ghostub:loadEmpreinteMap:reset]', e); } _empreinteMap = null; }
   // Détruire et recréer le div Leaflet pour éviter "Map container is already initialized"
@@ -6114,9 +6108,11 @@ window.loadEmpreinteMap = async () => {
   newLeaflet.style.cssText = 'width:100%;height:100%;border-radius:inherit;';
   container.appendChild(newLeaflet);
   if (loader) loader.style.display = 'flex';
+}
 
-  // Charger Leaflet si pas encore disponible
-  await new Promise((resolve) => {
+// Charger Leaflet si pas encore disponible
+function _ensureLeafletLoaded() {
+  return new Promise((resolve) => {
     if (window.L) return resolve();
     const s = document.createElement('script');
     s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
@@ -6131,50 +6127,173 @@ window.loadEmpreinteMap = async () => {
       document.head.appendChild(css);
     }
   });
+}
+
+// 1. Charger les fantômes déposés par l'utilisateur
+async function _loadEmpreinteDeposits() {
+  const depositSnap = await getDocs(query(
+    collection(db, COLL.GHOSTS),
+    where('authorUid', '==', currentUser.uid),
+    limit(100)
+  ));
+  const deposits = [];
+  depositSnap.forEach(d => {
+    const g = d.data();
+    if (g.lat && g.lng) deposits.push({ lat: g.lat, lng: g.lng, emoji: _ghostEmojiHTML(g), location: g.location || '?', id: d.id });
+  });
+  return deposits;
+}
+
+// 2. Charger les fantômes découverts (depuis Firestore discoveries)
+async function _loadEmpreinteDiscoveries() {
+  const discSnap = await getDocs(query(
+    collection(db, COLL.DISCOVERIES),
+    where('discoveredByUid', '==', currentUser.uid),
+    limit(100)
+  )).catch(() => null);
+
+  // Fallback : IDs localStorage → chercher lat/lng dans nearbyGhosts ou Firestore
+  const discIds = getDiscoveredIds().slice(-50);
+  const discoveries = [];
+  // On cherche d'abord dans nearbyGhosts (déjà chargés)
+  discIds.forEach(id => {
+    const found = nearbyGhosts.find(g => g.id === id);
+    if (found && found.lat && found.lng) {
+      discoveries.push({ lat: found.lat, lng: found.lng, emoji: found.emoji || '👁', location: found.location || '?', id });
+    }
+  });
+  // Compléter avec Firestore pour les fantômes non locaux
+  const missingIds = discIds.filter(id => !discoveries.find(d => d.id === id)).slice(0, 20);
+  if (missingIds.length > 0) {
+    await Promise.all(missingIds.map(async id => {
+      try {
+        const d = await getDoc(doc(db, COLL.GHOSTS, id));
+        if (d.exists()) {
+          const g = d.data();
+          if (g.lat && g.lng) discoveries.push({ lat: g.lat, lng: g.lng, emoji: g.emoji || '👁', location: g.location || '?', id });
+        }
+      } catch(e) { console.warn('[ghostub:loadEmpreinteMap:discoveries]', e); }
+    }));
+  }
+  return discoveries;
+}
+
+// 3. Centrer la carte sur le barycentre des points + créer l'instance Leaflet
+function _buildEmpreinteMapInstance(allPoints, deposits, discoveries) {
+  const centerLat = allPoints.reduce((s, p) => s + p.lat, 0) / allPoints.length;
+  const centerLng = allPoints.reduce((s, p) => s + p.lng, 0) / allPoints.length;
+
+  // Utiliser le div persistant (pas de innerHTML sur container)
+  const leafletDiv = document.getElementById('empreinteLeaflet');
+  _empreinteMap = L.map('empreinteLeaflet', { zoomControl: false, attributionControl: false })
+    .setView([centerLat, centerLng], deposits.length + discoveries.length > 5 ? 12 : 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(_empreinteMap);
+}
+
+// 4-5. Marqueurs dépôts (violet lumineux) et découvertes (doré)
+function _renderEmpreinteMarkers(deposits, discoveries) {
+  deposits.forEach(p => {
+    const icon = L.divIcon({
+      html: `<div class="empreinte-deposit-marker">${p.emoji}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14], className: ''
+    });
+    L.marker([p.lat, p.lng], { icon })
+      .addTo(_empreinteMap)
+      .bindPopup(`<div class="empreinte-popup">👻 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Votre dépôt</span></div>`);
+  });
+
+  discoveries.forEach(p => {
+    const icon = L.divIcon({
+      html: `<div class="empreinte-discovery-marker"></div>`,
+      iconSize: [10, 10], iconAnchor: [5, 5], className: ''
+    });
+    L.marker([p.lat, p.lng], { icon })
+      .addTo(_empreinteMap)
+      .bindPopup(`<div class="empreinte-popup">👁 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Découverte</span></div>`);
+  });
+}
+
+// Ajuster zoom pour tout voir
+function _fitEmpreinteMapBounds(allPoints) {
+  if (allPoints.length > 1) {
+    const bounds = L.latLngBounds(allPoints.map(p => [p.lat, p.lng]));
+    _empreinteMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
+  }
+  setTimeout(() => { if (_empreinteMap) _empreinteMap.invalidateSize(); }, 300);
+}
+
+// 3b. Ligne de trajet chronologique (dépôts reliés)
+function _renderEmpreinteTrail(deposits) {
+  if (deposits.length > 1) {
+    const trailCoords = deposits.map(p => [p.lat, p.lng]);
+    L.polyline(trailCoords, {
+      color: 'rgba(var(--ghost-blue-rgb),0.35)',
+      weight: 1.5,
+      dashArray: '4, 6',
+      lineCap: 'round'
+    }).addTo(_empreinteMap);
+  }
+}
+
+// 3c. Heatmap simulée — cercles de chaleur sur les zones actives
+function _renderEmpreinteHeatmap(allPoints, deposits) {
+  allPoints.forEach(p => {
+    // Cercle de chaleur extérieur (glow)
+    L.circle([p.lat, p.lng], {
+      radius: 60,
+      color: 'transparent',
+      fillColor: p === deposits.find(d => d.id === p.id)
+        ? 'rgba(var(--ghost-blue-rgb),0.08)'
+        : 'rgba(var(--premium-rgb),0.06)',
+      fillOpacity: 1,
+      interactive: false
+    }).addTo(_empreinteMap);
+  });
+}
+
+// 6. Score d'empreinte mystérieux
+function _computeAndRenderEmpreinteStats(allPoints, deposits, discoveries, statsEl) {
+  const cities = new Set(allPoints.map(p => p.location.split(',')[0])).size;
+  const score = Math.round(
+    deposits.length * 15 +
+    discoveries.length * 8 +
+    cities * 12 +
+    Math.min(allPoints.length, 20) * 3
+  );
+
+  statsEl.innerHTML = `
+    <div class="empreinte-stat-box">
+      <div class="empreinte-stat-num empreinte-stat-num-ether">${deposits.length}</div>
+      <div class="empreinte-stat-label">${t.profile_map_deposits || 'Dépôts'}</div>
+    </div>
+    <div class="empreinte-stat-box">
+      <div class="empreinte-stat-num empreinte-stat-num-gold">${discoveries.length}</div>
+      <div class="empreinte-stat-label">${t.profile_map_discoveries || 'Découvertes'}</div>
+    </div>
+    <div class="empreinte-stat-box">
+      <div class="empreinte-stat-num empreinte-stat-num-green">${cities}</div>
+      <div class="empreinte-stat-label">${t.profile_map_places || 'Lieux'}</div>
+    </div>
+    <div class="empreinte-stat-box-last">
+      <div class="empreinte-stat-num empreinte-stat-num-blue">✦${score}</div>
+      <div class="empreinte-stat-label">${t.profile_map_score || 'Score'}</div>
+    </div>`;
+}
+
+window.loadEmpreinteMap = async () => {
+  if (!currentUser) return;
+  const container = document.getElementById('empreinteMap');
+  const loader    = document.getElementById('empreinteLoader');
+  const statsEl   = document.getElementById('empreinteStats');
+  if (!container) return;
+
+  _resetEmpreinteMapContainer(container, loader);
+  await _ensureLeafletLoaded();
 
   try {
-    // 1. Charger les fantômes déposés par l'utilisateur
-    const depositSnap = await getDocs(query(
-      collection(db, COLL.GHOSTS),
-      where('authorUid', '==', currentUser.uid),
-      limit(100)
-    ));
-    const deposits = [];
-    depositSnap.forEach(d => {
-      const g = d.data();
-      if (g.lat && g.lng) deposits.push({ lat: g.lat, lng: g.lng, emoji: _ghostEmojiHTML(g), location: g.location || '?', id: d.id });
-    });
-
-    // 2. Charger les fantômes découverts (depuis Firestore discoveries)
-    const discSnap = await getDocs(query(
-      collection(db, COLL.DISCOVERIES),
-      where('discoveredByUid', '==', currentUser.uid),
-      limit(100)
-    )).catch(() => null);
-
-    // Fallback : IDs localStorage → chercher lat/lng dans nearbyGhosts ou Firestore
-    const discIds = getDiscoveredIds().slice(-50);
-    const discoveries = [];
-    // On cherche d'abord dans nearbyGhosts (déjà chargés)
-    discIds.forEach(id => {
-      const found = nearbyGhosts.find(g => g.id === id);
-      if (found && found.lat && found.lng) {
-        discoveries.push({ lat: found.lat, lng: found.lng, emoji: found.emoji || '👁', location: found.location || '?', id });
-      }
-    });
-    // Compléter avec Firestore pour les fantômes non locaux
-    const missingIds = discIds.filter(id => !discoveries.find(d => d.id === id)).slice(0, 20);
-    if (missingIds.length > 0) {
-      await Promise.all(missingIds.map(async id => {
-        try {
-          const d = await getDoc(doc(db, COLL.GHOSTS, id));
-          if (d.exists()) {
-            const g = d.data();
-            if (g.lat && g.lng) discoveries.push({ lat: g.lat, lng: g.lng, emoji: g.emoji || '👁', location: g.location || '?', id });
-          }
-        } catch(e) { console.warn('[ghostub:loadEmpreinteMap:discoveries]', e); }
-      }));
-    }
+    const deposits = await _loadEmpreinteDeposits();
+    const discoveries = await _loadEmpreinteDiscoveries();
 
     const allPoints = [...deposits, ...discoveries];
     if (loader) loader.style.display = 'none';
@@ -6185,99 +6304,15 @@ window.loadEmpreinteMap = async () => {
       return;
     }
 
-    // 3. Centrer la carte sur le barycentre des points
-    const centerLat = allPoints.reduce((s, p) => s + p.lat, 0) / allPoints.length;
-    const centerLng = allPoints.reduce((s, p) => s + p.lng, 0) / allPoints.length;
-
-    // Utiliser le div persistant (pas de innerHTML sur container)
     if (loader) loader.style.display = 'none';
-    const leafletDiv = document.getElementById('empreinteLeaflet');
-    _empreinteMap = L.map('empreinteLeaflet', { zoomControl: false, attributionControl: false })
-      .setView([centerLat, centerLng], deposits.length + discoveries.length > 5 ? 12 : 14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(_empreinteMap);
-
-    // 4. Marqueurs dépôts — violet lumineux
-    deposits.forEach(p => {
-      const icon = L.divIcon({
-        html: `<div class="empreinte-deposit-marker">${p.emoji}</div>`,
-        iconSize: [28, 28], iconAnchor: [14, 14], className: ''
-      });
-      L.marker([p.lat, p.lng], { icon })
-        .addTo(_empreinteMap)
-        .bindPopup(`<div class="empreinte-popup">👻 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Votre dépôt</span></div>`);
-    });
-
-    // 5. Marqueurs découvertes — doré
-    discoveries.forEach(p => {
-      const icon = L.divIcon({
-        html: `<div class="empreinte-discovery-marker"></div>`,
-        iconSize: [10, 10], iconAnchor: [5, 5], className: ''
-      });
-      L.marker([p.lat, p.lng], { icon })
-        .addTo(_empreinteMap)
-        .bindPopup(`<div class="empreinte-popup">👁 <b>${escapeHTML(p.location)}</b><br><span class="empreinte-popup-sub">Découverte</span></div>`);
-    });
-
-    // Ajuster zoom pour tout voir
-    if (allPoints.length > 1) {
-      const bounds = L.latLngBounds(allPoints.map(p => [p.lat, p.lng]));
-      _empreinteMap.fitBounds(bounds, { padding: [24, 24], maxZoom: 15 });
-    }
-    setTimeout(() => { if (_empreinteMap) _empreinteMap.invalidateSize(); }, 300);
-
-    // 3b. Ligne de trajet chronologique (dépôts reliés)
-    if (deposits.length > 1) {
-      const trailCoords = deposits.map(p => [p.lat, p.lng]);
-      L.polyline(trailCoords, {
-        color: 'rgba(var(--ghost-blue-rgb),0.35)',
-        weight: 1.5,
-        dashArray: '4, 6',
-        lineCap: 'round'
-      }).addTo(_empreinteMap);
-    }
-
-    // 3c. Heatmap simulée — cercles de chaleur sur les zones actives
-    allPoints.forEach(p => {
-      // Cercle de chaleur extérieur (glow)
-      L.circle([p.lat, p.lng], {
-        radius: 60,
-        color: 'transparent',
-        fillColor: p === deposits.find(d => d.id === p.id)
-          ? 'rgba(var(--ghost-blue-rgb),0.08)'
-          : 'rgba(var(--premium-rgb),0.06)',
-        fillOpacity: 1,
-        interactive: false
-      }).addTo(_empreinteMap);
-    });
-
-    // 6. Score d'empreinte mystérieux
-    const cities = new Set(allPoints.map(p => p.location.split(',')[0])).size;
-    const score = Math.round(
-      deposits.length * 15 +
-      discoveries.length * 8 +
-      cities * 12 +
-      Math.min(allPoints.length, 20) * 3
-    );
+    _buildEmpreinteMapInstance(allPoints, deposits, discoveries);
+    _renderEmpreinteMarkers(deposits, discoveries);
+    _fitEmpreinteMapBounds(allPoints);
+    _renderEmpreinteTrail(deposits);
+    _renderEmpreinteHeatmap(allPoints, deposits);
 
     if (loader) loader.style.display = 'none';
-    statsEl.innerHTML = `
-      <div class="empreinte-stat-box">
-        <div class="empreinte-stat-num empreinte-stat-num-ether">${deposits.length}</div>
-        <div class="empreinte-stat-label">${t.profile_map_deposits || 'Dépôts'}</div>
-      </div>
-      <div class="empreinte-stat-box">
-        <div class="empreinte-stat-num empreinte-stat-num-gold">${discoveries.length}</div>
-        <div class="empreinte-stat-label">${t.profile_map_discoveries || 'Découvertes'}</div>
-      </div>
-      <div class="empreinte-stat-box">
-        <div class="empreinte-stat-num empreinte-stat-num-green">${cities}</div>
-        <div class="empreinte-stat-label">${t.profile_map_places || 'Lieux'}</div>
-      </div>
-      <div class="empreinte-stat-box-last">
-        <div class="empreinte-stat-num empreinte-stat-num-blue">✦${score}</div>
-        <div class="empreinte-stat-label">${t.profile_map_score || 'Score'}</div>
-      </div>`;
+    _computeAndRenderEmpreinteStats(allPoints, deposits, discoveries, statsEl);
 
     // Afficher bouton partage si Web Share API dispo
     const shareBtn = document.getElementById('empreinteShareBtn');
