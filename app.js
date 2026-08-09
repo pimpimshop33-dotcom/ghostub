@@ -4848,6 +4848,182 @@ function _roundRect(ctx, x, y, w, h, r) {
   ctx.quadraticCurveTo(x, y, x + r, y);
   ctx.closePath();
 }
+// ── Fond nuit urbaine ────────────────────────────────
+function _drawGhostCardBackground(ctx, W, H) {
+  const bg = ctx.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0,   '#020408');
+  bg.addColorStop(0.4, '#060c18');
+  bg.addColorStop(1,   '#020308');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Pluie fine
+  const rng = (s) => { let x = Math.sin(s)*10000; return x - Math.floor(x); };
+  for (let i = 0; i < 120; i++) {
+    const x = rng(i*7.3)*W;
+    const y = rng(i*13.7)*H;
+    const len = rng(i*2.1)*40 + 20;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - len*0.15, y + len);
+    ctx.strokeStyle = `rgba(160,185,230,${rng(i*5.9)*0.25 + 0.08})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  }
+
+  // Halo réverbère en haut
+  const lamp1 = ctx.createRadialGradient(W*0.3, H*0.18, 0, W*0.3, H*0.18, 300);
+  lamp1.addColorStop(0, 'rgba(255,230,120,0.22)');
+  lamp1.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = lamp1; ctx.fillRect(0, 0, W, H);
+  const lamp2 = ctx.createRadialGradient(W*0.72, H*0.22, 0, W*0.72, H*0.22, 280);
+  lamp2.addColorStop(0, 'rgba(255,230,120,0.18)');
+  lamp2.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = lamp2; ctx.fillRect(0, 0, W, H);
+
+  // Brume centrale
+  const mist = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, 520);
+  mist.addColorStop(0, 'rgba(140,170,220,0.14)');
+  mist.addColorStop(0.6, 'rgba(100,130,180,0.06)');
+  mist.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = mist; ctx.fillRect(0, 0, W, H);
+
+  // Sol mouillé en bas
+  const puddle = ctx.createLinearGradient(0, H*0.72, 0, H);
+  puddle.addColorStop(0, 'rgba(0,0,0,0)');
+  puddle.addColorStop(0.5, 'rgba(30,50,90,0.25)');
+  puddle.addColorStop(1, 'rgba(10,20,40,0.5)');
+  ctx.fillStyle = puddle; ctx.fillRect(0, H*0.72, W, H*0.28);
+
+  // Reflet réverbère sur sol
+  const refl = ctx.createRadialGradient(W/2, H*0.88, 0, W/2, H*0.88, 200);
+  refl.addColorStop(0, 'rgba(255,220,100,0.18)');
+  refl.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = refl; ctx.fillRect(0, H*0.75, W, H*0.25);
+}
+
+// ── Header app ────────────────────────────────────────
+function _drawGhostCardHeader(ctx, W, ghostBlueRgb) {
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = '8px';
+  ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
+  ctx.font = '400 36px "Instrument Sans", sans-serif';
+  ctx.fillText('GHOSTUB', W/2, 100);
+  ctx.letterSpacing = '0px';
+
+  // Séparateur haut
+  ctx.strokeStyle = `rgba(${ghostBlueRgb},0.12)`;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(100, 128); ctx.lineTo(W-100, 128); ctx.stroke();
+}
+
+// ── Ghost mark avec glow ──────────────────────────────
+function _drawGhostCardMark(ctx, W, H, ghostBlueRgb) {
+  ctx.shadowColor = `rgba(${ghostBlueRgb},0.7)`;
+  ctx.shadowBlur = 80;
+  const ghostEmoji = selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null;
+  if (ghostEmoji) {
+    ctx.font = '220px serif';
+    ctx.fillText(ghostEmoji, W/2, H*0.38);
+  } else {
+    const sz = 220;
+    ctx.drawImage(_brandImg, W/2 - sz/2, H*0.38 - sz*0.75, sz, sz);
+  }
+  ctx.shadowBlur = 0;
+}
+
+// ── Message mystère (pas le texte — le FOMO) ──────────
+function _drawGhostCardMessage(ctx, W, H, ghostBlueRgb) {
+  ctx.fillStyle = 'rgba(230,228,255,0.88)';
+  ctx.font = 'italic 68px "Cormorant Garamond", Georgia, serif';
+  const line1 = _currentLang === 'en' ? 'A message is waiting for you' : 'Un message attend quelqu’un ici';
+  ctx.fillText(line1, W/2, H*0.52);
+
+  // Nombre de personnes qui peuvent encore l'ouvrir
+  const remaining = selectedGhost.maxOpenCount
+    ? Math.max(0, selectedGhost.maxOpenCount - (selectedGhost.openCount || 0))
+    : null;
+  if (remaining !== null && remaining > 0) {
+    ctx.fillStyle = 'rgba(255,180,60,0.85)';
+    ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(_currentLang === 'en' ? `Only ${remaining} can still open it` : `Plus que ${remaining} personne${remaining > 1 ? 's' : ''} peut l'ouvrir`, W/2, H*0.52 + 80);
+  } else {
+    ctx.fillStyle = `rgba(${ghostBlueRgb},0.55)`;
+    ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(_currentLang === 'en' ? '…but only if you are close enough' : '…mais seulement si tu t’en approches', W/2, H*0.52 + 80);
+  }
+}
+
+// ── Lieu (flou volontaire pour le mystère) ────────────
+function _drawGhostCardLocation(ctx, W, H, premiumRgb) {
+  const lieu = selectedGhost.location || (_currentLang === 'en' ? 'Unknown place' : 'Lieu inconnu');
+  const lieuShort = lieu.length > 32 ? lieu.substring(0, 30) + '…' : lieu;
+  ctx.fillStyle = 'rgba(255,240,200,0.7)';
+  ctx.font = '500 46px "Instrument Sans", sans-serif';
+  ctx.fillText('📍 ' + lieuShort, W/2, H*0.63);
+
+  // Distance et résonances
+  const resoCount = selectedGhost.resonances || 0;
+  if (resoCount > 0) {
+    ctx.fillStyle = `rgba(${premiumRgb},0.65)`;
+    ctx.font = '38px "Instrument Sans", sans-serif';
+    ctx.fillText('✦'.repeat(Math.min(resoCount, 5)) + ` — ${resoCount} résonance${resoCount > 1 ? 's' : ''}`, W/2, H*0.69);
+  }
+}
+
+// ── CTA viral ─────────────────────────────────────────
+function _drawGhostCardCTA(ctx, W, H, ghostBlueRgb) {
+  // Fond pill pour le CTA
+  ctx.fillStyle = `rgba(${ghostBlueRgb},0.12)`;
+  const pillY = H*0.78;
+  _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
+  ctx.fill();
+  ctx.strokeStyle = `rgba(${ghostBlueRgb},0.25)`;
+  ctx.lineWidth = 1.5;
+  _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
+  ctx.stroke();
+
+  ctx.fillStyle = 'rgba(200,215,255,0.9)';
+  ctx.font = '500 40px "Instrument Sans", sans-serif';
+  ctx.fillText(_currentLang === 'en' ? 'Come and open it on Ghostub' : 'Viens l’ouvrir sur Ghostub', W/2, pillY + 15);
+}
+
+function _drawGhostCardFooter(ctx, W, H, ghostBlueRgb) {
+  // Séparateur bas
+  ctx.strokeStyle = `rgba(${ghostBlueRgb},0.10)`;
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(100, H - 130); ctx.lineTo(W-100, H - 130); ctx.stroke();
+
+  // URL
+  ctx.fillStyle = `rgba(${ghostBlueRgb},0.3)`;
+  ctx.font = '28px "Instrument Sans", sans-serif';
+  ctx.letterSpacing = '1px';
+  ctx.fillText('ghostub.app', W/2, H - 80);
+  ctx.letterSpacing = '0px';
+}
+
+// ── Export ────────────────────────────────────────────
+function _exportGhostCard(canvas, btn) {
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], 'ghostcard.png', { type: 'image/png' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: '👻 Ghost Card — Ghostub',
+          text: _currentLang === 'en' ? 'I broke a seal here…' : 'J’ai brisé un sceau ici…'
+        });
+        Analytics.track('ghost_card_shared');
+      } catch(e) {
+        if (e.name !== 'AbortError') _downloadGhostCard(canvas);
+      }
+    } else {
+      _downloadGhostCard(canvas);
+    }
+    if (btn) { btn.textContent = '👻 Créer une Ghost Card'; btn.disabled = false; }
+  }, 'image/png');
+}
+
 window.generateGhostCard = async () => {
   if (!selectedGhost) return;
   const btn = document.getElementById('ghostCardBtn');
@@ -4863,165 +5039,14 @@ window.generateGhostCard = async () => {
     const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
     const premiumRgb = getComputedStyle(document.documentElement).getPropertyValue('--premium-rgb').trim();
 
-    // ── Fond nuit urbaine ────────────────────────────────
-    const bg = ctx.createLinearGradient(0, 0, 0, H);
-    bg.addColorStop(0,   '#020408');
-    bg.addColorStop(0.4, '#060c18');
-    bg.addColorStop(1,   '#020308');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    // Pluie fine
-    const rng = (s) => { let x = Math.sin(s)*10000; return x - Math.floor(x); };
-    for (let i = 0; i < 120; i++) {
-      const x = rng(i*7.3)*W;
-      const y = rng(i*13.7)*H;
-      const len = rng(i*2.1)*40 + 20;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x - len*0.15, y + len);
-      ctx.strokeStyle = `rgba(160,185,230,${rng(i*5.9)*0.25 + 0.08})`;
-      ctx.lineWidth = 0.8;
-      ctx.stroke();
-    }
-
-    // Halo réverbère en haut
-    const lamp1 = ctx.createRadialGradient(W*0.3, H*0.18, 0, W*0.3, H*0.18, 300);
-    lamp1.addColorStop(0, 'rgba(255,230,120,0.22)');
-    lamp1.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = lamp1; ctx.fillRect(0, 0, W, H);
-    const lamp2 = ctx.createRadialGradient(W*0.72, H*0.22, 0, W*0.72, H*0.22, 280);
-    lamp2.addColorStop(0, 'rgba(255,230,120,0.18)');
-    lamp2.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = lamp2; ctx.fillRect(0, 0, W, H);
-
-    // Brume centrale
-    const mist = ctx.createRadialGradient(W/2, H*0.45, 0, W/2, H*0.45, 520);
-    mist.addColorStop(0, 'rgba(140,170,220,0.14)');
-    mist.addColorStop(0.6, 'rgba(100,130,180,0.06)');
-    mist.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = mist; ctx.fillRect(0, 0, W, H);
-
-    // Sol mouillé en bas
-    const puddle = ctx.createLinearGradient(0, H*0.72, 0, H);
-    puddle.addColorStop(0, 'rgba(0,0,0,0)');
-    puddle.addColorStop(0.5, 'rgba(30,50,90,0.25)');
-    puddle.addColorStop(1, 'rgba(10,20,40,0.5)');
-    ctx.fillStyle = puddle; ctx.fillRect(0, H*0.72, W, H*0.28);
-
-    // Reflet réverbère sur sol
-    const refl = ctx.createRadialGradient(W/2, H*0.88, 0, W/2, H*0.88, 200);
-    refl.addColorStop(0, 'rgba(255,220,100,0.18)');
-    refl.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = refl; ctx.fillRect(0, H*0.75, W, H*0.25);
-
-    // ── Header app ────────────────────────────────────────
-    ctx.textAlign = 'center';
-    ctx.letterSpacing = '8px';
-    ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
-    ctx.font = '400 36px "Instrument Sans", sans-serif';
-    ctx.fillText('GHOSTUB', W/2, 100);
-    ctx.letterSpacing = '0px';
-
-    // Séparateur haut
-    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.12)`;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(100, 128); ctx.lineTo(W-100, 128); ctx.stroke();
-
-    // ── Ghost mark avec glow ──────────────────────────────
-    ctx.shadowColor = `rgba(${ghostBlueRgb},0.7)`;
-    ctx.shadowBlur = 80;
-    const ghostEmoji = selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null;
-    if (ghostEmoji) {
-      ctx.font = '220px serif';
-      ctx.fillText(ghostEmoji, W/2, H*0.38);
-    } else {
-      const sz = 220;
-      ctx.drawImage(_brandImg, W/2 - sz/2, H*0.38 - sz*0.75, sz, sz);
-    }
-    ctx.shadowBlur = 0;
-
-    // ── Message mystère (pas le texte — le FOMO) ──────────
-    ctx.fillStyle = 'rgba(230,228,255,0.88)';
-    ctx.font = 'italic 68px "Cormorant Garamond", Georgia, serif';
-    const line1 = _currentLang === 'en' ? 'A message is waiting for you' : 'Un message attend quelqu’un ici';
-    ctx.fillText(line1, W/2, H*0.52);
-
-    // Nombre de personnes qui peuvent encore l'ouvrir
-    const remaining = selectedGhost.maxOpenCount
-      ? Math.max(0, selectedGhost.maxOpenCount - (selectedGhost.openCount || 0))
-      : null;
-    if (remaining !== null && remaining > 0) {
-      ctx.fillStyle = 'rgba(255,180,60,0.85)';
-      ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
-      ctx.fillText(_currentLang === 'en' ? `Only ${remaining} can still open it` : `Plus que ${remaining} personne${remaining > 1 ? 's' : ''} peut l'ouvrir`, W/2, H*0.52 + 80);
-    } else {
-      ctx.fillStyle = `rgba(${ghostBlueRgb},0.55)`;
-      ctx.font = 'italic 48px "Cormorant Garamond", Georgia, serif';
-      ctx.fillText(_currentLang === 'en' ? '…but only if you are close enough' : '…mais seulement si tu t’en approches', W/2, H*0.52 + 80);
-    }
-
-    // ── Lieu (flou volontaire pour le mystère) ────────────
-    const lieu = selectedGhost.location || (_currentLang === 'en' ? 'Unknown place' : 'Lieu inconnu');
-    const lieuShort = lieu.length > 32 ? lieu.substring(0, 30) + '…' : lieu;
-    ctx.fillStyle = 'rgba(255,240,200,0.7)';
-    ctx.font = '500 46px "Instrument Sans", sans-serif';
-    ctx.fillText('📍 ' + lieuShort, W/2, H*0.63);
-
-    // Distance et résonances
-    const resoCount = selectedGhost.resonances || 0;
-    if (resoCount > 0) {
-      ctx.fillStyle = `rgba(${premiumRgb},0.65)`;
-      ctx.font = '38px "Instrument Sans", sans-serif';
-      ctx.fillText('✦'.repeat(Math.min(resoCount, 5)) + ` — ${resoCount} résonance${resoCount > 1 ? 's' : ''}`, W/2, H*0.69);
-    }
-
-    // ── CTA viral ─────────────────────────────────────────
-    // Fond pill pour le CTA
-    ctx.fillStyle = `rgba(${ghostBlueRgb},0.12)`;
-    const pillY = H*0.78;
-    _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
-    ctx.fill();
-    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.25)`;
-    ctx.lineWidth = 1.5;
-    _roundRect(ctx, W/2 - 360, pillY - 50, 720, 110, 55);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgba(200,215,255,0.9)';
-    ctx.font = '500 40px "Instrument Sans", sans-serif';
-    ctx.fillText(_currentLang === 'en' ? 'Come and open it on Ghostub' : 'Viens l’ouvrir sur Ghostub', W/2, pillY + 15);
-
-    // Séparateur bas
-    ctx.strokeStyle = `rgba(${ghostBlueRgb},0.10)`;
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(100, H - 130); ctx.lineTo(W-100, H - 130); ctx.stroke();
-
-    // URL
-    ctx.fillStyle = `rgba(${ghostBlueRgb},0.3)`;
-    ctx.font = '28px "Instrument Sans", sans-serif';
-    ctx.letterSpacing = '1px';
-    ctx.fillText('ghostub.app', W/2, H - 80);
-    ctx.letterSpacing = '0px';
-
-    // ── Export ────────────────────────────────────────────
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'ghostcard.png', { type: 'image/png' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: '👻 Ghost Card — Ghostub',
-            text: _currentLang === 'en' ? 'I broke a seal here…' : 'J’ai brisé un sceau ici…'
-          });
-          Analytics.track('ghost_card_shared');
-        } catch(e) {
-          if (e.name !== 'AbortError') _downloadGhostCard(canvas);
-        }
-      } else {
-        _downloadGhostCard(canvas);
-      }
-      if (btn) { btn.textContent = '👻 Créer une Ghost Card'; btn.disabled = false; }
-    }, 'image/png');
+    _drawGhostCardBackground(ctx, W, H);
+    _drawGhostCardHeader(ctx, W, ghostBlueRgb);
+    _drawGhostCardMark(ctx, W, H, ghostBlueRgb);
+    _drawGhostCardMessage(ctx, W, H, ghostBlueRgb);
+    _drawGhostCardLocation(ctx, W, H, premiumRgb);
+    _drawGhostCardCTA(ctx, W, H, ghostBlueRgb);
+    _drawGhostCardFooter(ctx, W, H, ghostBlueRgb);
+    _exportGhostCard(canvas, btn);
 
   } catch(e) {
     console.warn('generateGhostCard:', e);
