@@ -5598,19 +5598,12 @@ async function _checkFirstDepositor(lat, lng, geohash5) {
   } catch(e) { return false; }
 }
 
-window.loadNearbyGhosts = async () => {
-  // Vérification offline
-  if (!navigator.onLine) {
-    showToast('warning', t.radar_offline);
-  }
-  const _gc = document.getElementById('ghostCount'); if (_gc) _gc.textContent = '';
-  document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_locating + '</span>';
-  skeletonGhostList();
+// Ne déclenche la popup GPS native que si le priming a déjà été accepté
+// (cf. _maybeShowLocationPrimer) — sinon, sur le tout premier lancement,
+// cet appel partirait avant toute explication pendant que l'onboarding
+// est encore affiché. On utilise le fallback en attendant _ensureLocationReady().
+async function _resolveNearbyGhostsLocation() {
   try {
-    // Ne déclenche la popup GPS native que si le priming a déjà été accepté
-    // (cf. _maybeShowLocationPrimer) — sinon, sur le tout premier lancement,
-    // cet appel partirait avant toute explication pendant que l'onboarding
-    // est encore affiché. On utilise le fallback en attendant _ensureLocationReady().
     if (!window._locationWatchStarted) {
       if (!userLat || !userLng) { userLat = 46.6034; userLng = 1.8883; window._gpsIsFallback = true; }
     } else {
@@ -5629,19 +5622,26 @@ window.loadNearbyGhosts = async () => {
     }
     // Si on a déjà une position réelle, on l'utilise sans marquer comme fallback
   }
+}
 
-  // ── QUERY FIRESTORE (géohash ~15km) ─────────────────────────────────
-  // WorldService.getVisibleGhosts filtre par geohash (centre + 8 voisins ~15km)
-  // → coût Firestore proportionnel à la zone, pas à la collection globale
-  let snap;
+// ── QUERY FIRESTORE (géohash ~15km) ─────────────────────────────────
+// WorldService.getVisibleGhosts filtre par geohash (centre + 8 voisins ~15km)
+// → coût Firestore proportionnel à la zone, pas à la collection globale
+// Retourne null si la requête échoue (l'UI d'erreur est déjà posée) — le
+// caller doit alors sortir immédiatement de loadNearbyGhosts.
+async function _fetchVisibleGhostsSnapshot() {
   try {
-    snap = await WorldService.getVisibleGhosts(userLat, userLng);
+    return await WorldService.getVisibleGhosts(userLat, userLng);
   } catch(firestoreErr) {
     console.error('Firestore error:', firestoreErr);
     showToast('error', t.radar_firestore_err || 'Erreur de chargement.');
     document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg-err">' + t.radar_firestore_err + '</span>';
-    renderGhostList(); renderRadarDots(); return;
+    renderGhostList(); renderRadarDots();
+    return null;
   }
+}
+
+function _processNearbyGhostsSnapshot(snap) {
   nearbyGhosts = [];
   // Fantômes réels mais hors du rayon "proche" (5-15km) — gardés uniquement pour
   // le teaser de présence (direction + distance), jamais leur contenu ni position exacte.
@@ -5675,7 +5675,10 @@ window.loadNearbyGhosts = async () => {
     }
   });
   nearbyGhosts.sort((a,b) => a.distance - b.distance);
-  // Streak de présence physique — tracker le geohash du lieu actuel
+}
+
+// Streak de présence physique — tracker le geohash du lieu actuel
+function _trackCurrentPlaceVisit() {
   if (userLat && userLng) {
     const _gf = buildGeohashFields(userLat, userLng);
     if (_gf && _gf.geohash5) {
@@ -5683,9 +5686,9 @@ window.loadNearbyGhosts = async () => {
       _trackFrequentPlace(_gf.geohash5); // détection lieu fréquenté
     }
   }
-  // Vérifier fenêtres éphémères après chaque chargement
-  setTimeout(_checkEphemeralWindows, 500);
+}
 
+function _notifySecretGhostsNearby() {
   for (const g of nearbyGhosts) {
     if (g.secret) {
       const key = 'secret_revealed_' + g.id;
@@ -5712,9 +5715,10 @@ window.loadNearbyGhosts = async () => {
       }
     }
   }
+}
 
-  const count = nearbyGhosts.length;
-  // Si 0 résultat et qu'il y a des fantômes en base, élargir à 50km
+// Si 0 résultat et qu'il y a des fantômes en base, élargir à 50km
+function _widenNearbyGhostsIfEmpty(snap, count) {
   let widened = false;
   if (count === 0 && snap.size > 0) {
     snap.forEach(d => {
@@ -5725,6 +5729,10 @@ window.loadNearbyGhosts = async () => {
     });
     nearbyGhosts.sort((a,b) => a.distance - b.distance);
   }
+  return widened;
+}
+
+function _updateGhostCountMessage(count, widened) {
   if (count === 0) {
     if (widened && nearbyGhosts.length > 0) {
       document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_no_ghosts_widened + '</span>';
@@ -5734,6 +5742,9 @@ window.loadNearbyGhosts = async () => {
   } else {
     document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
   }
+}
+
+function _renderNearbyGhostsUI(count) {
   // Le ping sonar n'est plus lié au refresh — il suit désormais le passage du
   // faisceau radar sur chaque point (cf. renderRadarDots() / _radarPingLoop).
   const mc = document.getElementById('mapCount');
@@ -5745,6 +5756,9 @@ window.loadNearbyGhosts = async () => {
   if (document.getElementById('screenMap')?.classList.contains('active')) {
     renderStaticMap();
   }
+}
+
+function _updateResonanceStatusButton() {
   const resoEl = document.getElementById('resoStatus');
   if (resoEl) {
     if (hasResonatedToday()) {
@@ -5757,6 +5771,9 @@ window.loadNearbyGhosts = async () => {
       resoEl.style.borderColor = 'rgba(var(--ghost-blue-rgb),.3)';
     }
   }
+}
+
+function _runPostLoadHousekeeping(count) {
   Analytics.track('ghosts_loaded', { count });
   updateRankBar();
   checkForNewGhosts(count);
@@ -5764,6 +5781,35 @@ window.loadNearbyGhosts = async () => {
   setTimeout(() => checkVirginGhostNearby(), 3000);
   // Nettoyage des clés prev_reso_* orphelines (fantômes supprimés/expirés)
   cleanOldResoKeys();
+}
+
+window.loadNearbyGhosts = async () => {
+  // Vérification offline
+  if (!navigator.onLine) {
+    showToast('warning', t.radar_offline);
+  }
+  const _gc = document.getElementById('ghostCount'); if (_gc) _gc.textContent = '';
+  document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_locating + '</span>';
+  skeletonGhostList();
+
+  await _resolveNearbyGhostsLocation();
+
+  const snap = await _fetchVisibleGhostsSnapshot();
+  if (!snap) return;
+
+  _processNearbyGhostsSnapshot(snap);
+  _trackCurrentPlaceVisit();
+  // Vérifier fenêtres éphémères après chaque chargement
+  setTimeout(_checkEphemeralWindows, 500);
+  _notifySecretGhostsNearby();
+
+  const count = nearbyGhosts.length;
+  const widened = _widenNearbyGhostsIfEmpty(snap, count);
+  _updateGhostCountMessage(count, widened);
+
+  _renderNearbyGhostsUI(count);
+  _updateResonanceStatusButton();
+  _runPostLoadHousekeeping(count);
 };
 
 function cleanOldResoKeys() {
