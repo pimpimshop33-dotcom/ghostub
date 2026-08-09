@@ -7576,6 +7576,259 @@ window.followChain = () => {
   }, 800);
 };
 
+function _readDepositFormInputs() {
+  const location = document.getElementById('depositLocation').value.trim();
+  const rawEmoji  = document.getElementById('depositEmoji').value || '👻';
+  // FIX: Limiter l'emoji à 2 caractères max pour éviter injection de HTML
+  const emoji = [...rawEmoji].slice(0, 2).join('');
+  const duration = document.querySelector('.dur-btn.active:not([data-maxopen])')?.textContent || t.dep_dur_7d;
+  const maxOpenCount = parseInt(document.querySelector('.dur-btn.active[data-maxopen]')?.dataset.maxopen || '0');
+  const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
+  // Pseudo par défaut, anonymat via le lien discret (Lot Q) — remplace
+  // l'ancien dropdown Identité et son bug d'indexation (Lot O/P).
+  const anon     = document.getElementById('anonToggleLink')?.classList.contains('active') || false;
+  const err      = document.getElementById('depositError');
+  return { location, emoji, duration, maxOpenCount, radius, anon, err };
+}
+
+// Construit le message du fantôme selon le mode (normal / commerce) et
+// applique ses propres validations. Retourne `null` si une validation a
+// échoué (l'UI d'erreur — toast/bordure/focus — est déjà posée par cette
+// fonction, il faut alors sortir immédiatement de depositGhost), sinon
+// retourne le message construit (potentiellement vide en mode normal — la
+// validation "message vide" générale reste dans depositGhost).
+//
+// Le message dépend du mode : Commerce le reconstruit depuis titre/description/
+// code (le champ #depositMsg normal est masqué dans ce mode, cf toggleBusinessMode) ;
+// ces validations vivaient avant dans l'ancien wizardNext(1), disparu avec la
+// fusion en une seule page (Lot H) — reportées ici pour ne pas les perdre.
+function _buildDepositMessage() {
+  if (_depositMode === 'business') {
+    const bizTitle = document.getElementById('bizTitle').value.trim();
+    if (!bizTitle) {
+      const el = document.getElementById('bizTitle');
+      el.style.borderColor = 'rgba(255,100,100,.5)';
+      setTimeout(() => el.style.borderColor = '', 1500);
+      el.focus();
+      showToast('warning', t.dep_biz_title_err);
+      return null;
+    }
+    const bizType = document.querySelector('#bizTypeSelector .type-btn.active')?.dataset.val || 'Offre';
+    const bizDesc = document.getElementById('bizDesc').value.trim();
+    const promoCodeVal = document.getElementById('promoCode').value.trim();
+    let message = `🏪 ${bizType} : ${bizTitle}`;
+    if (bizDesc) message += `\n${bizDesc}`;
+    if (promoCodeVal) message += `\nCode : ${promoCodeVal}`;
+    return message;
+  } else {
+    const message = document.getElementById('depositMsg').value.trim();
+    // Filtre anti-pub pour les non-premium (Mode Commerce Premium requis pour les offres)
+    if (!isPremium && message) {
+      const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
+      const msgLower = message.toLowerCase();
+      if (spamWords.some(w => msgLower.includes(w))) {
+        showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
+        const msgEl = document.getElementById('depositMsg');
+        msgEl.style.borderColor = 'rgba(var(--premium-rgb),.5)';
+        setTimeout(() => msgEl.style.borderColor = '', 2000);
+        return null;
+      }
+    }
+    return message;
+  }
+}
+
+// Vérification Premium serveur avant opération critique + cooldown (0 pour
+// Premium, 15min pour Free). Retourne false si le dépôt est refusé (l'erreur
+// est déjà posée dans `err`).
+async function _verifyDepositAllowed(err) {
+  if (isPremium) await _verifyPremiumServer();
+  if (!isPremium) {
+    const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid, isExpired);
+    if (!cooldownCheck.ok) { err.textContent = cooldownCheck.reason; return false; }
+  }
+  return true;
+}
+
+// Upload isolé dans son propre try/catch : en cas d'échec (y compris timeout),
+// on ne doit JAMAIS créer le fantôme sans son média, et l'UI doit toujours
+// se réinitialiser (bouton réactivé, spinner CSS retiré via setLoading).
+// Retourne null si l'upload échoue (l'UI d'erreur est déjà posée).
+async function _uploadDepositMedia(depositBtn, err, hasMedia) {
+  setLoading(depositBtn, true);
+  depositBtn.textContent = hasMedia ? '⬆ Upload…' : '';
+  try {
+    return await uploadMedia(currentUser.uid + '_' + Date.now());
+  } catch (e) {
+    console.warn('uploadMedia error:', e);
+    setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
+    err.textContent = t.dep_upload_failed;
+    showToast('error', t.dep_upload_failed, 5000);
+    return null;
+  }
+}
+
+// ── Dépôt via la Cloud Function createGhostSecure (audit 4.3) ───────
+// Le document est désormais créé côté serveur (admin SDK) plutôt que
+// par écriture directe du SDK client : c'est ce qui permet d'appliquer
+// enfin DEPOSIT.MAX_ACTIVE (5 fantômes actifs max) de façon fiable —
+// un comptage agrégé n'est pas possible dans firestore.rules seules.
+// ghostCount et lastGhostCreatedAt sont mis à jour dans la même
+// transaction côté fonction ; plus besoin de les écrire séparément ici.
+function _buildGhostDepositPayload(uploadResult, input) {
+  const { message, location, emoji, duration, radius, maxOpenCount, anon } = input;
+  const {
+    audioUrl, audioPublicId, audioResourceType,
+    photoUrl, photoPublicId, photoResourceType,
+    videoUrl, videoPublicId, videoResourceType,
+    attachments,
+  } = uploadResult;
+  const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
+  const chainNext = isPremium ? (window._chainNextCoords || null) : null;
+  const openCondition = getSelectedCond();
+  const openHour = openCondition === 'hour' ? document.getElementById('condHourInput').value : null;
+  const openDate = openCondition === 'future' ? document.getElementById('condFutureInput').value : null;
+  return {
+    message, location: location || 'Lieu sans nom', emoji, duration, radius, maxOpenCount: maxOpenCount || 0,
+    anonymous: anon,
+    dedicatedTo: (isPremium && document.getElementById('dedicatedUidInput')?.value.trim()) || null,
+    audioUrl: audioUrl || null, photoUrl: photoUrl || null, videoUrl: videoUrl || null,
+    audioPublicId: audioPublicId || null, audioResourceType: audioResourceType || null,
+    photoPublicId: photoPublicId || null, photoResourceType: photoResourceType || null,
+    videoPublicId: videoPublicId || null, videoResourceType: videoResourceType || null,
+    attachments: (isPremium && Array.isArray(attachments) && attachments.length > 0) ? attachments : null,
+    chainHint: (isPremium && chainHint) || null,
+    chainLat: chainNext ? chainNext.lat : null,
+    chainLng: chainNext ? chainNext.lng : null,
+    openCondition: openCondition || 'always',
+    openHour: openHour || null,
+    openDate: openDate || null,
+    businessMode: (isPremium && _depositMode === 'business') || false,
+    promoCode: (isPremium && _depositMode === 'business') ? (document.getElementById('promoCode')?.value.trim() || null) : null,
+    author: currentUser.displayName || currentUser.email,
+    lat: userLat, lng: userLng,
+  };
+}
+
+// Retourne l'id du fantôme créé, ou null si le serveur a refusé (l'erreur
+// est déjà posée dans `err`).
+async function _submitGhostDeposit(ghostData, depositBtn, err) {
+  try {
+    const res = await _createGhostSecureCallable(ghostData);
+    return res.data.ghostId;
+  } catch (e) {
+    console.warn('[ghostub:createGhostSecure]', e);
+    setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
+    // resource-exhausted couvre à la fois le cooldown et le plafond de 5
+    // fantômes actifs — le message précis vient du serveur (e.message),
+    // les autres cas retombent sur un message générique traduit.
+    err.textContent = (e.code === 'functions/resource-exhausted' && e.message)
+      ? e.message
+      : (e.code === 'functions/permission-denied')
+        ? t.dep_err_denied
+        : t.dep_err_generic;
+    return null;
+  }
+}
+
+// Déposer un fantôme compte aussi comme une action significative pour le streak.
+// Réinitialise aussi le formulaire et l'état du mode dépôt pour le prochain dépôt.
+function _resetDepositStateAfterSuccess(depositBtn) {
+  const _suDep = _updateStreak();
+  _renderStreak();
+  if (_suDep.freezeJustUsed) showToast('info', t.streak_freeze_used);
+  document.getElementById('depositMsg').value = '';
+  document.getElementById('depositLocation').value = '';
+  document.getElementById('chainHint').value = '';
+  const promoEl = document.getElementById('promoCode');
+  if (promoEl) promoEl.value = '';
+  const bizExtra = document.getElementById('businessExtra');
+  if (bizExtra) bizExtra.style.display = 'none';
+  // v105 : reset l'état du mode dépôt après succès
+  _depositMode = 'normal';
+  window._depositMode = _depositMode;
+  const bizIcon = document.getElementById('businessToggleIcon');
+  if (bizIcon) bizIcon.textContent = '○';
+  const bizBtn = document.getElementById('businessToggleBtn');
+  if (bizBtn) bizBtn.style.borderColor = 'rgba(var(--premium-rgb),.2)';
+  document.getElementById('chainMapLabel').textContent = 'Placer le prochain point sur la carte';
+  document.getElementById('chainMapPreview').style.display = 'none';
+  window._chainNextCoords = null;
+  setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
+  clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
+  // Replier le menu média et le lien anonyme (Lot Q)
+  _resetAnonToggle();
+  ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
+}
+
+function _showDepositSuccessScreen(ghostId) {
+  document.getElementById('depositSuccess').classList.add('show');
+  _maybeShowSuccessNotifPrompt();
+  // Ghost dédié sans UID : afficher le lien de partage
+  if (isPremium && !document.getElementById('dedicatedUidInput')?.value.trim()) {
+    const _dedEl = document.getElementById('successSubText');
+    if (_dedEl && ghostId) {
+      const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
+      window._lastDedicatedLink = _link;
+      _dedEl.innerHTML = 'Ton ghost est ancré.<br><span class="dedicated-link-hint">Partage ce lien pour le dédier :</span><br><button data-action="copyDedicatedLink" class="dedicated-link-btn">' + _link + '</button>';
+    }
+  }
+}
+
+function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location) {
+  // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
+  const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
+  localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
+  // Particules dorées
+  setTimeout(() => _launchDepositParticles(), 80);
+  showToast('success', t.dep_success);
+  // Badge premier déposant dans ce lieu
+  if (userLat && userLng) {
+    const _dFields = buildGeohashFields(userLat, userLng);
+    if (_dFields && _dFields.geohash5) {
+      _checkFirstDepositor(userLat, userLng, _dFields.geohash5).then(isFirst => {
+        if (isFirst) setTimeout(() => {
+          showToast('info', '🏅 ' + (_currentLang === 'en' ? 'First ghost in this place!' : 'Premier fantôme de ce lieu !'), 5000);
+          showNotif('🏅 Pionnier !', _currentLang === 'en'
+            ? 'Your ghost is the first in this place. It will be remembered.'
+            : 'Ton fantôme est le premier ici. Il restera.');
+        }, 2200);
+      }).catch(()=>{});
+    }
+  }
+  // Notifier les utilisateurs qui ont des fantômes dans ce périmètre
+  _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(e => console.warn('notify:', e));
+  playDepositSound();
+  HapticsService.deposit();
+  Analytics.track('ghost_deposited', { anonymous: anon, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
+}
+
+// Clic pour fermer manuellement si le timer bloque.
+// CSP audit 4.6 : la protection reposait sur _requestSuccessNotif()
+// appelant e.stopPropagation() pendant que son onclick="" tournait
+// directement sur le bouton, avant que l'événement ne remonte jusqu'ici.
+// Le dispatcher délégué (zone 0b) écoute sur document, donc son propre
+// gestionnaire tourne APRÈS ce listener-ci dans l'ordre de bulle —
+// stopPropagation() y arriverait trop tard. Garde plutôt ici, à la
+// source, indépendante de l'ordre d'écoute.
+function _armDepositSuccessDismiss() {
+  const successEl = document.getElementById('depositSuccess');
+  const dismissSuccess = (e) => {
+    if (e.target.closest('#successNotifBtn')) return;
+    successEl.classList.remove('show');
+    successEl.removeEventListener('click', dismissSuccess);
+    showScreen('screenRadar');
+    setNav('nav-radar');
+    // Délai pour laisser Firestore propager le nouveau fantôme
+    setTimeout(() => loadNearbyGhosts().catch(() => {}), 1500);
+  };
+  successEl.addEventListener('click', dismissSuccess);
+  setTimeout(() => dismissSuccess(), 6000);
+}
+
 window.depositGhost = async () => {
   // Verrou synchrone anti double-tap : sans lui, deux taps rapprochés peuvent
   // chacun passer la vérification de cooldown (asynchrone) avant que le
@@ -7585,54 +7838,10 @@ window.depositGhost = async () => {
   const depositBtn = document.getElementById('depositBtn');
   depositBtn.disabled = true;
   try {
-    const location = document.getElementById('depositLocation').value.trim();
-    const rawEmoji  = document.getElementById('depositEmoji').value || '👻';
-    // FIX: Limiter l'emoji à 2 caractères max pour éviter injection de HTML
-    const emoji = [...rawEmoji].slice(0, 2).join('');
-    const duration = document.querySelector('.dur-btn.active:not([data-maxopen])')?.textContent || t.dep_dur_7d;
-    const maxOpenCount = parseInt(document.querySelector('.dur-btn.active[data-maxopen]')?.dataset.maxopen || '0');
-    const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
-    // Pseudo par défaut, anonymat via le lien discret (Lot Q) — remplace
-    // l'ancien dropdown Identité et son bug d'indexation (Lot O/P).
-    const anon     = document.getElementById('anonToggleLink')?.classList.contains('active') || false;
-    const err      = document.getElementById('depositError');
+    const { location, emoji, duration, maxOpenCount, radius, anon, err } = _readDepositFormInputs();
 
-    // Le message dépend du mode : Commerce le reconstruit depuis titre/description/
-    // code (le champ #depositMsg normal est masqué dans ce mode, cf toggleBusinessMode) ;
-    // ces validations vivaient avant dans l'ancien wizardNext(1), disparu avec la
-    // fusion en une seule page (Lot H) — reportées ici pour ne pas les perdre.
-    let message;
-    if (_depositMode === 'business') {
-      const bizTitle = document.getElementById('bizTitle').value.trim();
-      if (!bizTitle) {
-        const el = document.getElementById('bizTitle');
-        el.style.borderColor = 'rgba(255,100,100,.5)';
-        setTimeout(() => el.style.borderColor = '', 1500);
-        el.focus();
-        showToast('warning', t.dep_biz_title_err);
-        return;
-      }
-      const bizType = document.querySelector('#bizTypeSelector .type-btn.active')?.dataset.val || 'Offre';
-      const bizDesc = document.getElementById('bizDesc').value.trim();
-      const promoCodeVal = document.getElementById('promoCode').value.trim();
-      message = `🏪 ${bizType} : ${bizTitle}`;
-      if (bizDesc) message += `\n${bizDesc}`;
-      if (promoCodeVal) message += `\nCode : ${promoCodeVal}`;
-    } else {
-      message = document.getElementById('depositMsg').value.trim();
-      // Filtre anti-pub pour les non-premium (Mode Commerce Premium requis pour les offres)
-      if (!isPremium && message) {
-        const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
-        const msgLower = message.toLowerCase();
-        if (spamWords.some(w => msgLower.includes(w))) {
-          showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
-          const msgEl = document.getElementById('depositMsg');
-          msgEl.style.borderColor = 'rgba(var(--premium-rgb),.5)';
-          setTimeout(() => msgEl.style.borderColor = '', 2000);
-          return;
-        }
-      }
-    }
+    const message = _buildDepositMessage();
+    if (message === null) return;
 
     if (!message) { err.textContent = t.dep_err_msg; document.getElementById('depositMsg').focus(); return; }
     if (message.length > 600) { err.textContent = t.dep_err_long; return; }
@@ -7644,174 +7853,22 @@ window.depositGhost = async () => {
     if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
 
     err.textContent = '';
-    // Vérification Premium serveur avant opération critique
-    if (isPremium) await _verifyPremiumServer();
-    // Cooldown : 0 pour Premium, 15min pour Free
-    if (!isPremium) {
-      const cooldownCheck = await WorldService.checkDepositCooldown(currentUser.uid, isExpired);
-      if (!cooldownCheck.ok) { err.textContent = cooldownCheck.reason; return; }
-    }
+    if (!(await _verifyDepositAllowed(err))) return;
+
     const hasMedia = !!(window._pendingAudioBlob || window._pendingPhotoFile || window._pendingVideoFile || (Array.isArray(window._pendingAttachments) && window._pendingAttachments.length > 0));
-    setLoading(depositBtn, true);
-    depositBtn.textContent = hasMedia ? '⬆ Upload…' : '';
-
-    // Upload isolé dans son propre try/catch : en cas d'échec (y compris timeout),
-    // on ne doit JAMAIS créer le fantôme sans son média, et l'UI doit toujours
-    // se réinitialiser (bouton réactivé, spinner CSS retiré via setLoading).
-    let uploadResult;
-    try {
-      uploadResult = await uploadMedia(currentUser.uid + '_' + Date.now());
-    } catch (e) {
-      console.warn('uploadMedia error:', e);
-      setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
-      err.textContent = t.dep_upload_failed;
-      showToast('error', t.dep_upload_failed, 5000);
-      return;
-    }
+    const uploadResult = await _uploadDepositMedia(depositBtn, err, hasMedia);
+    if (!uploadResult) return;
 
     try {
-      const {
-        audioUrl, audioPublicId, audioResourceType,
-        photoUrl, photoPublicId, photoResourceType,
-        videoUrl, videoPublicId, videoResourceType,
-        attachments,
-      } = uploadResult;
       if (hasMedia) depositBtn.textContent = t.dep_btn_saving;
-      const chainHint = isPremium ? document.getElementById('chainHint').value.trim() : null;
-      const chainNext = isPremium ? (window._chainNextCoords || null) : null;
-      const openCondition = getSelectedCond();
-      const openHour = openCondition === 'hour' ? document.getElementById('condHourInput').value : null;
-      const openDate = openCondition === 'future' ? document.getElementById('condFutureInput').value : null;
-      // ── Dépôt via la Cloud Function createGhostSecure (audit 4.3) ───────
-      // Le document est désormais créé côté serveur (admin SDK) plutôt que
-      // par écriture directe du SDK client : c'est ce qui permet d'appliquer
-      // enfin DEPOSIT.MAX_ACTIVE (5 fantômes actifs max) de façon fiable —
-      // un comptage agrégé n'est pas possible dans firestore.rules seules.
-      // ghostCount et lastGhostCreatedAt sont mis à jour dans la même
-      // transaction côté fonction ; plus besoin de les écrire séparément ici.
-      const ghostData = {
-        message, location: location || 'Lieu sans nom', emoji, duration, radius, maxOpenCount: maxOpenCount || 0,
-        anonymous: anon,
-        dedicatedTo: (isPremium && document.getElementById('dedicatedUidInput')?.value.trim()) || null,
-        audioUrl: audioUrl || null, photoUrl: photoUrl || null, videoUrl: videoUrl || null,
-        audioPublicId: audioPublicId || null, audioResourceType: audioResourceType || null,
-        photoPublicId: photoPublicId || null, photoResourceType: photoResourceType || null,
-        videoPublicId: videoPublicId || null, videoResourceType: videoResourceType || null,
-        attachments: (isPremium && Array.isArray(attachments) && attachments.length > 0) ? attachments : null,
-        chainHint: (isPremium && chainHint) || null,
-        chainLat: chainNext ? chainNext.lat : null,
-        chainLng: chainNext ? chainNext.lng : null,
-        openCondition: openCondition || 'always',
-        openHour: openHour || null,
-        openDate: openDate || null,
-        businessMode: (isPremium && _depositMode === 'business') || false,
-        promoCode: (isPremium && _depositMode === 'business') ? (document.getElementById('promoCode')?.value.trim() || null) : null,
-        author: currentUser.displayName || currentUser.email,
-        lat: userLat, lng: userLng,
-      };
-      let ghostId;
-      try {
-        const res = await _createGhostSecureCallable(ghostData);
-        ghostId = res.data.ghostId;
-      } catch (e) {
-        console.warn('[ghostub:createGhostSecure]', e);
-        setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
-        // resource-exhausted couvre à la fois le cooldown et le plafond de 5
-        // fantômes actifs — le message précis vient du serveur (e.message),
-        // les autres cas retombent sur un message générique traduit.
-        err.textContent = (e.code === 'functions/resource-exhausted' && e.message)
-          ? e.message
-          : (e.code === 'functions/permission-denied')
-            ? t.dep_err_denied
-            : t.dep_err_generic;
-        return;
-      }
-      // Déposer un fantôme compte aussi comme une action significative pour le streak
-      const _suDep = _updateStreak();
-      _renderStreak();
-      if (_suDep.freezeJustUsed) showToast('info', t.streak_freeze_used);
-      document.getElementById('depositMsg').value = '';
-      document.getElementById('depositLocation').value = '';
-      document.getElementById('chainHint').value = '';
-      const promoEl = document.getElementById('promoCode');
-      if (promoEl) promoEl.value = '';
-      const bizExtra = document.getElementById('businessExtra');
-      if (bizExtra) bizExtra.style.display = 'none';
-      // v105 : reset l'état du mode dépôt après succès
-      _depositMode = 'normal';
-      window._depositMode = _depositMode;
-      const bizIcon = document.getElementById('businessToggleIcon');
-      if (bizIcon) bizIcon.textContent = '○';
-      const bizBtn = document.getElementById('businessToggleBtn');
-      if (bizBtn) bizBtn.style.borderColor = 'rgba(var(--premium-rgb),.2)';
-      document.getElementById('chainMapLabel').textContent = 'Placer le prochain point sur la carte';
-      document.getElementById('chainMapPreview').style.display = 'none';
-      window._chainNextCoords = null;
-      setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
-      clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
-      // Replier le menu média et le lien anonyme (Lot Q)
-      _resetAnonToggle();
-      ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.style.display = 'none';
-      });
-      if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
-      document.getElementById('depositSuccess').classList.add('show');
-      _maybeShowSuccessNotifPrompt();
-      // Ghost dédié sans UID : afficher le lien de partage
-      if (isPremium && !document.getElementById('dedicatedUidInput')?.value.trim()) {
-        const _dedEl = document.getElementById('successSubText');
-        if (_dedEl && ghostId) {
-          const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
-          window._lastDedicatedLink = _link;
-          _dedEl.innerHTML = 'Ton ghost est ancré.<br><span class="dedicated-link-hint">Partage ce lien pour le dédier :</span><br><button data-action="copyDedicatedLink" class="dedicated-link-btn">' + _link + '</button>';
-        }
-      }
-      // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
-      const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
-      localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
-      // Haptic handled by HapticsService.deposit() above
-      // Particules dorées
-      setTimeout(() => _launchDepositParticles(), 80);
-      showToast('success', t.dep_success);
-      // Badge premier déposant dans ce lieu
-      if (userLat && userLng) {
-        const _dFields = buildGeohashFields(userLat, userLng);
-        if (_dFields && _dFields.geohash5) {
-          _checkFirstDepositor(userLat, userLng, _dFields.geohash5).then(isFirst => {
-            if (isFirst) setTimeout(() => {
-              showToast('info', '🏅 ' + (_currentLang === 'en' ? 'First ghost in this place!' : 'Premier fantôme de ce lieu !'), 5000);
-              showNotif('🏅 Pionnier !', _currentLang === 'en'
-                ? 'Your ghost is the first in this place. It will be remembered.'
-                : 'Ton fantôme est le premier ici. Il restera.');
-            }, 2200);
-          }).catch(()=>{});
-        }
-      }
-      // Notifier les utilisateurs qui ont des fantômes dans ce périmètre
-      _notifyNearbyUsers(ghostId, userLat, userLng, location || 'ce lieu').catch(e => console.warn('notify:', e));
-      playDepositSound();
-      HapticsService.deposit();
-      Analytics.track('ghost_deposited', { anonymous: anon, hasAudio: !!audioUrl, hasPhoto: !!photoUrl });
-      // Clic pour fermer manuellement si le timer bloque
-      const successEl = document.getElementById('depositSuccess');
-      // CSP audit 4.6 : la protection reposait sur _requestSuccessNotif()
-      // appelant e.stopPropagation() pendant que son onclick="" tournait
-      // directement sur le bouton, avant que l'événement ne remonte jusqu'ici.
-      // Le dispatcher délégué (zone 0b) écoute sur document, donc son propre
-      // gestionnaire tourne APRÈS ce listener-ci dans l'ordre de bulle —
-      // stopPropagation() y arriverait trop tard. Garde plutôt ici, à la
-      // source, indépendante de l'ordre d'écoute.
-      const dismissSuccess = (e) => {
-        if (e.target.closest('#successNotifBtn')) return;
-        successEl.classList.remove('show');
-        successEl.removeEventListener('click', dismissSuccess);
-        showScreen('screenRadar');
-        setNav('nav-radar');
-        // Délai pour laisser Firestore propager le nouveau fantôme
-        setTimeout(() => loadNearbyGhosts().catch(() => {}), 1500);
-      };
-      successEl.addEventListener('click', dismissSuccess);
-      setTimeout(() => dismissSuccess(), 6000);
+      const ghostData = _buildGhostDepositPayload(uploadResult, { message, location, emoji, duration, radius, maxOpenCount, anon });
+      const ghostId = await _submitGhostDeposit(ghostData, depositBtn, err);
+      if (!ghostId) return;
+
+      _resetDepositStateAfterSuccess(depositBtn);
+      _showDepositSuccessScreen(ghostId);
+      _trackDepositSuccessEffects(ghostId, anon, ghostData.audioUrl, ghostData.photoUrl, location);
+      _armDepositSuccessDismiss();
     } catch(e) {
       console.warn('depositGhost error:', e);
       err.textContent = e.code === 'permission-denied'
