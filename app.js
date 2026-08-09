@@ -6415,6 +6415,167 @@ window.shareEmpreinte = async () => {
 // ── PARTAGE PROFIL PUBLIC ─────────────────────────────────────────
 
 // ── MON ANNÉE GHOSTUB ────────────────────────────────────
+// Collecter les données
+async function _collectYearCardStats() {
+  const discovered = getDiscoveryCount();
+  const deposited  = Math.max(
+    parseInt(localStorage.getItem('ghostub_total_deposited_' + (currentUser?.uid || 'anon')) || '0'),
+    parseInt(document.getElementById('statDeposited')?.textContent || '0')
+  );
+  const resonances = parseInt(document.getElementById('statResonances')?.textContent || '0');
+  const firstReads = parseInt(document.getElementById('statFirstReader')?.textContent || '0');
+  const streak     = _getStreak().count;
+  const rank       = getRank(discovered);
+  const name       = currentUser?.displayName || 'Chasseur';
+
+  // Données Firestore pour le lieu le plus visité
+  let topLocation = '';
+  try {
+    const snap = await getDocs(query(
+      collection(db, COLL.GHOSTS),
+      where('authorUid', '==', currentUser.uid),
+      orderBy('openCount', 'desc'),
+      limit(1)
+    ));
+    if (!snap.empty) topLocation = snap.docs[0].data().location || '';
+  } catch(e) { console.warn('[ghostub:generateYearCard:topLocation]', e); }
+
+  return { discovered, deposited, resonances, firstReads, streak, rank, name, topLocation };
+}
+
+// ── Fond ─────────────────────────────────────────────
+function _drawYearCardBackground(ctx, W, H) {
+  const bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0,   '#06040e');
+  bg.addColorStop(0.4, '#0d0820');
+  bg.addColorStop(1,   '#04030c');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // Étoiles
+  for (let i = 0; i < 200; i++) {
+    const sx = (Math.sin(i*7.3)*0.5+0.5)*W;
+    const sy = (Math.sin(i*13.7)*0.5+0.5)*H;
+    const sr = (Math.sin(i*3.1)*0.5+0.5)*1.8+0.2;
+    const sa = 0.1+(Math.sin(i*5.9)*0.5+0.5)*0.5;
+    ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2);
+    ctx.fillStyle = `rgba(200,210,255,${sa})`; ctx.fill();
+  }
+
+  // Halos
+  [[W*0.25,H*0.35,'rgba(120,80,255,0.15)'],[W*0.75,H*0.6,'rgba(80,160,255,0.1)']].forEach(([x,y,c])=>{
+    const h = ctx.createRadialGradient(x,y,0,x,y,300);
+    h.addColorStop(0,c); h.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=h; ctx.fillRect(0,0,W,H);
+  });
+}
+
+function _drawYearCardHeader(ctx, W, name, rank) {
+  ctx.textAlign = 'center';
+
+  // App name
+  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
+  ctx.font = '500 34px "Instrument Sans", sans-serif';
+  ctx.fillText('GHOSTUB', W/2, 110);
+
+  // Ligne déco
+  ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(80,140); ctx.lineTo(W-80,140); ctx.stroke();
+
+  // Titre
+  ctx.fillStyle = 'rgba(var(--premium-rgb),0.85)';
+  ctx.font = 'italic 62px "Cormorant Garamond", Georgia, serif';
+  ctx.fillText(_currentLang === 'en' ? 'My year in ghosts' : 'Mon année en fantômes', W/2, 230);
+
+  // Nom + rang
+  ctx.fillStyle = 'rgba(230,225,255,0.9)';
+  ctx.font = '500 44px "Instrument Sans", sans-serif';
+  ctx.fillText(name, W/2, 310);
+  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.5)';
+  ctx.font = '34px "Instrument Sans", sans-serif';
+  ctx.fillText(rank.icon + ' ' + rank.label, W/2, 370);
+
+  // Ligne déco milieu
+  ctx.strokeStyle = 'rgba(var(--premium-rgb),0.15)';
+  ctx.beginPath(); ctx.moveTo(120,420); ctx.lineTo(W-120,420); ctx.stroke();
+}
+
+// Stats grandes
+function _drawYearCardStats(ctx, W, H, discovered, deposited, resonances) {
+  const stats = [
+    { num: discovered, label: _currentLang === 'en' ? 'seals broken' : 'sceaux brisés', icon: '🔮', y: 560 },
+    { num: deposited,  label: _currentLang === 'en' ? 'ghosts invoked' : 'fantômes invoqués', icon: '👻', y: 760 },
+    { num: resonances, label: _currentLang === 'en' ? 'resonances given' : 'résonances données', icon: '✦', y: 960 },
+  ];
+
+  stats.forEach(({ num, label, icon, y }) => {
+    // Halo derrière le chiffre
+    const sh = ctx.createRadialGradient(W/2,y-40,0,W/2,y-40,120);
+    sh.addColorStop(0,'rgba(168,180,255,0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle = sh; ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = 'rgba(230,225,255,0.95)';
+    ctx.font = `bold ${num >= 100 ? 110 : 130}px "Cormorant Garamond", Georgia, serif`;
+    ctx.fillText(String(num), W/2, y);
+
+    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.65)';
+    ctx.font = 'italic 40px "Cormorant Garamond", Georgia, serif';
+    ctx.fillText(icon + '  ' + label, W/2, y+60);
+  });
+}
+
+function _drawYearCardExtras(ctx, W, streak, firstReads, topLocation) {
+  // Extras
+  ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.1)';
+  ctx.beginPath(); ctx.moveTo(120,1080); ctx.lineTo(W-120,1080); ctx.stroke();
+
+  const extras = [];
+  if (streak >= 2) extras.push(`🔥 ${streak} jours de streak`);
+  if (firstReads > 0) extras.push(`🥇 ${firstReads} premier${firstReads>1?'s':''} lecteur${firstReads>1?'s':''}`);
+  if (topLocation) extras.push(`📍 ${topLocation.substring(0,30)}`);
+
+  ctx.fillStyle = 'rgba(var(--premium-rgb),0.6)';
+  ctx.font = '36px "Instrument Sans", sans-serif';
+  extras.forEach((e, i) => ctx.fillText(e, W/2, 1160 + i*70));
+}
+
+function _drawYearCardFooter(ctx, W, H) {
+  // Ligne bas
+  ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
+  ctx.beginPath(); ctx.moveTo(80,H-150); ctx.lineTo(W-80,H-150); ctx.stroke();
+
+  // CTA
+  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.35)';
+  ctx.font = '32px "Instrument Sans", sans-serif';
+  ctx.fillText(_currentLang === 'en' ? 'And you, what did you leave this year?' : 'Et toi, qu’est-ce que tu as laissé cette année ?', W/2, H-100);
+  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.2)';
+  ctx.font = '28px "Instrument Sans", sans-serif';
+  ctx.fillText('ghostub.app', W/2, H-55);
+}
+
+// Export
+function _exportYearCard(canvas, btn, discovered, deposited) {
+  canvas.toBlob(async (blob) => {
+    const file = new File([blob], 'mon-annee-ghostub.png', { type: 'image/png' });
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: _currentLang === 'en' ? '✨ My Ghostub Year' : '✨ Mon année Ghostub',
+          text: _currentLang === 'en'
+            ? `${discovered} seals broken, ${deposited} ghosts invoked. #Ghostub`
+            : `${discovered} sceaux brisés, ${deposited} fantômes invoqués. #Ghostub`
+        });
+        Analytics.track('year_card_shared');
+      } catch(e) {
+        if (e.name !== 'AbortError') _downloadCanvas(canvas, 'mon-annee-ghostub.png');
+      }
+    } else {
+      _downloadCanvas(canvas, 'mon-annee-ghostub.png');
+    }
+    if (btn) { btn.textContent = t.profile_year_btn || (t.lang === 'en' ? '❆ My year' : '❆ Mon année'); btn.disabled = false; }
+  }, 'image/png');
+}
+
 window.generateYearCard = async () => {
   const btn = document.getElementById('yearCardBtn');
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
@@ -6426,155 +6587,19 @@ window.generateYearCard = async () => {
       document.fonts.load('500 36px "Instrument Sans"')
     ]);
 
-    // Collecter les données
-    const discovered = getDiscoveryCount();
-    const deposited  = Math.max(
-      parseInt(localStorage.getItem('ghostub_total_deposited_' + (currentUser?.uid || 'anon')) || '0'),
-      parseInt(document.getElementById('statDeposited')?.textContent || '0')
-    );
-    const resonances = parseInt(document.getElementById('statResonances')?.textContent || '0');
-    const firstReads = parseInt(document.getElementById('statFirstReader')?.textContent || '0');
-    const streak     = _getStreak().count;
-    const rank       = getRank(discovered);
-    const name       = currentUser?.displayName || 'Chasseur';
-
-    // Données Firestore pour le lieu le plus visité
-    let topLocation = '';
-    try {
-      const snap = await getDocs(query(
-        collection(db, COLL.GHOSTS),
-        where('authorUid', '==', currentUser.uid),
-        orderBy('openCount', 'desc'),
-        limit(1)
-      ));
-      if (!snap.empty) topLocation = snap.docs[0].data().location || '';
-    } catch(e) { console.warn('[ghostub:generateYearCard:topLocation]', e); }
+    const { discovered, deposited, resonances, firstReads, streak, rank, name, topLocation } = await _collectYearCardStats();
 
     const W = 1080, H = 1920;
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
 
-    // ── Fond ─────────────────────────────────────────────
-    const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0,   '#06040e');
-    bg.addColorStop(0.4, '#0d0820');
-    bg.addColorStop(1,   '#04030c');
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-
-    // Étoiles
-    for (let i = 0; i < 200; i++) {
-      const sx = (Math.sin(i*7.3)*0.5+0.5)*W;
-      const sy = (Math.sin(i*13.7)*0.5+0.5)*H;
-      const sr = (Math.sin(i*3.1)*0.5+0.5)*1.8+0.2;
-      const sa = 0.1+(Math.sin(i*5.9)*0.5+0.5)*0.5;
-      ctx.beginPath(); ctx.arc(sx,sy,sr,0,Math.PI*2);
-      ctx.fillStyle = `rgba(200,210,255,${sa})`; ctx.fill();
-    }
-
-    // Halos
-    [[W*0.25,H*0.35,'rgba(120,80,255,0.15)'],[W*0.75,H*0.6,'rgba(80,160,255,0.1)']].forEach(([x,y,c])=>{
-      const h = ctx.createRadialGradient(x,y,0,x,y,300);
-      h.addColorStop(0,c); h.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle=h; ctx.fillRect(0,0,W,H);
-    });
-
-    ctx.textAlign = 'center';
-
-    // App name
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
-    ctx.font = '500 34px "Instrument Sans", sans-serif';
-    ctx.fillText('GHOSTUB', W/2, 110);
-
-    // Ligne déco
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(80,140); ctx.lineTo(W-80,140); ctx.stroke();
-
-    // Titre
-    ctx.fillStyle = 'rgba(var(--premium-rgb),0.85)';
-    ctx.font = 'italic 62px "Cormorant Garamond", Georgia, serif';
-    ctx.fillText(_currentLang === 'en' ? 'My year in ghosts' : 'Mon année en fantômes', W/2, 230);
-
-    // Nom + rang
-    ctx.fillStyle = 'rgba(230,225,255,0.9)';
-    ctx.font = '500 44px "Instrument Sans", sans-serif';
-    ctx.fillText(name, W/2, 310);
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.5)';
-    ctx.font = '34px "Instrument Sans", sans-serif';
-    ctx.fillText(rank.icon + ' ' + rank.label, W/2, 370);
-
-    // Ligne déco milieu
-    ctx.strokeStyle = 'rgba(var(--premium-rgb),0.15)';
-    ctx.beginPath(); ctx.moveTo(120,420); ctx.lineTo(W-120,420); ctx.stroke();
-
-    // Stats grandes
-    const stats = [
-      { num: discovered, label: _currentLang === 'en' ? 'seals broken' : 'sceaux brisés', icon: '🔮', y: 560 },
-      { num: deposited,  label: _currentLang === 'en' ? 'ghosts invoked' : 'fantômes invoqués', icon: '👻', y: 760 },
-      { num: resonances, label: _currentLang === 'en' ? 'resonances given' : 'résonances données', icon: '✦', y: 960 },
-    ];
-
-    stats.forEach(({ num, label, icon, y }) => {
-      // Halo derrière le chiffre
-      const sh = ctx.createRadialGradient(W/2,y-40,0,W/2,y-40,120);
-      sh.addColorStop(0,'rgba(168,180,255,0.08)'); sh.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.fillStyle = sh; ctx.fillRect(0,0,W,H);
-
-      ctx.fillStyle = 'rgba(230,225,255,0.95)';
-      ctx.font = `bold ${num >= 100 ? 110 : 130}px "Cormorant Garamond", Georgia, serif`;
-      ctx.fillText(String(num), W/2, y);
-
-      ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.65)';
-      ctx.font = 'italic 40px "Cormorant Garamond", Georgia, serif';
-      ctx.fillText(icon + '  ' + label, W/2, y+60);
-    });
-
-    // Extras
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.1)';
-    ctx.beginPath(); ctx.moveTo(120,1080); ctx.lineTo(W-120,1080); ctx.stroke();
-
-    const extras = [];
-    if (streak >= 2) extras.push(`🔥 ${streak} jours de streak`);
-    if (firstReads > 0) extras.push(`🥇 ${firstReads} premier${firstReads>1?'s':''} lecteur${firstReads>1?'s':''}`);
-    if (topLocation) extras.push(`📍 ${topLocation.substring(0,30)}`);
-
-    ctx.fillStyle = 'rgba(var(--premium-rgb),0.6)';
-    ctx.font = '36px "Instrument Sans", sans-serif';
-    extras.forEach((e, i) => ctx.fillText(e, W/2, 1160 + i*70));
-
-    // Ligne bas
-    ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)';
-    ctx.beginPath(); ctx.moveTo(80,H-150); ctx.lineTo(W-80,H-150); ctx.stroke();
-
-    // CTA
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.35)';
-    ctx.font = '32px "Instrument Sans", sans-serif';
-    ctx.fillText(_currentLang === 'en' ? 'And you, what did you leave this year?' : 'Et toi, qu’est-ce que tu as laissé cette année ?', W/2, H-100);
-    ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.2)';
-    ctx.font = '28px "Instrument Sans", sans-serif';
-    ctx.fillText('ghostub.app', W/2, H-55);
-
-    // Export
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'mon-annee-ghostub.png', { type: 'image/png' });
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: _currentLang === 'en' ? '✨ My Ghostub Year' : '✨ Mon année Ghostub',
-            text: _currentLang === 'en'
-              ? `${discovered} seals broken, ${deposited} ghosts invoked. #Ghostub`
-              : `${discovered} sceaux brisés, ${deposited} fantômes invoqués. #Ghostub`
-          });
-          Analytics.track('year_card_shared');
-        } catch(e) {
-          if (e.name !== 'AbortError') _downloadCanvas(canvas, 'mon-annee-ghostub.png');
-        }
-      } else {
-        _downloadCanvas(canvas, 'mon-annee-ghostub.png');
-      }
-      if (btn) { btn.textContent = t.profile_year_btn || (t.lang === 'en' ? '❆ My year' : '❆ Mon année'); btn.disabled = false; }
-    }, 'image/png');
+    _drawYearCardBackground(ctx, W, H);
+    _drawYearCardHeader(ctx, W, name, rank);
+    _drawYearCardStats(ctx, W, H, discovered, deposited, resonances);
+    _drawYearCardExtras(ctx, W, streak, firstReads, topLocation);
+    _drawYearCardFooter(ctx, W, H);
+    _exportYearCard(canvas, btn, discovered, deposited);
 
   } catch(e) {
     console.warn('generateYearCard:', e);
