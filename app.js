@@ -7065,8 +7065,11 @@ window.swipeGhost = (dir) => {
   }, { passive: true });
 })();
 
-window.openGhost = async (id) => {
-  if (_isGuestUser()) { _promptSignUp('guest_signup_open'); return; }
+// Résout selectedGhost/currentGhostIndex pour l'id demandé (cache local
+// nearbyGhosts, sinon fetch Firestore). Retourne false si le fantôme est
+// introuvable ou inaccessible (l'UI d'erreur est déjà posée) — le caller
+// doit alors sortir immédiatement d'openGhost.
+async function _resolveGhostForOpen(id) {
   const idx = nearbyGhosts.findIndex(g => g.id === id);
   if (idx !== -1) currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
@@ -7077,17 +7080,20 @@ window.openGhost = async (id) => {
   if (!selectedGhost) {
     try {
       const docSnap = await getDoc(doc(db, COLL.GHOSTS, id));
-      if (!docSnap.exists()) { showToast('info', t.detail_ghost_gone); return; }
+      if (!docSnap.exists()) { showToast('info', t.detail_ghost_gone); return false; }
       selectedGhost = { id: docSnap.id, ...docSnap.data(), distance: 0 };
     } catch(e) {
       // Erreur réseau/permission distincte d'un fantôme réellement supprimé —
       // message générique plutôt que d'affirmer à tort qu'il n'existe plus.
       console.warn('[ghostub:openGhost]', e);
       showToast('error', t.misc_error_generic);
-      return;
+      return false;
     }
   }
+  return true;
+}
 
+function _renderGhostDetailHeader() {
   document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
   // Icône de catégorie (Sceau) visible dans le détail — seul autre endroit
   // avec l'écran de dépôt où elle apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md).
@@ -7102,7 +7108,11 @@ window.openGhost = async (id) => {
   else { sealedEl.innerHTML = _BRAND_MARK_HTML; }
   const readCountEl = document.getElementById('detailReadCount');
   if (readCountEl) readCountEl.style.display = 'none';
+}
 
+// Calcule distance/propriétaire/verrouillage et pose les libellés qui en
+// dépendent (sealedHint, detailDistance). Retourne { isOwner, isLocked }.
+function _computeGhostDetailAccess() {
   // FIX: Guard contre lat/lng manquants
   const ghostDist = (selectedGhost.distance != null) ? selectedGhost.distance :
     (selectedGhost.lat && selectedGhost.lng && userLat ?
@@ -7120,8 +7130,12 @@ window.openGhost = async (id) => {
   );
   // FIX: isLocked vérifie la distance calculée (ghostDist)
   const isLocked = selectedGhost.secret && ghostDist > 3 && !isOwner;
+  return { isOwner, isLocked };
+}
 
-  // ── Ghost dédié : vérifier si l'utilisateur est le destinataire ──
+// ── Ghost dédié : vérifier si l'utilisateur est le destinataire ──
+// Retourne false si bloqué (overlay déjà affiché) — le caller doit sortir.
+function _checkDedicatedGhostAccess(isOwner) {
   if (selectedGhost.dedicatedTo && !isOwner) {
     const uid = currentUser?.uid || '';
     const email = currentUser?.email || '';
@@ -7138,10 +7152,15 @@ window.openGhost = async (id) => {
         sub: 'Ce ghost a été laissé pour quelqu’un d’autre.',
         showTimer: false
       });
-      return;
+      return false;
     }
   }
-  // ── Vérifier la condition d'ouverture (sauf pour le propriétaire, SAUF capsule temporelle) ──
+  return true;
+}
+
+// ── Vérifier la condition d'ouverture (sauf pour le propriétaire, SAUF capsule temporelle) ──
+// Retourne false si bloqué (overlay déjà affiché) — le caller doit sortir.
+function _checkGhostOpenCondition(isOwner) {
   resetBlockedOverlay();
   // La date future doit s'appliquer même au créateur : sinon l'effet "lettre au futur" n'a plus de sens.
   const _forceCondCheck = selectedGhost.openCondition === 'future';
@@ -7152,120 +7171,132 @@ window.openGhost = async (id) => {
       setNav('nav-radar');
       document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
       showBlockedOverlay(condCheck);
-      return;
+      return false;
     }
   }
+  return true;
+}
 
-  if (isLocked) {
-    document.getElementById('detailMessage').textContent = t.ghost_secret_locked;
-    document.getElementById('detailMessage').style.color = 'rgba(168,100,255,0.6)';
-    document.getElementById('detailAudio').innerHTML = '';
-    document.getElementById('detailPhoto').innerHTML = '';
-    document.getElementById('resonanceBtn').style.display = 'none';
-    document.getElementById('secretBtn').style.display = 'none';
-    document.querySelector('#screenDetail .btn-secondary').style.display = 'none';
-    const msgRBtnLocked = document.getElementById('msgReportBtn');
-    if (msgRBtnLocked) msgRBtnLocked.style.display = 'none';
+function _renderLockedGhostDetail() {
+  document.getElementById('detailMessage').textContent = t.ghost_secret_locked;
+  document.getElementById('detailMessage').style.color = 'rgba(168,100,255,0.6)';
+  document.getElementById('detailAudio').innerHTML = '';
+  document.getElementById('detailPhoto').innerHTML = '';
+  document.getElementById('resonanceBtn').style.display = 'none';
+  document.getElementById('secretBtn').style.display = 'none';
+  document.querySelector('#screenDetail .btn-secondary').style.display = 'none';
+  const msgRBtnLocked = document.getElementById('msgReportBtn');
+  if (msgRBtnLocked) msgRBtnLocked.style.display = 'none';
+}
+
+function _renderGhostDetailMessage(isOwner) {
+  document.getElementById('detailMessage').style.color = '';
+  document.getElementById('resonanceBtn').style.display = '';
+  document.querySelector('#screenDetail .btn-secondary').style.display = '';
+  document.getElementById('detailMessage').innerHTML = '&ldquo;' + escapeHTML(selectedGhost.message).replace(/&#39;/g, "'") + '&rdquo;';
+  // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
+  const msgReportBtn = document.getElementById('msgReportBtn');
+  if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
+  document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : '🌫️ ' + escapeHTML(selectedGhost.author || '');
+
+  // ── Mode Commerce : afficher le code promo ──
+  const existingPromo = document.getElementById('detailPromoBlock');
+  if (existingPromo) existingPromo.remove();
+  if (selectedGhost.businessMode && selectedGhost.promoCode) {
+    const promoBlock = document.createElement('div');
+    promoBlock.id = 'detailPromoBlock';
+    promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.35);border-radius:14px;padding:14px 16px;text-align:center;';
+    promoBlock.innerHTML =
+      '<div class="promo-code-label">&#x1F3EA; Offre exclusive</div>' +
+      '<div class="promo-code-value">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
+      '<div class="promo-code-hint">Présentez ce message en caisse pour en bénéficier</div>';
+    document.getElementById('detailMessage').after(promoBlock);
+  }
+}
+
+function _renderGhostDetailMeta() {
+  document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
+  document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
+  document.getElementById('detailRadius').textContent = '📡 ' + escapeHTML(selectedGhost.radius || '10m');
+
+  // ── Mode Commerce : masquer Partager et la réaction courte ──
+  const isBizGhost = !!selectedGhost.businessMode;
+  const shareBtn2 = document.getElementById('ghostShareBtn');
+  const resoBtn2  = document.getElementById('resonanceBtn');
+  const microRow2 = document.querySelector('.micro-reply-row');
+  if (shareBtn2) shareBtn2.style.display = isBizGhost ? 'none' : '';
+  if (resoBtn2)  resoBtn2.style.display  = isBizGhost ? 'none' : '';
+  if (microRow2) microRow2.style.display = isBizGhost ? 'none' : '';
+
+  const chainDiv = document.getElementById('detailChain');
+  if (selectedGhost.chainHint || selectedGhost.chainLat) {
+    chainDiv.style.display = 'block';
+    chainDiv.innerHTML = `
+      <div class="detail-chain-box">
+        <div class="detail-chain-label">🔗 La piste continue…</div>
+        ${selectedGhost.chainHint ? `<div class="detail-chain-hint">"${escapeHTML(selectedGhost.chainHint)}"</div>` : ''}
+        ${selectedGhost.chainLat ? `<button data-action="followChain" class="detail-chain-follow-btn">🗺 Suivre la piste →</button>` : ''}
+      </div>`;
   } else {
-    document.getElementById('detailMessage').style.color = '';
-    document.getElementById('resonanceBtn').style.display = '';
-    document.querySelector('#screenDetail .btn-secondary').style.display = '';
-    document.getElementById('detailMessage').innerHTML = '&ldquo;' + escapeHTML(selectedGhost.message).replace(/&#39;/g, "'") + '&rdquo;';
-    // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
-    const msgReportBtn = document.getElementById('msgReportBtn');
-    if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
-    document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : '🌫️ ' + escapeHTML(selectedGhost.author || '');
-
-    // ── Mode Commerce : afficher le code promo ──
-    const existingPromo = document.getElementById('detailPromoBlock');
-    if (existingPromo) existingPromo.remove();
-    if (selectedGhost.businessMode && selectedGhost.promoCode) {
-      const promoBlock = document.createElement('div');
-      promoBlock.id = 'detailPromoBlock';
-      promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.35);border-radius:14px;padding:14px 16px;text-align:center;';
-      promoBlock.innerHTML =
-        '<div class="promo-code-label">&#x1F3EA; Offre exclusive</div>' +
-        '<div class="promo-code-value">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
-        '<div class="promo-code-hint">Présentez ce message en caisse pour en bénéficier</div>';
-      document.getElementById('detailMessage').after(promoBlock);
-    }
-    document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
-    document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
-    document.getElementById('detailRadius').textContent = '📡 ' + escapeHTML(selectedGhost.radius || '10m');
-
-    // ── Mode Commerce : masquer Partager et la réaction courte ──
-    const isBizGhost = !!selectedGhost.businessMode;
-    const shareBtn2 = document.getElementById('ghostShareBtn');
-    const resoBtn2  = document.getElementById('resonanceBtn');
-    const microRow2 = document.querySelector('.micro-reply-row');
-    if (shareBtn2) shareBtn2.style.display = isBizGhost ? 'none' : '';
-    if (resoBtn2)  resoBtn2.style.display  = isBizGhost ? 'none' : '';
-    if (microRow2) microRow2.style.display = isBizGhost ? 'none' : '';
-
-    const chainDiv = document.getElementById('detailChain');
-    if (selectedGhost.chainHint || selectedGhost.chainLat) {
-      chainDiv.style.display = 'block';
-      chainDiv.innerHTML = `
-        <div class="detail-chain-box">
-          <div class="detail-chain-label">🔗 La piste continue…</div>
-          ${selectedGhost.chainHint ? `<div class="detail-chain-hint">"${escapeHTML(selectedGhost.chainHint)}"</div>` : ''}
-          ${selectedGhost.chainLat ? `<button data-action="followChain" class="detail-chain-follow-btn">🗺 Suivre la piste →</button>` : ''}
-        </div>`;
-    } else {
-      chainDiv.style.display = 'none';
-    }
-
-    const alreadyToday = hasResonatedToday();
-    const resoBtn = document.getElementById('resonanceBtn');
-    if (alreadyToday) {
-      resoBtn.classList.add('resonated');
-      resoBtn.textContent = t.detail_reso_used;
-      resoBtn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.2)';
-      resoBtn.style.color = 'rgba(var(--ghost-blue-rgb),.4)';
-      resoBtn.style.cursor = 'default';
-    } else {
-      resoBtn.classList.remove('resonated');
-      resoBtn.style.borderColor = '';
-      resoBtn.style.color = '';
-      resoBtn.style.cursor = '';
-      document.getElementById('resonanceCount').textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
-    }
-
-    // Passer en secret désactivé (Lot P) — plus aucun nouveau fantôme secret,
-    // même en convertissant un fantôme existant après coup.
-    document.getElementById('secretBtn').style.display = 'none';
-
-    const audioEl = document.getElementById('detailAudio');
-    if (selectedGhost.audioUrl) {
-      audioEl.innerHTML = `
-        <div class="detail-media-block">
-          <div class="detail-media-label">🎙 Message vocal</div>
-          <audio controls src="${escapeHTML(selectedGhost.audioUrl)}" class="detail-audio-el" aria-label="Message vocal du fantôme"></audio>
-        </div>`;
-    } else { audioEl.innerHTML = ''; }
-
-    const photoEl = document.getElementById('detailPhoto');
-    if (selectedGhost.videoUrl) {
-      photoEl.innerHTML = `
-        <div class="detail-media-block-rel">
-          <div class="detail-media-label">🎥 Vidéo</div>
-          <div class="detail-video-wrap">
-            <video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" class="detail-video-el" aria-label="Vidéo du fantôme"></video>
-            <button data-action="openReportModal" aria-label="Signaler cette vidéo" title="Signaler cette vidéo" class="detail-media-report-btn">⚑ Signaler</button>
-          </div>
-        </div>`;
-    } else if (selectedGhost.photoUrl) {
-      photoEl.innerHTML = `
-        <div class="detail-media-block-rel">
-          <div class="detail-media-label">📷 Photo</div>
-          <div class="detail-photo-wrap">
-            <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy">
-            <button data-action="openReportModal" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" class="detail-media-report-btn detail-media-report-btn--hover">⚑ Signaler</button>
-          </div>
-        </div>`;
-    } else { photoEl.innerHTML = ''; }
+    chainDiv.style.display = 'none';
   }
+}
 
+function _renderGhostResonanceButtonState() {
+  const alreadyToday = hasResonatedToday();
+  const resoBtn = document.getElementById('resonanceBtn');
+  if (alreadyToday) {
+    resoBtn.classList.add('resonated');
+    resoBtn.textContent = t.detail_reso_used;
+    resoBtn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.2)';
+    resoBtn.style.color = 'rgba(var(--ghost-blue-rgb),.4)';
+    resoBtn.style.cursor = 'default';
+  } else {
+    resoBtn.classList.remove('resonated');
+    resoBtn.style.borderColor = '';
+    resoBtn.style.color = '';
+    resoBtn.style.cursor = '';
+    document.getElementById('resonanceCount').textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
+  }
+}
+
+function _renderGhostDetailMedia() {
+  // Passer en secret désactivé (Lot P) — plus aucun nouveau fantôme secret,
+  // même en convertissant un fantôme existant après coup.
+  document.getElementById('secretBtn').style.display = 'none';
+
+  const audioEl = document.getElementById('detailAudio');
+  if (selectedGhost.audioUrl) {
+    audioEl.innerHTML = `
+      <div class="detail-media-block">
+        <div class="detail-media-label">🎙 Message vocal</div>
+        <audio controls src="${escapeHTML(selectedGhost.audioUrl)}" class="detail-audio-el" aria-label="Message vocal du fantôme"></audio>
+      </div>`;
+  } else { audioEl.innerHTML = ''; }
+
+  const photoEl = document.getElementById('detailPhoto');
+  if (selectedGhost.videoUrl) {
+    photoEl.innerHTML = `
+      <div class="detail-media-block-rel">
+        <div class="detail-media-label">🎥 Vidéo</div>
+        <div class="detail-video-wrap">
+          <video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" class="detail-video-el" aria-label="Vidéo du fantôme"></video>
+          <button data-action="openReportModal" aria-label="Signaler cette vidéo" title="Signaler cette vidéo" class="detail-media-report-btn">⚑ Signaler</button>
+        </div>
+      </div>`;
+  } else if (selectedGhost.photoUrl) {
+    photoEl.innerHTML = `
+      <div class="detail-media-block-rel">
+        <div class="detail-media-label">📷 Photo</div>
+        <div class="detail-photo-wrap">
+          <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy">
+          <button data-action="openReportModal" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" class="detail-media-report-btn detail-media-report-btn--hover">⚑ Signaler</button>
+        </div>
+      </div>`;
+  } else { photoEl.innerHTML = ''; }
+}
+
+async function _loadGhostReplies(id) {
   const repliesSnap = await getDocs(query(
     collection(db, COLL.REPLIES),
     where('ghostId', '==', id),
@@ -7283,6 +7314,28 @@ window.openGhost = async (id) => {
       repliesList.innerHTML += `<span class="micro-reply-pill">✦ ${escapeHTML(txt)}</span>`;
     });
   }
+}
+
+window.openGhost = async (id) => {
+  if (_isGuestUser()) { _promptSignUp('guest_signup_open'); return; }
+  if (!(await _resolveGhostForOpen(id))) return;
+
+  _renderGhostDetailHeader();
+  const { isOwner, isLocked } = _computeGhostDetailAccess();
+
+  if (!_checkDedicatedGhostAccess(isOwner)) return;
+  if (!_checkGhostOpenCondition(isOwner)) return;
+
+  if (isLocked) {
+    _renderLockedGhostDetail();
+  } else {
+    _renderGhostDetailMessage(isOwner);
+    _renderGhostDetailMeta();
+    _renderGhostResonanceButtonState();
+    _renderGhostDetailMedia();
+  }
+
+  await _loadGhostReplies(id);
 
   updateSwipeUI();
   updateReportBtn(id);
