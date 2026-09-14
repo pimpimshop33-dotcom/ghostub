@@ -1459,6 +1459,9 @@ const CLOUDINARY_UPLOAD_PRESET = 'fantome_unsigned';
 const _brandImg = new Image();
 _brandImg.src = 'assets/brand/ghostub-mark-trace.svg';
 const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" class="brand-mark-icon" aria-hidden="true">';
+const _BRAND_MARK_SLEEPY_HTML = '<img src="assets/brand/ghostub-mark-trace-sleepy.svg" class="brand-mark-icon" aria-hidden="true">';
+const _BRAND_MARK_CELEBRATION_HTML = '<img src="assets/brand/ghostub-mark-trace-celebration.svg" class="brand-mark-icon" aria-hidden="true">';
+const _BRAND_MARK_PREMIUM_HTML = '<img src="assets/brand/ghostub-mark-trace-premium.svg" class="brand-mark-icon" aria-hidden="true">';
 function _ghostEmojiHTML(g) {
   if (g.secret)       return '🔮';
   if (g.businessMode) return '🏪';
@@ -4050,7 +4053,7 @@ function showDiscoveryToast(count, isNew) {
     }
   }
   if (isMilestone) {
-    icon.innerHTML = _rankIconHTML(rank, { size: 22 });
+    icon.innerHTML = _BRAND_MARK_CELEBRATION_HTML;
     text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
@@ -4520,7 +4523,7 @@ function _renderPricingCards() {
           <div class="plan-card-label plan-card-label-premium">✦ ${isEn ? 'Premium Hunter' : 'Chasseur Premium'}</div>
           <div class="plan-card-price">0,99€ <span class="plan-card-price-period">${isEn ? '/month' : '/mois'}</span></div>
         </div>
-        <div class="plan-card-icon-wrap">${_BRAND_MARK_HTML}</div>
+        <div class="plan-card-icon-wrap">${_BRAND_MARK_PREMIUM_HTML}</div>
       </div>
       <div class="plan-card-features">
         <div class="plan-feature-row"><span class="plan-check-blue">✓</span> ${isEn ? 'Unlimited openings' : 'Ouvertures illimitées'}</div>
@@ -6886,7 +6889,7 @@ function renderGhostList() {
         <button data-action="nav" data-screen="screenDeposit" data-nav="nav-deposit" class="radar-welcome-cta-btn">${t.radar_first_btn}</button>
       </div>` : `
       <div class="radar-empty-block">
-        <div class="radar-empty-icon">${_BRAND_MARK_HTML}</div>
+        <div class="radar-empty-icon">${_BRAND_MARK_SLEEPY_HTML}</div>
         <div class="radar-empty-title">${t.radar_empty_title}</div>
         <div class="radar-empty-sub">${t.radar_empty_sub}</div>
         <div class="radar-empty-actions">

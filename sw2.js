@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v101';
+const CACHE_NAME = 'ghostub-v102';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 // Audit 1.7 : addAll() sans .catch() — si ce seul fetch échouait (blip
