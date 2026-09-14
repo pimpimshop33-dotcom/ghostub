@@ -2706,6 +2706,11 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
    semi-transparente avec ce filtre (ancien bug 2, opacité effective ~30%). */
 .emoji-opt .category-icon,
 .emoji-opt .category-icon *{color:var(--ether) !important;}
+/* Icônes UI (rang, série, badge Premium) — cf. _uiIconHTML dans app.js.
+   L'alignement vertical doit passer par une règle CSS et non par un attribut
+   style="" inline : la CSP du site n'autorise pas style-src 'unsafe-inline',
+   donc tout style inline posé en JS est silencieusement bloqué par le navigateur. */
+.ui-icon{vertical-align:-3px;}
 .wizard-back-btn {
   color: rgba(var(--ghost-blue-rgb),0.5) !important;
   -webkit-text-fill-color: rgba(var(--ghost-blue-rgb),0.5) !important;

@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=202"></script>
+<script type="module" src="app.js?v=203"></script>
 
-<link rel="stylesheet" href="style.css?v=201">
+<link rel="stylesheet" href="style.css?v=202">
 </head>
 <body>
 <!-- Skip link pour accessibilité clavier -->
@@ -604,28 +604,28 @@
           <div class="deposit-advanced-content" id="condAccordionContent">
           <div class="cond-selector u-mt10" role="group" aria-label="Condition d'ouverture du fantôme">
             <button class="cond-btn active" data-cond="always" data-action="selectCond" type="button">
-              <span class="cond-btn-icon">✉</span>
+              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 6l9 7 9-7"/></svg></span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
               </span>
             </button>
             <button class="cond-btn" data-cond="night" data-action="selectCond" type="button">
-              <span class="cond-btn-icon">🌙</span>
+              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
               </span>
             </button>
             <button class="cond-btn" data-cond="hour" data-action="selectCond" type="button">
-              <span class="cond-btn-icon">⏰</span>
+              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
               </span>
             </button>
             <button class="cond-btn" data-cond="future" data-action="selectCond" type="button" id="condFutureBtn">
-              <span class="cond-btn-icon">📅</span>
+              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></span>
               <span class="cond-btn-text">
                 <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
                 <div class="cond-btn-sub" data-i18n="dep_cond_future_sub">S'ouvre à une date précise</div>

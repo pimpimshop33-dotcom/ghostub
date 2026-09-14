@@ -1658,6 +1658,39 @@ function _categoryIconHTML(emoji, { size = 20 } = {}) {
   return `<svg class="category-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${path}</svg>`;
 }
 
+// ══════════════════════════════════════════════════════════
+// ICÔNES UI — SVG monochrome, même convention que .nav-icon /
+// .category-icon (viewBox 24×24, stroke=currentColor, stroke-width 1.5).
+// Remplace les emoji système utilisés comme icônes fonctionnelles (rangs,
+// conditions de dépôt, série) — un emoji natif rend différemment selon
+// l'OS/l'appareil et casse la cohérence de la palette spirit blue/ghost
+// lavender (audit UX septembre 2026). Même pattern fallback que
+// CATEGORY_ICON_PATHS : un emoji non mappé retombe sur le texte brut plutôt
+// que de casser l'affichage.
+const UI_ICON_PATHS = {
+  '🌫️': '<path d="M3 8c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 13c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 18c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/>',
+  '🚶': '<circle cx="13" cy="4" r="1.8"/><path d="M13 6.5l-1 4-3.5 2M12 10.5l3 1.5 1 5M9 12.5l-2 6M14 17l2.5 4"/>',
+  '🧭': '<circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-5 2 2-5z"/>',
+  '🌙': '<path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/>',
+  '👻': '<path d="M6 20V10a6 6 0 0 1 12 0v10l-2-2-2 2-2-2-2 2-2-2z"/><circle cx="9.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/>',
+  '🔮': '<circle cx="12" cy="10" r="6"/><path d="M7 19h10M8.5 21h7"/>',
+  '⭐': '<path d="M12 3l2.2 5.6 6 .4-4.6 3.9 1.6 5.9L12 15.8 6.8 18.8l1.6-5.9L3.8 9l6-.4z"/>',
+  '✉': '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 6l9 7 9-7"/>',
+  '⏰': '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>',
+  '📅': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/>',
+  '🔥': '<path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/>',
+  '✦': '<path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/>',
+};
+function _uiIconHTML(emoji, { size = 16, className = 'ui-icon' } = {}) {
+  const path = UI_ICON_PATHS[emoji];
+  if (!path) return escapeHTML(emoji || ''); // fallback texte brut si non mappé
+  return `<svg class="${className}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${path}</svg>`;
+}
+// Icône de rang, alignée inline avec le libellé texte (remplace rank.icon brut)
+function _rankIconHTML(rank, { size = 14 } = {}) {
+  return _uiIconHTML(rank.icon, { size, className: 'ui-icon rank-icon' });
+}
+
 let currentUser = null;
 let isPremium = false;
 let userLat = null;
@@ -3676,11 +3709,11 @@ function _renderStreak() {
   const weekPlaces = _getWeeklyPlaces();
   // Priorité : lieux de la semaine > jours consécutifs
   if (weekPlaces >= 3) {
-    el.textContent = '🔥 ' + weekPlaces + ' lieux';
+    el.innerHTML = _uiIconHTML('🔥', { size: 13 }) + ' ' + weekPlaces + ' lieux';
     el.style.display = 'inline-block';
     el.title = weekPlaces + ' lieux explorés cette semaine';
   } else if (s.count >= 2) {
-    el.textContent = '🔥 ' + s.count + 'j';
+    el.innerHTML = _uiIconHTML('🔥', { size: 13 }) + ' ' + s.count + 'j';
     el.style.display = 'inline-block';
     el.title = s.count + ' jours consécutifs';
   } else {
@@ -3772,7 +3805,7 @@ function updateRankBar() {
   const fill = document.getElementById('rankProgressFill');
   const nextEl = document.getElementById('rankNext');
   if (!badge) return;
-  badge.textContent = current.icon + ' ' + current.label;
+  badge.innerHTML = _rankIconHTML(current) + ' ' + escapeHTML(current.label);
   if (next) {
     const progress = ((count - current.min) / (next.min - current.min)) * 100;
     fill.style.width = Math.min(progress, 100) + '%';
@@ -3847,17 +3880,17 @@ window.toggleAudioEnabled = () => {
 // Replié par défaut, affiche juste le choix actuel — ne se déplie que pour
 // changer. Remplace l'ancien système de nappe/bandeau d'outils (Lot H1).
 const _CORD_ACCORDION_LABELS = {
-  always: '✉ ',
-  night:  '🌙 ',
-  hour:   '⏰ ',
-  future: '📅 ',
+  always: '✉',
+  night:  '🌙',
+  hour:   '⏰',
+  future: '📅',
 };
 function _updateCondAccordionSummary() {
   const el = document.getElementById('condAccordionSummary');
   if (!el) return;
   const cond = getSelectedCond();
   const labelKey = { always: 'dep_cond_always_label', night: 'dep_cond_night_label', hour: 'dep_cond_hour_label', future: 'dep_cond_future_label' }[cond] || 'dep_cond_always_label';
-  el.textContent = (_CORD_ACCORDION_LABELS[cond] || _CORD_ACCORDION_LABELS.always) + (t[labelKey] || 'Toujours accessible');
+  el.innerHTML = _uiIconHTML(_CORD_ACCORDION_LABELS[cond] || _CORD_ACCORDION_LABELS.always, { size: 14 }) + ' ' + escapeHTML(t[labelKey] || 'Toujours accessible');
 }
 window.toggleCondAccordion = (forceOpen) => {
   const toggle = document.getElementById('condAccordionToggle');
@@ -4017,7 +4050,7 @@ function showDiscoveryToast(count, isNew) {
     }
   }
   if (isMilestone) {
-    icon.textContent = rank.icon;
+    icon.innerHTML = _rankIconHTML(rank, { size: 22 });
     text.innerHTML = '<b>' + count + ' ' + (_currentLang === 'fr' ? 'fantômes' : 'ghosts') + '</b> ' + (_currentLang === 'fr' ? 'découverts' : 'discovered') + ' ! <span class="milestone-badge">' + escapeHTML(rank.label) + '</span>';
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
@@ -4067,7 +4100,7 @@ async function refreshProfileStats() {
   const count = getDiscoveryCount();
   const rank  = getRank(count);
   animateStatNumber('statDiscovered', count);
-  document.getElementById('statRank').textContent = rank.icon + ' ' + rank.label;
+  document.getElementById('statRank').innerHTML = _rankIconHTML(rank) + ' ' + escapeHTML(rank.label);
   updateFavoritesCount();
   const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
@@ -4375,7 +4408,7 @@ function updatePremiumUI() {
       premiumHtml: `<label class="form-label prem-label-row"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerAttachments" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span class="prem-btn-hint">PDF, JPG, PNG</span></button>` },
   ];
 
-  const _badge = (txt) => `<span class="badge-premium">✦ Premium</span>`;
+  const _badge = (txt) => `<span class="badge-premium">${_uiIconHTML('✦', { size: 11 })} Premium</span>`;
   const _freeBtn = (icon, label, sub) => `<button class="cond-btn free-btn-full" data-action="nav" data-screen="screenProfile" data-nav="nav-profile" type="button"><span class="cond-btn-icon">${icon}</span><span class="cond-btn-text"><div class="cond-btn-label">${label} ${_badge()}</div><div class="cond-btn-sub">${sub}</div></span></button>`;
 
   _premSections.forEach(({ id, icon, label, sub, premiumHtml }) => {
@@ -4416,7 +4449,7 @@ function updatePremiumUI() {
     if (isPremium && !existingBadge) {
       const badge = document.createElement('div');
       badge.id = 'premiumAvatarBadge';
-      badge.textContent = '✦ Premium';
+      badge.innerHTML = _uiIconHTML('✦', { size: 10 }) + ' Premium';
       badge.style.cssText = 'font-size:10px;color:rgba(var(--premium-rgb),.85);background:rgba(var(--premium-rgb),.1);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:2px 10px;margin-top:4px;letter-spacing:.5px;display:inline-block;';
       avatar.parentNode.insertBefore(badge, avatar.nextSibling);
     } else if (!isPremium && existingBadge) {
