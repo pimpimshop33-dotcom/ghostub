@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Variante "veille / nuit" du Trace — mêmes gradients et même silhouette
+       que ghostub-mark-trace.svg (asset de référence), yeux fermés (arcs au
+       lieu des ellipses lumineuses) + trois points de sommeil discrets.
+       Usage suggéré : écran de veille prolongée, état vide nocturne,
+       notification "aucune activité récente". -->
+  <defs>
+    <linearGradient id="trace-stroke-sleepy" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#9DABFF" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#C7BCEE" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#C7BCEE" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="trace-fill-sleepy" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#93A2FF" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#C7BCEE" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M100 38
+           C 128 38 152 62 152 95
+           L 152 150
+           C 152 150 146 168 136 156
+           C 128 146 122 168 112 158
+           C 105 151 100 168 91 160
+           C 82 152 76 168 66 158
+           C 58 150 52 160 48 150
+           L 48 95
+           C 48 62 72 38 100 38"
+        fill="url(#trace-fill-sleepy)" stroke="url(#trace-stroke-sleepy)" stroke-width="4.2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Yeux fermés : arcs souples plutôt que les ellipses lumineuses -->
+  <path d="M72 94c2.5-3 8.5-3 11 0" fill="none" stroke="#C7BCEE" stroke-width="3" stroke-linecap="round"/>
+  <path d="M114 94c2.5-3 8.5-3 11 0" fill="none" stroke="#C7BCEE" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- Trois points de sommeil, taille croissante -->
+  <circle cx="140" cy="55" r="2.2" fill="#C7BCEE" opacity=".55"/>
+  <circle cx="148" cy="46" r="3" fill="#C7BCEE" opacity=".7"/>
+  <circle cx="158" cy="35" r="3.8" fill="#C7BCEE" opacity=".85"/>
+</svg>
