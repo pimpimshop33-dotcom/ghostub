@@ -1647,6 +1647,12 @@ window.setTraceColor = async (colorId) => {
 // entrée '👻' existait ici avant et n'était en pratique jamais atteinte
 // (cf. l'appelant ligne ~6518, qui exclut déjà ce cas) — supprimée pour ne
 // pas laisser un second dessin du fantôme trainer dans le code.
+// EXCEPTION actée par Pipo (Lot X, 2026-09-14) : cette règle reste valable
+// ICI (Sceaux de catégorie, CATEGORY_ICON_PATHS) et pour les AUTRES icônes de
+// rang (UI_ICON_PATHS), mais est explicitement levée pour le seul rang
+// Hanteur/Haunter, qui affiche désormais le Trace — cf. le cas particulier
+// dans _rankIconHTML(). Ne pas "corriger" ce cas par erreur en le recroyant
+// encore couvert par la règle générale.
 const CATEGORY_ICON_PATHS = {
   '💬': '<path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
   '❤️': '<path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/>',
@@ -1691,6 +1697,13 @@ function _uiIconHTML(emoji, { size = 16, className = 'ui-icon' } = {}) {
 }
 // Icône de rang, alignée inline avec le libellé texte (remplace rank.icon brut)
 function _rankIconHTML(rank, { size = 14 } = {}) {
+  // Exception Lot X (2026-09-14, décision Pipo) : le rang Hanteur/Haunter
+  // affiche le Trace lui-même plutôt que son pictogramme SVG — lève la règle
+  // du Lot F ("le neutre n'est jamais un Sceau parmi d'autres") pour CE seul
+  // cas. Ne pas étendre aux autres rangs sans nouvelle validation produit.
+  if (rank.icon === '👻') {
+    return `<img src="assets/brand/ghostub-mark-trace.svg" class="ui-icon rank-icon" width="${size}" height="${size}" aria-hidden="true">`;
+  }
   return _uiIconHTML(rank.icon, { size, className: 'ui-icon rank-icon' });
 }
 
