@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v103';
+const CACHE_NAME = 'ghostub-v104';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 // Audit 1.7 : addAll() sans .catch() — si ce seul fetch échouait (blip
@@ -99,7 +99,7 @@ self.addEventListener('push', e => {
   try { data = e.data?.json() || {}; } catch(err) {}
   const title = data.title || '\ud83d\udc7b Ghostub — message proche';
   const body  = data.body  || 'Un message vous attend dans votre quartier.';
-  const icon  = data.icon  || 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png';
+  const icon  = data.icon  || '/ghostub/assets/brand/png/icon-maskable-512.png';
   const url   = data.url   || '/ghostub/';
   const tag   = data.tag   || 'ghostub-nearby';
   e.waitUntil(
@@ -134,7 +134,7 @@ self.addEventListener('message', e => {
     const { title, body, tag } = e.data;
     self.registration.showNotification(title || '\ud83d\udc7b Ghostub', {
       body: body || 'Un message vous attend.',
-      icon: 'https://raw.githubusercontent.com/pimpimshop33-dotcom/ghostub/main/icon.png',
+      icon: '/ghostub/assets/brand/png/icon-maskable-512.png',
       tag: tag || 'ghostub-nearby',
       vibrate: [200, 100, 200],
       data: { url: '/ghostub/' }

@@ -2774,7 +2774,7 @@ function showNotif(title, body) {
   navigator.serviceWorker.ready.then(reg => {
     reg.showNotification(title.replace(/<[^>]*>/g, ''), {
       body: body.replace(/<[^>]*>/g, ''),
-      icon: '/ghostub/icon-maskable-512.png',
+      icon: '/ghostub/assets/brand/png/icon-maskable-512.png',
       tag: 'fantome-' + Date.now(),
       vibrate: [200, 100, 200],
       data: { url: '/ghostub/' }
