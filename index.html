@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=208"></script>
+<script type="module" src="app.js?v=209"></script>
 
 <link rel="stylesheet" href="style.css?v=203">
 </head>
@@ -286,6 +286,7 @@
         <div class="radar-ring"></div><div class="radar-ring"></div><div class="radar-ring"></div>
         <div class="radar-sweep"></div>
         <div class="radar-center"></div>
+        <svg id="radarCompassArrow" class="radar-compass-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3v14M12 3l-4 5M12 3l4 5"/></svg>
         <div id="radarDots"></div>
       </div>
     </div>
@@ -1224,6 +1225,14 @@
   <span class="discovery-toast-icon" id="toastIcon"></span>
   <span class="discovery-toast-text" id="toastText"></span>
 </div>
+
+<!-- BOUSSOLE — bouton d'activation iOS (DeviceOrientationEvent.requestPermission
+     nécessite un geste utilisateur explicite, pas de demande automatique).
+     Partagé Radar + Carte, affiché uniquement quand nécessaire. -->
+<button id="compassPermBtn" class="compass-perm-btn u-hidden" data-action="requestCompassPermission" data-i18n-aria-label="compass_enable_btn" aria-label="Activer la boussole">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v14M12 3l-4 5M12 3l4 5"/></svg>
+  <span data-i18n="compass_enable_btn">Activer la boussole</span>
+</button>
 <div id="sealBreakFlash"></div>
 <canvas id="sealParticles"></canvas>
 </body>

@@ -533,6 +533,21 @@ body.light-theme #screenRadar{
   background:#F1EEFF;transform:translate(-50%,-50%);
   box-shadow:0 0 12px 4px rgba(241,238,255,0.5);
 }
+/* Boussole (Lot Z) — flèche de cap ancrée sur .radar-center, pivote autour
+   de ce point (transform-origin en bas) ; masquée par défaut (opacity),
+   affichée seulement quand une lecture d'orientation valide arrive — voir
+   _applyCompassHeadingToUI() dans app.js. Distincte du .radar-sweep (balayage
+   continu, pas lié à l'orientation réelle) : les deux tournent indépendamment. */
+.radar-compass-arrow{
+  position:absolute;top:50%;left:50%;
+  color:var(--ether);
+  transform:translate(-50%,-100%) rotate(0deg);
+  transform-origin:50% 100%;
+  opacity:0;pointer-events:none;z-index:2;
+  filter:drop-shadow(0 0 5px rgba(157,171,255,.55));
+  transition:opacity .3s ease;
+}
+.radar-compass-arrow.visible{opacity:1;}
 #radarDots{position:absolute;inset:0;}
 .ghost-dot{
   position:absolute;cursor:pointer;
@@ -2364,6 +2379,20 @@ body.light-theme .reply-char-count.near{color:rgba(180,90,10,.85) !important;}
 .ghost-map-marker:nth-child(4n) .ghost-map-bubble{animation-delay:1.4s;}
 .ghost-map-marker:nth-child(5n) .ghost-map-bubble{animation-delay:1.9s;}
 .user-map-dot{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c8daf5,#5080c0);border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(var(--spirit-rgb),.2),0 0 20px rgba(var(--spirit-rgb),.6);animation:ghostPulseRing 2.4s ease-out infinite;position:relative;}
+/* Boussole (Lot Z) — flèche de cap superposée au marqueur "vous êtes ici"
+   de la Carte, même logique que .radar-compass-arrow (pivote depuis le
+   centre du point, masquée tant qu'aucune lecture d'orientation n'arrive). */
+.user-map-marker-wrap{position:relative;width:16px;height:16px;}
+.map-compass-arrow{
+  position:absolute;left:50%;bottom:50%;
+  color:var(--ether);
+  transform:translate(-50%,0) rotate(0deg);
+  transform-origin:50% 100%;
+  opacity:0;pointer-events:none;z-index:2;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
+  transition:opacity .3s ease;
+}
+.map-compass-arrow.visible{opacity:1;}
 
 /* ── ACCESSIBILITY ─────────────────────────────────────── */
 .skip-link{position:absolute;top:-100px;left:16px;background:var(--amber);color:var(--void);padding:8px 16px;border-radius:8px;font-size:var(--text-base);font-weight:bold;z-index:99999;transition:top .2s;text-decoration:none;}
@@ -2550,6 +2579,30 @@ body.light-theme .reply-item{background:rgba(210,208,232,.6);}
 }
 .quick-deposit-btn:hover{background:linear-gradient(135deg,rgba(var(--mist-rgb),.3),rgba(var(--spirit-rgb),.16));box-shadow:0 0 28px rgba(var(--mist-rgb),.15);}
 .quick-deposit-btn:active{transform:scale(.98);}
+
+/* ── BOUSSOLE — bouton d'activation iOS (Lot Z) ──────────
+   Flottant, partagé Radar + Carte, affiché uniquement le temps que la
+   permission DeviceOrientationEvent n'a pas été demandée/tranchée. */
+.compass-perm-btn{
+  position:fixed;left:50%;bottom:calc(92px + var(--sab));
+  transform:translateX(-50%);
+  align-items:center;gap:7px;
+  padding:9px 16px;
+  background:rgba(20,17,36,.88);backdrop-filter:blur(8px);
+  border:1px solid rgba(var(--ghost-blue-rgb),.35);
+  border-radius:24px;color:var(--ether);
+  font-family:'Instrument Sans',sans-serif;font-size:var(--text-sm);
+  cursor:pointer;z-index:500;touch-action:manipulation;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);
+  transition:opacity .2s,transform .2s;
+}
+/* .u-hidden (display:none, définie plus haut dans la feuille) doit rester
+   décisive tant qu'elle est présente — pas de display:flex inconditionnel
+   sur .compass-perm-btn qui l'écraserait par ordre de cascade (même piège
+   que le Lot Y : cf. body:has(...) vs body.light-theme). */
+.compass-perm-btn:not(.u-hidden){display:flex;}
+.compass-perm-btn:hover{border-color:rgba(var(--ghost-blue-rgb),.55);}
+body.light-theme .compass-perm-btn{background:rgba(230,228,244,.95);color:var(--ether);border-color:rgba(80,60,200,.35);}
 
 /* ── AUDIO TOGGLE ──────────────────────────────────────── */
 .audio-toggle{background:none;border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:8px;padding:4px 8px;font-size:var(--text-md);cursor:pointer;color:var(--spirit-dim);transition:all .2s;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}

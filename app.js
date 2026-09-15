@@ -550,6 +550,7 @@ const LANGS = {
     radar_reso_tip: 'Résonance quotidienne disponible',
     radar_radius_tip: 'Rayon de détection des fantômes autour de vous',
     radar_help_tip: 'Comment ça marche ?',
+    compass_enable_btn: 'Activer la boussole',
     radar_section_label: 'Traces dans les alentours',
     radar_vibe_label: 'Détection active · présences en attente',
     filter_all: '🌫️ Toutes',
@@ -1164,6 +1165,7 @@ const LANGS = {
     radar_reso_tip: 'Daily resonance available',
     radar_radius_tip: 'Detection radius for ghosts around you',
     radar_help_tip: 'How it works',
+    compass_enable_btn: 'Enable compass',
     radar_section_label: 'Traces around you',
     radar_vibe_label: 'Detection active · presences waiting',
     filter_all: '🌫️ All',
@@ -2085,11 +2087,19 @@ function _setupLeafletMapInstance(container, centerLat, centerLng) {
 
 // Marqueur "vous êtes ici" + cercle de détection en mode chasse.
 function _addUserPositionMarker(centerLat, centerLng) {
+  // Flèche de cap (Lot Z) superposée au point — id fixe : le marqueur entier
+  // est recréé à chaque (re)construction de la carte (buildLeafletMap), donc
+  // pas de risque de doublon d'id. _compassTick() la réapplique juste après
+  // pour reprendre la valeur lissée courante sans saut visuel à 0°.
   const userIcon = L.divIcon({
-    html: '<div class="user-map-dot"></div>',
+    html: '<div class="user-map-marker-wrap">'
+        + '<div class="user-map-dot"></div>'
+        + '<svg id="mapCompassArrow" class="map-compass-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3v14M12 3l-4 5M12 3l4 5"/></svg>'
+        + '</div>',
     iconSize: [16,16], iconAnchor: [8,8], className: ''
   });
   L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
+  _compassTick();
 
   // En mode chasse : cercle de détection autour de l'utilisateur
   if (huntMode) {
@@ -7193,6 +7203,129 @@ function _stopRadarPingLoop() {
   if (_radarPingIntervalId) { clearInterval(_radarPingIntervalId); _radarPingIntervalId = null; }
 }
 
+// ── BOUSSOLE — cap de l'utilisateur, partagé Radar + Carte (Lot Z) ──────
+// Un seul listener DeviceOrientationEvent pour les deux écrans, démarré/
+// arrêté depuis window.showScreen() selon l'écran actif (même schéma que
+// _startRadarPingLoop/_stopRadarPingLoop ci-dessus) — jamais dupliqué entre
+// Radar et Carte. Dégradation propre si l'API n'existe pas (desktop) ou que
+// la permission iOS est refusée : les flèches restent juste invisibles
+// (classe .visible jamais ajoutée), aucune erreur, aucun layout cassé.
+const COMPASS_SMOOTH_FACTOR = 0.18;
+const COMPASS_TICK_MS = 120;
+let _compassEventName = null;
+let _compassListening = false;
+let _compassIntervalId = null;
+let _compassRawHeading = null;
+let _compassSmoothedHeading = null;
+let _compassPermissionDenied = false;
+
+function _compassSupported() {
+  return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
+}
+
+// Interpolation angulaire courte (gère le passage 359°→0° sans faire un
+// tour complet dans l'autre sens) — lisse le tremblement des micro-events.
+function _lerpAngleDeg(from, to, t) {
+  const diff = ((to - from + 540) % 360) - 180;
+  return (from + diff * t + 360) % 360;
+}
+
+function _handleCompassEvent(e) {
+  let heading = null;
+  if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) {
+    heading = e.webkitCompassHeading; // Safari/iOS : déjà un cap compas 0-360
+  } else if (typeof e.alpha === 'number' && !isNaN(e.alpha)) {
+    heading = 360 - e.alpha; // deviceorientationabsolute/deviceorientation : alpha → cap
+  }
+  if (heading === null) return;
+  _compassRawHeading = ((heading % 360) + 360) % 360;
+  if (_compassSmoothedHeading === null) _compassSmoothedHeading = _compassRawHeading;
+}
+
+// Throttle des écritures DOM (~120ms) indépendamment de la fréquence réelle
+// des events, qui peut être très élevée sur certains appareils.
+function _compassTick() {
+  if (_compassRawHeading === null) return;
+  _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, COMPASS_SMOOTH_FACTOR);
+  const deg = Math.round(_compassSmoothedHeading * 10) / 10;
+  const radarArrow = document.getElementById('radarCompassArrow');
+  if (radarArrow) {
+    radarArrow.style.transform = `translate(-50%,-100%) rotate(${deg}deg)`;
+    radarArrow.classList.add('visible');
+  }
+  // Le marqueur Carte est recréé à chaque (re)construction de la carte
+  // (buildLeafletMap) mais pas en continu — cette écriture prend la valeur
+  // lissée courante, donc pas de saut visuel entre deux recréations.
+  const mapArrow = document.getElementById('mapCompassArrow');
+  if (mapArrow) {
+    mapArrow.style.transform = `translate(-50%,0) rotate(${deg}deg)`;
+    mapArrow.classList.add('visible');
+  }
+}
+
+function _hideCompassArrows() {
+  document.getElementById('radarCompassArrow')?.classList.remove('visible');
+  document.getElementById('mapCompassArrow')?.classList.remove('visible');
+}
+
+function _attachCompassListener() {
+  if (_compassListening) return;
+  _compassEventName = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
+  window.addEventListener(_compassEventName, _handleCompassEvent);
+  _compassListening = true;
+  if (!_compassIntervalId) _compassIntervalId = setInterval(_compassTick, COMPASS_TICK_MS);
+  document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+}
+
+function _detachCompassListener() {
+  if (_compassListening && _compassEventName) {
+    window.removeEventListener(_compassEventName, _handleCompassEvent);
+  }
+  _compassListening = false;
+  if (_compassIntervalId) { clearInterval(_compassIntervalId); _compassIntervalId = null; }
+  _compassRawHeading = null;
+  _compassSmoothedHeading = null;
+  _hideCompassArrows();
+}
+
+// Appelé depuis window.showScreen() en entrant sur Radar ou Carte.
+function _startCompass() {
+  if (!_compassSupported() || _compassPermissionDenied) return;
+  const needsPermission = typeof DeviceOrientationEvent.requestPermission === 'function';
+  if (needsPermission) {
+    // iOS 13+ : requestPermission() doit venir d'un vrai geste utilisateur —
+    // jamais appelé automatiquement ici, juste le bouton discret affiché.
+    if (!_compassListening) document.getElementById('compassPermBtn')?.classList.remove('u-hidden');
+    return;
+  }
+  _attachCompassListener();
+}
+
+// Appelé depuis window.showScreen() en quittant Radar ET Carte (économie
+// batterie — pas d'écoute en tâche de fond quand aucun des deux n'est visible).
+function _stopCompass() {
+  document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+  _detachCompassListener();
+}
+
+window.requestCompassPermission = async () => {
+  if (!_compassSupported() || typeof DeviceOrientationEvent.requestPermission !== 'function') return;
+  try {
+    const result = await DeviceOrientationEvent.requestPermission();
+    if (result === 'granted') {
+      _compassPermissionDenied = false;
+      _attachCompassListener();
+    } else {
+      _compassPermissionDenied = true;
+      document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+    }
+  } catch (e) {
+    console.warn('[ghostub:compass] requestPermission refusé', e);
+    _compassPermissionDenied = true;
+    document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+  }
+};
+
 let currentGhostIndex = 0;
 
 function updateSwipeUI() {
@@ -9164,6 +9297,10 @@ window.showScreen = (id, fromPopstate = false) => {
   if (id === 'screenRadar' && !_wasRadarActive) _startRadarPingLoop();
   else if (id !== 'screenRadar' && _wasRadarActive) _stopRadarPingLoop();
 
+  // Boussole (Lot Z) : écouteur unique, actif uniquement sur Radar/Carte.
+  if (id === 'screenRadar' || id === 'screenMap') _startCompass();
+  else _stopCompass();
+
   // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que
   // le compte n'est plus anonyme (inscription/liaison de compte), réévalué
   // à chaque navigation donc toujours synchronisé sans écouteur dédié.
@@ -10130,6 +10267,7 @@ const ACTIONS = {
 
   // Zone 4 — Radar
   toggleAudioEnabled: () => toggleAudioEnabled(),
+  requestCompassPermission: () => requestCompassPermission(),
   setRadarRadius: (el) => setRadarRadius(Number(el.dataset.arg)),
   setFilter: (el) => setFilter(el.dataset.arg, el),
   loadNearbyGhosts: () => loadNearbyGhosts(),
