@@ -7224,6 +7224,13 @@ let _compassPermissionDenied = false;
 // (le magnétomètre est naturellement bruité, les events arrivent souvent
 // plus vite que COMPASS_TICK_MS).
 let _compassRawBuffer = [];
+// Sonde de détection (Lot AD) : au lieu de deviner depuis la seule présence
+// de DeviceOrientationEvent.requestPermission (peu fiable — certains
+// Android/WebView l'exposent sans jamais bloquer les events), on s'abonne
+// toujours directement d'abord, puis on vérifie après ce délai si des
+// lectures sont réellement arrivées avant d'afficher le bouton iOS.
+const COMPASS_PROBE_DELAY_MS = 1800;
+let _compassProbeTimeoutId = null;
 
 function _compassSupported() {
   return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
@@ -7329,22 +7336,36 @@ function _detachCompassListener() {
 }
 
 // Appelé depuis window.showScreen() en entrant sur Radar ou Carte.
+// Détection progressive (Lot AD) plutôt que devinée depuis la seule présence
+// de requestPermission : on s'abonne toujours directement d'abord ; si des
+// lectures arrivent dans le délai de sonde, tant mieux (cas Android normal,
+// y compris les navigateurs qui exposent requestPermission sans en avoir
+// besoin) — le bouton n'est réservé qu'au cas où, après le délai, aucune
+// lecture n'est arrivée ET que requestPermission existe (vrai iOS bloqué).
 function _startCompass() {
   if (!_compassSupported() || _compassPermissionDenied) return;
-  const needsPermission = typeof DeviceOrientationEvent.requestPermission === 'function';
-  if (needsPermission) {
-    // iOS 13+ : requestPermission() doit venir d'un vrai geste utilisateur —
-    // jamais appelé automatiquement ici, juste le bouton discret affiché.
-    if (!_compassListening) document.getElementById('compassPermBtn')?.classList.remove('u-hidden');
-    return;
-  }
   _attachCompassListener();
+  if (_compassProbeTimeoutId) clearTimeout(_compassProbeTimeoutId);
+  _compassProbeTimeoutId = setTimeout(() => {
+    _compassProbeTimeoutId = null;
+    if (_compassRawHeading !== null) return; // des lectures arrivent déjà — rien à faire
+    const needsPermission = typeof DeviceOrientationEvent.requestPermission === 'function';
+    // Écoute inerte (aucune lecture reçue) : on réinitialise proprement avant
+    // d'afficher le bouton ou d'abandonner, pour que le prochain vrai
+    // _attachCompassListener() (après accord de permission) reparte d'un
+    // état propre plutôt que d'être court-circuité par _compassListening.
+    _detachCompassListener();
+    if (needsPermission) {
+      document.getElementById('compassPermBtn')?.classList.remove('u-hidden');
+    }
+  }, COMPASS_PROBE_DELAY_MS);
 }
 
 // Appelé depuis window.showScreen() en quittant Radar ET Carte (économie
 // batterie — pas d'écoute en tâche de fond quand aucun des deux n'est visible).
 function _stopCompass() {
   document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+  if (_compassProbeTimeoutId) { clearTimeout(_compassProbeTimeoutId); _compassProbeTimeoutId = null; }
   _detachCompassListener();
 }
 
