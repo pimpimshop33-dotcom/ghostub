@@ -2087,19 +2087,15 @@ function _setupLeafletMapInstance(container, centerLat, centerLng) {
 
 // Marqueur "vous êtes ici" + cercle de détection en mode chasse.
 function _addUserPositionMarker(centerLat, centerLng) {
-  // Flèche de cap (Lot Z) superposée au point — id fixe : le marqueur entier
-  // est recréé à chaque (re)construction de la carte (buildLeafletMap), donc
-  // pas de risque de doublon d'id. _compassTick() la réapplique juste après
-  // pour reprendre la valeur lissée courante sans saut visuel à 0°.
+  // Boussole (Lot AA) : plus de flèche greffée sur ce marqueur — le widget
+  // boussole de la Carte (#mapCompassWidget) vit en overlay séparé dans
+  // index.html, indépendant de ce marqueur Leaflet recréé à chaque
+  // (re)construction de la carte (buildLeafletMap).
   const userIcon = L.divIcon({
-    html: '<div class="user-map-marker-wrap">'
-        + '<div class="user-map-dot"></div>'
-        + '<svg id="mapCompassArrow" class="map-compass-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3v14M12 3l-4 5M12 3l4 5"/></svg>'
-        + '</div>',
+    html: '<div class="user-map-dot"></div>',
     iconSize: [16,16], iconAnchor: [8,8], className: ''
   });
   L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
-  _compassTick();
 
   // En mode chasse : cercle de détection autour de l'utilisateur
   if (huntMode) {
@@ -7248,24 +7244,25 @@ function _compassTick() {
   if (_compassRawHeading === null) return;
   _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, COMPASS_SMOOTH_FACTOR);
   const deg = Math.round(_compassSmoothedHeading * 10) / 10;
-  const radarArrow = document.getElementById('radarCompassArrow');
-  if (radarArrow) {
-    radarArrow.style.transform = `translate(-50%,-100%) rotate(${deg}deg)`;
-    radarArrow.classList.add('visible');
+  // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
+  // (#radarCompassWidget/#mapCompassWidget dans index.html), pas plus
+  // accroché à .radar-center ni recréé avec le marqueur Leaflet : seule
+  // l'aiguille tourne, le cadran reste fixe.
+  const radarNeedle = document.getElementById('radarCompassNeedle');
+  if (radarNeedle) {
+    radarNeedle.style.transform = `rotate(${deg}deg)`;
+    document.getElementById('radarCompassWidget')?.classList.add('visible');
   }
-  // Le marqueur Carte est recréé à chaque (re)construction de la carte
-  // (buildLeafletMap) mais pas en continu — cette écriture prend la valeur
-  // lissée courante, donc pas de saut visuel entre deux recréations.
-  const mapArrow = document.getElementById('mapCompassArrow');
-  if (mapArrow) {
-    mapArrow.style.transform = `translate(-50%,0) rotate(${deg}deg)`;
-    mapArrow.classList.add('visible');
+  const mapNeedle = document.getElementById('mapCompassNeedle');
+  if (mapNeedle) {
+    mapNeedle.style.transform = `rotate(${deg}deg)`;
+    document.getElementById('mapCompassWidget')?.classList.add('visible');
   }
 }
 
-function _hideCompassArrows() {
-  document.getElementById('radarCompassArrow')?.classList.remove('visible');
-  document.getElementById('mapCompassArrow')?.classList.remove('visible');
+function _hideCompassWidgets() {
+  document.getElementById('radarCompassWidget')?.classList.remove('visible');
+  document.getElementById('mapCompassWidget')?.classList.remove('visible');
 }
 
 function _attachCompassListener() {
@@ -7285,7 +7282,7 @@ function _detachCompassListener() {
   if (_compassIntervalId) { clearInterval(_compassIntervalId); _compassIntervalId = null; }
   _compassRawHeading = null;
   _compassSmoothedHeading = null;
-  _hideCompassArrows();
+  _hideCompassWidgets();
 }
 
 // Appelé depuis window.showScreen() en entrant sur Radar ou Carte.

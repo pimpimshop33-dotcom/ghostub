@@ -497,7 +497,7 @@ body.light-theme #screenRadar{
   cursor:pointer;touch-action:manipulation;
 }
 .guest-banner:active{background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.1),rgba(var(--ghost-blue-rgb),.04));}
-.radar-wrap{display:flex;align-items:center;justify-content:center;padding:8px 20px 4px;}
+.radar-wrap{display:flex;align-items:center;justify-content:center;padding:8px 20px 4px;position:relative;}
 .radar{
   width:100%;max-width:320px;aspect-ratio:1;border-radius:50%;position:relative;
   /* Contraste renforcé (Lot G-bis, rapprochement maquette) : le radar occupe
@@ -533,21 +533,49 @@ body.light-theme #screenRadar{
   background:#F1EEFF;transform:translate(-50%,-50%);
   box-shadow:0 0 12px 4px rgba(241,238,255,0.5);
 }
-/* Boussole (Lot Z) — flèche de cap ancrée sur .radar-center, pivote autour
-   de ce point (transform-origin en bas) ; masquée par défaut (opacity),
-   affichée seulement quand une lecture d'orientation valide arrive — voir
-   _applyCompassHeadingToUI() dans app.js. Distincte du .radar-sweep (balayage
-   continu, pas lié à l'orientation réelle) : les deux tournent indépendamment. */
-.radar-compass-arrow{
-  position:absolute;top:50%;left:50%;
-  color:var(--ether);
-  transform:translate(-50%,-100%) rotate(0deg);
-  transform-origin:50% 100%;
-  opacity:0;pointer-events:none;z-index:2;
-  filter:drop-shadow(0 0 5px rgba(157,171,255,.55));
+/* ── BOUSSOLE — widget autonome (Lot AA) ──────────────────
+   Remplace l'ancienne flèche accrochée à .radar-center/.user-map-dot (Lot Z,
+   revert Pipo) : un vrai cadran (lettres cardinales fixes) + aiguille
+   bicolore qui tourne au centre, posé À CÔTÉ du radar / en coin flottant sur
+   la carte plutôt que dessus. Réutilise le cap déjà lissé par _compassTick()
+   (app.js) — seuls le rendu et l'ancrage DOM changent, pas le capteur.
+   Composant partagé par les 2 écrans, chacun avec son propre id de
+   positionnement (.radar-compass-widget / .map-compass-widget) et sa propre
+   aiguille ciblée par app.js (#radarCompassNeedle / #mapCompassNeedle). */
+.compass-widget{
+  position:absolute;
+  /* z-index élevé : sur la Carte, ni #mapContainer ni #leafletMap ne créent
+     de contexte d'empilement propre (position sans transform/isolation), donc
+     les panes internes de Leaflet (tuiles/marqueurs/popups, z-index 200-700)
+     remontent directement en concurrence avec ce widget — vérifié en
+     inspectant elementFromPoint(), un z-index bas (3) restait invisible
+     sous la tile pane. 900 reste sous les modales de l'app (z-index 10000+). */
+  z-index:900;
+  width:52px;height:52px;
+  opacity:0;pointer-events:none;
   transition:opacity .3s ease;
 }
-.radar-compass-arrow.visible{opacity:1;}
+.compass-widget.visible{opacity:1;}
+.compass-dial{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 10px rgba(0,0,0,.45));}
+.compass-dial-bg{fill:rgba(20,17,36,.82);stroke:rgba(var(--ghost-blue-rgb),.4);stroke-width:1.2;}
+.compass-letter{font-family:'Instrument Sans',sans-serif;font-size:9px;font-weight:600;fill:var(--spirit-dim);}
+.compass-needle{transform-box:fill-box;transform-origin:50% 50%;transition:transform .05s linear;}
+.compass-needle-n{fill:var(--amber);}
+.compass-needle-s{fill:rgba(var(--spirit-rgb),.55);}
+.compass-needle-hub{fill:var(--ether);}
+body.light-theme .compass-dial-bg{fill:rgba(230,228,244,.92);stroke:rgba(80,60,200,.35);}
+body.light-theme .compass-letter{fill:rgba(58,42,148,.78);}
+body.light-theme .compass-needle-hub{fill:var(--warm);}
+/* Radar : coin haut-droit de .radar-wrap (position:relative ci-dessus) —
+   dans le coin du carré englobant, hors du disque circulaire du radar, donc
+   ne chevauche ni le sweep ni les anneaux ni le centre. */
+#radarCompassWidget{top:2px;right:8px;}
+/* Carte : coin haut-GAUCHE de #mapContainer (mesuré, pas deviné — le
+   haut-droit est déjà pris par le contrôle de zoom Leaflet, L.control.zoom
+   position:'topright' dans app.js), sous le header + la barre de filtres,
+   en overlay sur Leaflet sans bloquer pan/zoom (pointer-events:none, aucun
+   contrôle interactif dans ce widget). */
+#mapCompassWidget{top:134px;left:12px;pointer-events:none;}
 #radarDots{position:absolute;inset:0;}
 .ghost-dot{
   position:absolute;cursor:pointer;
@@ -2379,20 +2407,10 @@ body.light-theme .reply-char-count.near{color:rgba(180,90,10,.85) !important;}
 .ghost-map-marker:nth-child(4n) .ghost-map-bubble{animation-delay:1.4s;}
 .ghost-map-marker:nth-child(5n) .ghost-map-bubble{animation-delay:1.9s;}
 .user-map-dot{width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#c8daf5,#5080c0);border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 4px rgba(var(--spirit-rgb),.2),0 0 20px rgba(var(--spirit-rgb),.6);animation:ghostPulseRing 2.4s ease-out infinite;position:relative;}
-/* Boussole (Lot Z) — flèche de cap superposée au marqueur "vous êtes ici"
-   de la Carte, même logique que .radar-compass-arrow (pivote depuis le
-   centre du point, masquée tant qu'aucune lecture d'orientation n'arrive). */
-.user-map-marker-wrap{position:relative;width:16px;height:16px;}
-.map-compass-arrow{
-  position:absolute;left:50%;bottom:50%;
-  color:var(--ether);
-  transform:translate(-50%,0) rotate(0deg);
-  transform-origin:50% 100%;
-  opacity:0;pointer-events:none;z-index:2;
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.5));
-  transition:opacity .3s ease;
-}
-.map-compass-arrow.visible{opacity:1;}
+/* Boussole (Lot AA, revert du Lot Z) : plus de flèche accrochée à ce
+   marqueur — le widget boussole vit maintenant en overlay séparé sur
+   #screenMap (#mapCompassWidget, cf. plus haut), pas recréé à chaque
+   rafraîchissement de position contrairement à ce marqueur Leaflet. */
 
 /* ── ACCESSIBILITY ─────────────────────────────────────── */
 .skip-link{position:absolute;top:-100px;left:16px;background:var(--amber);color:var(--void);padding:8px 16px;border-radius:8px;font-size:var(--text-base);font-weight:bold;z-index:99999;transition:top .2s;text-decoration:none;}
@@ -2580,13 +2598,18 @@ body.light-theme .reply-item{background:rgba(210,208,232,.6);}
 .quick-deposit-btn:hover{background:linear-gradient(135deg,rgba(var(--mist-rgb),.3),rgba(var(--spirit-rgb),.16));box-shadow:0 0 28px rgba(var(--mist-rgb),.15);}
 .quick-deposit-btn:active{transform:scale(.98);}
 
-/* ── BOUSSOLE — bouton d'activation iOS (Lot Z) ──────────
+/* ── BOUSSOLE — bouton d'activation iOS (Lot Z, repositionné Lot AA) ────
    Flottant, partagé Radar + Carte, affiché uniquement le temps que la
-   permission DeviceOrientationEvent n'a pas été demandée/tranchée. */
+   permission DeviceOrientationEvent n'a pas été demandée/tranchée. Repositionné
+   en haut-droit (au lieu de bas-centre) pour rester visuellement à côté du
+   nouveau widget boussole (#radarCompassWidget/#mapCompassWidget, tous deux
+   ancrés en haut-droit de leur écran) plutôt qu'à un endroit sans rapport. */
 .compass-perm-btn{
-  position:fixed;left:50%;bottom:calc(92px + var(--sab));
-  transform:translateX(-50%);
+  position:fixed;top:calc(var(--sat) + 58px);right:14px;
   align-items:center;gap:7px;
+  /* voir override body:has(#screenMap.active) plus bas — la Carte a un
+     header + une barre de filtres plus hauts que le Radar à cet endroit,
+     vérifié par capture d'écran (chevauchait .map-filter-bar sinon). */
   padding:9px 16px;
   background:rgba(20,17,36,.88);backdrop-filter:blur(8px);
   border:1px solid rgba(var(--ghost-blue-rgb),.35);
@@ -2602,6 +2625,12 @@ body.light-theme .reply-item{background:rgba(210,208,232,.6);}
    que le Lot Y : cf. body:has(...) vs body.light-theme). */
 .compass-perm-btn:not(.u-hidden){display:flex;}
 .compass-perm-btn:hover{border-color:rgba(var(--ghost-blue-rgb),.55);}
+/* Carte : header + barre de filtres plus hauts qu'au Radar à cette
+   position — repoussé plus bas et basculé à gauche (là où vit
+   #mapCompassWidget) pour ne chevaucher ni .map-filter-bar ni le contrôle
+   de zoom Leaflet en haut-droit (vérifié par capture d'écran, même
+   technique body:has() que le Lot Y). */
+body:has(#screenMap.active) .compass-perm-btn{top:calc(var(--sat) + 156px);right:auto;left:12px;}
 body.light-theme .compass-perm-btn{background:rgba(230,228,244,.95);color:var(--ether);border-color:rgba(80,60,200,.35);}
 
 /* ── AUDIO TOGGLE ──────────────────────────────────────── */
