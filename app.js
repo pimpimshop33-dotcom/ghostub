@@ -7206,12 +7206,19 @@ function _stopRadarPingLoop() {
 // Radar et Carte. Dégradation propre si l'API n'existe pas (desktop) ou que
 // la permission iOS est refusée : les flèches restent juste invisibles
 // (classe .visible jamais ajoutée), aucune erreur, aucun layout cassé.
-const COMPASS_SMOOTH_FACTOR = 0.1;
+const COMPASS_SMOOTH_FACTOR = 0.05;
 const COMPASS_TICK_MS = 120;
 // Sous ce seuil, on n'écrit pas le DOM (évite de redéclencher la transition
 // CSS pour un mouvement imperceptible, cause du "sursaut" remonté par Pipo —
-// cf. LOT-AB-boussole-aiguille-qui-saccade.md).
-const COMPASS_JITTER_THRESHOLD_DEG = 0.6;
+// cf. LOT-AB-boussole-aiguille-qui-saccade.md). Remonté 0.6°→1.8° (Lot AC) :
+// le bruit magnétomètre réel du téléphone est plus fort que la simulation
+// ne le reproduisait, il fallait lisser plus fort, pas changer d'approche.
+const COMPASS_JITTER_THRESHOLD_DEG = 1.8;
+// Fenêtre glissante (Lot AC) : nombre de dernières lectures brutes gardées,
+// peu importe leur espacement temporel — remplace l'ancien comportement qui
+// ne moyennait que les lectures reçues depuis le tick précédent (~120ms,
+// fenêtre trop courte pour absorber le bruit réel d'un magnétomètre).
+const COMPASS_RAW_WINDOW_SIZE = 10;
 let _compassEventName = null;
 let _compassListening = false;
 let _compassIntervalId = null;
@@ -7252,6 +7259,7 @@ function _handleCompassEvent(e) {
   }
   if (heading === null) return;
   _compassRawBuffer.push(((heading % 360) + 360) % 360);
+  if (_compassRawBuffer.length > COMPASS_RAW_WINDOW_SIZE) _compassRawBuffer.shift();
 }
 
 // Moyenne vectorielle d'angles (moyenne des sin/cos puis atan2) — contrairement
@@ -7272,9 +7280,13 @@ function _averageAngleDeg(angles) {
 // Throttle des écritures DOM (~120ms) indépendamment de la fréquence réelle
 // des events, qui peut être très élevée sur certains appareils.
 function _compassTick() {
+  // Fenêtre glissante (Lot AC) : on moyenne les COMPASS_RAW_WINDOW_SIZE
+  // dernières lectures à chaque tick sans vider le buffer — seules les
+  // entrées les plus anciennes sortent (_handleCompassEvent, via .shift())
+  // au fil des nouvelles lectures, ce qui absorbe bien plus de bruit qu'une
+  // simple moyenne des lectures reçues depuis le tick précédent.
   if (_compassRawBuffer.length) {
     _compassRawHeading = _averageAngleDeg(_compassRawBuffer);
-    _compassRawBuffer = [];
   }
   if (_compassRawHeading === null) return;
   if (_compassSmoothedHeading === null) {

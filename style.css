@@ -559,7 +559,7 @@ body.light-theme #screenRadar{
 .compass-dial{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 10px rgba(0,0,0,.45));}
 .compass-dial-bg{fill:rgba(20,17,36,.82);stroke:rgba(var(--ghost-blue-rgb),.4);stroke-width:1.2;}
 .compass-letter{font-family:'Instrument Sans',sans-serif;font-size:9px;font-weight:600;fill:var(--spirit-dim);}
-.compass-needle{transform-box:fill-box;transform-origin:50% 50%;transition:transform .15s ease-out;}
+.compass-needle{transform-box:fill-box;transform-origin:50% 50%;transition:transform .28s ease-out;}
 .compass-needle-n{fill:var(--amber);}
 .compass-needle-s{fill:rgba(var(--spirit-rgb),.55);}
 .compass-needle-hub{fill:var(--ether);}
