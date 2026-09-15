@@ -7206,7 +7206,6 @@ function _stopRadarPingLoop() {
 // Radar et Carte. Dégradation propre si l'API n'existe pas (desktop) ou que
 // la permission iOS est refusée : les flèches restent juste invisibles
 // (classe .visible jamais ajoutée), aucune erreur, aucun layout cassé.
-const COMPASS_SMOOTH_FACTOR = 0.05;
 const COMPASS_TICK_MS = 120;
 // Sous ce seuil, on n'écrit pas le DOM (évite de redéclencher la transition
 // CSS pour un mouvement imperceptible, cause du "sursaut" remonté par Pipo —
@@ -7219,10 +7218,31 @@ const COMPASS_JITTER_THRESHOLD_DEG = 1.8;
 // ne moyennait que les lectures reçues depuis le tick précédent (~120ms,
 // fenêtre trop courte pour absorber le bruit réel d'un magnétomètre).
 const COMPASS_RAW_WINDOW_SIZE = 10;
+// Lissage adaptatif (Lot AE) : un facteur fixe ne peut pas être à la fois
+// réactif à l'arrêt/en visée ET stable en marchant — le bruit réel du
+// magnétomètre est nettement plus fort en mouvement (vibrations de marche,
+// oscillations du bras) que le tremblement naturel de la main à l'arrêt.
+// On fait donc varier COMPASS_SMOOTH_FACTOR entre ces deux bornes selon la
+// dispersion mesurée sur la fenêtre glissante COMPASS_RAW_WINDOW_SIZE
+// ci-dessus (réutilisée telle quelle, pas de seconde fenêtre).
+const COMPASS_SMOOTH_FACTOR_STABLE = 0.08;   // dispersion faible → réactif
+const COMPASS_SMOOTH_FACTOR_WALKING = 0.025; // dispersion forte → très lissé
+// Dispersion = variance circulaire (1 - R, où R est la longueur du vecteur
+// moyen des lectures de la fenêtre — déjà calculée par _averageAngleDeg pour
+// la moyenne elle-même). R proche de 1 = lectures quasi alignées (peu de
+// bruit), R proche de 0 = lectures étalées sur tout le cercle (bruit fort).
+// Sous COMPASS_DISPERSION_LOW : régime stable. Au-dessus de
+// COMPASS_DISPERSION_HIGH : régime marche. Entre les deux : interpolation
+// linéaire du facteur — pas de switch brutal if/else, le lissage varie en
+// continu avec le niveau de bruit réellement mesuré, donc la transition
+// elle-même ne crée pas de saut visible.
+const COMPASS_DISPERSION_LOW = 0.008;
+const COMPASS_DISPERSION_HIGH = 0.06;
 let _compassEventName = null;
 let _compassListening = false;
 let _compassIntervalId = null;
 let _compassRawHeading = null;
+let _compassDispersion = 0; // dispersion de la fenêtre courante (Lot AE, cf. _averageAngleDeg)
 let _compassSmoothedHeading = null;
 let _compassDisplayedHeading = null;
 let _compassPermissionDenied = false;
@@ -7282,10 +7302,12 @@ function _updateCompassDebugPanel(deg, skipped) {
   const raw = _compassRawHeading === null ? '—' : _compassRawHeading.toFixed(1);
   const smoothed = _compassSmoothedHeading === null ? '—' : _compassSmoothedHeading.toFixed(1);
   const shown = _compassDisplayedHeading === null ? '—' : _compassDisplayedHeading.toFixed(1);
+  const factor = _compassSmoothFactor(_compassDispersion);
   el.textContent =
     `event: ${_compassEventName || '—'}\n` +
     `events/tick: ${_compassEventsSinceTick}\n` +
     `raw(avg ${_compassRawBuffer.length}): ${raw}°\n` +
+    `dispersion: ${_compassDispersion.toFixed(4)} → facteur: ${factor.toFixed(4)}\n` +
     `smoothed: ${smoothed}°\n` +
     `affiché: ${shown}°${skipped ? ' (skip)' : ''}\n` +
     `deg calculé ce tick: ${deg === null ? '—' : deg.toFixed(1)}°`;
@@ -7294,7 +7316,10 @@ function _updateCompassDebugPanel(deg, skipped) {
 
 // Moyenne vectorielle d'angles (moyenne des sin/cos puis atan2) — contrairement
 // à une moyenne arithmétique brute, gère correctement le passage 359°/0°
-// (moyenner 359° et 1° doit donner ~0°, pas ~180°).
+// (moyenner 359° et 1° doit donner ~0°, pas ~180°). Renvoie aussi R, la
+// longueur du vecteur moyen (1 = lectures alignées, 0 = étalées sur tout le
+// cercle) — réutilisé tel quel comme mesure de dispersion (Lot AE) au lieu
+// de recalculer une variance séparément sur une seconde fenêtre.
 function _averageAngleDeg(angles) {
   if (!angles.length) return null;
   let sumSin = 0, sumCos = 0;
@@ -7303,8 +7328,20 @@ function _averageAngleDeg(angles) {
     sumSin += Math.sin(rad);
     sumCos += Math.cos(rad);
   }
-  const avgRad = Math.atan2(sumSin / angles.length, sumCos / angles.length);
-  return ((avgRad * 180 / Math.PI) + 360) % 360;
+  const n = angles.length;
+  const avgRad = Math.atan2(sumSin / n, sumCos / n);
+  const avg = ((avgRad * 180 / Math.PI) + 360) % 360;
+  const R = Math.sqrt(sumSin * sumSin + sumCos * sumCos) / n;
+  return { avg, dispersion: 1 - R };
+}
+
+// Facteur de lissage effectif pour ce tick, interpolé entre les régimes
+// stable/marche selon la dispersion mesurée (voir constantes ci-dessus).
+function _compassSmoothFactor(dispersion) {
+  if (dispersion <= COMPASS_DISPERSION_LOW) return COMPASS_SMOOTH_FACTOR_STABLE;
+  if (dispersion >= COMPASS_DISPERSION_HIGH) return COMPASS_SMOOTH_FACTOR_WALKING;
+  const t = (dispersion - COMPASS_DISPERSION_LOW) / (COMPASS_DISPERSION_HIGH - COMPASS_DISPERSION_LOW);
+  return COMPASS_SMOOTH_FACTOR_STABLE + (COMPASS_SMOOTH_FACTOR_WALKING - COMPASS_SMOOTH_FACTOR_STABLE) * t;
 }
 
 // Throttle des écritures DOM (~120ms) indépendamment de la fréquence réelle
@@ -7314,15 +7351,20 @@ function _compassTick() {
   // dernières lectures à chaque tick sans vider le buffer — seules les
   // entrées les plus anciennes sortent (_handleCompassEvent, via .shift())
   // au fil des nouvelles lectures, ce qui absorbe bien plus de bruit qu'une
-  // simple moyenne des lectures reçues depuis le tick précédent.
+  // simple moyenne des lectures reçues depuis le tick précédent. La même
+  // fenêtre sert aussi de mesure de dispersion pour le lissage adaptatif
+  // (Lot AE) — pas de fenêtre séparée.
   if (_compassRawBuffer.length) {
-    _compassRawHeading = _averageAngleDeg(_compassRawBuffer);
+    const { avg, dispersion } = _averageAngleDeg(_compassRawBuffer);
+    _compassRawHeading = avg;
+    _compassDispersion = dispersion;
   }
   if (_compassRawHeading === null) { _updateCompassDebugPanel(null, false); return; }
+  const smoothFactor = _compassSmoothFactor(_compassDispersion);
   if (_compassSmoothedHeading === null) {
     _compassSmoothedHeading = _compassRawHeading;
   } else {
-    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, COMPASS_SMOOTH_FACTOR);
+    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, smoothFactor);
   }
   const deg = Math.round(_compassSmoothedHeading * 10) / 10;
   // Seuil anti-tremblement : si le mouvement depuis la dernière valeur
@@ -7373,6 +7415,7 @@ function _detachCompassListener() {
   _compassListening = false;
   if (_compassIntervalId) { clearInterval(_compassIntervalId); _compassIntervalId = null; }
   _compassRawHeading = null;
+  _compassDispersion = 0;
   _compassSmoothedHeading = null;
   _compassDisplayedHeading = null;
   _compassRawBuffer = [];
