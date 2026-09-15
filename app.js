@@ -7231,6 +7231,7 @@ let _compassPermissionDenied = false;
 // (le magnétomètre est naturellement bruité, les events arrivent souvent
 // plus vite que COMPASS_TICK_MS).
 let _compassRawBuffer = [];
+let _compassEventsSinceTick = 0; // diagnostic uniquement (?compassDebug=1)
 // Sonde de détection (Lot AD) : au lieu de deviner depuis la seule présence
 // de DeviceOrientationEvent.requestPermission (peu fiable — certains
 // Android/WebView l'exposent sans jamais bloquer les events), on s'abonne
@@ -7238,6 +7239,14 @@ let _compassRawBuffer = [];
 // lectures sont réellement arrivées avant d'afficher le bouton iOS.
 const COMPASS_PROBE_DELAY_MS = 1800;
 let _compassProbeTimeoutId = null;
+// Diagnostic temporaire (Lot AC bis) : Pipo confirme que ça tremble encore en
+// continu sur son A54 malgré un lissage très agressif (0.05/1.8°/fenêtre de
+// 10) et après calibration magnétomètre (geste en 8, sans effet) — donc pas
+// un simple problème de paramètres. Overlay activé via ?compassDebug=1 dans
+// l'URL (jamais visible en usage normal) pour voir les vraies valeurs brutes
+// reçues du capteur et identifier la cause réelle avant de retoucher aux
+// constantes de lissage à l'aveugle. À retirer une fois la cause confirmée.
+const _compassDebugEnabled = typeof location !== 'undefined' && /[?&]compassDebug=1\b/.test(location.search);
 
 function _compassSupported() {
   return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
@@ -7260,6 +7269,27 @@ function _handleCompassEvent(e) {
   if (heading === null) return;
   _compassRawBuffer.push(((heading % 360) + 360) % 360);
   if (_compassRawBuffer.length > COMPASS_RAW_WINDOW_SIZE) _compassRawBuffer.shift();
+  _compassEventsSinceTick++;
+}
+
+// Diagnostic uniquement (?compassDebug=1) — écrit les valeurs réelles reçues
+// du capteur pour voir si le bruit vient des lectures brutes elles-mêmes
+// (capteur/OS) ou d'ailleurs, avant de retoucher aux constantes de lissage.
+function _updateCompassDebugPanel(deg, skipped) {
+  if (!_compassDebugEnabled) return;
+  const el = document.getElementById('compassDebugPanel');
+  if (!el) return;
+  const raw = _compassRawHeading === null ? '—' : _compassRawHeading.toFixed(1);
+  const smoothed = _compassSmoothedHeading === null ? '—' : _compassSmoothedHeading.toFixed(1);
+  const shown = _compassDisplayedHeading === null ? '—' : _compassDisplayedHeading.toFixed(1);
+  el.textContent =
+    `event: ${_compassEventName || '—'}\n` +
+    `events/tick: ${_compassEventsSinceTick}\n` +
+    `raw(avg ${_compassRawBuffer.length}): ${raw}°\n` +
+    `smoothed: ${smoothed}°\n` +
+    `affiché: ${shown}°${skipped ? ' (skip)' : ''}\n` +
+    `deg calculé ce tick: ${deg === null ? '—' : deg.toFixed(1)}°`;
+  _compassEventsSinceTick = 0;
 }
 
 // Moyenne vectorielle d'angles (moyenne des sin/cos puis atan2) — contrairement
@@ -7288,7 +7318,7 @@ function _compassTick() {
   if (_compassRawBuffer.length) {
     _compassRawHeading = _averageAngleDeg(_compassRawBuffer);
   }
-  if (_compassRawHeading === null) return;
+  if (_compassRawHeading === null) { _updateCompassDebugPanel(null, false); return; }
   if (_compassSmoothedHeading === null) {
     _compassSmoothedHeading = _compassRawHeading;
   } else {
@@ -7301,7 +7331,7 @@ function _compassTick() {
   // vibration même quand le cap réel est quasi stable).
   if (_compassDisplayedHeading !== null) {
     const diff = Math.abs(((deg - _compassDisplayedHeading + 540) % 360) - 180);
-    if (diff < COMPASS_JITTER_THRESHOLD_DEG) return;
+    if (diff < COMPASS_JITTER_THRESHOLD_DEG) { _updateCompassDebugPanel(deg, true); return; }
   }
   _compassDisplayedHeading = deg;
   // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
@@ -7318,6 +7348,7 @@ function _compassTick() {
     mapNeedle.style.transform = `rotate(${deg}deg)`;
     document.getElementById('mapCompassWidget')?.classList.add('visible');
   }
+  _updateCompassDebugPanel(deg, false);
 }
 
 function _hideCompassWidgets() {
@@ -7332,6 +7363,7 @@ function _attachCompassListener() {
   _compassListening = true;
   if (!_compassIntervalId) _compassIntervalId = setInterval(_compassTick, COMPASS_TICK_MS);
   document.getElementById('compassPermBtn')?.classList.add('u-hidden');
+  if (_compassDebugEnabled) document.getElementById('compassDebugPanel')?.classList.remove('u-hidden');
 }
 
 function _detachCompassListener() {
@@ -7345,6 +7377,7 @@ function _detachCompassListener() {
   _compassDisplayedHeading = null;
   _compassRawBuffer = [];
   _hideCompassWidgets();
+  document.getElementById('compassDebugPanel')?.classList.add('u-hidden');
 }
 
 // Appelé depuis window.showScreen() en entrant sur Radar ou Carte.

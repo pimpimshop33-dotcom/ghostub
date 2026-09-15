@@ -2625,6 +2625,18 @@ body.light-theme .reply-item{background:rgba(210,208,232,.6);}
    que le Lot Y : cf. body:has(...) vs body.light-theme). */
 .compass-perm-btn:not(.u-hidden){display:flex;}
 .compass-perm-btn:hover{border-color:rgba(var(--ghost-blue-rgb),.55);}
+/* Diagnostic temporaire (?compassDebug=1) — lecture des valeurs brutes du
+   capteur en conditions réelles, à retirer une fois la cause du tremblement
+   identifiée. Même piège .u-hidden que .compass-perm-btn ci-dessus : la
+   règle :not(.u-hidden) doit rester décisive sur la cascade. */
+.compass-debug-panel:not(.u-hidden){display:block;}
+.compass-debug-panel{
+  position:fixed;left:8px;bottom:calc(8px + var(--sab));
+  background:rgba(0,0,0,.82);color:#9dabff;
+  font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
+  padding:8px 10px;border-radius:8px;white-space:pre;
+  z-index:9000;pointer-events:none;max-width:min(280px,calc(100vw - 16px));
+}
 /* Carte : header + barre de filtres plus hauts qu'au Radar à cette
    position — repoussé plus bas et basculé à gauche (là où vit
    #mapCompassWidget) pour ne chevaucher ni .map-filter-bar ni le contrôle
