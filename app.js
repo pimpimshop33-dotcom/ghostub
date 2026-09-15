@@ -7206,6 +7206,11 @@ function _stopRadarPingLoop() {
 // Radar et Carte. Dégradation propre si l'API n'existe pas (desktop) ou que
 // la permission iOS est refusée : les flèches restent juste invisibles
 // (classe .visible jamais ajoutée), aucune erreur, aucun layout cassé.
+// Référence de temps pour le lissage (Lot AE/AF) : COMPASS_SMOOTH_FACTOR_*
+// est calibré "par tranche de COMPASS_TICK_MS" — ce n'est plus l'intervalle
+// d'un setInterval (Lot AF : remplacé par une boucle requestAnimationFrame,
+// cf. _compassTick ci-dessous), juste l'unité de temps de référence utilisée
+// pour convertir ce facteur en un facteur effectif selon le dt réel écoulé.
 const COMPASS_TICK_MS = 120;
 // Sous ce seuil, on n'écrit pas le DOM (évite de redéclencher la transition
 // CSS pour un mouvement imperceptible, cause du "sursaut" remonté par Pipo —
@@ -7240,7 +7245,8 @@ const COMPASS_DISPERSION_LOW = 0.008;
 const COMPASS_DISPERSION_HIGH = 0.06;
 let _compassEventName = null;
 let _compassListening = false;
-let _compassIntervalId = null;
+let _compassRafId = null;
+let _compassLastFrameTs = null; // performance.now() du frame précédent (Lot AF, dt réel)
 let _compassRawHeading = null;
 let _compassDispersion = 0; // dispersion de la fenêtre courante (Lot AE, cf. _averageAngleDeg)
 let _compassSmoothedHeading = null;
@@ -7252,6 +7258,7 @@ let _compassPermissionDenied = false;
 // plus vite que COMPASS_TICK_MS).
 let _compassRawBuffer = [];
 let _compassEventsSinceTick = 0; // diagnostic uniquement (?compassDebug=1)
+let _compassLastDtMs = 0; // dt réel du dernier frame — diagnostic (Lot AF, ?compassDebug=1)
 // Sonde de détection (Lot AD) : au lieu de deviner depuis la seule présence
 // de DeviceOrientationEvent.requestPermission (peu fiable — certains
 // Android/WebView l'exposent sans jamais bloquer les events), on s'abonne
@@ -7302,15 +7309,17 @@ function _updateCompassDebugPanel(deg, skipped) {
   const raw = _compassRawHeading === null ? '—' : _compassRawHeading.toFixed(1);
   const smoothed = _compassSmoothedHeading === null ? '—' : _compassSmoothedHeading.toFixed(1);
   const shown = _compassDisplayedHeading === null ? '—' : _compassDisplayedHeading.toFixed(1);
-  const factor = _compassSmoothFactor(_compassDispersion);
+  const baseFactor = _compassSmoothFactor(_compassDispersion);
+  const effFactor = _compassEffectiveFactor(baseFactor, _compassLastDtMs);
   el.textContent =
     `event: ${_compassEventName || '—'}\n` +
-    `events/tick: ${_compassEventsSinceTick}\n` +
+    `dt réel entre frames: ${_compassLastDtMs.toFixed(1)}ms (réf ${COMPASS_TICK_MS}ms)\n` +
+    `events/frame: ${_compassEventsSinceTick}\n` +
     `raw(avg ${_compassRawBuffer.length}): ${raw}°\n` +
-    `dispersion: ${_compassDispersion.toFixed(4)} → facteur: ${factor.toFixed(4)}\n` +
+    `dispersion: ${_compassDispersion.toFixed(4)} → facteur base: ${baseFactor.toFixed(4)} → effectif: ${effFactor.toFixed(4)}\n` +
     `smoothed: ${smoothed}°\n` +
     `affiché: ${shown}°${skipped ? ' (skip)' : ''}\n` +
-    `deg calculé ce tick: ${deg === null ? '—' : deg.toFixed(1)}°`;
+    `deg calculé ce frame: ${deg === null ? '—' : deg.toFixed(1)}°`;
   _compassEventsSinceTick = 0;
 }
 
@@ -7335,8 +7344,9 @@ function _averageAngleDeg(angles) {
   return { avg, dispersion: 1 - R };
 }
 
-// Facteur de lissage effectif pour ce tick, interpolé entre les régimes
-// stable/marche selon la dispersion mesurée (voir constantes ci-dessus).
+// Facteur de lissage de base pour un tick de référence COMPASS_TICK_MS,
+// interpolé entre les régimes stable/marche selon la dispersion mesurée
+// (voir constantes ci-dessus).
 function _compassSmoothFactor(dispersion) {
   if (dispersion <= COMPASS_DISPERSION_LOW) return COMPASS_SMOOTH_FACTOR_STABLE;
   if (dispersion >= COMPASS_DISPERSION_HIGH) return COMPASS_SMOOTH_FACTOR_WALKING;
@@ -7344,14 +7354,47 @@ function _compassSmoothFactor(dispersion) {
   return COMPASS_SMOOTH_FACTOR_STABLE + (COMPASS_SMOOTH_FACTOR_WALKING - COMPASS_SMOOTH_FACTOR_STABLE) * t;
 }
 
-// Throttle des écritures DOM (~120ms) indépendamment de la fréquence réelle
-// des events, qui peut être très élevée sur certains appareils.
-function _compassTick() {
+// Lot AF — la Carte a un travail de rendu (tuiles/marqueurs Leaflet) bien
+// plus lourd que le Radar ; or un setInterval partage le même thread
+// principal que ce rendu, et se fait donc retarder/regrouper par le
+// navigateur quand ce thread est occupé (vérifié par une mesure réelle du
+// jitter d'un setInterval sous contention synchrone du thread — le pire
+// écart mesuré passe de ~160ms à ~350ms pour un intervalle nominal de
+// 120ms — cf. LOT-AF-boussole-carte-plus-saccadee.md). Avec un facteur de
+// lissage fixe appliqué "par tick" sans tenir compte du temps réellement
+// écoulé, un tick retardé/regroupé rattrape alors son retard en un seul
+// pas de taille identique à un tick normal — ce qui se traduit par un
+// à-coup visible plutôt qu'un mouvement régulier.
+// Ce facteur effectif convertit le facteur "de base" (calibré pour un pas
+// de COMPASS_TICK_MS) en facteur réellement appliqué pour le dt mesuré
+// entre deux frames, de sorte que la VITESSE de rattrapage perçue reste la
+// même que le rendu tourne à 60fps (Radar) ou soit ralenti par des pics de
+// rendu Leaflet (Carte) : (1-facteur)^(dt/réf) est l'équivalent temporel
+// exact de répéter le lissage "par petits pas" sur la durée réellement
+// écoulée, au lieu d'un seul grand pas ou de plusieurs petits pas supposés.
+function _compassEffectiveFactor(baseFactor, dtMs) {
+  const dt = Math.min(Math.max(dtMs, 0), 2000); // borne un dt aberrant (onglet en arrière-plan, reprise après veille)
+  return 1 - Math.pow(1 - baseFactor, dt / COMPASS_TICK_MS);
+}
+
+// Boucle requestAnimationFrame (Lot AF, remplace l'ancien setInterval) :
+// rAF est priorisé par le navigateur pour les mises à jour visuelles et se
+// resynchronise mieux après un délai qu'un setInterval, et surtout on pilote
+// ici l'interpolation par le dt réellement écoulé (voir
+// _compassEffectiveFactor) plutôt que par un nombre de ticks supposés
+// réguliers — la vitesse de rotation reste cohérente même si des frames
+// sont sautées côté Carte.
+function _compassTick(nowTs) {
+  _compassRafId = requestAnimationFrame(_compassTick);
+  const now = typeof nowTs === 'number' ? nowTs : performance.now();
+  const dtMs = _compassLastFrameTs === null ? COMPASS_TICK_MS : (now - _compassLastFrameTs);
+  _compassLastFrameTs = now;
+  _compassLastDtMs = dtMs;
   // Fenêtre glissante (Lot AC) : on moyenne les COMPASS_RAW_WINDOW_SIZE
-  // dernières lectures à chaque tick sans vider le buffer — seules les
+  // dernières lectures à chaque frame sans vider le buffer — seules les
   // entrées les plus anciennes sortent (_handleCompassEvent, via .shift())
   // au fil des nouvelles lectures, ce qui absorbe bien plus de bruit qu'une
-  // simple moyenne des lectures reçues depuis le tick précédent. La même
+  // simple moyenne des lectures reçues depuis le frame précédent. La même
   // fenêtre sert aussi de mesure de dispersion pour le lissage adaptatif
   // (Lot AE) — pas de fenêtre séparée.
   if (_compassRawBuffer.length) {
@@ -7360,11 +7403,12 @@ function _compassTick() {
     _compassDispersion = dispersion;
   }
   if (_compassRawHeading === null) { _updateCompassDebugPanel(null, false); return; }
-  const smoothFactor = _compassSmoothFactor(_compassDispersion);
+  const baseFactor = _compassSmoothFactor(_compassDispersion);
+  const effFactor = _compassEffectiveFactor(baseFactor, dtMs);
   if (_compassSmoothedHeading === null) {
     _compassSmoothedHeading = _compassRawHeading;
   } else {
-    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, smoothFactor);
+    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, effFactor);
   }
   const deg = Math.round(_compassSmoothedHeading * 10) / 10;
   // Seuil anti-tremblement : si le mouvement depuis la dernière valeur
@@ -7403,7 +7447,8 @@ function _attachCompassListener() {
   _compassEventName = ('ondeviceorientationabsolute' in window) ? 'deviceorientationabsolute' : 'deviceorientation';
   window.addEventListener(_compassEventName, _handleCompassEvent);
   _compassListening = true;
-  if (!_compassIntervalId) _compassIntervalId = setInterval(_compassTick, COMPASS_TICK_MS);
+  _compassLastFrameTs = null;
+  if (!_compassRafId) _compassRafId = requestAnimationFrame(_compassTick);
   document.getElementById('compassPermBtn')?.classList.add('u-hidden');
   if (_compassDebugEnabled) document.getElementById('compassDebugPanel')?.classList.remove('u-hidden');
 }
@@ -7413,7 +7458,8 @@ function _detachCompassListener() {
     window.removeEventListener(_compassEventName, _handleCompassEvent);
   }
   _compassListening = false;
-  if (_compassIntervalId) { clearInterval(_compassIntervalId); _compassIntervalId = null; }
+  if (_compassRafId) { cancelAnimationFrame(_compassRafId); _compassRafId = null; }
+  _compassLastFrameTs = null;
   _compassRawHeading = null;
   _compassDispersion = 0;
   _compassSmoothedHeading = null;
