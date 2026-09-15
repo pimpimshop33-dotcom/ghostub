@@ -7206,14 +7206,24 @@ function _stopRadarPingLoop() {
 // Radar et Carte. Dégradation propre si l'API n'existe pas (desktop) ou que
 // la permission iOS est refusée : les flèches restent juste invisibles
 // (classe .visible jamais ajoutée), aucune erreur, aucun layout cassé.
-const COMPASS_SMOOTH_FACTOR = 0.18;
+const COMPASS_SMOOTH_FACTOR = 0.1;
 const COMPASS_TICK_MS = 120;
+// Sous ce seuil, on n'écrit pas le DOM (évite de redéclencher la transition
+// CSS pour un mouvement imperceptible, cause du "sursaut" remonté par Pipo —
+// cf. LOT-AB-boussole-aiguille-qui-saccade.md).
+const COMPASS_JITTER_THRESHOLD_DEG = 0.6;
 let _compassEventName = null;
 let _compassListening = false;
 let _compassIntervalId = null;
 let _compassRawHeading = null;
 let _compassSmoothedHeading = null;
+let _compassDisplayedHeading = null;
 let _compassPermissionDenied = false;
+// Lectures brutes accumulées depuis le dernier tick — moyennées (vecteurs,
+// wraparound-safe) avant lissage, au lieu de ne garder que le dernier event
+// (le magnétomètre est naturellement bruité, les events arrivent souvent
+// plus vite que COMPASS_TICK_MS).
+let _compassRawBuffer = [];
 
 function _compassSupported() {
   return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
@@ -7234,16 +7244,47 @@ function _handleCompassEvent(e) {
     heading = 360 - e.alpha; // deviceorientationabsolute/deviceorientation : alpha → cap
   }
   if (heading === null) return;
-  _compassRawHeading = ((heading % 360) + 360) % 360;
-  if (_compassSmoothedHeading === null) _compassSmoothedHeading = _compassRawHeading;
+  _compassRawBuffer.push(((heading % 360) + 360) % 360);
+}
+
+// Moyenne vectorielle d'angles (moyenne des sin/cos puis atan2) — contrairement
+// à une moyenne arithmétique brute, gère correctement le passage 359°/0°
+// (moyenner 359° et 1° doit donner ~0°, pas ~180°).
+function _averageAngleDeg(angles) {
+  if (!angles.length) return null;
+  let sumSin = 0, sumCos = 0;
+  for (const a of angles) {
+    const rad = a * Math.PI / 180;
+    sumSin += Math.sin(rad);
+    sumCos += Math.cos(rad);
+  }
+  const avgRad = Math.atan2(sumSin / angles.length, sumCos / angles.length);
+  return ((avgRad * 180 / Math.PI) + 360) % 360;
 }
 
 // Throttle des écritures DOM (~120ms) indépendamment de la fréquence réelle
 // des events, qui peut être très élevée sur certains appareils.
 function _compassTick() {
+  if (_compassRawBuffer.length) {
+    _compassRawHeading = _averageAngleDeg(_compassRawBuffer);
+    _compassRawBuffer = [];
+  }
   if (_compassRawHeading === null) return;
-  _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, COMPASS_SMOOTH_FACTOR);
+  if (_compassSmoothedHeading === null) {
+    _compassSmoothedHeading = _compassRawHeading;
+  } else {
+    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, COMPASS_SMOOTH_FACTOR);
+  }
   const deg = Math.round(_compassSmoothedHeading * 10) / 10;
+  // Seuil anti-tremblement : si le mouvement depuis la dernière valeur
+  // affichée est imperceptible, ne pas réécrire le transform — ça évite de
+  // redéclencher la transition CSS en continu (donnait une impression de
+  // vibration même quand le cap réel est quasi stable).
+  if (_compassDisplayedHeading !== null) {
+    const diff = Math.abs(((deg - _compassDisplayedHeading + 540) % 360) - 180);
+    if (diff < COMPASS_JITTER_THRESHOLD_DEG) return;
+  }
+  _compassDisplayedHeading = deg;
   // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
   // (#radarCompassWidget/#mapCompassWidget dans index.html), pas plus
   // accroché à .radar-center ni recréé avec le marqueur Leaflet : seule
@@ -7282,6 +7323,8 @@ function _detachCompassListener() {
   if (_compassIntervalId) { clearInterval(_compassIntervalId); _compassIntervalId = null; }
   _compassRawHeading = null;
   _compassSmoothedHeading = null;
+  _compassDisplayedHeading = null;
+  _compassRawBuffer = [];
   _hideCompassWidgets();
 }
 
