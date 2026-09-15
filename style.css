@@ -239,20 +239,20 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
    Lot S : copie à l'identique sur l'intro (les couleurs "dans le même
    esprit" du Lot R ne suffisaient pas — mêmes valeurs exactes, sans
    réinterprétation, comme la leçon du Lot G sur le radar lui-même). */
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .phone {
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .phone {
   background: radial-gradient(120% 90% at 30% -10%, #14162b 0%, #0A0B14 55%, #05060c 100%) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) { background: #05060c; }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light:is(.warm-lg,.warm-md,.warm-sm,.pink,.front-1,.front-2) {
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) { background: #05060c; }
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light:is(.warm-lg,.warm-md,.warm-sm,.pink,.front-1,.front-2) {
   opacity: 0 !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-lg {
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-lg {
   background: #9DABFF !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-md {
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.cool-md {
   background: #C7BCEE !important; opacity: .35 !important; filter: blur(20px) !important;
 }
-body:has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.mist {
+body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMap.active, #screenProfile.active, #screenOnboard.active) .bokeh-light.mist {
   background: #6C7AE0 !important; opacity: .35 !important; filter: blur(20px) !important;
 }
 
@@ -880,7 +880,11 @@ body.light-theme #screenRadar{
   background:linear-gradient(180deg,rgba(232,225,210,.06) 0%,rgba(232,225,210,.025) 100%) !important;
   border:1px solid rgba(var(--lettre-ink-rgb),.16);
   border-radius:16px 16px 0 0 !important;
-  min-height:150px;
+  /* Occupe l'espace dispo de l'écran Détail plutôt qu'un petit cadre isolé
+     (Lot Y) — badges/résonner/réactions restent accessibles par le scroll
+     en dessous, comme avant. */
+  min-height:min(56dvh,480px);
+  display:flex;align-items:center;
   padding:36px 26px !important;margin-bottom:0;letter-spacing:.01em;
   box-shadow:inset 0 1px 0 rgba(255,235,200,.05),0 4px 22px rgba(0,0,0,.18);
   position:relative;
@@ -1517,7 +1521,7 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
    incohérence préexistante reproduite volontairement, pas harmonisée. */
 .detail-media-report-btn--hover:hover{background:rgba(255,60,60,.18);}
 .detail-photo-wrap{position:relative;display:inline-block;width:100%;}
-.detail-photo-img{width:100%;border-radius:12px;border:1px solid var(--border);max-height:240px;object-fit:cover;display:block;}
+.detail-photo-img{width:100%;border-radius:12px;border:1px solid var(--border);max-height:min(65dvh,560px);object-fit:contain;background:var(--surface);display:block;cursor:pointer;}
 .dedicated-link-hint{font-size:11px;opacity:.7;}
 .dedicated-link-btn{font-size:10px;color:rgba(var(--ghost-blue-rgb),.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;}
 /* Écran de secours si l'initialisation Firebase échoue entièrement (app.js) */
@@ -2257,6 +2261,10 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .report-btn:hover{background:rgba(255,80,80,.08);border-color:rgba(255,80,80,.4);}
 .report-modal,.share-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;}
 .report-modal.show,.share-modal.show{opacity:1;pointer-events:all;}
+/* Visualiseur photo plein écran — tap sur la photo du Détail (Lot Y) */
+.photo-viewer-modal{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,2,6,.92);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .25s;}
+.photo-viewer-modal.show{opacity:1;pointer-events:all;}
+.photo-viewer-img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px;}
 .report-sheet,.share-sheet{width:100%;max-width:390px;background:var(--surface2);border:1px solid rgba(232,160,48,.15);border-bottom:none;border-radius:24px 24px 0 0;padding:20px 20px;padding-bottom:calc(28px + var(--sab));transition:transform .3s cubic-bezier(.25,.46,.45,.94);transform:translateY(100%);box-shadow:0 -8px 40px rgba(0,0,0,.8);}
 .report-modal.show .report-sheet,.share-modal.show .share-sheet{transform:translateY(0);}
 .report-sheet-title,.share-sheet-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:4px;text-align:center;}
@@ -2468,6 +2476,22 @@ body.light-theme .envelope-footer{border-top-color:rgba(80,60,200,.12);}
 body.light-theme .envelope-tag{color:rgba(70,50,150,.62) !important;-webkit-text-fill-color:rgba(70,50,150,.62) !important;}
 body.light-theme .envelope-views{color:rgba(70,50,150,.58) !important;-webkit-text-fill-color:rgba(70,50,150,.58) !important;}
 body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40,190,.95) !important;-webkit-text-fill-color:rgba(120,40,190,.95) !important;}
+
+/* ── Fonds "nuit" fixes sans variante Mode jour — Lot Y ──
+   Ces éléments utilisaient un rgba() sombre codé en dur, sans lien avec
+   les variables de thème (ambiance délibérément nocturne conservée en
+   Mode nuit) : on ajoute ici uniquement l'override clair manquant,
+   plutôt que de toucher la règle de base et risquer de changer le rendu
+   Mode nuit déjà validé. */
+body.light-theme .msg-report-btn,
+body.light-theme .detail-media-report-btn{background:rgba(230,225,245,.92) !important;}
+body.light-theme .dep-mini-loader{background:rgba(230,225,245,.75);}
+body.light-theme .empreinte-map-wrap,
+body.light-theme .ppm-map{background:rgba(210,208,232,.75);}
+body.light-theme .empreinte-stat-box,
+body.light-theme .empreinte-stat-box-last{background:rgba(210,208,232,.75);}
+body.light-theme .map-filter-bar .filter-btn{background:rgba(210,208,232,.75);}
+body.light-theme .reply-item{background:rgba(210,208,232,.6);}
 
 /* ── RANK / PROGRESSION BAR ─────────────────────────────── */
 .rank-bar{display:flex;align-items:center;gap:10px;padding:6px 20px 2px;}

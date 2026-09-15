@@ -1958,6 +1958,18 @@ function closeModal(modalId) {
 window.openModal = openModal;
 window.closeModal = closeModal;
 
+// Visualiseur photo plein écran (Lot Y) — même convention que closeReportModal/closeShareModal.
+window.openPhotoViewer = (url) => {
+  if (!url) return;
+  document.getElementById('photoViewerImg').src = url;
+  openModal('photoViewerModal');
+};
+window.closePhotoViewer = (e) => {
+  if (e && e.target !== document.getElementById('photoViewerModal')) return;
+  closeModal('photoViewerModal');
+  document.getElementById('photoViewerImg').src = '';
+};
+
 window.renderStaticMap = () => {
   const centerLat = userLat || 48.8566; // Paris par défaut si GPS indisponible
   const centerLng = userLng || 2.3522;
@@ -7469,7 +7481,7 @@ function _renderGhostDetailMedia() {
       <div class="detail-media-block-rel">
         <div class="detail-media-label">📷 Photo</div>
         <div class="detail-photo-wrap">
-          <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy">
+          <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy" data-action="openPhotoViewer" data-arg="${escapeHTML(selectedGhost.photoUrl)}" role="button" tabindex="0" aria-label="Agrandir la photo en plein écran">
           <button data-action="openReportModal" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" class="detail-media-report-btn detail-media-report-btn--hover">⚑ Signaler</button>
         </div>
       </div>`;
@@ -10133,6 +10145,8 @@ const ACTIONS = {
   toggleFavorite: () => toggleFavorite(),
   generateGhostCard: () => generateGhostCard(),
   openShareModal: () => openShareModal(),
+  openPhotoViewer: (el) => openPhotoViewer(el.dataset.arg),
+  closePhotoViewer: (el, event) => closePhotoViewer(event),
   updateReplyCount: (el) => updateReplyCount(el),
   selectType: (el) => selectType(el),
   sendReply: () => sendReply(),
