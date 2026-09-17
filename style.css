@@ -320,6 +320,11 @@ body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMa
   background:linear-gradient(0deg,rgba(var(--mist-rgb),.06) 0%,rgba(var(--spirit-rgb),.04) 40%,transparent 100%);
   pointer-events:none;animation:fogRise 8s ease-in-out infinite;
 }
+/* Lot AO : "l'intro un peu trop bleue" en Mode jour — cette brume de fond
+   (déjà discrète en Mode nuit) reste visible sur blanc ; encore plus
+   estompée ici, on garde seulement le halo autour du Trace lui-même
+   (.ob-scene0-halo, inchangé — Pipo : "juste un halo très léger"). */
+body.light-theme #screenOnboard::before{opacity:.35;}
 @keyframes fogRise{
   0%,100%{opacity:.6;transform:scaleY(1);}
   50%{opacity:1;transform:scaleY(1.08);}
@@ -335,6 +340,14 @@ body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMa
   background:linear-gradient(135deg,#9DABFF 0%,#C7BCEE 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   letter-spacing:1.5px;
+}
+/* Lot AO : "trop bleu" en Mode jour — ce dégradé (pensé pour fond nocturne)
+   s'applique aux 4 titres du carrousel d'intro (wordmark "Ghostub" inclus),
+   sans variante claire jusqu'ici. Encre foncée pleine, pas de dégradé ;
+   "ub" garde l'ambre jour via .wordmark-ub (règle séparée, déjà themée). */
+body.light-theme .ob-title{
+  background:none !important;
+  -webkit-text-fill-color:var(--ether) !important;color:var(--ether) !important;
 }
 /* Wordmark "Ghostub" — "ub" dans l'ambre de l'app, même variable que l'onglet
    actif de la nav du bas (.nav-item.active{color:var(--amber)}) — pas une
