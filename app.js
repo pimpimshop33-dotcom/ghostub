@@ -308,14 +308,35 @@ const LANGS = {
     profile_rank: 'Rang',
     profile_discovered: 'Découvertes',
     profile_deposited: 'Dépôts',
-    // Teinte du Trace (Lot K)
-    trace_color_spirit: 'Spirit blue',
+    // "Mon rang" (Lot AP, fusion rangs/collection)
+    mon_rank_title: 'Mon rang',
+    rank_card_obtained: 'obtenu',
+    rank_card_yours: 'ton rang',
+    rank_card_more: 'encore {n}',
+    rank_card_at: 'à {n}',
+    rank_card_of: 'sur',
+    rank_card_aria_at: 'à',
+    rank_card_aria_points: 'points',
+    rank_card_modal_obtained: 'Rang obtenu.',
+    rank_card_modal_yours: 'C\'est ton rang actuel.',
+    rank_card_modal_locked: 'Encore {n} points pour l\'atteindre.',
+    rank_card_modal_threshold: 'À {n} points.',
+    rank_progress_next: 'Prochain rang : {rank}',
+    rank_progress_remaining: 'Encore {n} points.',
+    rank_progress_rule: 'Tu gagnes 1 point à chaque fantôme découvert, déposé ou qui résonne, et 3 points par jour de série.',
+    rank_progress_max: 'Tu es une {rank}.',
+    modal_ok: 'OK',
+    // Teinte du Trace (Lot K, cartes "Mon Trace" Lot AP)
+    trace_color_spirit: 'Spirit',
     trace_color_violet: 'Orchidée',
     trace_color_mist: 'Brume',
     trace_color_amber: 'Ambre',
-    trace_color_rose: 'Rose spectral',
+    trace_color_rose: 'Rose',
     trace_color_crimson: 'Braise',
-    trace_color_locked: '🔒 Teinte réservée aux membres Premium',
+    trace_color_locked: 'Teinte réservée aux membres Premium',
+    mon_trace_title: 'Mon Trace',
+    mon_trace_sub: 'Choisis ton fantôme : chaque couleur a son caractère.',
+    mon_trace_premium_hint: '✦ 3 fantômes réservés aux membres Premium',
     // Collection de cartes (Lot L)
     collection_title: 'Ma collection',
     profile_resonances: 'Résonances',
@@ -947,14 +968,35 @@ const LANGS = {
     profile_discovered: 'Discovered',
     profile_deposited: 'Dropped',
     profile_resonances: 'Resonances',
-    // Trace color (Lot K)
-    trace_color_spirit: 'Spirit blue',
+    // "My rank" (Lot AP, rank/collection merge)
+    mon_rank_title: 'My rank',
+    rank_card_obtained: 'obtained',
+    rank_card_yours: 'your rank',
+    rank_card_more: '{n} more',
+    rank_card_at: 'at {n}',
+    rank_card_of: 'of',
+    rank_card_aria_at: 'at',
+    rank_card_aria_points: 'points',
+    rank_card_modal_obtained: 'Rank obtained.',
+    rank_card_modal_yours: 'This is your current rank.',
+    rank_card_modal_locked: '{n} more points to reach it.',
+    rank_card_modal_threshold: 'At {n} points.',
+    rank_progress_next: 'Next rank: {rank}',
+    rank_progress_remaining: '{n} more points.',
+    rank_progress_rule: 'You earn 1 point for every ghost discovered, dropped, or resonated with, and 3 points per streak day.',
+    rank_progress_max: 'You are a {rank}.',
+    modal_ok: 'OK',
+    // Trace color (Lot K, "My Trace" cards Lot AP)
+    trace_color_spirit: 'Spirit',
     trace_color_violet: 'Orchid',
     trace_color_mist: 'Mist',
     trace_color_amber: 'Amber',
-    trace_color_rose: 'Spectral rose',
+    trace_color_rose: 'Rose',
     trace_color_crimson: 'Ember',
-    trace_color_locked: '🔒 Premium-only tint',
+    trace_color_locked: 'Premium-only tint',
+    mon_trace_title: 'My Trace',
+    mon_trace_sub: 'Choose your ghost: every color has its own character.',
+    mon_trace_premium_hint: '✦ 3 ghosts reserved for Premium members',
     // Card collection (Lot L)
     collection_title: 'My collection',
     profile_first_reader: 'First reads',
@@ -1917,6 +1959,11 @@ const UI_ICON_PATHS = {
   '🔔': '<path d="M12 3a5 5 0 0 0-5 5v3.5c0 .8-.3 1.6-.9 2.1L4.5 15h15l-1.6-1.4a2.8 2.8 0 0 1-.9-2.1V8a5 5 0 0 0-5-5z"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0"/>',
   '🔗': '<path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/><path d="M9.5 14.5l5-5"/>',
   '🔒': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  // Lot AP — 4 rangs (fusion rangs/cartes) sans icône existante.
+  '🐾': '<ellipse cx="12" cy="17" rx="5" ry="4"/><circle cx="6" cy="9" r="2"/><circle cx="11" cy="6" r="2"/><circle cx="16" cy="8" r="2"/><circle cx="19" cy="12" r="2"/>',
+  '🔄': '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+  '🌑': '<path d="M12 3a9 9 0 0 0 0 18 7 7 0 1 1 0-18z"/>',
+  '⏳': '<path d="M6 3h12M6 21h12M7 3c0 5 5 7 5 9s-5 4-5 9M17 3c0 5-5 7-5 9s5 4 5 9"/>',
 };
 function _uiIconHTML(emoji, { size = 16, className = 'ui-icon' } = {}) {
   const path = UI_ICON_PATHS[emoji];
@@ -2735,6 +2782,12 @@ onAuthStateChanged(auth, async user => {
     await _waitMinIntroDisplay();
     showScreen('screenRadar');
     setNav('nav-radar');
+    // Lot AP : réchauffe le cache du score combiné (rang) en arrière-plan
+    // dès la connexion, sans bloquer l'affichage du Radar — sinon le badge
+    // de rang du Radar reste sur la dernière valeur connue (ou "Curieux" à
+    // 0 si jamais calculée) tant que l'utilisateur n'a pas ouvert le Profil
+    // au moins une fois dans CETTE session.
+    setTimeout(() => { if (typeof refreshProfileStats === 'function') refreshProfileStats(); }, 1500);
     // Fantôme garanti au 1er lancement — décalé après le GPS
     setTimeout(() => _seedWelcomeGhost(), 4000);
     // ── Présence passive — GPS watch ─────────────────────────────────
@@ -3987,26 +4040,48 @@ const MILESTONES = [1,5,10,25,50,100];
 // Résonances (utilisé aussi par _checkResoMilestone plus bas et par
 // CARD_TRACKS ci-dessous — déclaré ici pour être disponible avant les deux).
 const RESO_MILESTONES = [5, 10, 25, 50, 100];
+// ══════════════════════════════════════════════════════════
+// RANG UNIQUE (Lot AP) — fusion des deux progressions parallèles qui
+// existaient avant (rangs du Radar basés sur les DÉCOUVERTES seules, cartes
+// du Profil basées sur le SCORE COMBINÉ) : constat Pipo, ni les ronds de
+// couleur ni les cartes n'étaient compréhensibles, et surtout il y avait
+// DEUX jauges différentes pour "la même" progression. Une seule table :
+// le score combiné (plus gratifiant, tout compte) + les noms de rangs
+// (plus évocateurs que les paliers "Régulier/Habitué" de l'ex-collection).
+// Seuils IDENTIQUES à l'ex-CARD_COMBINED_MILESTONES (3,8,15,25,40,60,90,
+// 130,180,250) + un rang de départ à 0 (pas une carte à débloquer, cf.
+// _renderRankCards qui l'exclut de la grille).
 const RANKS_FR = [
-  {min:0,   label:'Curieux',      icon:'🌫️'},
-  {min:3,   label:'Flâneur',      icon:'🚶'},
-  {min:8,   label:'Explorateur',  icon:'🧭'},
-  {min:15,  label:'Vagabond',     icon:'🌙'},
-  {min:30,  label:'Hanteur',      icon:'👻'},
-  {min:60,  label:'Spectre',      icon:'🔮'},
-  {min:100, label:'Légende',      icon:'⭐'},
+  {min:0,   label:'Curieux',       icon:'🌫️'},
+  {min:3,   label:'Flâneur',       icon:'🚶'},
+  {min:8,   label:'Explorateur',   icon:'🧭'},
+  {min:15,  label:'Vagabond',      icon:'🌙'},
+  {min:25,  label:'Rôdeur',        icon:'🐾'},
+  {min:40,  label:'Hanteur',       icon:'👻'},
+  {min:60,  label:'Spectre',       icon:'🔮'},
+  {min:90,  label:'Revenant',      icon:'🔄'},
+  {min:130, label:'Ombre',         icon:'🌑'},
+  {min:180, label:'Esprit ancien', icon:'⏳'},
+  {min:250, label:'Légende',       icon:'⭐'},
 ];
 const RANKS_EN = [
-  {min:0,   label:'Curious',      icon:'🌫️'},
-  {min:3,   label:'Wanderer',     icon:'🚶'},
-  {min:8,   label:'Explorer',     icon:'🧭'},
-  {min:15,  label:'Drifter',      icon:'🌙'},
-  {min:30,  label:'Haunter',      icon:'👻'},
-  {min:60,  label:'Spectre',      icon:'🔮'},
-  {min:100, label:'Legend',       icon:'⭐'},
+  {min:0,   label:'Curious',        icon:'🌫️'},
+  {min:3,   label:'Wanderer',       icon:'🚶'},
+  {min:8,   label:'Explorer',       icon:'🧭'},
+  {min:15,  label:'Drifter',        icon:'🌙'},
+  {min:25,  label:'Prowler',        icon:'🐾'},
+  {min:40,  label:'Haunter',        icon:'👻'},
+  {min:60,  label:'Spectre',        icon:'🔮'},
+  {min:90,  label:'Revenant',       icon:'🔄'},
+  {min:130, label:'Shade',          icon:'🌑'},
+  {min:180, label:'Ancient spirit', icon:'⏳'},
+  {min:250, label:'Legend',         icon:'⭐'},
 ];
 const RANKS = () => _currentLang === 'en' ? RANKS_EN : RANKS_FR;
 
+// n = score combiné (_combinedCollectionScore), plus le nombre brut de
+// découvertes — seul appelant qui passait encore un compte brut
+// (showDiscoveryToast) a été corrigé pour passer le score en cache.
 function getRank(n) {
   const ranks = RANKS();
   let rank = ranks[0];
@@ -4015,51 +4090,116 @@ function getRank(n) {
   return { ...rank, index: rankIdx };
 }
 
-// ══════════════════════════════════════════════════════════
-// COLLECTION DE CARTES (Lot L)
-// Progression combinée unique (L3, tranché — finalisation Lots K/L) : une
-// seule piste de cartes plutôt que 4 pistes séparées par stat. Les stats déjà
-// trackées (découvertes, dépôts, résonances, série de jours actifs) sont
-// agrégées en un score unique — la série est pondérée ×3 car elle est
-// rate-limitée à un jour par jour (donc plus rare/dure à accumuler que les
-// autres actions, qui peuvent se répéter plusieurs fois par session) ;
-// discoveries/dépôts/résonances comptent à égalité (même ordre de grandeur
-// d'effort, une action = un point). Toujours entièrement dérivé à
-// l'affichage, aucun nouveau champ Firestore, aucun état à persister (le
-// score ne peut que croître).
-const CARD_COMBINED_MILESTONES = [3, 8, 15, 25, 40, 60, 90, 130, 180, 250];
-const CARD_TIER_NAMES_FR = ['Premier pas', 'Régulier', 'Habitué', 'Assidu', 'Confirmé', 'Endurant', 'Expert', 'Vétéran', 'Maître', 'Légende'];
-const CARD_TIER_NAMES_EN = ['First step', 'Regular', 'Habitué', 'Dedicated', 'Confirmed', 'Enduring', 'Expert', 'Veteran', 'Master', 'Legend'];
-
+// Score = 1 pt par fantôme découvert, déposé, ou résonance + 3 pts par jour
+// de série (rate-limitée à 1/jour donc plus rare/dure à accumuler que les
+// autres actions, qui peuvent se répéter plusieurs fois par session — les
+// 3 autres comptent à égalité, même ordre de grandeur d'effort). Toujours
+// entièrement dérivé à l'affichage, aucun nouveau champ Firestore.
 function _combinedCollectionScore(stats) {
   return (stats.discovered || 0) + (stats.deposited || 0) + (stats.resonances || 0) + (stats.streak || 0) * 3;
 }
 
-function _renderTraceCollection(stats) {
-  const grid = document.getElementById('traceCollectionGrid');
-  const progressEl = document.getElementById('collectionProgress');
-  if (!grid) return;
-  const tierNames = _currentLang === 'en' ? CARD_TIER_NAMES_EN : CARD_TIER_NAMES_FR;
-  const score = _combinedCollectionScore(stats);
-  let unlockedCount = 0;
-  const html = CARD_COMBINED_MILESTONES.map((threshold, i) => {
-    const unlocked = score >= threshold;
-    if (unlocked) unlockedCount++;
-    const tier = tierNames[i] || threshold;
-    return `<div class="trace-card ${unlocked ? 'unlocked' : 'locked'}" title="${escapeHTML(tier)} · ${threshold}">` +
-      `<div class="trace-card-icon" aria-hidden="true">${unlocked ? '✦' : _uiIconHTML('🔒', { size: 15, className: 'ui-icon trace-card-lock-icon' })}</div>` +
-      `<div class="trace-card-count">${threshold}</div>` +
-      `</div>`;
-  }).join('');
-  grid.innerHTML = html;
-  if (progressEl) progressEl.textContent = unlockedCount + ' / ' + CARD_COMBINED_MILESTONES.length;
+// ── Cache du score combiné (mémoire + localStorage) ─────────
+// Le score a besoin de stats (dépôts, résonances, série) qui ne sont
+// aujourd'hui chargées en entier que sur le Profil (refreshProfileStats,
+// 1-2 lectures Firestore) — le Radar (updateRankBar, affiché bien plus
+// souvent) lit ce cache plutôt que de refaire ces requêtes à chaque
+// affichage. Recalculé (et le cache réécrit) à chaque refreshProfileStats().
+let _cachedCombinedScore = null;
+function _combinedScoreCacheKey() { return 'ghostub_combined_score_' + (currentUser ? currentUser.uid : 'anon'); }
+function _getCachedCombinedScore() {
+  if (_cachedCombinedScore != null) return _cachedCombinedScore;
+  _cachedCombinedScore = parseInt(localStorage.getItem(_combinedScoreCacheKey()) || '0');
+  return _cachedCombinedScore;
+}
+function _setCachedCombinedScore(score) {
+  _cachedCombinedScore = score;
+  localStorage.setItem(_combinedScoreCacheKey(), String(score));
 }
 
-// ── Update rank bar in radar ──────────────────────────────
-function updateRankBar() {
-  const count = getDiscoveryCount();
+// ══════════════════════════════════════════════════════════
+// "MON RANG" (Lot AP, remplace la Collection de cartes du Lot L) — grille
+// 5×2 des 10 rangs à débloquer (le rang de départ Curieux n'est pas une
+// carte). Chaque carte reste un vrai <button> avec un aria-label complet
+// (nom, seuil, état) — l'ancien attribut title (invisible sur mobile) est
+// remplacé par ce texte + une fiche modale au tap (_showRankCardDetail).
+function _renderRankCard(stats) {
+  const grid = document.getElementById('rankCardsGrid');
+  if (!grid) return;
+  const score = _combinedCollectionScore(stats);
+  _setCachedCombinedScore(score);
   const ranks = RANKS();
-  const { index } = getRank(count);
+  const { index: currentIdx } = getRank(score);
+  const html = ranks.slice(1).map((r, i) => {
+    const idx = i + 1; // index réel dans ranks[] (on a sauté l'entrée 0)
+    let state, stateLabel;
+    if (idx < currentIdx) { state = 'unlocked'; stateLabel = t.rank_card_obtained || 'obtenu'; }
+    else if (idx === currentIdx) { state = 'current'; stateLabel = t.rank_card_yours || 'ton rang'; }
+    else if (idx === currentIdx + 1) { state = 'next'; stateLabel = (t.rank_card_more || 'encore {n}').replace('{n}', r.min - score); }
+    else { state = 'locked'; stateLabel = (t.rank_card_at || 'à {n}').replace('{n}', r.min); }
+    const reached = state === 'unlocked' || state === 'current';
+    const uid = 'rc' + (_traceIdSeq++);
+    // Trace doré si atteint, silhouette pâle sinon — même dessin (le rang
+    // n'a pas de "caractère" comme Mon Trace, juste un état obtenu/pas).
+    const [c1, c2] = reached ? ['#F5DFA0', '#FFF3C7'] : ['#8A85A0', '#8A85A0'];
+    const traceHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="34" height="34">${_traceBodyMarkup('👻', c1, c2, uid, 34)}</svg>`;
+    const ariaLabel = `${r.label}, ${t.rank_card_aria_at || 'à'} ${r.min} ${t.rank_card_aria_points || 'points'}, ${stateLabel}`;
+    return `<button type="button" class="rank-card rank-card-${state}" data-action="showRankCardDetail" data-arg="${idx}" aria-label="${escapeHTML(ariaLabel)}">` +
+      `<span class="rank-card-icon">${traceHTML}</span>` +
+      `<span class="rank-card-name">${escapeHTML(r.label)}</span>` +
+      `<span class="rank-card-state">${escapeHTML(stateLabel)}</span>` +
+      `</button>`;
+  }).join('');
+  grid.innerHTML = html;
+  const countEl = document.getElementById('rankCardsCount');
+  if (countEl) countEl.textContent = currentIdx + ' ' + (t.rank_card_of || 'sur') + ' ' + (ranks.length - 1);
+  _renderRankProgressLine(score, ranks, currentIdx);
+}
+
+// Ligne "Prochain rang : X" + barre + règle des points (au-dessus de la
+// grille) — au rang max, message dédié sans barre (rien à progresser vers).
+function _renderRankProgressLine(score, ranks, currentIdx) {
+  const wrap = document.getElementById('rankProgressLine');
+  if (!wrap) return;
+  const current = ranks[currentIdx];
+  const next = ranks[currentIdx + 1] || null;
+  if (!next) {
+    wrap.innerHTML = `<div class="rank-progress-max">${(t.rank_progress_max || 'Tu es une {rank}.').replace('{rank}', escapeHTML(current.label))}</div>`;
+    return;
+  }
+  const remaining = next.min - score;
+  const pct = Math.min(100, Math.max(0, ((score - current.min) / (next.min - current.min)) * 100));
+  wrap.innerHTML =
+    `<div class="rank-progress-next-line">${(t.rank_progress_next || 'Prochain rang : {rank}').replace('{rank}', escapeHTML(next.label))} <span class="rank-progress-fraction">${score} / ${next.min}</span></div>` +
+    `<div class="rank-progress-track"><div class="rank-progress-track-fill" style="width:${pct}%"></div></div>` +
+    `<div class="rank-progress-rule">${(t.rank_progress_remaining || 'Encore {n} points.').replace('{n}', remaining)} ${t.rank_progress_rule || ''}</div>`;
+}
+
+window.showRankCardDetail = (idx) => {
+  const ranks = RANKS();
+  const r = ranks[Number(idx)];
+  if (!r) return;
+  const score = _getCachedCombinedScore();
+  const { index: currentIdx } = getRank(score);
+  let stateText;
+  if (Number(idx) < currentIdx) stateText = t.rank_card_modal_obtained || 'Rang obtenu.';
+  else if (Number(idx) === currentIdx) stateText = t.rank_card_modal_yours || 'C\'est ton rang actuel.';
+  else stateText = (t.rank_card_modal_locked || 'Encore {n} points pour l\'atteindre.').replace('{n}', Math.max(0, r.min - score));
+  const threshold = (t.rank_card_modal_threshold || 'À {n} points.').replace('{n}', r.min);
+  const subtitle = `${threshold} ${stateText} ${t.rank_progress_rule || ''}`;
+  showConfirm(r.label, subtitle, { confirmLabel: t.modal_ok || 'OK', hideCancel: true });
+};
+
+// ── Update rank bar in radar ──────────────────────────────
+// Lot AP : lit le score combiné en cache (mémoire/localStorage, cf. plus
+// haut) plutôt que getDiscoveryCount() — le Radar affiche ainsi le MÊME
+// rang que le Profil sans requête Firestore supplémentaire à chaque appel
+// (updateRankBar est appelé bien plus souvent que refreshProfileStats, qui
+// seul recalcule et réécrit le cache).
+function updateRankBar() {
+  const score = _getCachedCombinedScore();
+  const ranks = RANKS();
+  const { index } = getRank(score);
   const current = ranks[index];
   const next = ranks[index + 1] || null;
   const badge = document.getElementById('rankBadge');
@@ -4068,7 +4208,7 @@ function updateRankBar() {
   if (!badge) return;
   badge.innerHTML = _rankIconHTML(current) + ' ' + escapeHTML(current.label);
   if (next) {
-    const progress = ((count - current.min) / (next.min - current.min)) * 100;
+    const progress = ((score - current.min) / (next.min - current.min)) * 100;
     fill.style.width = Math.min(progress, 100) + '%';
     nextEl.textContent = '→ ' + next.label + ' (' + next.min + ')';
     nextEl.style.display = '';
@@ -4298,14 +4438,20 @@ function showDiscoveryToast(count, isNew) {
   const text  = document.getElementById('toastText');
   if (!toast) return;
   toast.classList.remove('discovery-toast-rare', 'discovery-toast-secret');
-  const rank = getRank(count);
   const isMilestone = MILESTONES.includes(count) && isNew;
   if (isNew) {
+    // Lot AP : le rang vient du score combiné, pas du seul compte de
+    // découvertes — incrémente le cache de +1 ici (une nouvelle découverte
+    // = +1 point) plutôt que de refaire les lectures Firestore de
+    // refreshProfileStats() à chaque ouverture d'enveloppe.
+    _setCachedCombinedScore(_getCachedCombinedScore() + 1);
     const _su = _updateStreak();
     _renderStreak();
     updateRankBar();
+    _renderProfileRankBadge();
     if (_su.freezeJustUsed) showToast('info', t.streak_freeze_used);
   }
+  const rank = getRank(_getCachedCombinedScore());
   // Play chime on new discovery
   if (isNew) {
     AudioService.playChime();
@@ -4370,9 +4516,7 @@ function animateStatNumber(id, newVal) {
 async function refreshProfileStats() {
   if (!currentUser) return;
   const count = getDiscoveryCount();
-  const rank  = getRank(count);
   animateStatNumber('statDiscovered', count);
-  document.getElementById('statRank').innerHTML = _rankIconHTML(rank) + ' ' + escapeHTML(rank.label);
   updateFavoritesCount();
   const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
@@ -4399,12 +4543,24 @@ async function refreshProfileStats() {
     }
     animateStatNumber('statResonances', resonances);
   } catch(e) { console.warn('refreshProfileStats:', e); }
-  updateRankBar();
-  // Collection de cartes (Lot L) — dérivée des stats déjà chargées ci-dessus,
-  // aucune lecture Firestore supplémentaire.
-  if (typeof _renderTraceCollection === 'function') {
-    _renderTraceCollection({ discovered: count, deposited, resonances, streak: _getStreak().count });
+  // "Mon rang" (Lot AP) — _renderRankCard recalcule le score combiné et
+  // réécrit le cache (_setCachedCombinedScore) ; updateRankBar()/le badge
+  // sous le pseudo doivent donc être appelés APRÈS, pas avant, pour lire un
+  // cache à jour plutôt que la valeur potentiellement périmée du dernier
+  // passage (ou 0 à la toute première fois).
+  if (typeof _renderRankCard === 'function') {
+    _renderRankCard({ discovered: count, deposited, resonances, streak: _getStreak().count });
   }
+  updateRankBar();
+  _renderProfileRankBadge();
+}
+// Pastille du rang courant sous le pseudo, à côté de la pastille Premium
+// (remplace l'ancien gros bloc "RANG" séparé, cf. index.html #profileHdr).
+function _renderProfileRankBadge() {
+  const el = document.getElementById('profileRankBadge');
+  if (!el) return;
+  const rank = getRank(_getCachedCombinedScore());
+  el.innerHTML = _rankIconHTML(rank, { size: 10 }) + ' ' + escapeHTML(rank.label);
 }
 async function loadBizDashboard() {
   if (!currentUser) return;
@@ -5554,6 +5710,15 @@ function showConfirm(title, subtitle, options = {}) {
     const typedInput = document.getElementById('confirmTypedInput');
     const btnOk = document.getElementById('confirmOk');
     const btnCancel = document.getElementById('confirmCancel');
+    // Lot AP : confirmLabel était déjà passé par un appelant (renouveler une
+    // offre, ligne ~4587) sans jamais être lu ici — bug latent corrigé au
+    // passage. cancelLabel/hideCancel ajoutés pour la fiche "Mon rang"
+    // (usage informatif, pas une confirmation destructrice à 2 issues) —
+    // "Supprimer" reste le repli par défaut, les 2 seuls autres appelants
+    // actuels sans option sont bien des suppressions.
+    btnOk.textContent = options.confirmLabel || 'Supprimer';
+    btnCancel.textContent = options.cancelLabel || 'Annuler';
+    btnCancel.style.display = options.hideCancel ? 'none' : '';
 
     // Mode saisie obligatoire
     if (options.requireTyped) {
@@ -5589,6 +5754,7 @@ function showConfirm(title, subtitle, options = {}) {
       btnOk.disabled = false;
       btnOk.style.opacity = '1';
       typedWrap.style.display = 'none';
+      btnCancel.style.display = '';
       btnOk.removeEventListener('click', onOk);
       btnCancel.removeEventListener('click', onCancel);
       resolve(result);
@@ -6763,7 +6929,9 @@ async function _collectYearCardStats() {
   const resonances = parseInt(document.getElementById('statResonances')?.textContent || '0');
   const firstReads = parseInt(document.getElementById('statFirstReader')?.textContent || '0');
   const streak     = _getStreak().count;
-  const rank       = getRank(discovered);
+  // Lot AP : rang unique dérivé du score combiné (comme partout ailleurs),
+  // pas des seules découvertes — toutes les stats sont déjà réunies ici.
+  const rank       = getRank(_combinedCollectionScore({ discovered, deposited, resonances, streak }));
   const name       = currentUser?.displayName || 'Chasseur';
 
   // Données Firestore pour le lieu le plus visité
@@ -6979,22 +7147,32 @@ window.checkPublicProfileParam = async () => {
     ));
     const ghostCount = ghostsSnap.size;
     const totalOpens = ghostsSnap.docs.reduce((s, d) => s + (d.data().openCount || 0), 0);
-    showPublicProfileModal(uid, name, ghostCount, totalOpens, ghostsSnap.docs);
+    // Lot AP : même rang que partout ailleurs, approximé avec ce qui est
+    // déjà lisible publiquement (users/{uid}.ghostCount/totalResonances,
+    // déjà utilisés par le classement Top chasseurs) — les découvertes et
+    // la série ne sont pas dénormalisées publiquement (userStats n'est pas
+    // conçu pour être lu par un autre utilisateur), donc traitées comme 0
+    // ici : rang plancher, jamais surestimé.
+    const userData = userDoc.exists() ? userDoc.data() : {};
+    const rank = getRank(_combinedCollectionScore({ discovered: 0, deposited: ghostCount, resonances: userData.totalResonances || 0, streak: 0 }));
+    showPublicProfileModal(uid, name, ghostCount, totalOpens, ghostsSnap.docs, rank);
   } catch(e) { console.warn('checkPublicProfileParam:', e); }
 };
 
-window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs) => {
+window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs, rank) => {
   const existing = document.getElementById('publicProfileModal');
   if (existing) existing.remove();
   const modal = document.createElement('div');
   modal.id = 'publicProfileModal';
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(6,6,14,.95);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;padding:32px 20px;overflow-y:auto;';
   const initial = name.charAt(0).toUpperCase();
+  const rankBadgeHTML = rank ? `<div class="ppm-rank-badge">${_rankIconHTML(rank, { size: 12 })} ${escapeHTML(rank.label)}</div>` : '';
   modal.innerHTML = `
     <button data-action="closePublicProfileModal" class="ppm-close-btn">✕</button>
     <div class="ppm-avatar-initial">${initial}</div>
     <div class="ppm-name">${escapeHTML(name)}</div>
     <div class="ppm-subtitle">Chasseur de fantômes</div>
+    ${rankBadgeHTML}
     <div class="ppm-stats-grid">
       <div class="ppm-stat-box">
         <div class="ppm-stat-num">${ghostCount}</div>
@@ -8704,6 +8882,12 @@ function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location
   // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
   const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
   localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
+  // Lot AP : un dépôt vaut 1 point de score combiné (rang) — même logique
+  // que la découverte dans showDiscoveryToast, pour que le cache reste
+  // juste sans re-solliciter Firestore.
+  _setCachedCombinedScore(_getCachedCombinedScore() + 1);
+  updateRankBar();
+  _renderProfileRankBadge();
   // Particules dorées
   setTimeout(() => _launchDepositParticles(), 80);
   // Lot AO : plus de toast "Votre trace est ancrée…" ici — il s'affichait

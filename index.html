@@ -829,13 +829,25 @@
         <div class="profile-name-big" id="profileName">…</div>
         <!-- Lot AO : pastille hors du flux de la bague avatar (le badge y était
              inséré comme enfant flex, ce qui poussait l'avatar hors du centre) —
-             toujours présente dans le DOM, simplement masquée/affichée. -->
-        <div id="premiumAvatarBadge" class="premium-avatar-badge u-hidden">
-          <svg class="ui-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg>
-          Premium
+             toujours présente dans le DOM, simplement masquée/affichée.
+             Lot AP : pastille de rang courant ajoutée à côté (remplace le
+             gros bloc "RANG" séparé qu'il y avait plus bas). -->
+        <div class="profile-badge-row">
+          <span id="profileRankBadge" class="profile-rank-badge">—</span>
+          <div id="premiumAvatarBadge" class="premium-avatar-badge u-hidden">
+            <svg class="ui-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg>
+            Premium
+          </div>
         </div>
-        <!-- Teinte du Trace (Lot K) — personnalisation de l'avatar profil -->
-        <div class="trace-color-picker" id="traceColorPicker" role="group" aria-label="Teinte de mon Trace"></div>
+        <!-- "Mon Trace" (Lot K, réécrit Lot AP) — personnalisation de l'avatar
+             profil : chaque couleur est un visage distinct, pas juste une
+             teinte (cf. TRACE_COLORS.face, app.js). -->
+        <div class="mon-trace-card">
+          <div class="mon-trace-title" data-i18n="mon_trace_title">Mon Trace</div>
+          <div class="mon-trace-sub" data-i18n="mon_trace_sub">Choisis ton fantôme : chaque couleur a son caractère.</div>
+          <div class="trace-color-picker" id="traceColorPicker" role="group" aria-label="Teinte de mon Trace"></div>
+          <div class="mon-trace-premium-hint u-hidden" id="monTracePremiumHint" data-i18n="mon_trace_premium_hint">✦ 3 fantômes réservés aux membres Premium</div>
+        </div>
         <div class="profile-share-row">
           <button data-action="shareMyProfile" class="profile-share-btn">
             <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20V10a6 6 0 0 1 12 0v10l-2-2-2 2-2-2-2 2-2-2z"/><circle cx="9.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/></svg>
@@ -844,18 +856,15 @@
           <button data-action="generateYearCard" id="yearCardBtn" class="profile-year-btn" data-i18n="profile_year_btn">✦ Mon année</button>
         </div>
       </div>
-      <!-- ── RANG sous le nom ─────────────────────────── -->
-      <div class="profile-rank-block">
-        <span id="statRank" class="profile-rank-value">—</span>
-        <div class="profile-rank-label" data-i18n="profile_rank">Rang</div>
-      </div>
-
-      <!-- ── COLLECTION DE CARTES (Lot L) ────────────────── -->
+      <!-- ── "MON RANG" (Lot AP, remplace le bloc RANG + Ma collection) ── -->
       <div class="empreinte-header">
-        <div class="empreinte-title" data-i18n="collection_title">Ma collection</div>
-        <div class="empreinte-sub" id="collectionProgress">0 / 0</div>
+        <div class="empreinte-title" data-i18n="mon_rank_title">Mon rang</div>
+        <div class="empreinte-sub" id="rankCardsCount">0 / 0</div>
       </div>
-      <div class="trace-collection-grid" id="traceCollectionGrid"></div>
+      <div class="mon-rank-card">
+        <div id="rankProgressLine" class="rank-progress-line"></div>
+        <div class="rank-cards-grid" id="rankCardsGrid"></div>
+      </div>
 
       <!-- ── MON EMPREINTE ──────────────────────────────── -->
       <div class="empreinte-header">
