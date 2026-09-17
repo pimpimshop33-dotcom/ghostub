@@ -450,260 +450,43 @@
   <!-- DEPOSIT -->
   <div class="screen" id="screenDeposit" aria-label="Déposer un fantôme">
     <div class="scroll dep-scroll">
-      <div class="wizard-header">
-        <div class="wizard-steps" role="list" aria-label="Étapes du dépôt">
-          <div class="wizard-step active" id="ws1" role="listitem" aria-current="step">
-            <div class="wizard-step-dot" aria-hidden="true">1</div>
-            <span data-i18n="dep_step_message">Message</span>
-          </div>
-          <div class="wizard-step-line" aria-hidden="true"></div>
-          <div class="wizard-step" id="ws2" role="listitem">
-            <div class="wizard-step-dot" aria-hidden="true">2</div>
-            <span data-i18n="dep_step_location">Lieu</span>
-          </div>
-          <div class="wizard-step-line" aria-hidden="true"></div>
-          <div class="wizard-step" id="ws3" role="listitem">
-            <div class="wizard-step-dot" aria-hidden="true">3</div>
-            <span data-i18n="dep_step_options">Options</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ÉTAPE 1 — Phase 1 v100 "La Lettre" -->
+      <!-- ÉTAPE 1 — Lot AI "Déposer simplifié" (remplace le wizard 3 étapes
+           du Lot H, déjà masqué visuellement — tout tient sur un écran). -->
       <div class="wizard-pane" id="wizardStep1">
-        <div class="wizard-pane-title" data-i18n="dep_pane1_title">Que laissez-vous ici ?</div>
-        <div class="wizard-pane-sub" data-i18n="dep_pane1_sub">Cette trace sera ancrée à votre position.</div>
+        <div class="dep-title" data-i18n="dep_pane1_title">Laisser une trace</div>
+        <div class="dep-subtitle" data-i18n="dep_pane1_sub">Ancrée ici, à ta position.</div>
         <!-- Formulaire normal (message personnel) — papier à lettres -->
         <div id="normalDepositForm">
           <div class="lettre-paper">
+            <!-- Icônes SVG monochrome (style nav-icon) — cf. TRACE_FACE_VARIANTS
+                 dans app.js, garder synchronisé si ces tracés changent. Rendu
+                 par _renderDepositSealPicker() (Lot AI) : les Sceaux sont des
+                 expressions du Trace, pas des pictos génériques. -->
+            <div class="lettre-stamp-strip emoji-picker" id="depositSealPicker" role="group" aria-label="Choisir un Sceau"></div>
             <div class="lettre-salutation" data-i18n="dep_lettre_salutation">À qui passera par ici,</div>
-            <!-- Icônes SVG monochrome (style nav-icon) — cf. CATEGORY_ICON_PATHS
-                 dans app.js, garder synchronisé si ces tracés changent. -->
-            <div class="lettre-stamp-strip emoji-picker" role="group" aria-label="Choisir un Sceau">
-              <span class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">Sceau :</span>
-              <button class="emoji-opt active" data-action="pickEmoji" data-arg="👻" aria-label="Sceau fantôme" aria-pressed="true"><img src="assets/brand/ghostub-mark-trace.svg" class="brand-mark-icon" aria-hidden="true"></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="💬" aria-label="Sceau message" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/></svg></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="❤️" aria-label="Sceau cœur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/></svg></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="🌙" aria-label="Sceau lune" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="✨" aria-label="Sceau étincelle" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="🔥" aria-label="Sceau feu" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/></svg></button>
-              <button class="emoji-opt" data-action="pickEmoji" data-arg="🌸" aria-label="Sceau fleur" aria-pressed="false"><svg class="category-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/></svg></button>
-              <input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" data-input-action="pickEmojiCustom">
-            </div>
             <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="600" aria-required="true" aria-describedby="msgCharCount"></textarea>
-            <div class="lettre-counter"><span id="msgCharCount">0</span>/600</div>
-            <div class="lettre-signature" data-i18n="dep_lettre_signature">— ancré ici, à jamais</div>
-          </div>
-          <!-- Identité (Lot Q) — pseudo par défaut, l'anonymat est un choix
-               discret plutôt qu'un réglage mis en avant. anon = false tant
-               que ce lien n'est pas activé (cf. depositGhost()). -->
-          <div class="dep-anon-toggle-wrap">
-            <button type="button" id="anonToggleLink" class="anon-toggle-link" data-action="toggleAnonMode" aria-pressed="false">
-              <span data-i18n="dep_anon_toggle_off">🌫️ rester anonyme</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Formulaire Commerce (formulaire dédié) -->
-        <div id="businessDepositForm" class="u-hidden">
-          <div class="dep-biz-type-box">
-            <div class="dep-biz-type-label">🏪 Type d'offre</div>
-            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" data-action="toggleBizTypeAccordion">
-              <span id="bizTypeAccordionSummary">🏷 Promo</span>
-              <span class="toggle-arrow" aria-hidden="true">▼</span>
-            </div>
-            <div class="deposit-advanced-content" id="bizTypeAccordionContent">
-              <div class="dep-biz-type-selector" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
-                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true">🏷 Promo</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false">🎉 Événement</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false">✨ Nouveauté</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false">🛎 Service</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-group u-mb10">
-            <label class="form-label" for="bizTitle">Titre de l'offre <span class="dep-required-mark">*</span></label>
-            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" maxlength="80" aria-required="true">
-          </div>
-          <div class="form-group u-mb10">
-            <label class="form-label" for="bizDesc">Description <span class="dep-optional-mark">(optionnel)</span></label>
-            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" maxlength="200"></textarea>
-          </div>
-          <div class="form-group u-mb6">
-            <label class="form-label" for="promoCode">Code promo <span class="dep-optional-mark">(optionnel)</span></label>
-            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40">
-          </div>
-          <div class="dep-biz-radius-banner">
-            <span class="dep-biz-radius-emoji">📡</span>
-            <span class="dep-biz-radius-text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
-          </div>
-        </div>
-
-        <!-- Champ caché businessExtra pour compatibilité depositGhost -->
-        <div id="businessExtra" class="u-hidden"></div>
-
-        <!-- Réglages du fantôme — fusionnés en sections empilées dans le
-             même scroll (Lot H, juillet 2026) : Lieu → Durée de vie →
-             Disparaît après → Condition d'ouverture → Média → Identité.
-             Remplace l'ancien système de "nappe" (bottom sheet à onglets,
-             elle-même derrière un bandeau d'outils révélé au clic) — mêmes
-             ids/handlers/valeurs qu'avant (H4/H5), seule la disposition
-             change : tout est désormais visible sans clic intermédiaire. -->
-
-        <!-- ── LIEU ──────────────────────────────────────── -->
-        <div class="section-label">📍 <span data-i18n="dep_tool_lieu">Lieu</span></div>
-        <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
-          <div id="depositMiniMap"></div>
-          <div class="dep-map-scan" aria-hidden="true"></div>
-          <div id="depositMiniLoader" class="dep-mini-loader">📡 Localisation…</div>
-        </div>
-        <div class="form-group u-mb14">
-          <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
-          <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true" maxlength="120">
-        </div>
-        <div id="step2RadiusWrap" class="form-group u-mb18">
-          <label class="form-label" data-i18n="dep_radius_label">Rayon de détection</label>
-          <div class="deposit-advanced-toggle" id="radiusAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="radiusAccordionContent" data-action="toggleRadiusAccordion">
-            <span id="radiusAccordionSummary">📡 10m</span>
-            <span class="toggle-arrow" aria-hidden="true">▼</span>
-          </div>
-          <div class="deposit-advanced-content" id="radiusAccordionContent">
-            <div class="radius-selector u-mt10" role="group" aria-label="Rayon de détection">
-              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">3m</button>
-              <button class="radius-btn active" data-action="selectRadius" aria-pressed="true">10m</button>
-              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">50m</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── DURÉE DE VIE ──────────────────────────────── -->
-        <div id="step2DurWrap" class="form-group u-mb18">
-          <label class="form-label" data-i18n="dep_duration_label">Durée de vie</label>
-          <div class="deposit-advanced-toggle" id="durAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="durAccordionContent" data-action="toggleDurAccordion">
-            <span id="durAccordionSummary">⏳ 7 jours</span>
-            <span class="toggle-arrow" aria-hidden="true">▼</span>
-          </div>
-          <div class="deposit-advanced-content" id="durAccordionContent">
-            <div class="duration-selector u-mt10" role="group" aria-label="Durée de vie du fantôme">
-              <button class="dur-btn" data-dur="24h" data-action="selectDur" aria-pressed="false">24h</button>
-              <button class="dur-btn active" data-dur="7d" data-action="selectDur" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
-              <button class="dur-btn" data-dur="1m" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-              <button class="dur-btn" data-dur="eternal" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── DISPARAÎT APRÈS ───────────────────────────── -->
-        <div id="step2MaxOpenWrap" class="form-group u-mb18">
-          <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
-          <div class="deposit-advanced-toggle" id="maxOpenAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="maxOpenAccordionContent" data-action="toggleMaxOpenAccordion">
-            <span id="maxOpenAccordionSummary">👁️ ∞ Illimité</span>
-            <span class="toggle-arrow" aria-hidden="true">▼</span>
-          </div>
-          <div class="deposit-advanced-content" id="maxOpenAccordionContent">
-            <div class="duration-selector u-mt10" role="group" aria-label="Nombre de découvertes avant disparition">
-              <button class="dur-btn active" data-maxopen="0" data-action="selectMaxOpen" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
-              <button class="dur-btn" data-maxopen="1" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
-              <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
-              <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- ── CONDITION D'OUVERTURE — accordéon replié par défaut (Lot H3) ── -->
-        <div id="step2CondWrap" class="form-group u-mb18">
-          <label class="form-label" data-i18n="dep_cond_label">Condition d'ouverture</label>
-          <div class="deposit-advanced-toggle" id="condAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="condAccordionContent" data-action="toggleCondAccordion">
-            <span id="condAccordionSummary">✉ Toujours accessible</span>
-            <span class="toggle-arrow" aria-hidden="true">▼</span>
-          </div>
-          <div class="deposit-advanced-content" id="condAccordionContent">
-          <div class="cond-selector u-mt10" role="group" aria-label="Condition d'ouverture du fantôme">
-            <button class="cond-btn active" data-cond="always" data-action="selectCond" type="button">
-              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 6l9 7 9-7"/></svg></span>
-              <span class="cond-btn-text">
-                <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
-                <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
-              </span>
-            </button>
-            <button class="cond-btn" data-cond="night" data-action="selectCond" type="button">
-              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></span>
-              <span class="cond-btn-text">
-                <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
-                <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
-              </span>
-            </button>
-            <button class="cond-btn" data-cond="hour" data-action="selectCond" type="button">
-              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
-              <span class="cond-btn-text">
-                <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
-                <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
-              </span>
-            </button>
-            <button class="cond-btn" data-cond="future" data-action="selectCond" type="button" id="condFutureBtn">
-              <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></span>
-              <span class="cond-btn-text">
-                <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
-                <div class="cond-btn-sub" data-i18n="dep_cond_future_sub">S'ouvre à une date précise</div>
-              </span>
-            </button>
-            <div id="premSection_chain"></div>
-            <div id="chainContent" class="u-hidden dep-chain-content">
-              <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
-              <button type="button" data-action="setChainMarker" class="media-btn dep-chain-btn">
-                <span class="media-icon" aria-hidden="true">🗺</span>
-                <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
+            <!-- Barre média DANS la lettre (Lot AI) — remplace le bouton
+                 "Ajouter un média" + son menu : chaque icône ouvre directement
+                 le panneau correspondant via selectMediaType (inchangé). État
+                 actif géré en CSS pur :has() sur les conteneurs d'aperçu
+                 (audioPreview/photoPreview/videoPreview/attachmentsList),
+                 même pattern que l'aperçu qui remplace le bouton d'origine. -->
+            <div class="lettre-media-row" role="group" aria-label="Ajouter un média">
+              <button type="button" class="lettre-media-icon-btn" id="depMediaIconVocal" data-action="selectMediaType" data-arg="vocal" aria-label="Message vocal (optionnel)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
               </button>
-              <div id="chainMapPreview" class="u-hidden dep-chain-map-preview"></div>
-            </div>
-            <div id="premSection_dedicated"></div>
-            <div id="dedicatedContent" class="u-hidden dep-dedicated-content">
-              <div class="dep-dedicated-intro">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
-              <input class="form-input dep-dedicated-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" aria-label="Email du destinataire">
-              <div class="dep-hint-xs" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
-            </div>
-          </div>
-          <div class="cond-extra" id="condExtraHour">
-            <label class="form-label u-mb6" for="condHourInput">Heure d'ouverture</label>
-            <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
-            <div class="dep-hint-xs-mt">Le fantôme sera accessible 15 min avant et après cette heure</div>
-          </div>
-          <div class="cond-extra" id="condExtraFuture">
-            <label class="form-label u-mb6" for="condFutureInput">Date d'ouverture</label>
-            <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
-            <div class="dep-hint-xs-mt" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
-          </div>
-          </div>
-        </div>
-
-        <!-- ── MÉDIA ─────────────────────────────────────── -->
-        <!-- Lot Q : les 4 blocs médias sont regroupés derrière un bouton
-             unique qui révèle le bloc choisi à la demande (au lieu de tout
-             empiler en permanence). Logique interne de chaque média
-             (enregistrement, compression photo, limites vidéo/documents,
-             gating Premium) totalement inchangée — seule l'entrée change. -->
-        <div class="section-label">🎨 <span data-i18n="dep_tool_media">Média</span></div>
-        <div id="mediaMenuWrap" class="form-group u-mb18">
-          <button type="button" class="media-btn" id="mediaAddBtn" data-action="toggleMediaMenu" aria-haspopup="true" aria-expanded="false" aria-controls="mediaMenuPanel">
-            <span class="media-icon" aria-hidden="true">➕</span>
-            <span data-i18n="dep_media_add_btn">Ajouter un média</span>
-          </button>
-          <div class="deposit-advanced-content" id="mediaMenuPanel" role="group" aria-label="Choisir un type de média">
-            <div class="dep-media-menu-inner">
-              <button type="button" class="media-menu-item" id="mediaMenuItemVocal" data-action="selectMediaType" data-arg="vocal">
-                <span class="media-icon" aria-hidden="true">🎙</span><span data-i18n="dep_vocal_label">Message vocal (optionnel)</span>
+              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="photo" aria-label="Photo (optionnel)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
               </button>
-              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="photo">
-                <span class="media-icon" aria-hidden="true">📷</span><span data-i18n="dep_photo_label">Photo (optionnel)</span>
+              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="video" aria-label="Vidéo (optionnel)">
+                <span class="dep-media-premium-dot" id="mediaMenuVideoBadge" aria-hidden="true">✦</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
               </button>
-              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="video">
-                <span class="media-icon" aria-hidden="true">🎥</span><span data-i18n="dep_video_optional">Vidéo (optionnel)</span>
-                <span id="mediaMenuVideoBadge" class="badge-premium">✦ Premium</span>
+              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="attach" aria-label="Documents (optionnel)">
+                <span class="dep-media-premium-dot" id="mediaMenuAttachBadge" aria-hidden="true">✦</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 12.5V7a4 4 0 0 1 8 0v8a2.6 2.6 0 0 1-5.2 0V8.2"/></svg>
               </button>
-              <button type="button" class="media-menu-item" data-action="selectMediaType" data-arg="attach">
-                <span class="media-icon" aria-hidden="true">📎</span><span data-i18n="dep_attach_label_short">Documents (optionnel)</span>
-                <span id="mediaMenuAttachBadge" class="badge-premium">✦ Premium</span>
-              </button>
+              <div class="lettre-counter"><span id="msgCharCount">0</span>/600</div>
             </div>
           </div>
 
@@ -749,6 +532,81 @@
           </div>
         </div>
 
+        <!-- Formulaire Commerce (formulaire dédié) -->
+        <div id="businessDepositForm" class="u-hidden">
+          <div class="dep-biz-type-box">
+            <div class="dep-biz-type-label">🏪 Type d'offre</div>
+            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" data-action="toggleBizTypeAccordion">
+              <span id="bizTypeAccordionSummary">🏷 Promo</span>
+              <span class="toggle-arrow" aria-hidden="true">▼</span>
+            </div>
+            <div class="deposit-advanced-content" id="bizTypeAccordionContent">
+              <div class="dep-biz-type-selector" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
+                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true">🏷 Promo</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false">🎉 Événement</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false">✨ Nouveauté</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false">🛎 Service</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group u-mb10">
+            <label class="form-label" for="bizTitle">Titre de l'offre <span class="dep-required-mark">*</span></label>
+            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" maxlength="80" aria-required="true">
+          </div>
+          <div class="form-group u-mb10">
+            <label class="form-label" for="bizDesc">Description <span class="dep-optional-mark">(optionnel)</span></label>
+            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" maxlength="200"></textarea>
+          </div>
+          <div class="form-group u-mb6">
+            <label class="form-label" for="promoCode">Code promo <span class="dep-optional-mark">(optionnel)</span></label>
+            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40">
+          </div>
+          <div class="dep-biz-radius-banner">
+            <span class="dep-biz-radius-emoji">📡</span>
+            <span class="dep-biz-radius-text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+          </div>
+        </div>
+
+        <!-- Champ caché businessExtra pour compatibilité depositGhost -->
+        <div id="businessExtra" class="u-hidden"></div>
+
+        <!-- ── LIEU — une ligne, "modifier" déplie carte + champ (Lot AI) ── -->
+        <div class="dep-location-row">
+          <span class="dep-location-pin" aria-hidden="true">📍</span>
+          <span class="dep-location-name" id="depLocationDisplay">📡 Localisation…</span>
+          <button type="button" class="dep-location-edit-link" id="depLocationEditBtn" data-action="toggleDepLocationEdit" aria-expanded="false" aria-controls="depLocationEditPanel" data-i18n="dep_loc_edit">modifier</button>
+        </div>
+        <div class="dep-location-edit-panel u-hidden" id="depLocationEditPanel">
+          <div class="dep-map-frame" role="img" aria-label="Carte de votre position actuelle">
+            <div id="depositMiniMap"></div>
+            <div class="dep-map-scan" aria-hidden="true"></div>
+            <div id="depositMiniLoader" class="dep-mini-loader">📡 Localisation…</div>
+          </div>
+          <div class="form-group u-mb14">
+            <label class="form-label" for="depositLocation" data-i18n="dep_loc_label">Nom du lieu</label>
+            <input class="form-input" id="depositLocation" type="text" placeholder="ex: Banc du parc, Café du coin…" aria-required="true" maxlength="120">
+          </div>
+        </div>
+
+        <!-- ── DURÉE DE VIE — 4 pastilles toujours visibles (Lot AI) ── -->
+        <div id="step2DurWrap" class="form-group u-mb14">
+          <div class="duration-selector dep-dur-grid" role="group" aria-label="Durée de vie du fantôme">
+            <button class="dur-btn" data-dur="24h" data-action="selectDur" aria-pressed="false">24h</button>
+            <button class="dur-btn active" data-dur="7d" data-action="selectDur" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
+            <button class="dur-btn" data-dur="1m" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
+            <button class="dur-btn" data-dur="eternal" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+          </div>
+        </div>
+
+        <!-- ── PLUS D'OPTIONS — ouvre le panneau (écran 2, bottom sheet) ── -->
+        <button type="button" class="dep-more-options-row" id="depMoreOptionsBtn" data-action="openDepositOptionsSheet" aria-haspopup="dialog" aria-controls="depositOptionsSheet">
+          <span class="dep-more-options-text">
+            <span class="dep-more-options-label" data-i18n="dep_more_options">Plus d'options</span>
+            <span class="dep-more-options-summary" id="depOptionsSummary"></span>
+          </span>
+          <span class="dep-more-options-chevron" aria-hidden="true">›</span>
+        </button>
+
         <!-- Conservé pour compat — textes basculés par toggleBusinessMode() -->
         <div id="step3Title" class="u-hidden" data-i18n="dep_pane3_title">Récapitulatif</div>
         <div id="step3Sub" class="u-hidden" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
@@ -756,18 +614,17 @@
         <button class="lettre-seal-btn" data-action="depositGhost" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
         <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
 
-        <!-- Bouton toggle Mode Commerce — déplacé sous "Sceller le fantôme" (juin 2026) -->
-        <div id="businessToggleWrap" class="dep-biz-toggle-wrap">
-          <button id="businessToggleBtn" data-action="toggleBusinessMode" type="button" class="dep-biz-toggle-btn">
-            <span class="dep-biz-toggle-main">
-              <div class="dep-biz-toggle-row">
-                <span class="dep-biz-toggle-emoji">🏪</span>
-                <span class="dep-biz-toggle-label" data-i18n="dep_biz_btn">Mode Commerce</span>
-                <span id="bizPremiumBadge" class="dep-biz-premium-badge">✦ Premium</span>
-              </div>
-              <div class="dep-biz-toggle-sub" id="bizToggleSubLabel" data-i18n="dep_biz_sub">Attirer des clients avec une offre géolocalisée</div>
-            </span>
-            <span id="businessToggleIcon" class="dep-biz-toggle-icon">○</span>
+        <!-- Deux liens discrets sous le sceau (Lot AI) — remplace le gros bloc
+             Mode Commerce ; mêmes ids/action/gating qu'avant, l'icône ○/●
+             et le sous-libellé restent la source de vérité JS mais ne sont
+             plus affichés séparément (repris dans le libellé du lien). -->
+        <div class="dep-bottom-links-row">
+          <button type="button" id="anonToggleLink" class="anon-toggle-link" data-action="toggleAnonMode" aria-pressed="false">
+            <span data-i18n="dep_anon_toggle_off">rester anonyme</span>
+          </button>
+          <button id="businessToggleBtn" data-action="toggleBusinessMode" type="button" class="dep-biz-link">
+            <span id="businessToggleIcon" class="u-hidden">○</span>
+            <span id="bizToggleSubLabel" data-i18n="dep_biz_link_off">mode Commerce ✦</span>
           </button>
         </div>
         <!-- Erreur de dépôt remontée ici pour visibilité immédiate -->
@@ -781,6 +638,106 @@
       <!-- ÉTAPE 3 (vidée — obsolète depuis la fusion en une seule page, Lot H) -->
       <div class="wizard-pane u-hidden" id="wizardStep3"></div>
       </div><!-- fin scroll -->
+
+    <!-- Écran 2 "Plus d'options" — bottom sheet (Lot AI). Contenu déplacé tel
+         quel depuis l'écran 1 (mêmes ids/handlers) : rayon, disparition,
+         condition d'ouverture + sections Premium chaîne/destinataire. Réutilise
+         l'infra openModal/closeModal existante (focus trap, retour de focus,
+         scroll verrouillé) — même pattern que .report-modal/.share-modal. -->
+    <div class="deposit-options-modal" id="depositOptionsSheet" data-action="closeDepositOptionsSheet" role="dialog" aria-modal="true" aria-labelledby="depositOptionsSheetTitle">
+      <div class="deposit-options-sheet">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <div class="deposit-options-sheet-header">
+          <div>
+            <div class="deposit-options-sheet-title" id="depositOptionsSheetTitle" data-i18n="dep_more_options">Plus d'options</div>
+            <div class="deposit-options-sheet-sub" data-i18n="dep_options_sheet_sub">Tout est facultatif. Les réglages par défaut conviennent.</div>
+          </div>
+          <button type="button" class="deposit-options-sheet-ok" data-action="closeModal" data-arg="depositOptionsSheet" data-i18n="dep_options_sheet_ok">OK</button>
+        </div>
+        <div class="deposit-options-sheet-body">
+          <!-- ── RAYON — "Visible à partir de" ────────────── -->
+          <div id="step2RadiusWrap" class="form-group u-mb18">
+            <label class="form-label" data-i18n="dep_radius_label">Visible à partir de</label>
+            <div class="radius-selector u-mt10" role="group" aria-label="Rayon de détection">
+              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">3m</button>
+              <button class="radius-btn active" data-action="selectRadius" aria-pressed="true">10m</button>
+              <button class="radius-btn" data-action="selectRadius" aria-pressed="false">50m</button>
+            </div>
+          </div>
+
+          <!-- ── DISPARAÎT APRÈS ───────────────────────────── -->
+          <div id="step2MaxOpenWrap" class="form-group u-mb18">
+            <label class="form-label" data-i18n="dep_disappears_label">Disparaît après</label>
+            <div class="duration-selector u-mt10" role="group" aria-label="Nombre de découvertes avant disparition">
+              <button class="dur-btn active" data-maxopen="0" data-action="selectMaxOpen" aria-pressed="true" data-i18n="dep_maxopen_inf">∞ Illimité</button>
+              <button class="dur-btn" data-maxopen="1" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_1">1 lecture</button>
+              <button id="maxOpen5Btn" class="dur-btn" data-maxopen="5" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_5">5 lectures</button>
+              <button id="maxOpen10Btn" class="dur-btn" data-maxopen="10" data-action="selectMaxOpen" aria-pressed="false" data-i18n="dep_maxopen_10">10 lectures</button>
+            </div>
+          </div>
+
+          <!-- ── CONDITION D'OUVERTURE — grille 2×2 ────────── -->
+          <div id="step2CondWrap" class="form-group u-mb18">
+            <label class="form-label" data-i18n="dep_cond_grid_label">Quand peut-on l'ouvrir ?</label>
+            <div class="cond-selector cond-selector-grid u-mt10" role="group" aria-label="Condition d'ouverture du fantôme">
+              <button class="cond-btn active" data-cond="always" data-action="selectCond" type="button">
+                <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 6l9 7 9-7"/></svg></span>
+                <span class="cond-btn-text">
+                  <div class="cond-btn-label" data-i18n="dep_cond_always_label">Toujours accessible</div>
+                  <div class="cond-btn-sub" data-i18n="dep_cond_always_sub">N'importe quand</div>
+                </span>
+              </button>
+              <button class="cond-btn" data-cond="night" data-action="selectCond" type="button">
+                <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/></svg></span>
+                <span class="cond-btn-text">
+                  <div class="cond-btn-label" data-i18n="dep_cond_night_label">La nuit uniquement</div>
+                  <div class="cond-btn-sub" data-i18n="dep_cond_night_sub">Accessible entre 22h et 6h</div>
+                </span>
+              </button>
+              <button class="cond-btn" data-cond="hour" data-action="selectCond" type="button">
+                <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+                <span class="cond-btn-text">
+                  <div class="cond-btn-label" data-i18n="dep_cond_hour_label">À une heure précise</div>
+                  <div class="cond-btn-sub" data-i18n="dep_cond_hour_sub">Fenêtre de ±15 min</div>
+                </span>
+              </button>
+              <button class="cond-btn" data-cond="future" data-action="selectCond" type="button" id="condFutureBtn">
+                <span class="cond-btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+                <span class="cond-btn-text">
+                  <div class="cond-btn-label"><span data-i18n="dep_cond_future_label">Message du futur</span> <span id="futureLock" class="badge-premium">✦ Premium</span></div>
+                  <div class="cond-btn-sub" data-i18n="dep_cond_future_sub">S'ouvre à une date précise</div>
+                </span>
+              </button>
+            </div>
+            <div id="premSection_chain"></div>
+            <div id="chainContent" class="u-hidden dep-chain-content">
+              <input class="form-input" id="chainHint" type="text" placeholder="ex: continue vers la fontaine…" aria-label="Indice vers le prochain fantôme">
+              <button type="button" data-action="setChainMarker" class="media-btn dep-chain-btn">
+                <span class="media-icon" aria-hidden="true">🗺</span>
+                <span id="chainMapLabel" data-i18n="dep_chain_place">Placer le prochain point sur la carte</span>
+              </button>
+              <div id="chainMapPreview" class="u-hidden dep-chain-map-preview"></div>
+            </div>
+            <div id="premSection_dedicated"></div>
+            <div id="dedicatedContent" class="u-hidden dep-dedicated-content">
+              <div class="dep-dedicated-intro">Entre l'email du destinataire — seul lui pourra ouvrir ce ghost.</div>
+              <input class="form-input dep-dedicated-input" id="dedicatedUidInput" type="email" inputmode="email" placeholder="email@exemple.com" aria-label="Email du destinataire">
+              <div class="dep-hint-xs" data-i18n="dep_dedicated_hint">Laisse vide pour que n'importe qui puisse l'ouvrir.</div>
+            </div>
+            <div class="cond-extra" id="condExtraHour">
+              <label class="form-label u-mb6" for="condHourInput">Heure d'ouverture</label>
+              <input class="cond-time-input" type="time" id="condHourInput" value="20:00" aria-label="Heure d'ouverture du fantôme">
+              <div class="dep-hint-xs-mt">Le fantôme sera accessible 15 min avant et après cette heure</div>
+            </div>
+            <div class="cond-extra" id="condExtraFuture">
+              <label class="form-label u-mb6" for="condFutureInput">Date d'ouverture</label>
+              <input class="cond-time-input" type="date" id="condFutureInput" aria-label="Date à partir de laquelle le fantôme sera lisible">
+              <div class="dep-hint-xs-mt" data-i18n="dep_future_hint">Le fantôme sera invisible jusqu'à cette date — comme un message dans une bouteille</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div><!-- fin screenDeposit -->
 
   <!-- MAP -->

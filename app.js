@@ -180,6 +180,16 @@ const LANGS = {
     dep_lettre_signature: '— ancré ici, à jamais',
     dep_seal_btn: 'Sceller le fantôme',
     dep_seal_hint: 'ancré à ta position actuelle, en un geste',
+    // Lot AI — Déposer simplifié
+    dep_more_options: "Plus d'options",
+    dep_options_sheet_sub: 'Tout est facultatif. Les réglages par défaut conviennent.',
+    dep_options_sheet_ok: 'OK',
+    dep_biz_link_off: 'mode Commerce ✦',
+    dep_biz_link_on: 'quitter le mode Commerce',
+    dep_loc_locating: '📡 Localisation…',
+    dep_loc_edit: 'modifier',
+    dep_loc_edit_close: 'fermer',
+    dep_cond_grid_label: "Quand peut-on l'ouvrir ?",
     // Phase 1b v101 — La Nappe (bottom sheet)
     dep_tool_lieu: 'Lieu',
     dep_tool_rules: 'Règles',
@@ -560,8 +570,8 @@ const LANGS = {
     filter_video: '🎥 Vidéos',
     reply_screen_title: 'Répondre ici',
     reply_screen_sub: 'Votre réponse restera ancrée au même endroit.',
-    dep_pane1_title: 'Que laissez-vous ici ?',
-    dep_pane1_sub: 'Cette trace sera ancrée à votre position.',
+    dep_pane1_title: 'Laisser une trace',
+    dep_pane1_sub: 'Ancrée ici, à ta position.',
     dep_pane2_title: 'Où et combien de temps ?',
     dep_pane2_sub: 'Le fantôme sera ancré ici.',
     dep_pane3_title: 'Récapitulatif',
@@ -795,6 +805,16 @@ const LANGS = {
     dep_lettre_signature: '— anchored here, forever',
     dep_seal_btn: 'Seal the ghost',
     dep_seal_hint: 'anchored to your current spot, in one tap',
+    // Lot AI — Simplified deposit
+    dep_more_options: 'More options',
+    dep_options_sheet_sub: 'Everything is optional. The defaults are fine.',
+    dep_options_sheet_ok: 'OK',
+    dep_biz_link_off: 'commerce mode ✦',
+    dep_biz_link_on: 'exit commerce mode',
+    dep_loc_locating: '📡 Locating…',
+    dep_loc_edit: 'edit',
+    dep_loc_edit_close: 'close',
+    dep_cond_grid_label: 'When can it be opened?',
     // Phase 1b v101 — The Sheet (bottom sheet)
     dep_tool_lieu: 'Place',
     dep_tool_rules: 'Rules',
@@ -1175,8 +1195,8 @@ const LANGS = {
     filter_video: '🎥 Videos',
     reply_screen_title: 'Reply here',
     reply_screen_sub: 'Your reply will stay anchored at the same spot.',
-    dep_pane1_title: 'What are you leaving here?',
-    dep_pane1_sub: 'This trace will be anchored to your location.',
+    dep_pane1_title: 'Leave a trace',
+    dep_pane1_sub: 'Anchored here, at your spot.',
     dep_pane2_title: 'Where and how long?',
     dep_pane2_sub: 'The ghost will be anchored here.',
     dep_pane3_title: 'Summary',
@@ -3910,44 +3930,11 @@ window.toggleAudioEnabled = () => {
   }
 })();
 
-// ── Accordéon "Condition d'ouverture" (Lot H3) ──────────────
-// Replié par défaut, affiche juste le choix actuel — ne se déplie que pour
-// changer. Remplace l'ancien système de nappe/bandeau d'outils (Lot H1).
-const _CORD_ACCORDION_LABELS = {
-  always: '✉',
-  night:  '🌙',
-  hour:   '⏰',
-  future: '📅',
-};
-function _updateCondAccordionSummary() {
-  const el = document.getElementById('condAccordionSummary');
-  if (!el) return;
-  const cond = getSelectedCond();
-  const labelKey = { always: 'dep_cond_always_label', night: 'dep_cond_night_label', hour: 'dep_cond_hour_label', future: 'dep_cond_future_label' }[cond] || 'dep_cond_always_label';
-  el.innerHTML = _uiIconHTML(_CORD_ACCORDION_LABELS[cond] || _CORD_ACCORDION_LABELS.always, { size: 14 }) + ' ' + escapeHTML(t[labelKey] || 'Toujours accessible');
-}
-window.toggleCondAccordion = (forceOpen) => {
-  const toggle = document.getElementById('condAccordionToggle');
-  const content = document.getElementById('condAccordionContent');
-  if (!toggle || !content) return;
-  const open = typeof forceOpen === 'boolean' ? forceOpen : !toggle.classList.contains('open');
-  toggle.classList.toggle('open', open);
-  content.classList.toggle('open', open);
-  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-};
-// Un choix de condition referme l'accordéon et met à jour le résumé —
-// délégation sur le conteneur (pas de changement de selectCond() lui-même,
-// qui reste la seule logique métier ici).
-document.getElementById('condAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.cond-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateCondAccordionSummary();
-  window.toggleCondAccordion(false);
-});
-
-// ── Accordéons "Rayon", "Durée de vie", "Disparaît après" (Lot N) ──
-// Même modèle que l'accordéon Condition d'ouverture ci-dessus : repliés par
-// défaut, résumé icône + valeur active, se referment après un choix.
+// ── Accordéons "Rayon", "Durée de vie", "Disparaît après", "Condition
+// d'ouverture" — retirés au Lot AI : ce contenu vit désormais dans le
+// panneau "Plus d'options" (bottom sheet #depositOptionsSheet), toujours
+// déplié à l'intérieur (plus d'accordéons imbriqués). _toggleDepositAccordion
+// reste utilisée par l'accordéon "Type d'offre" (Mode Commerce) ci-dessous.
 function _toggleDepositAccordion(toggleId, contentId, forceOpen) {
   const toggle = document.getElementById(toggleId);
   const content = document.getElementById(contentId);
@@ -3957,43 +3944,60 @@ function _toggleDepositAccordion(toggleId, contentId, forceOpen) {
   content.classList.toggle('open', open);
   toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
-window.toggleRadiusAccordion  = (forceOpen) => _toggleDepositAccordion('radiusAccordionToggle', 'radiusAccordionContent', forceOpen);
-window.toggleDurAccordion     = (forceOpen) => _toggleDepositAccordion('durAccordionToggle', 'durAccordionContent', forceOpen);
-window.toggleMaxOpenAccordion = (forceOpen) => _toggleDepositAccordion('maxOpenAccordionToggle', 'maxOpenAccordionContent', forceOpen);
 
-function _updateRadiusAccordionSummary() {
-  const el = document.getElementById('radiusAccordionSummary');
-  const btn = document.querySelector('#radiusAccordionContent .radius-btn.active');
-  if (el && btn) el.textContent = '📡 ' + btn.textContent.trim();
+// Résumé en direct affiché sur la ligne "Plus d'options" (Lot AI) — se
+// substitue aux anciens résumés d'accordéon individuels. Appelée après
+// chaque changement de rayon/disparition/condition.
+function _updateDepositOptionsSummary() {
+  const el = document.getElementById('depOptionsSummary');
+  if (!el) return;
+  const radiusBtn = document.querySelector('#step2RadiusWrap .radius-btn.active');
+  const maxOpenBtn = document.querySelector('#step2MaxOpenWrap .dur-btn.active');
+  const condLabel = document.querySelector('#step2CondWrap .cond-btn.active .cond-btn-label');
+  const parts = [];
+  if (radiusBtn) parts.push(radiusBtn.textContent.trim());
+  if (maxOpenBtn) parts.push(maxOpenBtn.textContent.trim());
+  if (condLabel) parts.push(condLabel.textContent.trim());
+  el.textContent = parts.join(' · ');
 }
-function _updateDurAccordionSummary() {
-  const el = document.getElementById('durAccordionSummary');
-  const btn = document.querySelector('#durAccordionContent .dur-btn.active');
-  if (el && btn) el.textContent = '⏳ ' + btn.textContent.trim();
+
+// ── "Plus d'options" — bottom sheet (Lot AI) ────────────────
+// Réutilise l'infra openModal/closeModal existante (focus trap, retour de
+// focus sur le déclencheur, verrouillage du scroll) — même schéma que
+// .report-modal/.share-modal.
+window.openDepositOptionsSheet = () => {
+  openModal('depositOptionsSheet', 'depMoreOptionsBtn');
+};
+window.closeDepositOptionsSheet = (e) => {
+  if (e && e.target !== document.getElementById('depositOptionsSheet')) return;
+  closeModal('depositOptionsSheet');
+};
+
+// ── Lieu — ligne unique + panneau "modifier" repliable (Lot AI) ──
+// La mini-carte n'est initialisée/rafraîchie qu'à l'ouverture (Leaflet ne
+// mesure correctement son conteneur que s'il est visible au moment de la
+// création — piège classique) ; _initDepositMiniMap() gère déjà elle-même
+// la réutilisation + invalidateSize() si la carte existe déjà (cf. sa propre
+// logique de reuse), donc un simple ré-appel à chaque dépliage suffit.
+window.toggleDepLocationEdit = (forceOpen) => {
+  const btn = document.getElementById('depLocationEditBtn');
+  const panel = document.getElementById('depLocationEditPanel');
+  if (!btn || !panel) return;
+  const open = typeof forceOpen === 'boolean' ? forceOpen : panel.classList.contains('u-hidden');
+  panel.classList.toggle('u-hidden', !open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  btn.textContent = open ? (t.dep_loc_edit_close || 'fermer') : (t.dep_loc_edit || 'modifier');
+  if (open) setTimeout(_initDepositMiniMap, 50);
+};
+// Reflète #depositLocation (valeur tapée ou autofill GPS) sur la ligne
+// résumée ; tant que le GPS n'a pas répondu, affiche "Localisation…".
+function _updateDepLocationDisplay() {
+  const el = document.getElementById('depLocationDisplay');
+  if (!el) return;
+  const val = document.getElementById('depositLocation')?.value.trim();
+  if (val) { el.textContent = val; return; }
+  el.textContent = userLat ? (t.dep_loc_searching || 'Recherche du lieu…') : (t.dep_loc_locating || '📡 Localisation…');
 }
-function _updateMaxOpenAccordionSummary() {
-  const el = document.getElementById('maxOpenAccordionSummary');
-  const btn = document.querySelector('#maxOpenAccordionContent .dur-btn.active');
-  if (el && btn) el.textContent = '👁️ ' + btn.textContent.trim();
-}
-document.getElementById('radiusAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.radius-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateRadiusAccordionSummary();
-  window.toggleRadiusAccordion(false);
-});
-document.getElementById('durAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.dur-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateDurAccordionSummary();
-  window.toggleDurAccordion(false);
-});
-document.getElementById('maxOpenAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.dur-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateMaxOpenAccordionSummary();
-  window.toggleMaxOpenAccordion(false);
-});
 
 // ── Accordéon "Type d'offre" (Lot O) ──
 // Même modèle que ci-dessus — Identité a été retirée en tant que réglage
@@ -4012,18 +4016,15 @@ document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e
   window.toggleBizTypeAccordion(false);
 });
 
-// ── Menu média compact (Lot Q) ──────────────────────────────
-// Un bouton unique révèle un menu ; choisir une ligne révèle SEULEMENT le
-// bloc média correspondant, à la place des 4 blocs empilés en permanence.
-// La logique propre à chaque média (record/photo/vidéo/documents) n'est
-// pas touchée — seule l'entrée change. L'aperçu qui remplace le bouton
-// d'origine une fois un média ajouté est géré en CSS pur (:has()).
+// ── Icônes média dans la lettre (Lot AI, remplace le menu Lot Q) ──
+// Chaque icône révèle directement le panneau du média correspondant. La
+// logique propre à chaque média (record/photo/vidéo/documents) n'est pas
+// touchée — seule l'entrée change. L'aperçu + l'état actif de l'icône sont
+// gérés en CSS pur (:has(), cf. style.css) sur ces mêmes conteneurs.
 const MEDIA_PANEL_IDS = { vocal: 'step3VocalWrap', photo: 'step3PhotoWrap', video: 'step3VideoWrap', attach: 'step3AttachmentsWrap' };
-window.toggleMediaMenu = (forceOpen) => _toggleDepositAccordion('mediaAddBtn', 'mediaMenuPanel', forceOpen);
 window.selectMediaType = (type) => {
   const panel = document.getElementById(MEDIA_PANEL_IDS[type]);
   if (panel) panel.style.display = 'block';
-  window.toggleMediaMenu(false);
 };
 
 // ── Lien discret "rester anonyme" (Lot Q) ──────────────────
@@ -8380,12 +8381,11 @@ function _resetDepositStateAfterSuccess(depositBtn) {
   window._chainNextCoords = null;
   setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
   clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
-  // Replier le menu média et le lien anonyme (Lot Q)
+  // Replier les panneaux média et le lien anonyme (Lot Q)
   _resetAnonToggle();
   ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id => {
     const el = document.getElementById(id); if (el) el.style.display = 'none';
   });
-  if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
 }
 
 function _showDepositSuccessScreen(ghostId) {
@@ -8463,6 +8463,14 @@ window.depositGhost = async () => {
   depositBtn.disabled = true;
   try {
     const { location, emoji, duration, maxOpenCount, radius, anon, err } = _readDepositFormInputs();
+
+    // Lot AI — le lieu n'est pas bloquant (retombe sur "Lieu sans nom" plus
+    // bas, comportement inchangé) mais on déplie le panneau et on y ramène
+    // l'attention si l'utilisateur ne l'a pas rempli.
+    if (!location && typeof window.toggleDepLocationEdit === 'function') {
+      window.toggleDepLocationEdit(true);
+      setTimeout(() => document.getElementById('depositLocation')?.focus(), 300);
+    }
 
     const message = _buildDepositMessage();
     if (message === null) return;
@@ -9118,7 +9126,6 @@ function _showScreenBase(id, fromPopstate = false) {
   }, 350);
 
   if (id === 'screenDeposit') {
-    setWizardStep(1);
     // Reset business mode complet
     const normalForm = document.getElementById('normalDepositForm');
     const bizForm    = document.getElementById('businessDepositForm');
@@ -9131,9 +9138,9 @@ function _showScreenBase(id, fromPopstate = false) {
     if (extra)      extra.style.display      = 'none';
     if (icon)       icon.textContent         = '○';
     if (btn2)       { btn2.style.borderColor = 'rgba(var(--premium-rgb),.2)'; btn2.style.background = 'rgba(var(--premium-rgb),.06)'; }
-    if (subLabel)   { subLabel.textContent = t.dep_biz_sub; subLabel.style.color = 'rgba(255,235,180,1)'; }
+    if (subLabel)   { subLabel.textContent = t.dep_biz_link_off; subLabel.style.color = 'rgba(255,235,180,1)'; }
     // Reset step 2 sections
-    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id2 => {
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id2 => {
       const el = document.getElementById(id2); if (el) el.style.display = '';
     });
     // Reset step 3 (Lot Q : Identité retirée, menu média replié par défaut)
@@ -9141,8 +9148,7 @@ function _showScreenBase(id, fromPopstate = false) {
     ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id2 => {
       const el = document.getElementById(id2); if (el) el.style.display = 'none';
     });
-    if (typeof window.toggleMediaMenu === 'function') window.toggleMediaMenu(false);
-    const vocalMenuItem = document.getElementById('mediaMenuItemVocal');
+    const vocalMenuItem = document.getElementById('depMediaIconVocal');
     if (vocalMenuItem) vocalMenuItem.style.display = '';
     const t3 = document.getElementById('step3Title');
     const s3 = document.getElementById('step3Sub');
@@ -9162,15 +9168,12 @@ function _showScreenBase(id, fromPopstate = false) {
     document.getElementById('condExtraHour')?.classList.remove('show');
     document.getElementById('condExtraAfter')?.classList.remove('show');
     document.getElementById('condExtraFuture')?.classList.remove('show');
-    // Reset accordéon Condition d'ouverture (Lot H3) — replié, résumé "always"
-    if (typeof window.toggleCondAccordion === 'function') window.toggleCondAccordion(false);
-    if (typeof _updateCondAccordionSummary === 'function') _updateCondAccordionSummary();
-    // Referme aussi les accordéons Rayon / Durée de vie / Disparaît après
-    // (Lot N) — la sélection elle-même n'est pas réinitialisée, seul l'état
-    // ouvert/fermé l'est, pour éviter qu'ils restent ouverts d'une visite à l'autre.
-    if (typeof window.toggleRadiusAccordion === 'function') window.toggleRadiusAccordion(false);
-    if (typeof window.toggleDurAccordion === 'function') window.toggleDurAccordion(false);
-    if (typeof window.toggleMaxOpenAccordion === 'function') window.toggleMaxOpenAccordion(false);
+    // Referme le panneau "Plus d'options" et le panneau lieu (Lot AI) — la
+    // sélection elle-même n'est pas réinitialisée, seul l'état ouvert/fermé
+    // l'est, pour éviter qu'ils restent ouverts d'une visite à l'autre.
+    closeModal('depositOptionsSheet');
+    if (typeof window.toggleDepLocationEdit === 'function') window.toggleDepLocationEdit(false);
+    _updateDepositOptionsSummary();
     // Referme aussi Identité / Type d'offre (Lot O)
     if (typeof window.toggleIdentityAccordion === 'function') window.toggleIdentityAccordion(false);
     if (typeof window.toggleBizTypeAccordion === 'function') window.toggleBizTypeAccordion(false);
@@ -9188,9 +9191,12 @@ function _showScreenBase(id, fromPopstate = false) {
       if (chainLock) chainLock.style.display = 'none';
     }
     if (typeof _updateMaxOpenLockUI === 'function') _updateMaxOpenLockUI();
-    // Lieu + sections Premium toujours visibles désormais (Lot H1) — plus
-    // besoin d'attendre l'ouverture d'un onglet/nappe pour les initialiser.
-    setTimeout(_initDepositMiniMap, 80);
+    // Lieu — ligne résumée mise à jour tout de suite ("Localisation…" tant
+    // que le GPS n'a pas répondu) ; la mini-carte, elle, reste collapsed
+    // par défaut (Lot AI) et ne s'initialise qu'au dépliage de "modifier"
+    // (cf. toggleDepLocationEdit) pour éviter le piège Leaflet classique
+    // (mesure de conteneur incorrecte si initialisé caché).
+    _updateDepLocationDisplay();
     // Auto-remplir le nom du lieu via reverse geocoding si vide (reporté ici
     // depuis l'ancien wizardNext(1), disparu avec la fusion en une seule page)
     const locInput = document.getElementById('depositLocation');
@@ -9203,6 +9209,7 @@ function _showScreenBase(id, fromPopstate = false) {
           setTimeout(() => locInput.style.borderColor = '', 1500);
         }
         locInput.placeholder = 'ex: Banc du parc, Café du coin…';
+        _updateDepLocationDisplay();
       });
     }
     updatePremiumUI();
@@ -9250,8 +9257,7 @@ window.toggleBusinessMode = () => {
   if (activating) {
     _depositMode = 'business';
     window._depositMode = _depositMode;
-    // Remettre à l'étape 1 et scroller en haut
-    if (typeof setWizardStep === 'function') setWizardStep(1);
+    // Scroller en haut
     document.getElementById('screenDeposit')?.querySelector('.scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
     // Basculer vers le formulaire Commerce
     normalForm.style.display = 'none';
@@ -9260,18 +9266,19 @@ window.toggleBusinessMode = () => {
     icon.textContent         = '●';
     btn.style.borderColor    = 'rgba(var(--premium-rgb),.6)';
     btn.style.background     = 'rgba(var(--premium-rgb),.1)';
-    subLabel.textContent     = t.dep_biz_active;
+    subLabel.textContent     = t.dep_biz_link_on;
     subLabel.style.color     = 'rgba(var(--premium-rgb),.7)';
     document.getElementById('depositEmoji').value = '🏪';
-    // Masquer durée/disparaît/rayon/condition dans step 2
-    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id => {
+    // Masquer durée/disparaît/rayon/condition/"Plus d'options" — un dépôt
+    // Commerce a des réglages fixes (1 mois, 50m), rien à ajuster.
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
     // Masquer vocal/chaîne dans step 3 (Lot Q : retiré du menu média, pas
     // seulement de l'affichage — pas de message vocal pour une offre Commerce),
     // adapter titre
-    const vocalMenuItemBiz = document.getElementById('mediaMenuItemVocal');
+    const vocalMenuItemBiz = document.getElementById('depMediaIconVocal');
     if (vocalMenuItemBiz) vocalMenuItemBiz.style.display = 'none';
     const vocalPanelBiz = document.getElementById('step3VocalWrap');
     if (vocalPanelBiz) vocalPanelBiz.style.display = 'none';
@@ -9304,10 +9311,9 @@ window.toggleBusinessMode = () => {
           b.setAttribute('aria-pressed', 'true');
         }
       });
-      // Resynchroniser les résumés d'accordéon (Lot O) — ces changements
-      // forcés ne passent pas par le clic délégué qui les met à jour d'habitude.
-      if (typeof _updateDurAccordionSummary === 'function') _updateDurAccordionSummary();
-      if (typeof _updateRadiusAccordionSummary === 'function') _updateRadiusAccordionSummary();
+      // Resynchroniser le résumé "Plus d'options" — ces changements forcés
+      // ne passent pas par le clic délégué qui le met à jour d'habitude.
+      _updateDepositOptionsSummary();
       // Le chemin forcé contourne _selectRadius() (qui l'appelle normalement) —
       // sans ça, l'aperçu du rayon sur la mini-carte restait visuellement
       // périmé après un forçage à 50m (audit 1.4).
@@ -9324,16 +9330,16 @@ window.toggleBusinessMode = () => {
     icon.textContent         = '○';
     btn.style.borderColor    = 'rgba(var(--premium-rgb),.2)';
     btn.style.background     = 'rgba(var(--premium-rgb),.06)';
-    subLabel.textContent     = t.dep_biz_sub;
+    subLabel.textContent     = t.dep_biz_link_off;
     subLabel.style.color     = 'rgba(255,235,180,1)';
     // Réafficher les sections step 2
-    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap'].forEach(id => {
+    ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
     // Réafficher le message vocal dans le menu média (Lot Q) — le panneau
     // lui-même reste replié tant qu'il n'est pas choisi dans le menu.
-    const vocalMenuItemNorm = document.getElementById('mediaMenuItemVocal');
+    const vocalMenuItemNorm = document.getElementById('depMediaIconVocal');
     if (vocalMenuItemNorm) vocalMenuItemNorm.style.display = '';
     const t3b = document.getElementById('step3Title');
     const s3b = document.getElementById('step3Sub');
@@ -9367,6 +9373,7 @@ window.selectCond = (btn) => {
       inp.value = nextYear.toISOString().split('T')[0];
     }
   }
+  _updateDepositOptionsSummary();
 };
 
 function getSelectedCond() {
@@ -10089,25 +10096,8 @@ function _updateRadiusCircle() {
 window._selectRadius = (btn) => {
   selectType(btn);           // comportement existant inchangé
   _updateRadiusCircle();     // mise à jour du cercle
+  _updateDepositOptionsSummary();
 };
-
-function setWizardStep(n) {
-  [1,2,3].forEach(i => {
-    document.getElementById('wizardStep' + i).style.display = i === n ? 'block' : 'none';
-    const ws = document.getElementById('ws' + i);
-    ws.classList.remove('active','done');
-    if (i === n) ws.classList.add('active');
-    else if (i < n) ws.classList.add('done');
-    ws.setAttribute('aria-current', i === n ? 'step' : 'false');
-  });
-  [1,2,3].forEach(i => {
-    const dot = document.querySelector('#ws' + i + ' .wizard-step-dot');
-    if (dot) dot.textContent = i < n ? '✓' : String(i);
-  });
-  document.querySelector('#screenDeposit .scroll').scrollTop = 0;
-  if (n === 2) setTimeout(_initDepositMiniMap, 80);
-  if (n === 3) updatePremiumUI(); // Basculer aperçu/contenu Premium à l'affichage de l'étape 3
-}
 
 window.pickEmoji = (el, emoji) => {
   document.querySelectorAll('.emoji-opt').forEach(e => {
@@ -10139,8 +10129,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (len > 540) parent.classList.add('full');
         else if (len > 450) parent.classList.add('near');
       }
+      // Hauteur réduite qui grandit avec le texte (Lot AI) — pas de
+      // !important sur height côté CSS, sinon cette écriture inline ne
+      // pourrait jamais l'emporter.
+      msg.style.height = 'auto';
+      msg.style.height = msg.scrollHeight + 'px';
     });
   }
+
+  // Ligne résumée du lieu (Lot AI) — synchro à chaque frappe manuelle
+  // (l'autofill GPS appelle _updateDepLocationDisplay() directement, la
+  // simple assignation .value ne déclenche pas d'event 'input').
+  const locInput = document.getElementById('depositLocation');
+  if (locInput) locInput.addEventListener('input', _updateDepLocationDisplay);
+
+  if (typeof _renderDepositSealPicker === 'function') _renderDepositSealPicker();
 
   // Init offline check
   updateOnlineStatus();
@@ -10176,6 +10179,7 @@ window.selectMaxOpen = (el) => {
   });
   el.classList.add('active');
   el.setAttribute('aria-pressed', 'true');
+  _updateDepositOptionsSummary();
 };
 
 function _updateMaxOpenLockUI() {
@@ -10189,7 +10193,7 @@ function _updateMaxOpenLockUI() {
       btn.setAttribute('aria-pressed', 'false');
       const oneBtn = btn.parentElement.querySelector('.dur-btn[data-maxopen="1"]');
       if (oneBtn) { oneBtn.classList.add('active'); oneBtn.setAttribute('aria-pressed', 'true'); }
-      if (typeof _updateMaxOpenAccordionSummary === 'function') _updateMaxOpenAccordionSummary();
+      _updateDepositOptionsSummary();
     }
   });
 }
@@ -10540,17 +10544,15 @@ const ACTIONS = {
   pickEmojiCustom: (el) => pickEmojiCustom(el),
   toggleAnonMode: (el) => toggleAnonMode(el),
   toggleBizTypeAccordion: () => toggleBizTypeAccordion(),
-  toggleRadiusAccordion: () => toggleRadiusAccordion(),
   selectRadius: (el) => _selectRadius(el),
-  toggleDurAccordion: () => toggleDurAccordion(),
   selectDur: (el) => selectDur(el),
-  toggleMaxOpenAccordion: () => toggleMaxOpenAccordion(),
   selectMaxOpen: (el) => selectMaxOpen(el),
-  toggleCondAccordion: () => toggleCondAccordion(),
   selectCond: (el) => selectCond(el),
   setChainMarker: () => setChainMarker(),
-  toggleMediaMenu: () => toggleMediaMenu(),
   selectMediaType: (el) => selectMediaType(el.dataset.arg),
+  toggleDepLocationEdit: () => toggleDepLocationEdit(),
+  openDepositOptionsSheet: () => openDepositOptionsSheet(),
+  closeDepositOptionsSheet: (el, event) => closeDepositOptionsSheet(event),
   toggleRecording: () => toggleRecording(),
   triggerPhotoCamera: () => triggerPhotoCamera(),
   triggerPhotoGallery: () => triggerPhotoGallery(),

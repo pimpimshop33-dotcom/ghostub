@@ -1106,7 +1106,6 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .u-mb18{margin-bottom:18px;}
 .u-mt10{margin-top:10px;}
 .dep-scroll{padding-bottom:32px;}
-.dep-anon-toggle-wrap{text-align:right;margin-top:8px;}
 .dep-biz-type-box{background:rgba(var(--premium-rgb),.07);border:1px solid rgba(var(--premium-rgb),.25);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
 .dep-biz-type-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:10px;}
 .dep-biz-type-selector{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
@@ -1127,18 +1126,8 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .dep-dedicated-input{font-size:13px !important;margin-bottom:8px;}
 .dep-hint-xs{font-size:10px;color:var(--spirit-dim);}
 .dep-hint-xs-mt{font-size:10px;color:var(--spirit-dim);margin-top:6px;}
-.dep-media-menu-inner{margin-top:10px;display:flex;flex-direction:column;gap:7px;}
 .media-type-panel{margin-top:10px;}
 .dep-record-timer{margin-left:auto;font-size:11px;opacity:.5;}
-.dep-biz-toggle-wrap{margin:14px 0 0;}
-.dep-biz-toggle-btn{display:flex;align-items:center;gap:10px;width:100%;background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:12px 14px;cursor:pointer;font-family:'Instrument Sans',sans-serif;text-align:left;}
-.dep-biz-toggle-main{flex:1;}
-.dep-biz-toggle-row{display:flex;align-items:center;gap:8px;}
-.dep-biz-toggle-emoji{font-size:20px;-webkit-text-fill-color:initial!important;filter:none!important;flex-shrink:0;}
-.dep-biz-toggle-label{font-size:13px;color:rgba(255,230,150,1);font-weight:600;-webkit-text-fill-color:rgba(255,230,150,1)!important;}
-.dep-biz-premium-badge{font-size:10px;background:rgba(var(--premium-rgb),.25);color:rgba(var(--premium-rgb),1);-webkit-text-fill-color:rgba(var(--premium-rgb),1)!important;border-radius:6px;padding:2px 6px;font-weight:700;border:1px solid rgba(var(--premium-rgb),.3);}
-.dep-biz-toggle-sub{font-size:11px;color:rgba(255,235,180,.8);}
-.dep-biz-toggle-icon{font-size:16px;color:rgba(var(--premium-rgb),.6);}
 .dep-error-spacing{margin-top:8px;}
 .dep-gps-hint{font-size:10px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;}
 
@@ -2194,16 +2183,8 @@ body.light-theme .envelope-open-btn:hover{
 @keyframes revealContent{from{opacity:0;transform:translateY(14px) scale(.96);}to{opacity:1;transform:translateY(0) scale(1);}}
 
 /* ── WIZARD ────────────────────────────────────────────── */
-.wizard-header{padding:16px 0 8px;}
-.wizard-steps{display:flex;align-items:center;justify-content:center;gap:0;}
-.wizard-step{display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.35;transition:opacity .3s;}
-.wizard-step.active{opacity:1;}
-.wizard-step.done{opacity:.7;}
-.wizard-step-dot{width:28px;height:28px;border-radius:50%;background:rgba(var(--spirit-rgb),.08);border:1px solid rgba(var(--spirit-rgb),.18);display:flex;align-items:center;justify-content:center;font-size:var(--text-sm);color:var(--spirit-dim);transition:all .3s;}
-.wizard-step.active .wizard-step-dot{background:rgba(232,160,48,.15);border-color:var(--amber);color:var(--warm);box-shadow:0 0 14px rgba(232,160,48,.25);}
-.wizard-step.done .wizard-step-dot{background:rgba(var(--mist-rgb),.12);border-color:rgba(var(--mist-rgb),.45);color:rgba(var(--mist-rgb),.9);}
-.wizard-step-label{font-size:var(--text-xs);color:var(--spirit-dim);letter-spacing:.5px;}
-.wizard-step-line{flex:1;height:1px;background:rgba(var(--spirit-rgb),.12);}
+/* .wizard-header/.wizard-steps/.wizard-step* retirés (Lot AI) — le stepper
+   1/2/3 est supprimé, cf. index.html #screenDeposit. */
 .wizard-title{font-family:'Cormorant Garamond',serif;font-size:var(--serif-sm);font-style:italic;color:var(--ether);margin-bottom:4px;}
 .wizard-sub{font-size:var(--text-base);color:var(--warm-dim);margin-bottom:16px;}
 .wizard-next-btn{
@@ -2364,21 +2345,9 @@ body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,2
 .cond-time-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:16px;cursor:pointer;}
 .cond-time-input:focus{border-color:rgba(232,160,48,.35);outline:none;}
 
-/* ── MENU MÉDIA COMPACT (Lot Q) ───────────────────────────
-   Un bouton unique révèle un panneau (réutilise .deposit-advanced-content)
-   listant les 4 types de média ; sélectionner une ligne révèle le bloc
-   correspondant sans toucher à sa logique interne. */
-.media-menu-item{
-  display:flex;align-items:center;gap:10px;width:100%;
-  padding:11px 14px;background:var(--surface);border:1px solid var(--border);
-  border-radius:13px;cursor:pointer;text-align:left;
-  font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);color:var(--warm-dim);
-  touch-action:manipulation;transition:all .2s;
-}
-.media-menu-item:hover{border-color:rgba(232,160,48,.2);}
-.media-menu-item .media-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
-.media-menu-item .badge-premium{margin-left:auto;}
-/* Une fois un média ajouté, l'aperçu remplace le déclencheur d'origine —
+/* ── MENU MÉDIA COMPACT (Lot Q, retiré au Lot AI — icônes directes
+   dans la lettre, cf. .lettre-media-icon-btn plus haut) ──
+   Une fois un média ajouté, l'aperçu remplace le déclencheur d'origine —
    pur CSS :has(), aucune modification des fonctions handlePhoto/handleVideo/etc.
    Documents exclu : jusqu'à 3 fichiers s'ajoutent l'un après l'autre, le
    bouton doit rester utilisable (.attachments-full le grise déjà à 3/3). */
@@ -2860,12 +2829,11 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
    PHASE 1 "LA LETTRE" v100 — Refonte du dépôt étape 1
    ═════════════════════════════════════════════════════════ */
 
-/* Le wizard 1/2/3 n'a plus de sens visuellement — on cache les puces.
-   Les boutons Continuer →/← Retour des étapes 2-3 restent fonctionnels
-   pour ceux qui ouvrent "✨ Personnaliser ton fantôme". */
-#screenDeposit .wizard-header { display: none !important; }
-#screenDeposit #wizardStep1 .wizard-pane-title,
-#screenDeposit #wizardStep1 .wizard-pane-sub { display: none !important; }
+/* Lot AI — écran Déposer simplifié : titre/sous-titre réels (remplacent
+   l'ancien wizard 1/2/3 et son .wizard-pane-title/-sub masqués depuis le
+   Lot H — tout le HTML du stepper a été retiré, plus besoin de le cacher). */
+.dep-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-style:italic;color:var(--ether);margin:14px 0 2px;}
+.dep-subtitle{font-size:var(--text-sm);color:var(--spirit-dim);margin-bottom:12px;}
 
 /* ── Le papier à lettres ─────────────────────────────────── */
 .lettre-paper{
@@ -2927,8 +2895,8 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 .lettre-stamp-strip .emoji-opt{
   background:transparent !important;
   border:1px solid transparent !important;
-  border-radius:8px !important;
-  width:36px;height:36px;min-width:36px;min-height:36px;
+  border-radius:50% !important;
+  width:40px;height:40px;min-width:40px;min-height:40px;
   font-size:17px;padding:0 !important;
   display:flex;align-items:center;justify-content:center;
   transition:all .2s;
@@ -2944,21 +2912,29 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   filter:grayscale(0) opacity(1) !important;
   box-shadow:0 0 8px rgba(var(--lettre-ink-rgb),.14);
 }
+/* Lot AI — bouton "+" qui révèle les 2 derniers Sceaux + le champ emoji perso */
+.emoji-opt-more{font-size:18px !important;color:rgba(var(--lettre-ink-rgb),.55) !important;-webkit-text-fill-color:rgba(var(--lettre-ink-rgb),.55) !important;border:1px dashed rgba(var(--lettre-ink-rgb),.25) !important;filter:none !important;}
+.emoji-opt-more[aria-expanded="true"]{background:rgba(var(--lettre-ink-rgb),.08) !important;}
+.lettre-stamp-strip-more{display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
 .lettre-stamp-strip .emoji-custom{
-  width:36px !important;height:36px !important;
+  width:40px !important;height:40px !important;
   background:transparent !important;
   border:1px dashed rgba(var(--ghost-blue-rgb),.22) !important;
-  border-radius:8px !important;
+  border-radius:50% !important;
   font-size:var(--text-md) !important;
   text-align:center;
   color:var(--warm) !important;
   -webkit-text-fill-color:var(--warm) !important;
 }
 
-/* La textarea — corps de la lettre, italique manuscrit */
+/* La textarea — corps de la lettre, italique manuscrit. Hauteur réduite
+   (Lot AI, 170→130px) et laissée libre de grandir avec le texte : le JS
+   (écouteur #depositMsg 'input') ajuste .style.height sur le contenu réel —
+   pas de !important sur height/min-height ici, sinon l'écriture JS ne
+   pourrait jamais l'emporter sur la règle CSS. */
 .lettre-textarea{
   width:100% !important;
-  min-height:170px !important;height:170px !important;
+  min-height:130px;height:130px;
   background:transparent !important;
   border:none !important;outline:none !important;
   padding:6px 2px !important;margin:0 !important;
@@ -2972,6 +2948,7 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   resize:none;
   box-shadow:none !important;
   border-radius:0 !important;
+  overflow:hidden;
 }
 .lettre-textarea::placeholder{
   color:rgba(var(--ghost-blue-rgb),.32) !important;
@@ -3058,18 +3035,17 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 .lettre-seal-btn:active{transform:scale(.98) translateY(0);}
 .lettre-seal-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
 
-/* Icône en pseudo-élément pour survivre aux changements de textContent */
+/* Icône en pseudo-élément pour survivre aux changements de textContent —
+   Lot AI : le Trace (même asset que la marque) plutôt que l'étoile ✦
+   générique, "avec le Trace en icône à gauche du texte". */
 .lettre-seal-btn::before{
-  content:'✦';
+  content:url('assets/brand/ghostub-mark-trace.svg');
   display:inline-flex;align-items:center;justify-content:center;
-  width:26px;height:26px;border-radius:50%;
+  width:22px;height:22px;border-radius:50%;
   background:radial-gradient(circle at 32% 30%,
     rgba(255,180,140,.40),
     rgba(180,50,50,.65));
   border:1px solid rgba(255,180,140,.42);
-  font-size:var(--text-base);font-style:normal;font-weight:400;
-  color:rgba(var(--seal-ink2-rgb),.95);
-  -webkit-text-fill-color:rgba(var(--seal-ink2-rgb),.95) !important;
   box-shadow:0 0 10px rgba(220,90,90,.32),
              inset 0 1px 1px rgba(255,220,200,.18);
   flex-shrink:0;letter-spacing:0;
@@ -3099,6 +3075,140 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   text-align:center;
   margin-top:8px;letter-spacing:.3px;
 }
+
+/* ═════════════════════════════════════════════════════════
+   LOT AI — Déposer simplifié (barre média, lieu, durée, "Plus d'options",
+   liens du bas, bottom sheet écran 2)
+   ═════════════════════════════════════════════════════════ */
+
+/* Barre média DANS la lettre, sous le texte — 4 icônes 44×44 + compteur */
+.lettre-media-row{
+  display:flex;align-items:center;gap:6px;
+  margin-top:10px;padding-top:10px;
+  border-top:1px dashed rgba(var(--lettre-ink-rgb),.18);
+}
+.lettre-media-icon-btn{
+  position:relative;
+  width:44px;height:44px;min-width:44px;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;
+  border:1.5px solid rgba(var(--spirit-rgb),.16);
+  border-radius:12px;
+  color:rgba(var(--spirit-rgb),.75);
+  cursor:pointer;transition:all .2s;touch-action:manipulation;
+}
+.lettre-media-icon-btn:hover{border-color:rgba(var(--spirit-rgb),.32);color:var(--ether);}
+.lettre-media-icon-btn:active{transform:scale(.94);}
+/* Icône active dès qu'un média est réellement attaché — état dérivé en CSS
+   pur des mêmes conteneurs d'aperçu que le reste de la feature (cf.
+   commentaire HTML), pas d'état JS dupliqué à maintenir en synchro. */
+#normalDepositForm:has(#audioPreview > *) #depMediaIconVocal,
+#normalDepositForm:has(#photoPreview > *) .lettre-media-icon-btn[data-arg="photo"],
+#normalDepositForm:has(#videoPreview > *) .lettre-media-icon-btn[data-arg="video"],
+#normalDepositForm:has(#attachmentsList > *) .lettre-media-icon-btn[data-arg="attach"]{
+  border-color:rgba(var(--ghost-blue-rgb),.55);
+  background:rgba(var(--ghost-blue-rgb),.14);
+  color:var(--spirit);
+}
+.dep-media-premium-dot{
+  position:absolute;top:-4px;right:-4px;
+  width:15px;height:15px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;line-height:1;
+  background:rgba(var(--premium-rgb),.85);
+  color:#2a1a00;
+  border:1px solid rgba(255,235,180,.6);
+}
+.lettre-media-row .lettre-counter{margin-left:auto;margin-top:0;}
+
+/* ── Lieu — une ligne + lien "modifier" ─────────────────── */
+.dep-location-row{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 2px;
+  margin-top:4px;
+}
+.dep-location-pin{font-size:15px;flex-shrink:0;}
+.dep-location-name{
+  flex:1;min-width:0;
+  font-size:var(--text-base);color:var(--warm-dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dep-location-edit-link{
+  flex-shrink:0;background:none;border:none;padding:6px 2px;
+  font-family:'Instrument Sans',sans-serif;font-size:12px;
+  color:var(--spirit);opacity:.75;cursor:pointer;
+  text-decoration:underline;text-decoration-color:transparent;
+  transition:all .2s;touch-action:manipulation;min-height:32px;
+}
+.dep-location-edit-link:hover,.dep-location-edit-link[aria-expanded="true"]{opacity:1;text-decoration-color:currentColor;}
+.dep-location-edit-panel{margin-bottom:6px;}
+
+/* ── Durée de vie — 4 pastilles en grille, toujours visibles ── */
+.dep-dur-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:0;}
+.dep-dur-grid .dur-btn{min-height:44px;}
+
+/* ── "Plus d'options" — une seule ligne, résumé en direct ── */
+.dep-more-options-row{
+  display:flex;align-items:center;gap:10px;width:100%;
+  padding:13px 14px;margin:6px 0 14px;
+  background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  cursor:pointer;transition:all .2s;text-align:left;touch-action:manipulation;
+  font-family:'Instrument Sans',sans-serif;
+}
+.dep-more-options-row:hover{border-color:var(--border-bright);}
+.dep-more-options-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;}
+.dep-more-options-label{font-size:var(--text-base);color:var(--warm-dim);}
+.dep-more-options-summary{
+  font-size:12px;color:var(--spirit-dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.dep-more-options-chevron{flex-shrink:0;font-size:20px;color:var(--spirit-dim);}
+
+/* ── Liens discrets sous le sceau : anonyme · mode Commerce ── */
+.dep-bottom-links-row{
+  display:flex;align-items:center;justify-content:center;gap:18px;
+  margin-top:10px;
+}
+.dep-biz-link{
+  background:none;border:none;padding:2px 0;
+  font-family:'Instrument Sans',sans-serif;font-size:11px;
+  color:rgba(var(--premium-rgb),.75);opacity:.85;cursor:pointer;
+  display:inline-flex;align-items:center;gap:4px;
+  text-decoration:underline;text-decoration-color:transparent;
+  transition:all .2s;touch-action:manipulation;
+}
+.dep-biz-link:hover{opacity:1;text-decoration-color:currentColor;}
+
+/* ── Écran 2 "Plus d'options" — bottom sheet (réutilise le pattern
+   .report-modal/.share-modal + .sheet-handle, cf. plus bas). ── */
+.deposit-options-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .25s;}
+.deposit-options-modal.show{opacity:1;pointer-events:all;}
+.deposit-options-sheet{
+  width:100%;max-width:390px;max-height:85vh;overflow-y:auto;
+  background:var(--surface2);border:1px solid rgba(232,160,48,.15);border-bottom:none;
+  border-radius:24px 24px 0 0;padding:20px 20px;padding-bottom:calc(28px + var(--sab));
+  transition:transform .3s cubic-bezier(.25,.46,.45,.94);transform:translateY(100%);
+  box-shadow:0 -8px 40px rgba(0,0,0,.8);
+}
+.deposit-options-modal.show .deposit-options-sheet{transform:translateY(0);}
+.deposit-options-sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px;}
+.deposit-options-sheet-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;color:var(--ether);margin-bottom:3px;}
+.deposit-options-sheet-sub{font-size:11px;color:var(--spirit-dim);line-height:1.5;}
+.deposit-options-sheet-ok{
+  flex-shrink:0;padding:9px 18px;
+  background:linear-gradient(135deg,rgba(232,160,48,.18),rgba(var(--spirit-rgb),.10));
+  border:1px solid rgba(232,160,48,.35);border-radius:13px;
+  color:var(--warm);font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);
+  cursor:pointer;touch-action:manipulation;transition:all .2s;
+}
+.deposit-options-sheet-ok:hover{background:rgba(232,160,48,.26);}
+
+/* Condition d'ouverture en grille 2×2 à l'intérieur du panneau (au lieu de
+   la colonne pleine largeur utilisée ailleurs) */
+.cond-selector-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.cond-selector-grid .cond-btn{flex-direction:column;align-items:flex-start;gap:6px;padding:12px 10px;}
+.cond-selector-grid .cond-btn-icon{width:auto;}
+.cond-selector-grid .cond-btn-sub{font-size:11px;}
 
 /* ═════════════════════════════════════════════════════════
    Écran Dépôt — anciennement "La Nappe" (bottom sheet à onglets
