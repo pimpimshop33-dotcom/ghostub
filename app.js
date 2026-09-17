@@ -1633,6 +1633,13 @@ function _ghostEmojiHTML(g) {
   return _traceMarkHTML(g, { size: 20, fadeOpacity: false });
 }
 
+// Lot AR — un seul point de lecture du thème pour toutes les couleurs de
+// Trace (évite de dupliquer classList.contains('light-theme') à chaque
+// site d'appel ci-dessous et dans _traceBodyMarkup).
+function _isLightTheme() {
+  return document.body.classList.contains('light-theme');
+}
+
 // ══════════════════════════════════════════════════════════
 // TRACE COLORÉ — teinte par catégorie (Sceau) + fanage temporel
 // (FEATURE-TRACE-COLORE-FANAGE.md)
@@ -1661,8 +1668,36 @@ const TRACE_CATEGORY_COLORS = {
   '🔥': ['#FFAD7A', '#FFD4B8'],
   '🌸': ['#C7A8FF', '#E8D4FF'],
 };
+// Lot AR — "encore trop de bleu et c'est pas très beau" (Pipo) : les teintes
+// pastel ci-dessus sont pensées pour un fond sombre et se fanent en gris-
+// lavande délavé sur blanc. Variante jour : couleurs plus soutenues, contour
+// PLEIN d'une seule teinte (c1===c2 — _traceBodyMarkup en dérive un dégradé
+// à un seul ton, le remplissage réduit déjà l'opacité via _traceFillOpacity,
+// proche du "~20%" demandé, sans dupliquer cette logique).
+const TRACE_CATEGORY_COLORS_DAY = {
+  '👻': ['#5B6BE0', '#5B6BE0'],
+  '💬': ['#2E86C7', '#2E86C7'],
+  '❤️': ['#E0568F', '#E0568F'],
+  '🌙': ['#7A52D6', '#7A52D6'],
+  '✨': ['#B57C10', '#B57C10'],
+  '🔥': ['#D97A4A', '#D97A4A'],
+  '🌸': ['#9A4FD6', '#9A4FD6'],
+};
 const TRACE_DEFAULT_COLORS = TRACE_CATEGORY_COLORS['👻'];
+const TRACE_DEFAULT_COLORS_DAY = TRACE_CATEGORY_COLORS_DAY['👻'];
 const TRACE_DISCOVERED_COLORS = ['#FFD98A', '#F5DFA0'];
+const TRACE_DISCOVERED_COLORS_DAY = ['#9F6317', '#9F6317'];
+// Lecture théme-aware des deux tables ci-dessus — un seul endroit qui sait
+// choisir jour/nuit, pour ne pas répéter `_isLightTheme() ? …DAY[x] : …[x]`
+// à chaque site d'appel.
+function _categoryColors(emoji) {
+  return _isLightTheme()
+    ? (TRACE_CATEGORY_COLORS_DAY[emoji] || TRACE_DEFAULT_COLORS_DAY)
+    : (TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS);
+}
+function _discoveredColors() {
+  return _isLightTheme() ? TRACE_DISCOVERED_COLORS_DAY : TRACE_DISCOVERED_COLORS;
+}
 
 // ══════════════════════════════════════════════════════════
 // SCEAUX = EXPRESSIONS DU TRACE (Lot AI, 2026-09-17)
@@ -1747,10 +1782,17 @@ function _traceBodyMarkup(emoji, c1, c2, uid, size = 48) {
   const path = `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38"`;
   const fillOp1 = _traceFillOpacity(size);
   const fillOp2 = fillOp1 * (0.08 / 0.22);
+  // Lot AR — "yeux perles" (dégradé clair → indigo) lisibles sur fond
+  // sombre, invisibles/délavés sur blanc. En Mode jour, visage en encre
+  // foncée unie (#1C1A24) — même radialGradient (les visages y peignent
+  // via url(#te-uid)), juste des arrêts plats au lieu du dégradé nacré.
+  const faceGradient = _isLightTheme()
+    ? `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#1C1A24"/><stop offset="100%" stop-color="#1C1A24"/></radialGradient>`
+    : `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>`;
   return `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
     `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="${fillOp1.toFixed(3)}"/><stop offset="100%" stop-color="${c2}" stop-opacity="${fillOp2.toFixed(3)}"/></linearGradient>` +
-    `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
+    faceGradient +
     `</defs>` +
     // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
     // restait "trop fin" — le ratio trait/silhouette compte plus que la
@@ -1774,9 +1816,7 @@ let _traceIdSeq = 0;
 // valeurs soient appliquées via de vraies écritures JS sur .style (hors
 // périmètre CSP). Tous les appelants actuels le font déjà.
 function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
-  const [c1, c2] = discovered
-    ? TRACE_DISCOVERED_COLORS
-    : (TRACE_CATEGORY_COLORS[g.emoji] || TRACE_DEFAULT_COLORS);
+  const [c1, c2] = discovered ? _discoveredColors() : _categoryColors(g.emoji);
 
   let opacity = 1, saturation = 100;
   if (!discovered) {
@@ -1805,7 +1845,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
 // ouverture. Même corps/couleurs que _traceMarkHTML, juste sans le calcul
 // de lifetime (rien à faner avant qu'un fantôme existe réellement).
 function _traceSealIconHTML(emoji, { size = 40 } = {}) {
-  const [c1, c2] = TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS;
+  const [c1, c2] = _categoryColors(emoji);
   const uid = 'ts' + (_traceIdSeq++);
   return `<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
 }
@@ -1915,6 +1955,21 @@ const TRACE_COLOR_PAIRS = {
   rose:    ['#FF9DC4', '#FBD2E4'],
   crimson: ['#E85A6E', '#F2A8B4'],
 };
+// Lot AR — variante jour, plus soutenue (mêmes valeurs que le tableau de
+// référence du lot), contour plein d'une seule teinte (c1===c2, cf.
+// TRACE_CATEGORY_COLORS_DAY plus haut pour l'explication du procédé).
+const TRACE_COLOR_PAIRS_DAY = {
+  spirit:  ['#5B6BE0', '#5B6BE0'],
+  violet:  ['#9A4FD6', '#9A4FD6'],
+  mist:    ['#1D9B70', '#1D9B70'],
+  amber:   ['#B57C10', '#B57C10'],
+  rose:    ['#E0568F', '#E0568F'],
+  crimson: ['#D03A50', '#D03A50'],
+};
+function _traceColorPair(colorId) {
+  const table = _isLightTheme() ? TRACE_COLOR_PAIRS_DAY : TRACE_COLOR_PAIRS;
+  return table[colorId] || TRACE_COLOR_PAIRS.violet;
+}
 
 // Cherche par id avec repli violet (défaut historique) — utilisé aux 2
 // endroits où une teinte doit toujours résoudre vers une entrée valide.
@@ -1934,7 +1989,7 @@ const GHOST_FLOAT_TARGETS = [
 ];
 function _applyTraceColor(colorId) {
   const color = _findTraceColor(colorId);
-  const [c1, c2] = TRACE_COLOR_PAIRS[color.id] || TRACE_COLOR_PAIRS.violet;
+  const [c1, c2] = _traceColorPair(color.id);
   const haloColor = isPremium ? 'rgba(240,200,100,.45)' : _hexToRgba(color.swatch, .35);
   GHOST_FLOAT_TARGETS.forEach(({ avatarId, haloId }) => {
     const avatar = document.getElementById(avatarId);
@@ -1961,7 +2016,7 @@ function _renderTraceColorPicker() {
     const locked = c.premium && !isPremium;
     const active = c.id === userTraceColor;
     const label = t[c.labelKey] || c.id;
-    const [c1, c2] = TRACE_COLOR_PAIRS[c.id];
+    const [c1, c2] = _traceColorPair(c.id);
     const uid = 'tp' + (_traceIdSeq++);
     const miniTrace = `<svg class="trace-svg" viewBox="0 0 200 200" width="40" height="40">${_traceBodyMarkup(c.face, c1, c2, uid, 40)}</svg>`;
     const ariaLabel = locked ? `${label} — ${t.trace_color_locked || 'Teinte réservée Premium'}` : label;
@@ -4230,7 +4285,13 @@ function _renderRankCard(stats) {
     const uid = 'rc' + (_traceIdSeq++);
     // Trace doré si atteint, silhouette pâle sinon — même dessin (le rang
     // n'a pas de "caractère" comme Mon Trace, juste un état obtenu/pas).
-    const [c1, c2] = reached ? ['#F5DFA0', '#FFF3C7'] : ['#8A85A0', '#8A85A0'];
+    // Lot AR : "ghosts dorés nets" (jour) / silhouette gris clair verrouillée
+    // — le gris-lavande #8A85A0 se lisait comme un bleu terne de plus sur
+    // fond blanc (capture Pipo), remplacé par le gris chaud des bordures.
+    const light = _isLightTheme();
+    const [c1, c2] = reached
+      ? (light ? ['#B57C10', '#B57C10'] : ['#F5DFA0', '#FFF3C7'])
+      : (light ? ['#D9D5CC', '#D9D5CC'] : ['#8A85A0', '#8A85A0']);
     const traceHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="34" height="34">${_traceBodyMarkup('👻', c1, c2, uid, 34)}</svg>`;
     const ariaLabel = `${r.label}, ${t.rank_card_aria_at || 'à'} ${r.min} ${t.rank_card_aria_points || 'points'}, ${stateLabel}`;
     return `<button type="button" class="rank-card rank-card-${state}" data-action="showRankCardDetail" data-arg="${idx}" aria-label="${escapeHTML(ariaLabel)}">` +
@@ -5733,6 +5794,12 @@ function applyTheme(theme) {
   const btn = document.getElementById('themeToggleBtn');
   if (btn) { const lbl = document.getElementById('themeToggleLabel'); if (lbl) lbl.textContent = isLight ? t.profile_night_mode : t.profile_day_mode; const ico = btn.querySelector('span'); if (ico) ico.textContent = isLight ? '🌙' : '☀️'; }
   localStorage.setItem('ghostub_theme', theme);
+  // Lot AR — les ghosts ont une palette dédiée par thème (TRACE_COLOR_PAIRS_DAY/
+  // TRACE_CATEGORY_COLORS_DAY) : sans ce ré-appel, l'avatar Profil/Aide garde
+  // les couleurs nuit jusqu'au prochain changement de teinte.
+  if (typeof _applyTraceColor === 'function' && typeof userTraceColor !== 'undefined') {
+    _applyTraceColor(userTraceColor);
+  }
 }
 
 function toggleTheme() {
