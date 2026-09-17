@@ -528,6 +528,19 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   cursor:pointer;touch-action:manipulation;
 }
 .guest-banner:active{background:linear-gradient(135deg,rgba(var(--ghost-blue-rgb),.1),rgba(var(--ghost-blue-rgb),.04));}
+/* Lot AP — encart "Quoi de neuf", même famille visuelle que .guest-banner
+   (dégradé lavande discret) mais avec une liste + bouton de fermeture. */
+.whatsnew-banner{
+  background:linear-gradient(135deg,rgba(232,160,48,.08),rgba(var(--ghost-blue-rgb),.04));
+  border:1px solid rgba(232,160,48,.2);
+  border-radius:12px;padding:10px 14px;margin:0 20px 10px;
+}
+.whatsnew-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.whatsnew-title{font-size:12px;font-weight:600;color:var(--amber);letter-spacing:.2px;}
+.whatsnew-close{background:none;border:none;padding:2px 4px;font-size:13px;color:var(--spirit-dim);cursor:pointer;touch-action:manipulation;line-height:1;}
+.whatsnew-list{list-style:none;display:flex;flex-direction:column;gap:3px;}
+.whatsnew-list li{font-size:11px;color:var(--warm-dim);line-height:1.4;padding-left:12px;position:relative;}
+.whatsnew-list li::before{content:'·';position:absolute;left:2px;color:rgba(232,160,48,.6);}
 .radar-wrap{display:flex;align-items:center;justify-content:center;padding:8px 20px 4px;position:relative;}
 .radar{
   width:100%;max-width:320px;aspect-ratio:1;border-radius:50%;position:relative;

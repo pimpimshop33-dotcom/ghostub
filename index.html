@@ -278,6 +278,22 @@
       <span aria-hidden="true">👁</span>
       <span data-i18n="radar_guest_banner">Mode exploration — créez un compte pour déposer vos fantômes</span>
     </div>
+    <!-- "Quoi de neuf" (Lot AP) — encart fermable affiché une fois aux
+         utilisateurs déjà connus de l'app (pas aux tout premiers lancements,
+         déjà couverts par l'intro) après une mise à jour majeure. Affiché/
+         masqué par _maybeShowWhatsNew() (app.js). -->
+    <div class="whatsnew-banner u-hidden" id="whatsnewBanner" role="status">
+      <div class="whatsnew-header">
+        <span class="whatsnew-title" data-i18n="whatsnew_title">✦ Quoi de neuf</span>
+        <button class="whatsnew-close" data-action="dismissWhatsNew" aria-label="Fermer" data-i18n-aria-label="whatsnew_close">✕</button>
+      </div>
+      <ul class="whatsnew-list">
+        <li data-i18n="whatsnew_item1">Déposer simplifié — la lettre et les 7 Sceaux</li>
+        <li data-i18n="whatsnew_item2">Boussole pour s'orienter vers un fantôme</li>
+        <li data-i18n="whatsnew_item3">Mon rang — une seule progression, plus claire</li>
+        <li data-i18n="whatsnew_item4">Mode jour repensé</li>
+      </ul>
+    </div>
     <!-- Rang & Progression -->
     <div class="rank-bar" id="rankBar" data-tip="Votre rang — grimpez en explorant et déposant des fantômes" data-i18n-tip="radar_rank_tip">
       <span class="rank-badge" id="rankBadge">✦ Curieux</span>
@@ -1027,24 +1043,43 @@
       <div class="help-hero">
         <img src="assets/brand/ghostub-mark-trace.svg" class="help-hero-icon" aria-hidden="true">
         <div class="help-hero-title" data-i18n="help_title">Comment ça marche ?</div>
-        <div class="help-hero-sub" data-i18n="help_sub">Tout ce que vous devez savoir sur Ghostub</div>
+        <div class="help-hero-sub" data-i18n="help_sub">Tout ce que tu dois savoir sur Ghostub</div>
       </div>
 
-      <!-- Découvrir -->
+      <!-- Déposer -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_discover_title">🌫️ Découvrir un fantôme</div>
-        <div class="help-card-body" data-i18n="help_discover_body">Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s'ouvrent qu'à quelques mètres.</div>
-        <div class="help-list">
-          <div class="help-list-row"><span>🌙</span><span data-i18n="help_cond_night">Certains ne s'ouvrent que la nuit (22h–6h)</span></div>
-          <div class="help-list-row"><span>⏰</span><span data-i18n="help_cond_hour">D'autres à une heure précise (±15 min)</span></div>
-          <div class="help-list-row"><span>📅</span><span data-i18n="help_cond_future">Messages du futur — s'ouvrent à une date définie</span></div>
-          <div class="help-list-row"><span>🔗</span><span data-i18n="help_cond_chain">Chasses au trésor — trouve le premier pour débloquer le suivant</span></div>
+        <div class="help-card-title" data-i18n="help_deposit_title">Déposer un fantôme</div>
+        <div class="help-card-body" data-i18n="help_deposit_body">Va dans un lieu qui t'inspire et ouvre Déposer. Le lieu est repéré automatiquement (tu peux le corriger avec « modifier ») et le message s'ancre à ta position GPS exacte. Choisis un Sceau parmi 7 — chacun exprime quelque chose : classique, souriant, amoureux, endormi, émerveillé, ardent, bavard.</div>
+        <div class="help-list-nomargin">
+          <div class="help-list-row-plain"><span data-i18n="help_dep_media">Tu peux joindre un message vocal ou une photo. La vidéo et les documents sont réservés Premium.</span></div>
+          <div class="help-list-row-plain"><span data-i18n="help_dep_duration">Durée de vie en pastilles : 24h, 7 jours, 1 mois ou éternel.</span></div>
+          <div class="help-list-row-plain"><strong data-i18n="help_dep_more_title">« Plus d'options »</strong></div>
+          <div class="help-list-row-plain"><span data-i18n="help_dep_more_body">Rayon de détection (3, 10 ou 50 m), nombre de lectures avant disparition (illimité, 1, 5 ou 10 — 5 et 10 réservés Premium), et condition d'ouverture : toujours accessible, la nuit uniquement (22h–6h), à une heure précise (±15 min), ou message du futur à une date fixée (Premium).</span></div>
+          <div class="help-list-row-plain"><span data-i18n="help_dep_anon">« Rester anonyme » masque ton pseudo sur ce dépôt précis.</span></div>
+          <div class="help-list-row-plain"><span data-i18n="help_dep_biz">Le mode Commerce (Premium) publie une offre visible à 50 m autour de ton commerce.</span></div>
         </div>
+        <div class="help-hint" data-i18n="help_deposit_limit">Un dépôt toutes les 15 minutes — 5 fantômes actifs maximum en même temps.</div>
+      </div>
+
+      <!-- Radar -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_radar_title">Le Radar</div>
+        <div class="help-card-body" data-i18n="help_radar_body">Chaque fantôme proche apparaît sous la forme de son Trace, coloré selon son Sceau — plus il est ancien, plus sa couleur pâlit. Trois portées de détection : 50 m, 200 m, 1 km. Tire l'écran vers le bas pour rafraîchir. Le sonar émet un signal discret à chaque balayage qui croise un fantôme.</div>
+      </div>
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_compass_title">La boussole</div>
+        <div class="help-card-body" data-i18n="help_compass_body">Elle indique la direction d'un fantôme proche, sur le Radar comme sur la Carte. Sur iPhone, un bouton « Activer la boussole » apparaît la première fois — il faut l'autoriser une fois. Sur ordinateur, elle ne s'affiche pas : c'est normal, il n'y a pas de capteur d'orientation.</div>
+      </div>
+
+      <!-- Carte -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_map_title">La Carte</div>
+        <div class="help-card-body" data-i18n="help_map_body">Filtre les fantômes par type (récentes, photos, vidéos, vocaux). Un halo doré signale un fantôme rare ou légendaire, un halo mauve un fantôme secret. Dézoome pour voir les fantômes proches se regrouper en amas ; touche un fantôme (ou un amas) pour ouvrir sa fiche.</div>
       </div>
 
       <!-- Zones hantées -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_haunted_title">👻 Zones hantées</div>
+        <div class="help-card-title" data-i18n="help_haunted_title">Zones hantées</div>
         <div class="help-card-body-mb" data-i18n="help_haunted_body">Quand plusieurs fantômes se concentrent dans un même endroit, une zone hantée apparaît sur la carte.</div>
         <div class="help-list-nomargin">
           <div class="help-list-row-center"><span class="help-badge help-badge-spot">✦ Ghost Spot</span><span data-i18n="help_haunted_spot">3–4 fantômes proches</span></div>
@@ -1053,100 +1088,110 @@
         </div>
       </div>
 
+      <!-- Ouvrir un fantôme -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_open_title">Ouvrir un fantôme</div>
+        <div class="help-card-body" data-i18n="help_open_body">Approche-toi jusqu'à entrer dans son rayon de détection, appuie dessus pour briser le sceau, puis gratte l'écran pour révéler le message. Le texte s'affiche ensuite plein écran, avec la photo ou la vidéo jointe entièrement visible au-dessus de la navigation.</div>
+        <div class="help-hint" data-i18n="help_open_quota">3 ouvertures gratuites par jour. Premium : illimité.</div>
+        <div class="help-card-body" data-i18n="help_open_actions">Une fois ouvert, tu peux résonner dessus (une fois par jour), réagir en un tap, l'ajouter à tes favoris, créer une Ghost Card à partager, ou le signaler.</div>
+      </div>
+
       <!-- Ghost Whisper -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_whisper_title">✦ Ghost Whisper</div>
-        <div class="help-card-body" data-i18n="help_whisper_body">Quand quelqu'un résonne sur un de vos fantômes, votre téléphone vibre discrètement à l'instant exact — pas de notification, juste une vibration mystérieuse. Vous saurez qu'une âme a croisé votre message, sans jamais savoir qui.</div>
-      </div>
-
-      <!-- Réagir -->
-      <div class="help-card">
-        <div class="help-card-title" data-i18n="help_react_title">💬 Réagir à un message</div>
-        <div class="help-card-body" data-i18n="help_react_body">Sous chaque message ouvert, réagissez en un tap (😂 🥹 😢 🤨 😮 ❤️) ou écrivez une réaction de 3 mots maximum. Si c'est votre message, vous serez prévenu de l'émotion qu'il a provoquée — sans jamais savoir qui a réagi.</div>
-      </div>
-
-      <!-- Déposer -->
-      <div class="help-card">
-        <div class="help-card-title" data-i18n="help_deposit_title">📍 Déposer un fantôme</div>
-        <div class="help-card-body" data-i18n="help_deposit_body">Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte.</div>
-        <div class="help-list">
-          <div class="help-list-row-plain"><span>📷</span><span data-i18n="help_dep_photo">Ajoutez une photo</span></div>
-          <div class="help-list-row-plain"><span>🎙</span><span data-i18n="help_dep_audio">Enregistrez un message vocal</span></div>
-          <div class="help-list-row-plain"><span>⏱</span><span data-i18n="help_dep_duration">Choisissez sa durée de vie : 24h, 7j, 1 mois ou éternel</span></div>
-          <div class="help-list-row-plain"><span>📡</span><span data-i18n="help_dep_radius">Rayon de détection : 3m, 10m ou 50m</span></div>
-          <div class="help-list-row-plain"><span>💌</span><span data-i18n="help_dep_dedicated">Ghost dédié : réservé à une seule personne (Premium)</span></div>
-        </div>
-        <div class="help-hint" data-i18n="help_deposit_limit">⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.</div>
+        <div class="help-card-title" data-i18n="help_whisper_title">Ghost Whisper</div>
+        <div class="help-card-body" data-i18n="help_whisper_body">Quand quelqu'un résonne sur un de tes fantômes, ton téléphone vibre discrètement à l'instant exact — pas de notification, juste une vibration mystérieuse. Tu sauras qu'une âme a croisé ton message, sans jamais savoir qui.</div>
       </div>
 
       <!-- Résonance -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_reso_title">✦ Résonance</div>
-        <div class="help-card-body" data-i18n="help_reso_body">Une résonance par jour — choisissez le message qui vous touche. L'auteur le ressentira via une vibration discrète. Votre score d'empreinte grandit à chaque résonance reçue.</div>
+        <div class="help-card-title" data-i18n="help_reso_title">Résonance</div>
+        <div class="help-card-body" data-i18n="help_reso_body">Une résonance par jour — choisis le message qui te touche. L'auteur la ressentira via une vibration discrète. Ton score de rang grandit à chaque résonance reçue.</div>
+      </div>
+
+      <!-- Réagir -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_react_title">Réagir à un message</div>
+        <div class="help-card-body" data-i18n="help_react_body">Sous chaque message ouvert, réagis en un tap ou écris une réaction de 3 mots maximum. Si c'est ton message, tu seras prévenu de l'émotion qu'il a provoquée — sans jamais savoir qui a réagi.</div>
       </div>
 
       <!-- Série & souvenirs -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_streak_title">🔥 Série & souvenirs</div>
-        <div class="help-card-body" data-i18n="help_streak_body">Déposez ou découvrez un fantôme chaque jour pour faire grandir votre série, visible en haut de l'écran radar — un jour de grâce automatique évite de la perdre si vous en sautez un. De temps en temps, un souvenir refait aussi surface : Ghostub vous rappelle qu'il y a 1 mois, 3 mois, 6 mois ou 1 an, vous laissiez une trace à un endroit précis.</div>
+        <div class="help-card-title" data-i18n="help_streak_title">Série & souvenirs</div>
+        <div class="help-card-body" data-i18n="help_streak_body">Dépose ou découvre un fantôme chaque jour pour faire grandir ta série, visible sur le Radar — un jour de grâce automatique évite de la perdre si tu en sautes un. De temps en temps, un souvenir refait surface : Ghostub te rappelle qu'il y a 1 mois, 3 mois, 6 mois ou 1 an, tu laissais une trace à un endroit précis.</div>
       </div>
 
-      <!-- Empreinte -->
+      <!-- Profil -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_empreinte_title">🗺 Mon empreinte</div>
-        <div class="help-card-body" data-i18n="help_empreinte_body">Dans votre profil, une carte personnelle trace tous les endroits où vous avez déposé ou découvert des fantômes. Une ligne relie vos dépôts dans l'ordre. Votre score ✦ reflète votre activité totale. Dans les listes "Invoqués" et "Sceaux brisés", appuyez sur 📖 Lire pour relire le texte complet de vos messages et voir les réactions reçues.</div>
-      </div>
-
-      <!-- Mode Chasse -->
-      <div class="help-card">
-        <div class="help-card-title" data-i18n="help_hunt_title">🎯 Mode Chasse</div>
-        <div class="help-card-body" data-i18n="help_hunt_body">Activez le Mode Chasse sur la carte pour voir les fantômes proches avec leur distance exacte. Approchez-vous pour débloquer ceux qui sont trop loin. Les fantômes déjà découverts apparaissent en transparence.</div>
+        <div class="help-card-title" data-i18n="help_profile_title">Ton profil</div>
+        <div class="help-list-nomargin">
+          <div class="help-list-row-plain"><strong data-i18n="help_profile_trace_title">Mon Trace</strong></div>
+          <div class="help-list-row-plain"><span data-i18n="help_profile_trace_body">Choisis la couleur ET le caractère de ton fantôme personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).</span></div>
+          <div class="help-list-row-plain"><strong data-i18n="help_profile_rank_title">Mon rang</strong></div>
+          <div class="help-list-row-plain"><span data-i18n="help_profile_rank_body">Une seule progression. Tu gagnes 1 point à chaque fantôme découvert, déposé, ou qui résonne, et 3 points par jour de série — 11 rangs, de Curieux à Légende.</span></div>
+          <div class="help-list-row-plain"><strong data-i18n="help_empreinte_title">Mon empreinte</strong></div>
+          <div class="help-list-row-plain"><span data-i18n="help_empreinte_body">Une carte personnelle trace tous les endroits où tu as déposé ou découvert des fantômes, reliés dans l'ordre. Dans les listes « Invoqués » et « Sceaux brisés », appuie sur Lire pour retrouver le texte complet et les réactions reçues.</span></div>
+          <div class="help-list-row-plain"><strong data-i18n="help_year_title">Mon année</strong></div>
+          <div class="help-list-row-plain"><span data-i18n="help_year_body">Une carte-souvenir qui résume ton année sur Ghostub, à partager si tu le souhaites.</span></div>
+        </div>
       </div>
 
       <!-- Premium -->
       <div class="help-card-premium">
-        <div class="help-card-title-premium" data-i18n="help_premium_title">✦ Spectre Premium</div>
-        <div class="help-card-body-mb" data-i18n="help_premium_sub">Le Premium débloque des fonctionnalités exclusives :</div>
+        <div class="help-card-title-premium" data-i18n="help_premium_title">Spectre Premium</div>
+        <div class="help-card-body-mb" data-i18n="help_premium_sub">Le Premium débloque :</div>
         <div class="help-premium-list" data-i18n="help_premium_list">
-          🎥 Vidéos dans vos fantômes<br>
-          📅 Message du futur — s'ouvre à une date précise<br>
-          🔗 Chasse au trésor — fantômes enchaînés<br>
-          💌 Ghost dédié — réservé à une seule personne<br>
-          🏪 Mode Commerce — offres exclusives pour commerçants
+          Vidéos et documents joints à tes fantômes<br>
+          Message du futur — s'ouvre à une date précise<br>
+          Chasses au trésor — fantômes enchaînés<br>
+          Ghost dédié — réservé à une seule personne<br>
+          Mode Commerce — offres visibles à 50 m<br>
+          Ouvertures illimitées (au lieu de 3/jour)<br>
+          5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>
+          3 teintes de Trace supplémentaires
         </div>
-        <div class="help-hint" data-i18n="help_premium_hint">Activez votre code dans Profil → Mon compte.</div>
+        <div class="help-hint" data-i18n="help_premium_hint">Active ton code dans Profil → Mon compte. Le paiement en ligne n'est pas encore disponible — contacte-nous pour obtenir un code.</div>
+      </div>
+
+      <!-- Réglages -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_settings_title">Réglages</div>
+        <div class="help-card-body" data-i18n="help_settings_body">Mode jour/nuit et langue se changent dans Profil → Mon compte. Active les notifications pour être prévenu quand ton fantôme est découvert. Tu peux installer Ghostub comme une application depuis le menu de ton navigateur. En cas de souci d'affichage après une mise à jour, vide le cache de ton navigateur.</div>
+      </div>
+
+      <!-- Règles de bonne conduite -->
+      <div class="help-card">
+        <div class="help-card-title" data-i18n="help_rules_title">Règles de bonne conduite</div>
+        <div class="help-card-body" data-i18n="help_rules_body">5 fantômes actifs maximum par personne. Les contenus sont modérés automatiquement, et tu peux signaler un message inapproprié à tout moment — après 3 signalements, il est supprimé.</div>
       </div>
 
       <!-- FAQ -->
       <div class="help-card">
-        <div class="help-faq-title" data-i18n="help_faq_title">❓ Questions fréquentes</div>
+        <div class="help-faq-title" data-i18n="help_faq_title">Questions fréquentes</div>
         <div class="help-faq-q" data-i18n="help_faq_q1">Pourquoi je ne vois pas de fantômes ?</div>
-        <div class="help-faq-a" data-i18n="help_faq_a1">Les fantômes n'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.</div>
+        <div class="help-faq-a" data-i18n="help_faq_a1">Les fantômes n'apparaissent que si tu es à portée. Active ton GPS, élargis la portée du Radar (50 m → 1 km) et déplace-toi dans ta ville.</div>
         <div class="help-faq-q" data-i18n="help_faq_q2">Mon fantôme a disparu ?</div>
-        <div class="help-faq-a" data-i18n="help_faq_a2">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.</div>
+        <div class="help-faq-a" data-i18n="help_faq_a2">Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois — sauf « éternel »). Certains disparaissent aussi après un certain nombre de lectures.</div>
         <div class="help-faq-q" data-i18n="help_faq_q3">Comment signaler un message inapproprié ?</div>
-        <div class="help-faq-a" data-i18n="help_faq_a3">Appuyez sur l'icône ⚑ dans le détail d'un fantôme pour le signaler. Notre équipe examine chaque signalement.</div>
+        <div class="help-faq-a" data-i18n="help_faq_a3">Appuie sur « Signaler » dans le détail d'un fantôme. Notre équipe examine chaque signalement.</div>
         <div class="help-faq-q" data-i18n="help_faq_q4">Combien de fantômes puis-je ouvrir par jour ?</div>
-        <div class="help-faq-a-last" data-i18n="help_faq_a4">3 ouvertures gratuites par jour. Passez en Premium pour un accès illimité.</div>
+        <div class="help-faq-a-last" data-i18n="help_faq_a4">3 ouvertures gratuites par jour. Passe en Premium pour un accès illimité.</div>
       </div>
 
       <!-- Mentions légales -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_legal_title">📋 Mentions légales & RGPD</div>
+        <div class="help-card-title" data-i18n="help_legal_title">Mentions légales & RGPD</div>
         <div class="help-legal-body" data-i18n="help_legal_body">
-          <strong>Éditeur :</strong> Ghostub — application indépendante<br>
+          <strong>Éditeur :</strong> Ghostub<br>
           <strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br>
-          <strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l'utilisation), messages déposés.<br><br>
-          <strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br>
-          <strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br>
-          <strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br>
-          <a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" class="help-legal-link">📄 Consulter notre politique de confidentialité complète →</a><br><br>
-          En utilisant Ghostub, vous acceptez que vos messages soient visibles par d'autres utilisateurs à proximité géographique.
+          Le détail complet (données traitées, sous-traitants, durées de conservation, tes droits) est dans nos pages légales.<br><br>
+          <a href="privacy.html" target="_blank" rel="noopener" class="help-legal-link">Politique de confidentialité →</a><br>
+          <a href="terms.html" target="_blank" rel="noopener" class="help-legal-link">Conditions générales d'utilisation →</a><br><br>
+          En utilisant Ghostub, tu acceptes que tes messages soient visibles par d'autres utilisateurs à proximité géographique.
         </div>
       </div>
 
       <div class="help-footer">
-        <div class="help-footer-text" data-i18n="help_version">Ghostub v1.0 — Géocaching émotionnel</div>
+        <div class="help-footer-text" data-i18n="help_version">Ghostub — géocaching émotionnel</div>
       </div>
     </div>
   </div>

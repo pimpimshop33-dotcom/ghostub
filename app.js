@@ -73,6 +73,12 @@ const LANGS = {
     auth_hide_password: 'Masquer le mot de passe',
     // Radar
     radar_guest_banner: 'Mode exploration — créez un compte pour déposer vos fantômes',
+    whatsnew_title: '✦ Quoi de neuf',
+    whatsnew_close: 'Fermer',
+    whatsnew_item1: 'Déposer simplifié — la lettre et les 7 Sceaux',
+    whatsnew_item2: 'Boussole pour s\'orienter vers un fantôme',
+    whatsnew_item3: 'Mon rang — une seule progression, plus claire',
+    whatsnew_item4: 'Mode jour repensé',
     guest_signup_open: 'Créez un compte gratuit pour ouvrir ce fantôme',
     guest_signup_deposit: 'Créez un compte gratuit pour déposer un fantôme',
     guest_signup_profile: 'Créez un compte gratuit pour accéder à votre profil',
@@ -647,57 +653,81 @@ const LANGS = {
     profile_rewatch_intro: 'Revoir l\'intro',
     profile_help_link: 'Aide & Mentions légales',
     profile_delete_all_btn: '🗑 Tout supprimer',
-    // Help screen
+    // Help screen (Lot AP — relu et réécrit contre le code réel, Lots Y→AP)
     help_back: '← retour',
     help_title: 'Comment ça marche ?',
-    help_sub: 'Tout ce que vous devez savoir sur Ghostub',
-    help_discover_title: '🌫️ Découvrir un fantôme',
-    help_discover_body: 'Des messages invisibles sont ancrés dans des lieux réels autour de vous. Approchez-vous physiquement pour les débloquer — ils ne s\'ouvrent qu\'à quelques mètres. Certains ont des conditions spéciales : uniquement la nuit, à une heure précise, ou après avoir trouvé un autre fantôme.',
-    help_deposit_title: '📍 Déposer un fantôme',
-    help_deposit_body: 'Allez dans un lieu qui vous inspire, appuyez sur 👻 Déposer et écrivez votre message. Il sera ancré à votre position GPS exacte. Vous pouvez y joindre une photo, un audio, choisir sa durée de vie et son rayon de détection.',
-    help_deposit_limit: '⏱ Un seul dépôt toutes les 15 minutes — maximum 5 fantômes actifs simultanément.',
-    help_premium_title: '✦ Spectre Premium',
-    help_premium_sub: 'Le Premium débloque des fonctionnalités exclusives :',
-    help_premium_list: '🎥 Vidéos dans vos fantômes<br>📅 Message du futur — s\'ouvre à une date précise<br>🔗 Chasse au trésor — fantômes enchaînés<br>🏪 Mode Commerce — offres exclusives pour commerçants',
-    help_premium_hint: 'Activez votre code dans Profil → Mon compte.',
-    help_faq_title: '❓ Questions fréquentes',
-    help_faq_q1: 'Pourquoi je ne vois pas de fantômes ?',
-    help_faq_a1: 'Les fantômes n\'apparaissent que si vous êtes à portée (généralement 50-500m). Activez votre GPS et déplacez-vous dans votre ville.',
-    help_faq_q2: 'Mon fantôme a disparu ?',
-    help_faq_a2: 'Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois). Certains disparaissent aussi après un certain nombre de lectures.',
-    help_faq_q3: 'Comment signaler un message inapproprié ?',
-    help_faq_a3: 'Appuyez sur l\'icône ⚑ dans le détail d\'un fantôme pour le signaler. Notre équipe examine chaque signalement.',
-    help_faq_q4: 'Combien de fantômes puis-je ouvrir par jour ?',
-    help_faq_a4: '3 ouvertures gratuites par jour. Passez en Premium pour un accès illimité.',
-    help_legal_title: '📋 Mentions légales & RGPD',
-    help_legal_body: '<strong>Éditeur :</strong> Ghostub — application indépendante<br><strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br><strong>Données collectées :</strong> adresse email, position GPS (uniquement lors de l\'utilisation), messages déposés.<br><br><strong>Utilisation :</strong> vos données sont utilisées exclusivement pour le fonctionnement de l\'application. Elles ne sont ni vendues ni transmises à des tiers.<br><br><strong>Suppression :</strong> vous pouvez supprimer vos fantômes et votre compte à tout moment depuis votre profil.<br><br><strong>Hébergement :</strong> Firebase (Google) — serveurs européens (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" class="help-legal-link">📄 Consulter notre politique de confidentialité complète →</a><br><br>En utilisant Ghostub, vous acceptez que vos messages soient visibles par d\'autres utilisateurs à proximité géographique.',
-    help_version: 'Ghostub v1.0 — Géocaching émotionnel',
-    help_cond_night: 'Certains ne s\'ouvrent que la nuit (22h–6h)',
-    help_cond_hour: 'D\'autres à une heure précise (±15 min)',
-    help_cond_future: 'Messages du futur — s\'ouvrent à une date définie',
-    help_cond_chain: 'Chasses au trésor — trouve le premier pour débloquer le suivant',
-    help_haunted_title: '👻 Zones hantées',
+    help_sub: 'Tout ce que tu dois savoir sur Ghostub',
+    // Déposer
+    help_deposit_title: 'Déposer un fantôme',
+    help_deposit_body: 'Va dans un lieu qui t\'inspire et ouvre Déposer. Le lieu est repéré automatiquement (tu peux le corriger avec « modifier ») et le message s\'ancre à ta position GPS exacte. Choisis un Sceau parmi 7 — chacun exprime quelque chose : classique, souriant, amoureux, endormi, émerveillé, ardent, bavard.',
+    help_dep_media: 'Tu peux joindre un message vocal ou une photo. La vidéo et les documents sont réservés Premium.',
+    help_dep_duration: 'Durée de vie en pastilles : 24h, 7 jours, 1 mois ou éternel.',
+    help_dep_more_title: '« Plus d\'options »',
+    help_dep_more_body: 'Rayon de détection (3, 10 ou 50 m), nombre de lectures avant disparition (illimité, 1, 5 ou 10 — 5 et 10 réservés Premium), et condition d\'ouverture : toujours accessible, la nuit uniquement (22h–6h), à une heure précise (±15 min), ou message du futur à une date fixée (Premium).',
+    help_dep_anon: '« Rester anonyme » masque ton pseudo sur ce dépôt précis.',
+    help_dep_biz: 'Le mode Commerce (Premium) publie une offre visible à 50 m autour de ton commerce.',
+    help_deposit_limit: 'Un dépôt toutes les 15 minutes — 5 fantômes actifs maximum en même temps.',
+    // Radar
+    help_radar_title: 'Le Radar',
+    help_radar_body: 'Chaque fantôme proche apparaît sous la forme de son Trace, coloré selon son Sceau — plus il est ancien, plus sa couleur pâlit. Trois portées de détection : 50 m, 200 m, 1 km. Tire l\'écran vers le bas pour rafraîchir. Le sonar émet un signal discret à chaque balayage qui croise un fantôme.',
+    help_compass_title: 'La boussole',
+    help_compass_body: 'Elle indique la direction d\'un fantôme proche, sur le Radar comme sur la Carte. Sur iPhone, un bouton « Activer la boussole » apparaît la première fois — il faut l\'autoriser une fois. Sur ordinateur, elle ne s\'affiche pas : c\'est normal, il n\'y a pas de capteur d\'orientation.',
+    // Carte
+    help_map_title: 'La Carte',
+    help_map_body: 'Filtre les fantômes par type (récentes, photos, vidéos, vocaux). Un halo doré signale un fantôme rare ou légendaire, un halo mauve un fantôme secret. Dézoome pour voir les fantômes proches se regrouper en amas ; touche un fantôme (ou un amas) pour ouvrir sa fiche.',
+    help_haunted_title: 'Zones hantées',
     help_haunted_body: 'Quand plusieurs fantômes se concentrent dans un même endroit, une zone hantée apparaît sur la carte.',
     help_haunted_spot: '3–4 fantômes proches',
     help_haunted_zone: '5–7 fantômes — zone hantée',
     help_haunted_hot: '8+ fantômes — infestation totale',
-    help_whisper_title: '✦ Ghost Whisper',
-    help_whisper_body: 'Quand quelqu\'un résonne sur un de vos fantômes, votre téléphone vibre discrètement à l\'instant exact — pas de notification, juste une vibration mystérieuse. Vous saurez qu\'une âme a croisé votre message, sans jamais savoir qui.',
-    help_reso_title: '✦ Résonance',
-    help_reso_body: 'Une résonance par jour — choisissez le message qui vous touche. L\'auteur le ressentira via une vibration discrète. Votre score d\'empreinte grandit à chaque résonance reçue.',
-    help_react_title: '💬 Réagir à un message',
-    help_react_body: 'Sous chaque message ouvert, réagissez en un tap (😂 🥹 😢 🤨 😮 ❤️) ou écrivez une réaction de 3 mots maximum. Si c\'est votre message, vous serez prévenu de l\'émotion qu\'il a provoquée — sans jamais savoir qui a réagi.',
-    help_streak_title: '🔥 Série & souvenirs',
-    help_streak_body: 'Déposez ou découvrez un fantôme chaque jour pour faire grandir votre série, visible en haut de l\'écran radar — un jour de grâce automatique évite de la perdre si vous en sautez un. De temps en temps, un souvenir refait aussi surface : Ghostub vous rappelle qu\'il y a 1 mois, 3 mois, 6 mois ou 1 an, vous laissiez une trace à un endroit précis.',
-    help_empreinte_title: '🗺 Mon empreinte',
-    help_empreinte_body: 'Dans votre profil, une carte personnelle trace tous les endroits où vous avez déposé ou découvert des fantômes. Une ligne relie vos dépôts dans l\'ordre. Votre score ✦ reflète votre activité totale. Dans les listes "Invoqués" et "Sceaux brisés", appuyez sur 📖 Lire pour relire le texte complet de vos messages et voir les réactions reçues.',
-    help_hunt_title: '🎯 Mode Chasse',
-    help_hunt_body: 'Activez le Mode Chasse sur la carte pour voir les fantômes proches avec leur distance exacte.',
-    help_dep_photo: 'Ajoutez une photo',
-    help_dep_audio: 'Enregistrez un message vocal',
-    help_dep_duration: 'Choisissez sa durée de vie : 24h, 7j, 1 mois ou éternel',
-    help_dep_radius: 'Rayon de détection : 3m, 10m ou 50m',
-    help_dep_dedicated: 'Ghost dédié : réservé à une seule personne (Premium)',
+    // Ouvrir un fantôme
+    help_open_title: 'Ouvrir un fantôme',
+    help_open_body: 'Approche-toi jusqu\'à entrer dans son rayon de détection, appuie dessus pour briser le sceau, puis gratte l\'écran pour révéler le message. Le texte s\'affiche ensuite plein écran, avec la photo ou la vidéo jointe entièrement visible au-dessus de la navigation.',
+    help_open_quota: '3 ouvertures gratuites par jour. Premium : illimité.',
+    help_open_actions: 'Une fois ouvert, tu peux résonner dessus (une fois par jour), réagir en un tap, l\'ajouter à tes favoris, créer une Ghost Card à partager, ou le signaler.',
+    help_whisper_title: 'Ghost Whisper',
+    help_whisper_body: 'Quand quelqu\'un résonne sur un de tes fantômes, ton téléphone vibre discrètement à l\'instant exact — pas de notification, juste une vibration mystérieuse. Tu sauras qu\'une âme a croisé ton message, sans jamais savoir qui.',
+    help_reso_title: 'Résonance',
+    help_reso_body: 'Une résonance par jour — choisis le message qui te touche. L\'auteur la ressentira via une vibration discrète. Ton score de rang grandit à chaque résonance reçue.',
+    help_react_title: 'Réagir à un message',
+    help_react_body: 'Sous chaque message ouvert, réagis en un tap ou écris une réaction de 3 mots maximum. Si c\'est ton message, tu seras prévenu de l\'émotion qu\'il a provoquée — sans jamais savoir qui a réagi.',
+    help_streak_title: 'Série & souvenirs',
+    help_streak_body: 'Dépose ou découvre un fantôme chaque jour pour faire grandir ta série, visible sur le Radar — un jour de grâce automatique évite de la perdre si tu en sautes un. De temps en temps, un souvenir refait surface : Ghostub te rappelle qu\'il y a 1 mois, 3 mois, 6 mois ou 1 an, tu laissais une trace à un endroit précis.',
+    // Profil
+    help_profile_title: 'Ton profil',
+    help_profile_trace_title: 'Mon Trace',
+    help_profile_trace_body: 'Choisis la couleur ET le caractère de ton fantôme personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).',
+    help_profile_rank_title: 'Mon rang',
+    help_profile_rank_body: 'Une seule progression. Tu gagnes 1 point à chaque fantôme découvert, déposé, ou qui résonne, et 3 points par jour de série — 11 rangs, de Curieux à Légende.',
+    help_empreinte_title: 'Mon empreinte',
+    help_empreinte_body: 'Une carte personnelle trace tous les endroits où tu as déposé ou découvert des fantômes, reliés dans l\'ordre. Dans les listes « Invoqués » et « Sceaux brisés », appuie sur Lire pour retrouver le texte complet et les réactions reçues.',
+    help_year_title: 'Mon année',
+    help_year_body: 'Une carte-souvenir qui résume ton année sur Ghostub, à partager si tu le souhaites.',
+    // Premium
+    help_premium_title: 'Spectre Premium',
+    help_premium_sub: 'Le Premium débloque :',
+    help_premium_list: 'Vidéos et documents joints à tes fantômes<br>Message du futur — s\'ouvre à une date précise<br>Chasses au trésor — fantômes enchaînés<br>Ghost dédié — réservé à une seule personne<br>Mode Commerce — offres visibles à 50 m<br>Ouvertures illimitées (au lieu de 3/jour)<br>5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>3 teintes de Trace supplémentaires',
+    help_premium_hint: 'Active ton code dans Profil → Mon compte. Le paiement en ligne n\'est pas encore disponible — contacte-nous pour obtenir un code.',
+    // Réglages
+    help_settings_title: 'Réglages',
+    help_settings_body: 'Mode jour/nuit et langue se changent dans Profil → Mon compte. Active les notifications pour être prévenu quand ton fantôme est découvert. Tu peux installer Ghostub comme une application depuis le menu de ton navigateur. En cas de souci d\'affichage après une mise à jour, vide le cache de ton navigateur.',
+    // Règles
+    help_rules_title: 'Règles de bonne conduite',
+    help_rules_body: '5 fantômes actifs maximum par personne. Les contenus sont modérés automatiquement, et tu peux signaler un message inapproprié à tout moment — après 3 signalements, il est supprimé.',
+    // FAQ
+    help_faq_title: 'Questions fréquentes',
+    help_faq_q1: 'Pourquoi je ne vois pas de fantômes ?',
+    help_faq_a1: 'Les fantômes n\'apparaissent que si tu es à portée. Active ton GPS, élargis la portée du Radar (50 m → 1 km) et déplace-toi dans ta ville.',
+    help_faq_q2: 'Mon fantôme a disparu ?',
+    help_faq_a2: 'Les fantômes ont une durée de vie limitée (24h, 7 jours ou 1 mois — sauf « éternel »). Certains disparaissent aussi après un certain nombre de lectures.',
+    help_faq_q3: 'Comment signaler un message inapproprié ?',
+    help_faq_a3: 'Appuie sur « Signaler » dans le détail d\'un fantôme. Notre équipe examine chaque signalement.',
+    help_faq_q4: 'Combien de fantômes puis-je ouvrir par jour ?',
+    help_faq_a4: '3 ouvertures gratuites par jour. Passe en Premium pour un accès illimité.',
+    // Légal
+    help_legal_title: 'Mentions légales & RGPD',
+    help_legal_body: '<strong>Éditeur :</strong> Ghostub<br><strong>Contact :</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br>Le détail complet (données traitées, sous-traitants, durées de conservation, tes droits) est dans nos pages légales.<br><br><a href="privacy.html" target="_blank" rel="noopener" class="help-legal-link">Politique de confidentialité →</a><br><a href="terms.html" target="_blank" rel="noopener" class="help-legal-link">Conditions générales d\'utilisation →</a><br><br>En utilisant Ghostub, tu acceptes que tes messages soient visibles par d\'autres utilisateurs à proximité géographique.',
+    help_version: 'Ghostub — géocaching émotionnel',
   },
   en: {
     // Onboarding
@@ -732,6 +762,12 @@ const LANGS = {
     auth_hide_password: 'Hide password',
     // Radar
     radar_guest_banner: 'Exploration mode — create an account to drop your own ghosts',
+    whatsnew_title: '✦ What\'s new',
+    whatsnew_close: 'Close',
+    whatsnew_item1: 'Simplified deposit — the letter and the 7 Seals',
+    whatsnew_item2: 'Compass to orient towards a ghost',
+    whatsnew_item3: 'My rank — one clearer progression',
+    whatsnew_item4: 'Redesigned Day mode',
     guest_signup_open: 'Create a free account to open this ghost',
     guest_signup_deposit: 'Create a free account to drop a ghost',
     guest_signup_profile: 'Create a free account to access your profile',
@@ -1306,57 +1342,81 @@ const LANGS = {
     profile_rewatch_intro: 'Watch intro again',
     profile_help_link: 'Help & Legal',
     profile_delete_all_btn: '🗑 Delete all',
-    // Help screen
+    // Help screen (Lot AP — reviewed and rewritten against the real code, Lots Y→AP)
     help_back: '← back',
     help_title: 'How does it work?',
     help_sub: 'Everything you need to know about Ghostub',
-    help_discover_title: '🌫️ Discover a ghost',
-    help_discover_body: 'Invisible messages are anchored to real places around you. Move physically to unlock them — they only open within a few metres. Some have special conditions: only at night, at a specific time, or after finding another ghost.',
-    help_deposit_title: '📍 Drop a ghost',
-    help_deposit_body: 'Go to a place that inspires you, tap 👻 Drop and write your message. It will be anchored to your exact GPS position. You can attach a photo, audio, choose its lifespan and detection radius.',
-    help_deposit_limit: '⏱ One drop every 15 minutes — maximum 5 active ghosts at a time.',
-    help_premium_title: '✦ Premium Spectre',
-    help_premium_sub: 'Premium unlocks exclusive features:',
-    help_premium_list: '🎥 Videos in your ghosts<br>📅 Future message — opens on a specific date<br>🔗 Treasure hunt — chained ghosts<br>🏪 Commerce Mode — exclusive offers for businesses',
-    help_premium_hint: 'Activate your code in Profile → My account.',
-    help_faq_title: '❓ Frequently asked questions',
-    help_faq_q1: 'Why don\'t I see any ghosts?',
-    help_faq_a1: 'Ghosts only appear if you are within range (usually 50–500m). Enable your GPS and move around your city.',
-    help_faq_q2: 'My ghost disappeared?',
-    help_faq_a2: 'Ghosts have a limited lifespan (24h, 7 days or 1 month). Some also disappear after a certain number of reads.',
-    help_faq_q3: 'How to report an inappropriate message?',
-    help_faq_a3: 'Tap the ⚑ icon in a ghost\'s detail to report it. Our team reviews every report.',
-    help_faq_q4: 'How many ghosts can I open per day?',
-    help_faq_a4: '3 free opens a day. Go Premium for unlimited access.',
-    help_legal_title: '📋 Legal & GDPR',
-    help_legal_body: '<strong>Publisher:</strong> Ghostub — independent application<br><strong>Contact:</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br><strong>Data collected:</strong> email address, GPS position (only during use), deposited messages.<br><br><strong>Use:</strong> your data is used exclusively for the application to function. It is neither sold nor shared with third parties.<br><br><strong>Deletion:</strong> you can delete your ghosts and account at any time from your profile.<br><br><strong>Hosting:</strong> Firebase (Google) — European servers (europe-west9).<br><br><a href="https://pimpimshop33-dotcom.github.io/ghostub/privacy.html" target="_blank" rel="noopener" class="help-legal-link">📄 Read our full privacy policy →</a><br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
-    help_version: 'Ghostub v1.0 — Emotional geocaching',
-    help_cond_night: 'Some only open at night (10pm–6am)',
-    help_cond_hour: 'Others at a specific time (±15 min)',
-    help_cond_future: 'Future messages — open on a set date',
-    help_cond_chain: 'Treasure hunts — find the first to unlock the next',
-    help_haunted_title: '👻 Haunted zones',
+    // Drop
+    help_deposit_title: 'Drop a ghost',
+    help_deposit_body: 'Go to a place that inspires you and open Drop. The place is detected automatically (you can correct it with "edit") and the message anchors to your exact GPS position. Pick a Seal among 7 — each expresses something: classic, smiling, in love, sleepy, amazed, ardent, chatty.',
+    help_dep_media: 'You can attach a voice message or a photo. Video and documents are Premium-only.',
+    help_dep_duration: 'Lifespan pills: 24h, 7 days, 1 month or eternal.',
+    help_dep_more_title: '"More options"',
+    help_dep_more_body: 'Detection radius (3, 10 or 50 m), number of reads before it vanishes (unlimited, 1, 5 or 10 — 5 and 10 are Premium-only), and opening condition: always open, night only (10pm–6am), a specific time (±15 min), or a future message on a set date (Premium).',
+    help_dep_anon: '"Stay anonymous" hides your name on that particular drop.',
+    help_dep_biz: 'Commerce Mode (Premium) publishes an offer visible within 50 m of your business.',
+    help_deposit_limit: 'One drop every 15 minutes — 5 active ghosts maximum at a time.',
+    // Radar
+    help_radar_title: 'The Radar',
+    help_radar_body: 'Every nearby ghost shows up as its Trace, colored by its Seal — the older it is, the paler its color. Three detection ranges: 50 m, 200 m, 1 km. Pull the screen down to refresh. The sonar emits a discreet signal on every sweep that crosses a ghost.',
+    help_compass_title: 'The compass',
+    help_compass_body: 'It points toward a nearby ghost, on both the Radar and the Map. On iPhone, an "Enable compass" button appears the first time — you need to allow it once. On desktop it doesn\'t show up: that\'s normal, there\'s no orientation sensor.',
+    // Map
+    help_map_title: 'The Map',
+    help_map_body: 'Filter ghosts by type (recent, photos, videos, voice). A gold halo marks a rare or legendary ghost, a purple halo a secret one. Zoom out to see nearby ghosts cluster together; tap a ghost (or a cluster) to open its sheet.',
+    help_haunted_title: 'Haunted zones',
     help_haunted_body: 'When several ghosts concentrate in the same area, a haunted zone appears on the map.',
     help_haunted_spot: '3–4 ghosts nearby',
     help_haunted_zone: '5–7 ghosts — haunted zone',
     help_haunted_hot: '8+ ghosts — full infestation',
-    help_whisper_title: '✦ Ghost Whisper',
+    // Opening a ghost
+    help_open_title: 'Opening a ghost',
+    help_open_body: 'Get close enough to enter its detection radius, tap it to break the seal, then scratch the screen to reveal the message. The text then shows full-screen, with any attached photo or video fully visible above the navigation.',
+    help_open_quota: '3 free opens per day. Premium: unlimited.',
+    help_open_actions: 'Once open, you can resonate on it (once a day), react with a tap, add it to your favorites, create a Ghost Card to share, or report it.',
+    help_whisper_title: 'Ghost Whisper',
     help_whisper_body: 'When someone resonates on one of your ghosts, your phone vibrates discreetly at that exact moment — no notification, just a mysterious vibration. You\'ll know a soul crossed your message, without ever knowing who.',
-    help_reso_title: '✦ Resonance',
-    help_reso_body: 'One resonance per day — pick the message that moves you. The author will feel it through a discreet vibration. Your footprint score grows with every resonance received.',
-    help_react_title: '💬 Reacting to a message',
-    help_react_body: 'Under every opened message, react with a single tap (😂 🥹 😢 🤨 😮 ❤️) or write a reaction up to 3 words. If it\'s your own message, you\'ll be notified of the emotion it caused — without ever knowing who reacted.',
-    help_streak_title: '🔥 Streak & memories',
-    help_streak_body: 'Deposit or discover a ghost every day to grow your streak, visible at the top of the radar screen — an automatic grace day keeps it alive if you miss one. Every now and then, a memory resurfaces too: Ghostub reminds you that 1 month, 3 months, 6 months, or 1 year ago, you left a trace at a specific place.',
-    help_empreinte_title: '🗺 My footprint',
-    help_empreinte_body: 'In your profile, a personal map traces all the places where you have deposited or discovered ghosts. A line connects your deposits in order. Your ✦ score reflects your total activity. In the "Invoked" and "Seals broken" lists, tap 📖 Read to re-read the full text of your messages and see the reactions they received.',
-    help_hunt_title: '🎯 Hunt Mode',
-    help_hunt_body: 'Activate Hunt Mode on the map to see nearby ghosts with their exact distance.',
-    help_dep_photo: 'Add a photo',
-    help_dep_audio: 'Record a voice message',
-    help_dep_duration: 'Choose its lifespan: 24h, 7d, 1 month or eternal',
-    help_dep_radius: 'Detection radius: 3m, 10m or 50m',
-    help_dep_dedicated: 'Dedicated ghost: reserved for one person (Premium)',
+    help_reso_title: 'Resonance',
+    help_reso_body: 'One resonance per day — pick the message that moves you. The author will feel it through a discreet vibration. Your rank score grows with every resonance received.',
+    help_react_title: 'Reacting to a message',
+    help_react_body: 'Under every opened message, react with a single tap or write a reaction up to 3 words. If it\'s your own message, you\'ll be notified of the emotion it caused — without ever knowing who reacted.',
+    help_streak_title: 'Streak & memories',
+    help_streak_body: 'Deposit or discover a ghost every day to grow your streak, visible on the Radar — an automatic grace day keeps it alive if you miss one. Every now and then, a memory resurfaces too: Ghostub reminds you that 1 month, 3 months, 6 months, or 1 year ago, you left a trace at a specific place.',
+    // Profile
+    help_profile_title: 'Your profile',
+    help_profile_trace_title: 'My Trace',
+    help_profile_trace_body: 'Choose the color AND the character of your personal ghost, the one that represents you — 3 free tints (Spirit, Orchid, Mist), 3 Premium-only (Amber, Rose, Ember).',
+    help_profile_rank_title: 'My rank',
+    help_profile_rank_body: 'A single progression. You gain 1 point for every ghost discovered, deposited, or resonated on, and 3 points per streak day — 11 ranks, from Curious to Legend.',
+    help_empreinte_title: 'My footprint',
+    help_empreinte_body: 'A personal map traces every place where you\'ve deposited or discovered ghosts, connected in order. In the "Summoned" and "Seals broken" lists, tap Read to revisit the full text and the reactions received.',
+    help_year_title: 'My year',
+    help_year_body: 'A memory card that sums up your year on Ghostub, shareable if you want.',
+    // Premium
+    help_premium_title: 'Premium Spectre',
+    help_premium_sub: 'Premium unlocks:',
+    help_premium_list: 'Videos and documents attached to your ghosts<br>Future message — opens on a specific date<br>Treasure hunts — chained ghosts<br>Dedicated ghost — reserved for one person<br>Commerce Mode — offers visible within 50 m<br>Unlimited opens (instead of 3/day)<br>5 or 10 reads per ghost you drop (instead of 1)<br>3 extra Trace tints',
+    help_premium_hint: 'Activate your code in Profile → My account. Online payment isn\'t available yet — contact us to get a code.',
+    // Settings
+    help_settings_title: 'Settings',
+    help_settings_body: 'Light/dark mode and language are changed in Profile → My account. Turn on notifications to be told when your ghost is discovered. You can install Ghostub as an app from your browser\'s menu. If something looks off after an update, clear your browser cache.',
+    // Rules
+    help_rules_title: 'Community guidelines',
+    help_rules_body: '5 active ghosts maximum per person. Content is moderated automatically, and you can report an inappropriate message at any time — after 3 reports, it\'s removed.',
+    // FAQ
+    help_faq_title: 'Frequently asked questions',
+    help_faq_q1: 'Why don\'t I see any ghosts?',
+    help_faq_a1: 'Ghosts only appear if you\'re within range. Enable your GPS, widen the Radar\'s range (50 m → 1 km) and move around your city.',
+    help_faq_q2: 'My ghost disappeared?',
+    help_faq_a2: 'Ghosts have a limited lifespan (24h, 7 days or 1 month — unless "eternal"). Some also disappear after a certain number of reads.',
+    help_faq_q3: 'How to report an inappropriate message?',
+    help_faq_a3: 'Tap "Report" in a ghost\'s detail. Our team reviews every report.',
+    help_faq_q4: 'How many ghosts can I open per day?',
+    help_faq_a4: '3 free opens a day. Go Premium for unlimited access.',
+    // Legal
+    help_legal_title: 'Legal & GDPR',
+    help_legal_body: '<strong>Publisher:</strong> Ghostub<br><strong>Contact:</strong> <a href="mailto:appghostub@gmail.com" class="help-legal-link">appghostub@gmail.com</a><br><br>Full detail (data processed, subcontractors, retention periods, your rights) is in our legal pages.<br><br><a href="privacy.html" target="_blank" rel="noopener" class="help-legal-link">Privacy policy →</a><br><a href="terms.html" target="_blank" rel="noopener" class="help-legal-link">Terms of use →</a><br><br>By using Ghostub, you agree that your messages are visible to other users in geographic proximity.',
+    help_version: 'Ghostub — emotional geocaching',
 
   }
 };
@@ -2788,6 +2848,7 @@ onAuthStateChanged(auth, async user => {
     // 0 si jamais calculée) tant que l'utilisateur n'a pas ouvert le Profil
     // au moins une fois dans CETTE session.
     setTimeout(() => { if (typeof refreshProfileStats === 'function') refreshProfileStats(); }, 1500);
+    _maybeShowWhatsNew();
     // Fantôme garanti au 1er lancement — décalé après le GPS
     setTimeout(() => _seedWelcomeGhost(), 4000);
     // ── Présence passive — GPS watch ─────────────────────────────────
@@ -10842,6 +10903,30 @@ function _clearHold() {
 
 window.goAuth = () => { localStorage.setItem('ghostub_onboard_seen', '1'); showScreen('screenAuth'); };
 
+// ── "QUOI DE NEUF" (Lot AP) ────────────────────────────────
+// L'app a beaucoup changé depuis les dernières versions de l'Aide (Lots
+// Y→AP : Déposer simplifié, Sceaux, boussole, rang unique, Mode jour) —
+// plutôt que rejouer toute l'intro carousel à ceux qui la connaissent déjà,
+// un petit encart fermable sur le Radar, une fois. _WHATSNEW_VERSION à
+// incrémenter la prochaine fois qu'un changement mérite d'être signalé —
+// chaque version a sa propre clé localStorage, donc se réaffiche une fois
+// même pour ceux qui ont déjà fermé une version précédente.
+const _WHATSNEW_VERSION = 'ap1';
+function _whatsNewSeenKey() { return 'ghostub_whatsnew_' + _WHATSNEW_VERSION + '_seen'; }
+function _maybeShowWhatsNew() {
+  const banner = document.getElementById('whatsnewBanner');
+  if (!banner) return;
+  // Seulement aux utilisateurs déjà connus de l'app (l'intro carousel des
+  // nouveaux couvre déjà tout ça) — pas rejoué à un tout premier lancement.
+  if (!localStorage.getItem('ghostub_onboard_seen')) return;
+  if (localStorage.getItem(_whatsNewSeenKey())) return;
+  banner.classList.remove('u-hidden');
+}
+window.dismissWhatsNew = () => {
+  localStorage.setItem(_whatsNewSeenKey(), '1');
+  document.getElementById('whatsnewBanner')?.classList.add('u-hidden');
+};
+
 function createParticles() {
   const canvas = document.getElementById('particleCanvas');
   if (!canvas) return;
@@ -11086,6 +11171,7 @@ const ACTIONS = {
   toggleCarnetEntry: (el) => toggleCarnetEntry(el.dataset.id, el.dataset.reactions === 'true', el),
   deleteOneGhost: (el) => deleteOneGhost(el.dataset.id),
   closePublicProfileModal: () => document.getElementById('publicProfileModal').remove(),
+  dismissWhatsNew: () => dismissWhatsNew(),
   joinGhostub: () => { window.location.href = 'https://pimpimshop33-dotcom.github.io/ghostub/'; },
   renewBusinessGhost: (el) => renewBusinessGhost(el.dataset.id),
 
