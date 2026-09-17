@@ -176,6 +176,15 @@ const LANGS = {
     // Phase 1 v100 — La Lettre
     dep_lettre_salutation: 'À qui passera par ici,',
     dep_lettre_stamp_label: 'Sceau :',
+    // Lot AI — Sceaux = expressions du Trace
+    seal_aria_classic: 'Sceau Trace classique',
+    seal_aria_smiling: 'Sceau Trace souriant',
+    seal_aria_loving: 'Sceau Trace amoureux',
+    seal_aria_sleepy: 'Sceau Trace endormi',
+    seal_aria_amazed: 'Sceau Trace émerveillé',
+    seal_aria_ardent: 'Sceau Trace ardent',
+    seal_aria_chatty: 'Sceau Trace bavard',
+    seal_more_label: 'Plus de Sceaux',
     dep_lettre_placeholder: 'Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver.',
     dep_lettre_signature: '— ancré ici, à jamais',
     dep_seal_btn: 'Sceller le fantôme',
@@ -801,6 +810,15 @@ const LANGS = {
     // Phase 1 v100 — La Lettre
     dep_lettre_salutation: 'To whoever passes through,',
     dep_lettre_stamp_label: 'Seal:',
+    // Lot AI — Seals = Trace expressions
+    seal_aria_classic: 'Classic Trace seal',
+    seal_aria_smiling: 'Smiling Trace seal',
+    seal_aria_loving: 'Loving Trace seal',
+    seal_aria_sleepy: 'Sleepy Trace seal',
+    seal_aria_amazed: 'Amazed Trace seal',
+    seal_aria_ardent: 'Ardent Trace seal',
+    seal_aria_chatty: 'Chatty Trace seal',
+    seal_more_label: 'More seals',
     dep_lettre_placeholder: 'A thought, a memory, a secret… for whoever may find it.',
     dep_lettre_signature: '— anchored here, forever',
     dep_seal_btn: 'Seal the ghost',
@@ -1350,6 +1368,9 @@ window.setLang = (lang) => {
   // Radar — toujours re-render la liste (visible ou non)
   if (typeof renderGhostList === 'function') renderGhostList();
 
+  // Déposer — rangée Sceau (aria-label localisés), préserve la sélection en cours
+  if (typeof _renderDepositSealPicker === 'function') _renderDepositSealPicker();
+
   // Profile — re-render si les données sont déjà chargées
   if (typeof refreshProfileStats === 'function') refreshProfileStats();
   if (typeof updatePremiumUI === 'function') updatePremiumUI();
@@ -1484,11 +1505,16 @@ const _BRAND_MARK_HTML = '<img src="assets/brand/ghostub-mark-trace.svg" class="
 const _BRAND_MARK_SLEEPY_HTML = '<img src="assets/brand/ghostub-mark-trace-sleepy.svg" class="brand-mark-icon" aria-hidden="true">';
 const _BRAND_MARK_CELEBRATION_HTML = '<img src="assets/brand/ghostub-mark-trace-celebration.svg" class="brand-mark-icon" aria-hidden="true">';
 const _BRAND_MARK_PREMIUM_HTML = '<img src="assets/brand/ghostub-mark-trace-premium.svg" class="brand-mark-icon" aria-hidden="true">';
+// Lot AI : un Sceau connu (cf. TRACE_CATEGORY_COLORS) se rend désormais en
+// Trace coloré (_traceMarkHTML) comme partout ailleurs dans l'app, pas en
+// glyphe emoji brut — seul un emoji perso non mappé (saisie libre) retombe
+// sur le texte tel quel, faute de teinte/expression dédiée pour lui.
 function _ghostEmojiHTML(g) {
   if (g.secret)       return '🔮';
   if (g.businessMode) return '🏪';
+  if (g.emoji && TRACE_CATEGORY_COLORS[g.emoji] && g.emoji !== '👻') return _traceMarkHTML(g, { size: 20, fadeOpacity: false });
   if (g.emoji && g.emoji !== '👻') return escapeHTML(g.emoji);
-  return _BRAND_MARK_HTML;
+  return _traceMarkHTML(g, { size: 20, fadeOpacity: false });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1521,6 +1547,65 @@ const TRACE_CATEGORY_COLORS = {
 };
 const TRACE_DEFAULT_COLORS = TRACE_CATEGORY_COLORS['👻'];
 const TRACE_DISCOVERED_COLORS = ['#FFD98A', '#F5DFA0'];
+
+// ══════════════════════════════════════════════════════════
+// SCEAUX = EXPRESSIONS DU TRACE (Lot AI, 2026-09-17)
+// Demande de Pipo : les Sceaux ne sont plus des pictos génériques (bulle,
+// cœur, lune…) mais des variantes du VRAI Trace — seuls les yeux/la bouche
+// changent, la silhouette/le halo/le dégradé restent ceux de _traceMarkHTML.
+// EXCEPTION actée par Pipo (Lot X, 2026-09-14, reconduite ici) à la règle
+// "un seul dessin du fantôme" (cf. commentaire déplacé depuis
+// CATEGORY_ICON_PATHS, retiré avec ce lot) : ces variantes de visage restent
+// LE Trace, pas un second dessin — ne pas "corriger" en réintroduisant des
+// pictos séparés. Les clés stockées ne changent pas (mêmes emoji en base,
+// zéro migration) :
+//   👻 classique (yeux perles, inchangé)   🌸 souriant (yeux + sourire)
+//   ❤️ amoureux (yeux en cœur)             🌙 endormi (yeux fermés en arc)
+//   ✨ émerveillé (grands yeux + bouche ronde)
+//   🔥 ardent (sourcils froncés)           💬 bavard (bouche ouverte)
+function _traceEyesClassic(uid) {
+  return `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
+    `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>`;
+}
+const TRACE_FACE_VARIANTS = {
+  '👻': (uid) => _traceEyesClassic(uid),
+  '🌸': (uid) => _traceEyesClassic(uid) +
+    `<path d="M84 117 Q100 129 116 117" stroke="#171A33" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".55"/>`,
+  '❤️': (uid) => {
+    const heart = (cx, cy) => `<path d="M${cx} ${cy - 2} C ${cx - 6} ${cy - 9} ${cx - 13} ${cy - 3} ${cx - 10} ${cy + 3} C ${cx - 7} ${cy + 8} ${cx} ${cy + 11} ${cx} ${cy + 11} C ${cx} ${cy + 11} ${cx + 7} ${cy + 8} ${cx + 10} ${cy + 3} C ${cx + 13} ${cy - 3} ${cx + 6} ${cy - 9} ${cx} ${cy - 2} Z" fill="url(#te-${uid})"/>`;
+    return heart(79, 92) + heart(121, 92);
+  },
+  '🌙': () =>
+    `<path d="M71.5 94 Q79 99.5 86.5 94" stroke="#171A33" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>` +
+    `<path d="M113.5 94 Q121 99.5 128.5 94" stroke="#171A33" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>`,
+  '✨': (uid) =>
+    `<ellipse cx="79" cy="94" rx="8.5" ry="10.5" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="8.5" ry="10.5" fill="url(#te-${uid})"/>` +
+    `<circle cx="75.5" cy="89.5" r="2" fill="#FFFFFF"/><circle cx="117.5" cy="89.5" r="2" fill="#FFFFFF"/>` +
+    `<circle cx="100" cy="123" r="4.2" fill="none" stroke="#171A33" stroke-width="2.2" opacity=".55"/>`,
+  '🔥': (uid) => _traceEyesClassic(uid) +
+    `<path d="M70.5 83 L84 87.5" stroke="#171A33" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><path d="M129.5 83 L116 87.5" stroke="#171A33" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>`,
+  '💬': (uid) => _traceEyesClassic(uid) +
+    `<ellipse cx="100" cy="121" rx="6" ry="8" fill="#171A33" opacity=".55"/>`,
+};
+function _traceFaceHTML(emoji, uid) {
+  const fn = TRACE_FACE_VARIANTS[emoji] || TRACE_FACE_VARIANTS['👻'];
+  return fn(uid);
+}
+// Corps du Trace (silhouette/halo/dégradé + visage) — partagé par
+// _traceMarkHTML (par fantôme, avec fanage) et _traceSealIconHTML (icône
+// statique du sélecteur de Sceau / sealedEmoji, sans fanage).
+function _traceBodyMarkup(emoji, c1, c2, uid) {
+  return `<defs>` +
+    `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
+    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
+    `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
+    `</defs>` +
+    // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
+    // restait "trop fin" — le ratio trait/silhouette compte plus que la
+    // taille globale du marqueur pour la lisibilité au premier coup d'œil.
+    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
+    _traceFaceHTML(emoji, uid);
+}
 
 let _traceIdSeq = 0;
 /**
@@ -1561,20 +1646,77 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
   const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
-  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">` +
-    `<defs>` +
-    `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
-    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
-    `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
-    `</defs>` +
-    // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
-    // restait "trop fin" — le ratio trait/silhouette compte plus que la
-    // taille globale du marqueur pour la lisibilité au premier coup d'œil.
-    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
-    `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
-    `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>` +
-    `</svg></span>`;
+  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid)}</svg></span>`;
 }
+// Icône statique (sans fanage) pour les contextes SANS document fantôme
+// complet : sélecteur de Sceau sur Déposer, sealedEmoji du Détail avant
+// ouverture. Même corps/couleurs que _traceMarkHTML, juste sans le calcul
+// de lifetime (rien à faner avant qu'un fantôme existe réellement).
+function _traceSealIconHTML(emoji, { size = 40 } = {}) {
+  const [c1, c2] = TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS;
+  const uid = 'ts' + (_traceIdSeq++);
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid)}</svg>`;
+}
+// Images préchargées des 7 expressions du Trace, pour le Sceau dessiné en
+// Canvas sur la Ghost Card (_drawGhostCardMark) — Canvas 2D ne peut pas
+// innerHTML du SVG comme le DOM, mais drawImage() fonctionne sur une image
+// dont la source est un SVG encodé en data URI, même technique que _brandImg
+// déjà utilisée ici pour le cas neutre. Couleurs figées à leur teinte pleine
+// (pas de fanage — cohérent avec _traceSealIconHTML, pas un vrai marqueur).
+const _traceFaceImages = {};
+Object.keys(TRACE_CATEGORY_COLORS).forEach(emoji => {
+  const [c1, c2] = TRACE_CATEGORY_COLORS[emoji];
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">${_traceBodyMarkup(emoji, c1, c2, 'card' + _traceIdSeq++)}</svg>`;
+  const img = new Image();
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  _traceFaceImages[emoji] = img;
+});
+
+// ── Rangée Sceau sur Déposer (Lot AI) ────────────────────────
+// 5 premiers visibles (classique, souriant, amoureux, endormi, émerveillé),
+// puis un bouton "+" qui révèle ardent, bavard et le champ emoji perso.
+// Icônes générées par _traceSealIconHTML — même source que partout ailleurs
+// où le Sceau s'affiche. pickEmoji/pickEmojiCustom (logique métier) inchangés.
+const DEPOSIT_SEAL_VISIBLE = ['👻', '🌸', '❤️', '🌙', '✨'];
+const DEPOSIT_SEAL_MORE = ['🔥', '💬'];
+const SEAL_ARIA_LABEL_KEYS = {
+  '👻': 'seal_aria_classic', '🌸': 'seal_aria_smiling', '❤️': 'seal_aria_loving',
+  '🌙': 'seal_aria_sleepy', '✨': 'seal_aria_amazed', '🔥': 'seal_aria_ardent', '💬': 'seal_aria_chatty',
+};
+function _renderDepositSealPicker() {
+  const wrap = document.getElementById('depositSealPicker');
+  if (!wrap) return;
+  // Préserve la sélection courante à travers un ré-appel (ex. changement de
+  // langue) — sinon chaque appel retomberait sur le classique par défaut.
+  const activeBtn = wrap.querySelector('.emoji-opt.active:not(.emoji-custom)');
+  const currentPreset = activeBtn ? activeBtn.dataset.arg : '👻';
+  const currentCustom = document.getElementById('depositEmoji')?.value || '';
+  const wasMoreOpen = document.getElementById('sealMoreWrap') && !document.getElementById('sealMoreWrap').classList.contains('u-hidden');
+  const sealBtn = (emoji) => {
+    const active = emoji === currentPreset;
+    const label = t[SEAL_ARIA_LABEL_KEYS[emoji]] || 'Sceau';
+    return `<button class="emoji-opt${active ? ' active' : ''}" data-action="pickEmoji" data-arg="${emoji}" aria-label="${escapeHTML(label)}" aria-pressed="${active}">${_traceSealIconHTML(emoji, { size: 30 })}</button>`;
+  };
+  wrap.innerHTML =
+    `<span class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">${escapeHTML(t.dep_lettre_stamp_label || 'Sceau :')}</span>` +
+    DEPOSIT_SEAL_VISIBLE.map(sealBtn).join('') +
+    `<button type="button" class="emoji-opt emoji-opt-more" id="sealMoreBtn" data-action="toggleSealMore" aria-expanded="false" aria-controls="sealMoreWrap" aria-label="${escapeHTML(t.seal_more_label || 'Plus de Sceaux')}">+</button>` +
+    `<span class="lettre-stamp-strip-more u-hidden" id="sealMoreWrap">` +
+    DEPOSIT_SEAL_MORE.map(sealBtn).join('') +
+    `<input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" data-input-action="pickEmojiCustom">` +
+    `</span>`;
+  const newCustomInput = document.getElementById('depositEmoji');
+  if (newCustomInput) newCustomInput.value = currentCustom;
+  if (wasMoreOpen) window.toggleSealMore(true);
+}
+window.toggleSealMore = (forceOpen) => {
+  const btn = document.getElementById('sealMoreBtn');
+  const wrap = document.getElementById('sealMoreWrap');
+  if (!btn || !wrap) return;
+  const open = typeof forceOpen === 'boolean' ? forceOpen : wrap.classList.contains('u-hidden');
+  wrap.classList.toggle('u-hidden', !open);
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+};
 // Applique les data-trace-* posés par _traceMarkHTML() — de vraies écritures
 // JS sur .style, jamais un style="" du markup, donc hors périmètre CSP
 // (cf. commentaire sur _traceMarkHTML).
@@ -1656,48 +1798,20 @@ window.setTraceColor = async (colorId) => {
   }
 };
 
-// ══════════════════════════════════════════════════════════
-// ICÔNES DE CATÉGORIE (Sceau) — SVG monochrome, style nav-icon
-// (viewBox 24×24, stroke=currentColor, stroke-width 1.5 — même convention
-// que .nav-icon). Utilisées UNIQUEMENT sur l'écran de dépôt (sélecteur) et
-// l'écran de détail (sealedEmoji) — jamais sur Carte/Radar, où seul le
-// Trace coloré (_traceMarkHTML) doit apparaître.
-// Pas d'entrée '👻' ici volontairement (Lot F, unification du Trace) : le
-// neutre n'est jamais un Sceau parmi d'autres, c'est LE Trace, donc il doit
-// toujours passer par _BRAND_MARK_HTML/_traceMarkHTML (même asset que
-// l'écran d'intro) plutôt que par un contour minimaliste différent. Une
-// entrée '👻' existait ici avant et n'était en pratique jamais atteinte
-// (cf. l'appelant ligne ~6518, qui exclut déjà ce cas) — supprimée pour ne
-// pas laisser un second dessin du fantôme trainer dans le code.
-// EXCEPTION actée par Pipo (Lot X, 2026-09-14) : cette règle reste valable
-// ICI (Sceaux de catégorie, CATEGORY_ICON_PATHS) et pour les AUTRES icônes de
-// rang (UI_ICON_PATHS), mais est explicitement levée pour le seul rang
-// Hanteur/Haunter, qui affiche désormais le Trace — cf. le cas particulier
-// dans _rankIconHTML(). Ne pas "corriger" ce cas par erreur en le recroyant
-// encore couvert par la règle générale.
-const CATEGORY_ICON_PATHS = {
-  '💬': '<path d="M4 5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 4v-4H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/>',
-  '❤️': '<path d="M12 20s-7-4.3-9.3-8.7C1 8.3 2.2 4.7 5.7 4.2c2-.3 4 .7 6.3 3.1 2.3-2.4 4.3-3.4 6.3-3.1 3.5.5 4.7 4.1 3 6.9C19 15.7 12 20 12 20z"/>',
-  '🌙': '<path d="M20 14.2A8.2 8.2 0 1 1 9.8 4a6.8 6.8 0 0 0 10.2 10.2z"/>',
-  '✨': '<path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/>',
-  '🔥': '<path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/>',
-  '🌸': '<circle cx="12" cy="12" r="2"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/><circle cx="6.5" cy="12" r="2.6"/><circle cx="17.5" cy="12" r="2.6"/>',
-};
-function _categoryIconHTML(emoji, { size = 20 } = {}) {
-  const path = CATEGORY_ICON_PATHS[emoji];
-  if (!path) return escapeHTML(emoji || ''); // emoji perso non mappé : fallback tel quel
-  return `<svg class="category-icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${path}</svg>`;
-}
+// CATEGORY_ICON_PATHS / _categoryIconHTML (pictos génériques bulle/cœur/
+// lune/étincelle/feu/fleur, Sceaux de catégorie) retirés au Lot AI — les
+// Sceaux sont désormais rendus par _traceSealIconHTML (expressions du Trace,
+// cf. TRACE_FACE_VARIANTS plus haut). Seul appelant : sealedEmoji du Détail,
+// migré vers _traceSealIconHTML.
 
 // ══════════════════════════════════════════════════════════
-// ICÔNES UI — SVG monochrome, même convention que .nav-icon /
-// .category-icon (viewBox 24×24, stroke=currentColor, stroke-width 1.5).
+// ICÔNES UI — SVG monochrome, même convention que .nav-icon
+// (viewBox 24×24, stroke=currentColor, stroke-width 1.5).
 // Remplace les emoji système utilisés comme icônes fonctionnelles (rangs,
 // conditions de dépôt, série) — un emoji natif rend différemment selon
 // l'OS/l'appareil et casse la cohérence de la palette spirit blue/ghost
-// lavender (audit UX septembre 2026). Même pattern fallback que
-// CATEGORY_ICON_PATHS : un emoji non mappé retombe sur le texte brut plutôt
-// que de casser l'affichage.
+// lavender (audit UX septembre 2026). Un emoji non mappé retombe sur le
+// texte brut plutôt que de casser l'affichage.
 const UI_ICON_PATHS = {
   '🌫️': '<path d="M3 8c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 13c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/><path d="M3 18c1.5-1.5 3-1.5 4.5 0s3 1.5 4.5 0 3-1.5 4.5 0 3 1.5 4.5 0"/>',
   '🚶': '<circle cx="13" cy="4" r="1.8"/><path d="M13 6.5l-1 4-3.5 2M12 10.5l3 1.5 1 5M9 12.5l-2 6M14 17l2.5 4"/>',
@@ -4989,12 +5103,19 @@ function _drawGhostCardHeader(ctx, W, ghostBlueRgb) {
 function _drawGhostCardMark(ctx, W, H, ghostBlueRgb) {
   ctx.shadowColor = `rgba(${ghostBlueRgb},0.7)`;
   ctx.shadowBlur = 80;
-  const ghostEmoji = selectedGhost.emoji && selectedGhost.emoji !== '👻' ? selectedGhost.emoji : null;
-  if (ghostEmoji) {
+  const sz = 220;
+  const emoji = selectedGhost.emoji || '👻';
+  // Lot AI : le Sceau se dessine comme une expression du Trace (image
+  // préchargée _traceFaceImages), pas le glyphe emoji brut — cohérent avec
+  // son rendu partout ailleurs (Carte/Radar/Détail/sélecteur).
+  const faceImg = TRACE_CATEGORY_COLORS[emoji] ? _traceFaceImages[emoji] : null;
+  if (faceImg) {
+    ctx.drawImage(faceImg, W/2 - sz/2, H*0.38 - sz*0.75, sz, sz);
+  } else if (emoji !== '👻') {
+    // emoji perso non mappé : fallback glyphe brut (inchangé)
     ctx.font = '220px serif';
-    ctx.fillText(ghostEmoji, W/2, H*0.38);
+    ctx.fillText(emoji, W/2, H*0.38);
   } else {
-    const sz = 220;
     ctx.drawImage(_brandImg, W/2 - sz/2, H*0.38 - sz*0.75, sz, sz);
   }
   ctx.shadowBlur = 0;
@@ -7667,15 +7788,19 @@ async function _resolveGhostForOpen(id) {
 
 function _renderGhostDetailHeader() {
   document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
-  // Icône de catégorie (Sceau) visible dans le détail — seul autre endroit
-  // avec l'écran de dépôt où elle apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md).
+  // Sceau visible dans le détail — seul autre endroit avec l'écran de dépôt
+  // où il apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md). Lot AI : expression
+  // du Trace (_traceSealIconHTML) plutôt que le picto générique d'avant.
   const sealedEl = document.getElementById('sealedEmoji');
   const _sv = selectedGhost.secret ? '🔮'
     : selectedGhost.businessMode ? '🏪'
     : null;
   if (_sv) { sealedEl.textContent = _sv; }
+  else if (selectedGhost.emoji && TRACE_CATEGORY_COLORS[selectedGhost.emoji] && selectedGhost.emoji !== '👻') {
+    sealedEl.innerHTML = `<span class="sealed-emoji-wrap">${_traceSealIconHTML(selectedGhost.emoji, { size: 32 })}</span>`;
+  }
   else if (selectedGhost.emoji && selectedGhost.emoji !== '👻') {
-    sealedEl.innerHTML = `<span class="sealed-emoji-wrap">${_categoryIconHTML(selectedGhost.emoji, { size: 32 })}</span>`;
+    sealedEl.textContent = selectedGhost.emoji; // emoji perso non mappé : fallback tel quel
   }
   else { sealedEl.innerHTML = _BRAND_MARK_HTML; }
   const readCountEl = document.getElementById('detailReadCount');
@@ -10542,6 +10667,7 @@ const ACTIONS = {
   // Zone 6 — Deposit
   pickEmoji: (el) => pickEmoji(el, el.dataset.arg),
   pickEmojiCustom: (el) => pickEmojiCustom(el),
+  toggleSealMore: () => toggleSealMore(),
   toggleAnonMode: (el) => toggleAnonMode(el),
   toggleBizTypeAccordion: () => toggleBizTypeAccordion(),
   selectRadius: (el) => _selectRadius(el),
