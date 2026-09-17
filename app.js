@@ -1780,13 +1780,16 @@ function _hydrateMapMarker(root) {
 // logique que le reste de l'app (options de base gratuites, palette élargie
 // en Premium, ex. Mode Commerce, 5/10 lectures, vidéo, documents).
 // ══════════════════════════════════════════════════════════
+// Lot AP — chaque teinte est aussi un visage (TRACE_FACE_VARIANTS, aucun
+// nouveau dessin) : "chaque couleur a son caractère" plutôt que 6 ronds
+// indistincts. `face` alimente _applyTraceColor/_renderTraceColorPicker.
 const TRACE_COLORS = [
-  { id: 'spirit',  swatch: '#9DABFF', premium: false, labelKey: 'trace_color_spirit' },
-  { id: 'violet',  swatch: '#B478E8', premium: false, labelKey: 'trace_color_violet' },
-  { id: 'mist',    swatch: '#6EE0B0', premium: false, labelKey: 'trace_color_mist' },
-  { id: 'amber',   swatch: '#F0C868', premium: true,  labelKey: 'trace_color_amber' },
-  { id: 'rose',    swatch: '#FF9DC4', premium: true,  labelKey: 'trace_color_rose' },
-  { id: 'crimson', swatch: '#E85A6E', premium: true,  labelKey: 'trace_color_crimson' },
+  { id: 'spirit',  swatch: '#9DABFF', premium: false, labelKey: 'trace_color_spirit',  face: '👻' },
+  { id: 'violet',  swatch: '#B478E8', premium: false, labelKey: 'trace_color_violet',  face: '✨' },
+  { id: 'mist',    swatch: '#6EE0B0', premium: false, labelKey: 'trace_color_mist',    face: '🌙' },
+  { id: 'amber',   swatch: '#F0C868', premium: true,  labelKey: 'trace_color_amber',   face: '🌸' },
+  { id: 'rose',    swatch: '#FF9DC4', premium: true,  labelKey: 'trace_color_rose',    face: '❤️' },
+  { id: 'crimson', swatch: '#E85A6E', premium: true,  labelKey: 'trace_color_crimson', face: '🔥' },
 ];
 const TRACE_COLOR_IDS = TRACE_COLORS.map(c => c.id);
 let userTraceColor = 'violet';
@@ -1805,22 +1808,66 @@ const TRACE_COLOR_PAIRS = {
   crimson: ['#E85A6E', '#F2A8B4'],
 };
 
+// Cherche par id avec repli violet (défaut historique) — utilisé aux 2
+// endroits où une teinte doit toujours résoudre vers une entrée valide.
+function _findTraceColor(colorId) {
+  return TRACE_COLORS.find(c => c.id === colorId) || TRACE_COLORS.find(c => c.id === 'violet');
+}
+
 function _applyTraceColor(colorId) {
   const avatar = document.getElementById('profileAvatar');
   if (!avatar) return;
-  const [c1, c2] = TRACE_COLOR_PAIRS[colorId] || TRACE_COLOR_PAIRS.violet;
+  const color = _findTraceColor(colorId);
+  const [c1, c2] = TRACE_COLOR_PAIRS[color.id] || TRACE_COLOR_PAIRS.violet;
   const uid = 'pa' + (_traceIdSeq++);
-  avatar.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="68" height="68">${_traceBodyMarkup('👻', c1, c2, uid, 68)}</svg>`;
+  avatar.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="68" height="68">${_traceBodyMarkup(color.face, c1, c2, uid, 68)}</svg>`;
 }
 
+// Lot AP — "les ronds de couleur sont incompréhensibles" (Pipo) : chaque
+// bouton montre maintenant le vrai visage de la teinte (pas juste sa
+// couleur) + son nom en clair sous le bouton, dans une carte "Mon Trace"
+// titrée (cf. index.html #monTraceCard). Le cadenas devient une pastille
+// ✦ ambre en coin (cohérent avec le reste de l'app, plus lisible qu'un
+// petit cadenas 11px) ; une ligne dédiée sous la grille explique le 3/6
+// Premium au lieu de le laisser deviner bouton par bouton.
 function _renderTraceColorPicker() {
   const wrap = document.getElementById('traceColorPicker');
   if (!wrap) return;
   wrap.innerHTML = TRACE_COLORS.map(c => {
     const locked = c.premium && !isPremium;
     const active = c.id === userTraceColor;
-    return `<button type="button" class="trace-color-swatch trace-color-swatch-${c.id}${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">' + _uiIconHTML('🔒', { size: 11 }) + '</span>' : ''}</button>`;
+    const label = t[c.labelKey] || c.id;
+    const [c1, c2] = TRACE_COLOR_PAIRS[c.id];
+    const uid = 'tp' + (_traceIdSeq++);
+    const miniTrace = `<svg class="trace-svg" viewBox="0 0 200 200" width="40" height="40">${_traceBodyMarkup(c.face, c1, c2, uid, 40)}</svg>`;
+    const ariaLabel = locked ? `${label} — ${t.trace_color_locked || 'Teinte réservée Premium'}` : label;
+    return `<button type="button" class="trace-pick-btn${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" data-swatch="${c.swatch}" aria-pressed="${active}" aria-label="${escapeHTML(ariaLabel)}">` +
+      `<span class="trace-pick-icon">${miniTrace}</span>` +
+      `<span class="trace-pick-name">${escapeHTML(label)}</span>` +
+      (locked ? `<span class="trace-pick-lock" aria-hidden="true">${_uiIconHTML('✦', { size: 10 })}</span>` : '') +
+      `</button>`;
   }).join('');
+  const hint = document.getElementById('monTracePremiumHint');
+  if (hint) hint.classList.toggle('u-hidden', isPremium);
+  // Bordure "2px de la couleur" (demande Pipo) : posée en JS sur .style,
+  // pas en style="" dans le markup (CSP audit 4.6) — chaque teinte a sa
+  // propre couleur de sélection, pas un bleu générique fixe.
+  const activeBtn = wrap.querySelector('.trace-pick-btn.active');
+  if (activeBtn) {
+    const swatch = activeBtn.dataset.swatch;
+    activeBtn.style.borderColor = swatch;
+    activeBtn.style.background = _hexToRgba(swatch, .12);
+  }
+}
+// rgba() depuis un hex #RRGGBB — utilisé pour teinter le fond des boutons
+// "Mon Trace" sélectionnés avec la couleur exacte de la teinte, sans
+// dupliquer une table de correspondance hex→rgb pour ces 6 couleurs.
+function _hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 window.setTraceColor = async (colorId) => {
