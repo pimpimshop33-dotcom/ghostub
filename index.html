@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=219"></script>
+<script type="module" src="app.js?v=220"></script>
 
-<link rel="stylesheet" href="style.css?v=204">
+<link rel="stylesheet" href="style.css?v=205">
 </head>
 <body>
 <!-- Skip link pour accessibilité clavier -->
@@ -460,9 +460,18 @@
           <div class="lettre-paper">
             <!-- Icônes SVG monochrome (style nav-icon) — cf. TRACE_FACE_VARIANTS
                  dans app.js, garder synchronisé si ces tracés changent. Rendu
-                 par _renderDepositSealPicker() (Lot AI) : les Sceaux sont des
-                 expressions du Trace, pas des pictos génériques. -->
+                 par _renderDepositSealPicker() (Lot AI/AJ) : les Sceaux sont
+                 des expressions du Trace, pas des pictos génériques — les 7
+                 sont affichés directement (Lot AJ, plus de "+"/emoji perso). -->
+            <div class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">Sceau :</div>
             <div class="lettre-stamp-strip emoji-picker" id="depositSealPicker" role="group" aria-label="Choisir un Sceau"></div>
+            <!-- Emoji perso (Lot X/AI) retiré de l'UI (Lot AJ, décision Pipo :
+                 les Sceaux = uniquement les 7 expressions du Trace) — champ
+                 caché conservé pour ne rien changer à la valeur envoyée par
+                 pickEmoji/_readDepositFormInputs ; les anciens fantômes avec
+                 un emoji perso continuent de s'afficher via le fallback
+                 existant (_ghostEmojiHTML / _renderGhostDetailHeader). -->
+            <input type="hidden" id="depositEmoji">
             <div class="lettre-salutation" data-i18n="dep_lettre_salutation">À qui passera par ici,</div>
             <textarea class="lettre-textarea" id="depositMsg" data-i18n-placeholder="dep_lettre_placeholder" placeholder="Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver." maxlength="600" aria-required="true" aria-describedby="msgCharCount"></textarea>
             <!-- Barre média DANS la lettre (Lot AI) — remplace le bouton
@@ -472,17 +481,17 @@
                  (audioPreview/photoPreview/videoPreview/attachmentsList),
                  même pattern que l'aperçu qui remplace le bouton d'origine. -->
             <div class="lettre-media-row" role="group" aria-label="Ajouter un média">
-              <button type="button" class="lettre-media-icon-btn" id="depMediaIconVocal" data-action="selectMediaType" data-arg="vocal" aria-label="Message vocal (optionnel)">
+              <button type="button" class="lettre-media-icon-btn" id="depMediaIconVocal" data-action="selectMediaType" data-arg="vocal" aria-label="Message vocal" aria-expanded="false" aria-controls="step3VocalWrap">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>
               </button>
-              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="photo" aria-label="Photo (optionnel)">
+              <button type="button" class="lettre-media-icon-btn" id="depMediaIconPhoto" data-action="selectMediaType" data-arg="photo" aria-label="Photo" aria-expanded="false" aria-controls="step3PhotoWrap">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
               </button>
-              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="video" aria-label="Vidéo (optionnel)">
+              <button type="button" class="lettre-media-icon-btn" id="depMediaIconVideo" data-action="selectMediaType" data-arg="video" aria-label="Vidéo" aria-expanded="false" aria-controls="step3VideoWrap">
                 <span class="dep-media-premium-dot" id="mediaMenuVideoBadge" aria-hidden="true">✦</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
               </button>
-              <button type="button" class="lettre-media-icon-btn" data-action="selectMediaType" data-arg="attach" aria-label="Documents (optionnel)">
+              <button type="button" class="lettre-media-icon-btn" id="depMediaIconAttach" data-action="selectMediaType" data-arg="attach" aria-label="Documents" aria-expanded="false" aria-controls="step3AttachmentsWrap">
                 <span class="dep-media-premium-dot" id="mediaMenuAttachBadge" aria-hidden="true">✦</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 12.5V7a4 4 0 0 1 8 0v8a2.6 2.6 0 0 1-5.2 0V8.2"/></svg>
               </button>
@@ -491,23 +500,23 @@
           </div>
 
           <div id="step3VocalWrap" class="media-type-panel u-hidden">
-            <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal (optionnel)</label>
+            <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal</label>
             <button class="media-btn" id="recordBtn" data-action="toggleRecording" type="button" aria-label="Enregistrer un message vocal">
-              <span class="media-icon" aria-hidden="true">🎙</span>
+              <span class="media-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg></span>
               <span id="recordLabel" data-i18n="dep_record_label">Enregistrer</span>
               <span id="recordTimer" aria-live="polite" aria-label="Durée d'enregistrement" class="dep-record-timer">00:00</span>
             </button>
             <div id="audioPreview"></div>
           </div>
           <div id="step3PhotoWrap" class="media-type-panel u-hidden">
-            <label class="form-label" data-i18n="dep_photo_label">Photo (optionnel)</label>
+            <label class="form-label" data-i18n="dep_photo_label">Photo</label>
             <div class="photo-choice">
               <button class="media-btn photo-choice-btn" data-action="triggerPhotoCamera" type="button" aria-label="Prendre une photo avec l'appareil photo">
-                <span class="media-icon" aria-hidden="true">📷</span>
+                <span class="media-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg></span>
                 <span data-i18n="dep_photo_camera">Appareil photo</span>
               </button>
               <button class="media-btn photo-choice-btn" data-action="triggerPhotoGallery" type="button" aria-label="Choisir une photo depuis la galerie">
-                <span class="media-icon" aria-hidden="true">🖼️</span>
+                <span class="media-icon" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="13" height="13" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg></span>
                 <span data-i18n="dep_photo_gallery">Galerie</span>
               </button>
             </div>
@@ -572,7 +581,7 @@
 
         <!-- ── LIEU — une ligne, "modifier" déplie carte + champ (Lot AI) ── -->
         <div class="dep-location-row">
-          <span class="dep-location-pin" aria-hidden="true">📍</span>
+          <span class="dep-location-pin" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-7.4 7-12a7 7 0 0 0-14 0c0 4.6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
           <span class="dep-location-name" id="depLocationDisplay">📡 Localisation…</span>
           <button type="button" class="dep-location-edit-link" id="depLocationEditBtn" data-action="toggleDepLocationEdit" aria-expanded="false" aria-controls="depLocationEditPanel" data-i18n="dep_loc_edit">modifier</button>
         </div>
@@ -594,7 +603,7 @@
             <button class="dur-btn" data-dur="24h" data-action="selectDur" aria-pressed="false">24h</button>
             <button class="dur-btn active" data-dur="7d" data-action="selectDur" aria-pressed="true" data-i18n="dep_dur_7d">7 jours</button>
             <button class="dur-btn" data-dur="1m" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_1m">1 mois</button>
-            <button class="dur-btn" data-dur="eternal" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_eternal">♾ Éternel</button>
+            <button class="dur-btn" data-dur="eternal" data-action="selectDur" aria-pressed="false" data-i18n="dep_dur_eternal">Éternel</button>
           </div>
         </div>
 

@@ -109,7 +109,7 @@ const LANGS = {
     dep_dur_24h: '24h',
     dep_dur_7d: '7 jours',
     dep_dur_1m: '1 mois',
-    dep_dur_eternal: '♾ Éternel',
+    dep_dur_eternal: 'Éternel',
     dep_maxopen_inf: '∞ Illimité',
     dep_maxopen_1: '1 lecture',
     dep_maxopen_5: '5 lectures',
@@ -213,7 +213,7 @@ const LANGS = {
     // Phase 1d v103 — Galerie de fichiers Premium
     prem_attach_label: 'Documents',
     prem_attach_sub: 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
-    dep_attach_label: '📎 Documents (optionnel)',
+    dep_attach_label: 'Documents',
     dep_attach_btn: 'Ajouter un fichier',
     dep_attach_count_hint: '3 fichiers maximum · 10 Mo chacun',
     dep_attach_remaining: 'emplacements restants',
@@ -262,11 +262,11 @@ const LANGS = {
     dep_duration_label: 'Durée de vie',
     dep_radius_label: 'Rayon de détection',
     dep_identity_label: 'Identité',
-    dep_anon_toggle_off: '🌫️ rester anonyme',
-    dep_anon_toggle_on: '👻 anonyme',
+    dep_anon_toggle_off: 'rester anonyme',
+    dep_anon_toggle_on: 'anonyme',
     dep_media_add_btn: 'Ajouter un média',
-    dep_vocal_label: 'Message vocal (optionnel)',
-    dep_photo_label: 'Photo (optionnel)',
+    dep_vocal_label: 'Message vocal',
+    dep_photo_label: 'Photo',
     dep_video_optional: 'Vidéo (optionnel)',
     dep_attach_label_short: 'Documents (optionnel)',
     profile_code_question: 'Vous avez un code d\'activation ?',
@@ -393,7 +393,7 @@ const LANGS = {
     dep_notif_ok: '✓ Tu seras averti',
     prem_video_label: 'Vidéo',
     prem_video_sub: 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
-    prem_video_optional: 'Vidéo (optionnel)',
+    prem_video_optional: 'Vidéo',
     prem_chain_label: 'Chaîne de fantômes',
     prem_chain_sub: 'Chasse au trésor urbaine · enchaîne tes ghosts',
     prem_dedicated_label: 'Pour quelqu\'un',
@@ -742,7 +742,7 @@ const LANGS = {
     dep_dur_24h: '24h',
     dep_dur_7d: '7 days',
     dep_dur_1m: '1 month',
-    dep_dur_eternal: '♾ Eternal',
+    dep_dur_eternal: 'Eternal',
     dep_maxopen_inf: '∞ Unlimited',
     dep_maxopen_1: '1 read',
     dep_maxopen_5: '5 reads',
@@ -847,7 +847,7 @@ const LANGS = {
     // Phase 1d v103 — File gallery Premium
     prem_attach_label: 'Files',
     prem_attach_sub: 'PDF, JPG, PNG · up to 3 files',
-    dep_attach_label: '📎 Files (optional)',
+    dep_attach_label: 'Files',
     dep_attach_btn: 'Add a file',
     dep_attach_count_hint: '3 files max · 10 MB each',
     dep_attach_remaining: 'slot(s) left',
@@ -896,11 +896,11 @@ const LANGS = {
     dep_duration_label: 'Lifespan',
     dep_radius_label: 'Detection radius',
     dep_identity_label: 'Identity',
-    dep_anon_toggle_off: '🌫️ stay anonymous',
-    dep_anon_toggle_on: '👻 anonymous',
+    dep_anon_toggle_off: 'stay anonymous',
+    dep_anon_toggle_on: 'anonymous',
     dep_media_add_btn: 'Add media',
-    dep_vocal_label: 'Voice message (optional)',
-    dep_photo_label: 'Photo (optional)',
+    dep_vocal_label: 'Voice message',
+    dep_photo_label: 'Photo',
     dep_video_optional: 'Video (optional)',
     dep_attach_label_short: 'Documents (optional)',
     profile_code_question: 'Do you have an activation code?',
@@ -1027,7 +1027,7 @@ const LANGS = {
     dep_notif_ok: '✓ You\'ll be notified',
     prem_video_label: 'Video',
     prem_video_sub: 'Up to 20 sec · opens only on site',
-    prem_video_optional: 'Video (optional)',
+    prem_video_optional: 'Video',
     prem_chain_label: 'Ghost chain',
     prem_chain_sub: 'Urban treasure hunt · chain your ghosts',
     prem_dedicated_label: 'For someone',
@@ -1587,14 +1587,64 @@ const TRACE_FACE_VARIANTS = {
   '💬': (uid) => _traceEyesClassic(uid) +
     `<ellipse cx="100" cy="121" rx="6" ry="8" fill="#171A33" opacity=".55"/>`,
 };
-function _traceFaceHTML(emoji, uid) {
+// Lot AJ — mode compact (size ≤ 48px) : à cette échelle, le contour fin
+// (fill 22%→8% d'opacité, traits de visage 2.2-3.2 à opacity .55-.6 sur un
+// viewBox de 200) donne des traits de l'ordre de 0.4px, sombres sur fond
+// sombre — les 7 Sceaux se ressemblaient tous. Silhouette pleine (couleur
+// franche par Sceau) + traits de visage épais et opaques, pour rester
+// lisibles/distinguables au premier coup d'œil à 30-40px.
+const TRACE_FACE_VARIANTS_COMPACT = {
+  '👻': () => `<ellipse cx="78" cy="92" rx="10" ry="13" fill="#0A0B14"/><ellipse cx="122" cy="92" rx="10" ry="13" fill="#0A0B14"/>`,
+  '🌸': () =>
+    `<path d="M66 97 Q78 79 90 97" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M110 97 Q122 79 134 97" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M72 116 Q100 144 128 116" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>`,
+  '❤️': () => {
+    const heart = (cx, cy) => `<path d="M${cx} ${cy - 2} C ${cx - 8} ${cy - 11} ${cx - 16} ${cy - 4} ${cx - 13} ${cy + 4} C ${cx - 9} ${cy + 11} ${cx} ${cy + 15} ${cx} ${cy + 15} C ${cx} ${cy + 15} ${cx + 9} ${cy + 11} ${cx + 13} ${cy + 4} C ${cx + 16} ${cy - 4} ${cx + 8} ${cy - 11} ${cx} ${cy - 2} Z" fill="#0A0B14"/>`;
+    return heart(78, 90) + heart(122, 90) +
+      `<path d="M86 122 Q100 132 114 122" stroke="#0A0B14" stroke-width="7" stroke-linecap="round" fill="none"/>`;
+  },
+  '🌙': (c1) =>
+    `<path d="M66 90 Q78 104 90 90" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M110 90 Q122 104 134 90" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<circle cx="100" cy="122" r="6" fill="#0A0B14"/>` +
+    // Deux "z" hors de la tête (silhouette ≈ x 48-152, y 38-168), en haut à droite.
+    `<path d="M138 30 L150 30 L138 42 L150 42" stroke="${c1}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
+    `<path d="M150 16 L159 16 L150 25 L159 25" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  '✨': () =>
+    `<circle cx="78" cy="92" r="16" fill="#0A0B14"/><circle cx="122" cy="92" r="16" fill="#0A0B14"/>` +
+    `<circle cx="72" cy="86" r="5" fill="#FFFFFF"/><circle cx="116" cy="86" r="5" fill="#FFFFFF"/>` +
+    `<circle cx="100" cy="126" r="8" fill="#0A0B14"/>`,
+  '🔥': () =>
+    `<path d="M60 70 L92 84" stroke="#0A0B14" stroke-width="10" stroke-linecap="round"/>` +
+    `<path d="M140 70 L108 84" stroke="#0A0B14" stroke-width="10" stroke-linecap="round"/>` +
+    `<circle cx="80" cy="98" r="9" fill="#0A0B14"/><circle cx="120" cy="98" r="9" fill="#0A0B14"/>` +
+    `<path d="M84 126 L116 126" stroke="#0A0B14" stroke-width="8" stroke-linecap="round"/>`,
+  '💬': () =>
+    `<ellipse cx="78" cy="92" rx="10" ry="13" fill="#0A0B14"/><ellipse cx="122" cy="92" rx="10" ry="13" fill="#0A0B14"/>` +
+    `<ellipse cx="100" cy="126" rx="17" ry="20" fill="#0A0B14"/>`,
+};
+function _traceFaceHTML(emoji, uid, { compact = false, c1 } = {}) {
+  if (compact) {
+    const fn = TRACE_FACE_VARIANTS_COMPACT[emoji] || TRACE_FACE_VARIANTS_COMPACT['👻'];
+    return fn(c1);
+  }
   const fn = TRACE_FACE_VARIANTS[emoji] || TRACE_FACE_VARIANTS['👻'];
   return fn(uid);
 }
 // Corps du Trace (silhouette/halo/dégradé + visage) — partagé par
 // _traceMarkHTML (par fantôme, avec fanage) et _traceSealIconHTML (icône
-// statique du sélecteur de Sceau / sealedEmoji, sans fanage).
-function _traceBodyMarkup(emoji, c1, c2, uid) {
+// statique du sélecteur de Sceau / sealedEmoji, sans fanage). `compact`
+// (Lot AJ) bascule vers une silhouette pleine + visage épais opaque,
+// utilisée automatiquement ≤48px par les deux appelants — au-dessus, rendu
+// contour existant inchangé (marqueurs Carte, Ghost Card).
+function _traceBodyMarkup(emoji, c1, c2, uid, { compact = false } = {}) {
+  const path = `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38"`;
+  if (compact) {
+    return `<defs><linearGradient id="tc-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs>` +
+      `${path} fill="url(#tc-${uid})" stroke="${c1}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>` +
+      _traceFaceHTML(emoji, uid, { compact: true, c1 });
+  }
   return `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
     `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
@@ -1603,8 +1653,8 @@ function _traceBodyMarkup(emoji, c1, c2, uid) {
     // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
     // restait "trop fin" — le ratio trait/silhouette compte plus que la
     // taille globale du marqueur pour la lisibilité au premier coup d'œil.
-    `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38" fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
-    _traceFaceHTML(emoji, uid);
+    `${path} fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
+    _traceFaceHTML(emoji, uid, { compact: false });
 }
 
 let _traceIdSeq = 0;
@@ -1646,7 +1696,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
   const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
-  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid)}</svg></span>`;
+  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, { compact: size <= 48 })}</svg></span>`;
 }
 // Icône statique (sans fanage) pour les contextes SANS document fantôme
 // complet : sélecteur de Sceau sur Déposer, sealedEmoji du Détail avant
@@ -1655,7 +1705,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
 function _traceSealIconHTML(emoji, { size = 40 } = {}) {
   const [c1, c2] = TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS;
   const uid = 'ts' + (_traceIdSeq++);
-  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid)}</svg>`;
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, { compact: size <= 48 })}</svg>`;
 }
 // Images préchargées des 7 expressions du Trace, pour le Sceau dessiné en
 // Canvas sur la Ghost Card (_drawGhostCardMark) — Canvas 2D ne peut pas
@@ -1672,13 +1722,17 @@ Object.keys(TRACE_CATEGORY_COLORS).forEach(emoji => {
   _traceFaceImages[emoji] = img;
 });
 
-// ── Rangée Sceau sur Déposer (Lot AI) ────────────────────────
-// 5 premiers visibles (classique, souriant, amoureux, endormi, émerveillé),
-// puis un bouton "+" qui révèle ardent, bavard et le champ emoji perso.
+// ── Rangée Sceau sur Déposer (Lot AI, simplifiée Lot AJ) ─────
+// Les 7 expressions du Trace, directement sur une seule rangée — plus de
+// "+"/emoji perso dans l'UI (décision Pipo : les Sceaux sont uniquement les
+// 7 expressions du Trace). Le champ #depositEmoji redevient un simple
+// <input type="hidden"> statique (index.html) : pickEmoji/_readDepositFormInputs
+// continuent de le lire/écrire sans aucun changement de valeur envoyée — seuls
+// les anciens fantômes déposés avec un emoji perso gardent leur fallback
+// d'affichage existant (_ghostEmojiHTML, _renderGhostDetailHeader).
 // Icônes générées par _traceSealIconHTML — même source que partout ailleurs
-// où le Sceau s'affiche. pickEmoji/pickEmojiCustom (logique métier) inchangés.
-const DEPOSIT_SEAL_VISIBLE = ['👻', '🌸', '❤️', '🌙', '✨'];
-const DEPOSIT_SEAL_MORE = ['🔥', '💬'];
+// où le Sceau s'affiche.
+const DEPOSIT_SEALS = ['👻', '🌸', '❤️', '🌙', '✨', '🔥', '💬'];
 const SEAL_ARIA_LABEL_KEYS = {
   '👻': 'seal_aria_classic', '🌸': 'seal_aria_smiling', '❤️': 'seal_aria_loving',
   '🌙': 'seal_aria_sleepy', '✨': 'seal_aria_amazed', '🔥': 'seal_aria_ardent', '💬': 'seal_aria_chatty',
@@ -1688,35 +1742,14 @@ function _renderDepositSealPicker() {
   if (!wrap) return;
   // Préserve la sélection courante à travers un ré-appel (ex. changement de
   // langue) — sinon chaque appel retomberait sur le classique par défaut.
-  const activeBtn = wrap.querySelector('.emoji-opt.active:not(.emoji-custom)');
-  const currentPreset = activeBtn ? activeBtn.dataset.arg : '👻';
-  const currentCustom = document.getElementById('depositEmoji')?.value || '';
-  const wasMoreOpen = document.getElementById('sealMoreWrap') && !document.getElementById('sealMoreWrap').classList.contains('u-hidden');
-  const sealBtn = (emoji) => {
-    const active = emoji === currentPreset;
+  const activeBtn = wrap.querySelector('.emoji-opt.active');
+  const current = activeBtn ? activeBtn.dataset.arg : (document.getElementById('depositEmoji')?.value || '👻');
+  wrap.innerHTML = DEPOSIT_SEALS.map(emoji => {
+    const active = emoji === current;
     const label = t[SEAL_ARIA_LABEL_KEYS[emoji]] || 'Sceau';
     return `<button class="emoji-opt${active ? ' active' : ''}" data-action="pickEmoji" data-arg="${emoji}" aria-label="${escapeHTML(label)}" aria-pressed="${active}">${_traceSealIconHTML(emoji, { size: 30 })}</button>`;
-  };
-  wrap.innerHTML =
-    `<span class="lettre-stamp-strip-label" data-i18n="dep_lettre_stamp_label">${escapeHTML(t.dep_lettre_stamp_label || 'Sceau :')}</span>` +
-    DEPOSIT_SEAL_VISIBLE.map(sealBtn).join('') +
-    `<button type="button" class="emoji-opt emoji-opt-more" id="sealMoreBtn" data-action="toggleSealMore" aria-expanded="false" aria-controls="sealMoreWrap" aria-label="${escapeHTML(t.seal_more_label || 'Plus de Sceaux')}">+</button>` +
-    `<span class="lettre-stamp-strip-more u-hidden" id="sealMoreWrap">` +
-    DEPOSIT_SEAL_MORE.map(sealBtn).join('') +
-    `<input class="emoji-custom" id="depositEmoji" type="text" aria-label="Emoji personnalisé" placeholder="✏️" maxlength="2" data-input-action="pickEmojiCustom">` +
-    `</span>`;
-  const newCustomInput = document.getElementById('depositEmoji');
-  if (newCustomInput) newCustomInput.value = currentCustom;
-  if (wasMoreOpen) window.toggleSealMore(true);
+  }).join('');
 }
-window.toggleSealMore = (forceOpen) => {
-  const btn = document.getElementById('sealMoreBtn');
-  const wrap = document.getElementById('sealMoreWrap');
-  if (!btn || !wrap) return;
-  const open = typeof forceOpen === 'boolean' ? forceOpen : wrap.classList.contains('u-hidden');
-  wrap.classList.toggle('u-hidden', !open);
-  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-};
 // Applique les data-trace-* posés par _traceMarkHTML() — de vraies écritures
 // JS sur .style, jamais un style="" du markup, donc hors périmètre CSP
 // (cf. commentaire sur _traceMarkHTML).
@@ -4130,16 +4163,46 @@ document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e
   window.toggleBizTypeAccordion(false);
 });
 
-// ── Icônes média dans la lettre (Lot AI, remplace le menu Lot Q) ──
-// Chaque icône révèle directement le panneau du média correspondant. La
-// logique propre à chaque média (record/photo/vidéo/documents) n'est pas
-// touchée — seule l'entrée change. L'aperçu + l'état actif de l'icône sont
-// gérés en CSS pur (:has(), cf. style.css) sur ces mêmes conteneurs.
+// ── Icônes média dans la lettre (Lot AI, remplace le menu Lot Q ; un seul
+// panneau ouvert à la fois + repli compact Lot AJ) ──────────
+// Chaque icône ouvre son panneau et referme les 3 autres ; re-taper l'icône
+// du panneau ouvert le referme. La logique propre à chaque média (record/
+// photo/vidéo/documents) n'est pas touchée — seule l'entrée/l'affichage
+// changent. L'état actif de l'icône reste en CSS pur :has() (Lot AI,
+// inchangé, cf. style.css).
 const MEDIA_PANEL_IDS = { vocal: 'step3VocalWrap', photo: 'step3PhotoWrap', video: 'step3VideoWrap', attach: 'step3AttachmentsWrap' };
+const MEDIA_ICON_IDS = { vocal: 'depMediaIconVocal', photo: 'depMediaIconPhoto', video: 'depMediaIconVideo', attach: 'depMediaIconAttach' };
+const MEDIA_PREVIEW_IDS = { vocal: 'audioPreview', photo: 'photoPreview', video: 'videoPreview', attach: 'attachmentsList' };
 window.selectMediaType = (type) => {
-  const panel = document.getElementById(MEDIA_PANEL_IDS[type]);
-  if (panel) panel.style.display = 'block';
+  const targetPanel = document.getElementById(MEDIA_PANEL_IDS[type]);
+  if (!targetPanel) return;
+  const wasOpen = targetPanel.classList.contains('media-panel-open');
+  Object.values(MEDIA_PANEL_IDS).forEach(id => document.getElementById(id)?.classList.remove('media-panel-open'));
+  if (!wasOpen) targetPanel.classList.add('media-panel-open');
+  _syncMediaPanelVisibility();
 };
+// Un panneau reste visible fermé s'il contient déjà un média (repli
+// compact — cf. .media-panel-collapsed dans style.css, qui masque le
+// libellé/les boutons d'ajout et ne garde que l'aperçu + son bouton de
+// suppression existant) : un média attaché n'est jamais perdu en changeant
+// de panneau. Recalculé après toute sélection ET par le MutationObserver
+// posé sur les conteneurs d'aperçu (cf. plus bas), donc reste correct quel
+// que soit le point d'entrée (ajout, suppression, reset).
+function _syncMediaPanelVisibility() {
+  Object.keys(MEDIA_PANEL_IDS).forEach(type => {
+    const panel = document.getElementById(MEDIA_PANEL_IDS[type]);
+    const icon = document.getElementById(MEDIA_ICON_IDS[type]);
+    if (!panel) return;
+    const isOpen = panel.classList.contains('media-panel-open');
+    const hasContent = (document.getElementById(MEDIA_PREVIEW_IDS[type])?.children.length || 0) > 0;
+    panel.classList.toggle('u-hidden', !isOpen && !hasContent);
+    if (icon) icon.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+}
+function _closeAllMediaPanels() {
+  Object.values(MEDIA_PANEL_IDS).forEach(id => document.getElementById(id)?.classList.remove('media-panel-open'));
+  _syncMediaPanelVisibility();
+}
 
 // ── Lien discret "rester anonyme" (Lot Q) ──────────────────
 // Remplace le dropdown Identité : pseudo par défaut, l'anonymat est un
@@ -4149,8 +4212,8 @@ window.toggleAnonMode = (btn) => {
   btn.setAttribute('aria-pressed', active ? 'true' : 'false');
   const label = btn.querySelector('span');
   if (label) label.textContent = active
-    ? (t.dep_anon_toggle_on || '👻 anonyme')
-    : (t.dep_anon_toggle_off || '🌫️ rester anonyme');
+    ? (t.dep_anon_toggle_on || 'anonyme')
+    : (t.dep_anon_toggle_off || 'rester anonyme');
 };
 function _resetAnonToggle() {
   const btn = document.getElementById('anonToggleLink');
@@ -4158,7 +4221,7 @@ function _resetAnonToggle() {
   btn.classList.remove('active');
   btn.setAttribute('aria-pressed', 'false');
   const label = btn.querySelector('span');
-  if (label) label.textContent = t.dep_anon_toggle_off || '🌫️ rester anonyme';
+  if (label) label.textContent = t.dep_anon_toggle_off || 'rester anonyme';
 }
 
 // ── Proximity data attribute helper ────────────────────────
@@ -4544,17 +4607,21 @@ function updatePremiumUI() {
   // Lock/unlock sections Premium
   const dedLock = document.getElementById('dedicatedLock');
   if (dedLock) dedLock.style.display = isPremium ? 'none' : 'flex';
-  // Sections Premium — injection directe dans les wrappers
+  // Sections Premium — injection directe dans les wrappers. Icônes vidéo/
+  // documents : mêmes SVG que la barre d'icônes de la lettre (Lot AJ, plus
+  // d'emoji 🎥/📎 — cohérence avec le reste de l'app).
+  const _videoIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>';
+  const _attachIconSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12.5V7a4 4 0 0 1 8 0v8a2.6 2.6 0 0 1-5.2 0V8.2"/></svg>';
   const _premSections = [
     { id: 'premSection_video',     icon: '🎥', label: t.prem_video_label || 'Vidéo', sub: t.prem_video_sub || 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
-      premiumHtml: `<label class="form-label prem-label-row"><span>${t.prem_video_optional || 'Vidéo (optionnel)'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerVideo" type="button"><span class="media-icon">🎥</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span class="prem-btn-hint">max 50 Mo · 20 sec</span></button>` },
+      premiumHtml: `<label class="form-label prem-label-row"><span>${t.prem_video_optional || 'Vidéo'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerVideo" type="button"><span class="media-icon">${_videoIconSvg}</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span class="prem-btn-hint">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
     { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
     // Phase 1d v103 — Galerie de fichiers
     { id: 'premSection_attachments', icon: '📎', label: t.prem_attach_label || 'Documents', sub: t.prem_attach_sub || 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
-      premiumHtml: `<label class="form-label prem-label-row"><span>${t.dep_attach_label || '📎 Documents (optionnel)'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerAttachments" type="button"><span class="media-icon">📎</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span class="prem-btn-hint">PDF, JPG, PNG</span></button>` },
+      premiumHtml: `<label class="form-label prem-label-row"><span>${t.dep_attach_label || 'Documents'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerAttachments" type="button"><span class="media-icon">${_attachIconSvg}</span><span>${t.dep_attach_btn || 'Ajouter un fichier'}</span><span class="prem-btn-hint">PDF, JPG, PNG</span></button>` },
   ];
 
   const _badge = (txt) => `<span class="badge-premium">${_uiIconHTML('✦', { size: 11 })} Premium</span>`;
@@ -8326,12 +8393,20 @@ window.followChain = () => {
   }, 800);
 };
 
+// Valeurs canoniques envoyées au serveur — exactement les chaînes comparées
+// dans ghost.service.js / functions/index.js (isExpired, computeLifetime).
+// Lues via data-dur (marqueur interne stable), jamais via .textContent : la
+// même classe de bug que l'audit 1.4 (cf. toggleBusinessMode plus bas) —
+// retirer le glyphe ♾ de l'affichage (Lot AJ) aurait sinon aussi changé la
+// valeur envoyée pour "Éternel", cassant isExpired/computeLifetime en silence.
+const DUR_CANONICAL_VALUES = { '24h': '24h', '7d': '7 jours', '1m': '1 mois', 'eternal': '♾ Éternel' };
 function _readDepositFormInputs() {
   const location = document.getElementById('depositLocation').value.trim();
   const rawEmoji  = document.getElementById('depositEmoji').value || '👻';
   // FIX: Limiter l'emoji à 2 caractères max pour éviter injection de HTML
   const emoji = [...rawEmoji].slice(0, 2).join('');
-  const duration = document.querySelector('.dur-btn.active:not([data-maxopen])')?.textContent || t.dep_dur_7d;
+  const durBtn = document.querySelector('.dur-btn.active:not([data-maxopen])');
+  const duration = (durBtn && DUR_CANONICAL_VALUES[durBtn.dataset.dur]) || durBtn?.textContent || t.dep_dur_7d;
   const maxOpenCount = parseInt(document.querySelector('.dur-btn.active[data-maxopen]')?.dataset.maxopen || '0');
   const radius   = document.querySelector('.radius-btn.active')?.textContent || '10m';
   // Pseudo par défaut, anonymat via le lien discret (Lot Q) — remplace
@@ -8508,9 +8583,7 @@ function _resetDepositStateAfterSuccess(depositBtn) {
   clearAudio(); clearPhoto(); clearVideo(); clearAttachments();
   // Replier les panneaux média et le lien anonyme (Lot Q)
   _resetAnonToggle();
-  ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.style.display = 'none';
-  });
+  if (typeof _closeAllMediaPanels === 'function') _closeAllMediaPanels();
 }
 
 function _showDepositSuccessScreen(ghostId) {
@@ -9268,11 +9341,11 @@ function _showScreenBase(id, fromPopstate = false) {
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id2 => {
       const el = document.getElementById(id2); if (el) el.style.display = '';
     });
-    // Reset step 3 (Lot Q : Identité retirée, menu média replié par défaut)
+    // Reset step 3 (Lot Q : Identité retirée, panneaux média repliés par
+    // défaut — Lot AJ : un média déjà attaché reste visible en compact,
+    // cf. _closeAllMediaPanels/_syncMediaPanelVisibility)
     _resetAnonToggle();
-    ['step3VocalWrap','step3PhotoWrap','step3VideoWrap','step3AttachmentsWrap'].forEach(id2 => {
-      const el = document.getElementById(id2); if (el) el.style.display = 'none';
-    });
+    if (typeof _closeAllMediaPanels === 'function') _closeAllMediaPanels();
     const vocalMenuItem = document.getElementById('depMediaIconVocal');
     if (vocalMenuItem) vocalMenuItem.style.display = '';
     const t3 = document.getElementById('step3Title');
@@ -9405,8 +9478,12 @@ window.toggleBusinessMode = () => {
     // adapter titre
     const vocalMenuItemBiz = document.getElementById('depMediaIconVocal');
     if (vocalMenuItemBiz) vocalMenuItemBiz.style.display = 'none';
+    // Classes plutôt que style.display en dur (Lot AJ) — un inline style
+    // laissé ici survivrait à la sortie du mode Commerce et empêcherait
+    // _syncMediaPanelVisibility() de rouvrir le panneau ensuite (l'inline
+    // l'emporterait toujours sur les classes).
     const vocalPanelBiz = document.getElementById('step3VocalWrap');
-    if (vocalPanelBiz) vocalPanelBiz.style.display = 'none';
+    if (vocalPanelBiz) { vocalPanelBiz.classList.remove('media-panel-open'); vocalPanelBiz.classList.add('u-hidden'); }
     const t3 = document.getElementById('step3Title');
     const s3 = document.getElementById('step3Sub');
     if (t3) t3.textContent = t.dep_biz_visual_title || 'Ajouter un visuel';
@@ -9462,10 +9539,12 @@ window.toggleBusinessMode = () => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
-    // Réafficher le message vocal dans le menu média (Lot Q) — le panneau
-    // lui-même reste replié tant qu'il n'est pas choisi dans le menu.
+    // Réafficher l'icône vocal (Lot Q/AJ) — le panneau lui-même redevient
+    // visible seulement s'il contient déjà un média ou est rouvert par l'icône
+    // (_syncMediaPanelVisibility recalcule les 4 panneaux au même moment).
     const vocalMenuItemNorm = document.getElementById('depMediaIconVocal');
     if (vocalMenuItemNorm) vocalMenuItemNorm.style.display = '';
+    if (typeof _syncMediaPanelVisibility === 'function') _syncMediaPanelVisibility();
     const t3b = document.getElementById('step3Title');
     const s3b = document.getElementById('step3Sub');
     if (t3b) t3b.textContent = t.dep_pane3_title;
@@ -10234,10 +10313,6 @@ window.pickEmoji = (el, emoji) => {
   document.getElementById('depositEmoji').value = emoji;
 };
 
-window.pickEmojiCustom = (input) => {
-  document.querySelectorAll('.emoji-opt:not(.emoji-custom)').forEach(e => e.classList.remove('active'));
-};
-
 document.addEventListener('DOMContentLoaded', () => {
   const emojiInput = document.getElementById('depositEmoji');
   if (emojiInput && !emojiInput.value) emojiInput.value = '👻';
@@ -10269,6 +10344,18 @@ document.addEventListener('DOMContentLoaded', () => {
   if (locInput) locInput.addEventListener('input', _updateDepLocationDisplay);
 
   if (typeof _renderDepositSealPicker === 'function') _renderDepositSealPicker();
+
+  // Repli compact des panneaux média (Lot AJ) — observe les 4 conteneurs
+  // d'aperçu pour garder .media-panel-collapsed/aria-expanded corrects quel
+  // que soit le chemin qui ajoute/retire le contenu (record/handlePhoto/
+  // handleVideo/handleAttachments/clear*/removeAttachment), sans avoir à
+  // instrumenter chacune de ces fonctions séparément.
+  if (typeof _syncMediaPanelVisibility === 'function') {
+    Object.values(MEDIA_PREVIEW_IDS).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) new MutationObserver(_syncMediaPanelVisibility).observe(el, { childList: true });
+    });
+  }
 
   // Init offline check
   updateOnlineStatus();
@@ -10666,8 +10753,6 @@ const ACTIONS = {
 
   // Zone 6 — Deposit
   pickEmoji: (el) => pickEmoji(el, el.dataset.arg),
-  pickEmojiCustom: (el) => pickEmojiCustom(el),
-  toggleSealMore: () => toggleSealMore(),
   toggleAnonMode: (el) => toggleAnonMode(el),
   toggleBizTypeAccordion: () => toggleBizTypeAccordion(),
   selectRadius: (el) => _selectRadius(el),

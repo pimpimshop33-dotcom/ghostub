@@ -1127,6 +1127,20 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .dep-hint-xs{font-size:10px;color:var(--spirit-dim);}
 .dep-hint-xs-mt{font-size:10px;color:var(--spirit-dim);margin-top:6px;}
 .media-type-panel{margin-top:10px;}
+/* Lot AJ — un seul panneau média ouvert à la fois (cf. selectMediaType,
+   app.js) ; un panneau fermé qui contient déjà un média reste visible en
+   mode compact (repli) : libellé + boutons d'ajout masqués, ne garde que
+   l'aperçu existant + son bouton de suppression. Visibilité (u-hidden)
+   décidée en JS (_syncMediaPanelVisibility) ; seul l'habillage "compact"
+   ci-dessous est du CSS pur. */
+.media-type-panel:not(.media-panel-open) > .form-label,
+.media-type-panel:not(.media-panel-open) #recordBtn,
+.media-type-panel:not(.media-panel-open) .photo-choice,
+.media-type-panel:not(.media-panel-open) #premSection_video,
+.media-type-panel:not(.media-panel-open) #premSection_attachments,
+.media-type-panel:not(.media-panel-open) .attachments-count-hint{
+  display:none;
+}
 .dep-record-timer{margin-left:auto;font-size:11px;opacity:.5;}
 .dep-error-spacing{margin-top:8px;}
 .dep-gps-hint{font-size:10px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;}
@@ -2876,20 +2890,25 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   letter-spacing:.4px;
 }
 
-/* Bandeau emoji "timbres" — minimaliste, en haut */
+/* Bandeau emoji "timbres" — minimaliste, en haut. Lot AJ : les 7 Sceaux
+   tiennent sur une ligne à 384px (7×40px + 6 gaps ≈ 298px), mais overflow-x
+   en filet de sécurité (sans barre visible) si le libellé au-dessus grandit
+   ou sur un écran encore plus étroit. */
 .lettre-stamp-strip{
   display:flex;align-items:center;
-  gap:3px;flex-wrap:wrap;
+  gap:3px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
   margin-bottom:14px;padding-bottom:10px;
   border-bottom:1px dashed rgba(var(--lettre-ink-rgb),.18);
 }
+.lettre-stamp-strip::-webkit-scrollbar{display:none;}
 .lettre-stamp-strip-label{
+  display:block;
   font-family:'Cormorant Garamond',serif;
   font-style:italic;font-size:var(--text-sm);
   color:rgba(var(--lettre-ink-rgb),.55);
   -webkit-text-fill-color:rgba(var(--lettre-ink-rgb),.55) !important;
   letter-spacing:.5px;
-  margin-right:6px;flex-shrink:0;
+  margin-bottom:6px;flex-shrink:0;
 }
 /* Réécrit les .emoji-opt à l'intérieur d'un .lettre-stamp-strip */
 .lettre-stamp-strip .emoji-opt{
@@ -2912,20 +2931,8 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   filter:grayscale(0) opacity(1) !important;
   box-shadow:0 0 8px rgba(var(--lettre-ink-rgb),.14);
 }
-/* Lot AI — bouton "+" qui révèle les 2 derniers Sceaux + le champ emoji perso */
-.emoji-opt-more{font-size:18px !important;color:rgba(var(--lettre-ink-rgb),.55) !important;-webkit-text-fill-color:rgba(var(--lettre-ink-rgb),.55) !important;border:1px dashed rgba(var(--lettre-ink-rgb),.25) !important;filter:none !important;}
-.emoji-opt-more[aria-expanded="true"]{background:rgba(var(--lettre-ink-rgb),.08) !important;}
-.lettre-stamp-strip-more{display:flex;align-items:center;gap:3px;flex-wrap:wrap;}
-.lettre-stamp-strip .emoji-custom{
-  width:40px !important;height:40px !important;
-  background:transparent !important;
-  border:1px dashed rgba(var(--ghost-blue-rgb),.22) !important;
-  border-radius:50% !important;
-  font-size:var(--text-md) !important;
-  text-align:center;
-  color:var(--warm) !important;
-  -webkit-text-fill-color:var(--warm) !important;
-}
+/* Lot AJ : les 7 Sceaux sont affichés directement — plus de bouton "+" ni
+   de champ emoji perso visible (cf. #depositSealPicker, app.js). */
 
 /* La textarea — corps de la lettre, italique manuscrit. Hauteur réduite
    (Lot AI, 170→130px) et laissée libre de grandir avec le texte : le JS
@@ -3127,7 +3134,7 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   padding:10px 2px;
   margin-top:4px;
 }
-.dep-location-pin{font-size:15px;flex-shrink:0;}
+.dep-location-pin{display:flex;align-items:center;color:var(--spirit);flex-shrink:0;}
 .dep-location-name{
   flex:1;min-width:0;
   font-size:var(--text-base);color:var(--warm-dim);
