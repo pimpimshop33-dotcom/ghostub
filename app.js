@@ -415,20 +415,21 @@ const LANGS = {
     profile_year_btn: '✦ Mon année',
     map_share_btn: '↗ Partager',
     dep_success_title: 'Fantôme ancré',
-    dep_success_sub: 'Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
-    dep_success_sub_dedicated: 'Ton ghost est ancré.<br>Partage ce lien pour le dédier :',
+    dep_success_sub: 'Ta trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
+    dep_success_sub_dedicated: 'Ton fantôme est ancré.',
     dep_success_hint: 'Appuie pour continuer',
     dep_notif_btn: 'Savoir quand il est découvert',
     dep_notif_ok: '✓ Tu seras averti',
     dep_copy_link_btn: 'Copier le lien',
+    dep_copy_link_hint: 'pour l\'envoyer à quelqu\'un',
     dep_copy_link_done: 'Lien copié',
     prem_video_label: 'Vidéo',
     prem_video_sub: 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
     prem_video_optional: 'Vidéo',
     prem_chain_label: 'Chaîne de fantômes',
-    prem_chain_sub: 'Chasse au trésor urbaine · enchaîne tes ghosts',
+    prem_chain_sub: 'Chasse au trésor urbaine · enchaîne tes fantômes',
     prem_dedicated_label: 'Pour quelqu\'un',
-    prem_dedicated_sub: 'Ghost secret réservé à une seule personne',
+    prem_dedicated_sub: 'Fantôme secret réservé à une seule personne',
     map_hunt_toast: '🎯 Mode chasse activé — approche-toi pour ouvrir !',
     map_hunt_already: '✓ Déjà découvert',
     map_hunt_locked: '🔒 Encore {dist} à parcourir pour l\'ouvrir',
@@ -443,7 +444,7 @@ const LANGS = {
     // Notifications
     notif_new_ghost_title: 'Un fantôme s\'est approché',
     notif_reso_title: '✦ Votre trace a résonné',
-    whisper_vibration: '✦ Une âme a résonné sur ton ghost',
+    whisper_vibration: '✦ Une âme a résonné sur ton fantôme',
     notif_disc_title: '🔮 Votre fantôme secret a été trouvé !',
     notif_open_title: '✉ Votre trace a été découverte',
     notif_reply_title: '↩ Quelqu\'un vous a répondu',
@@ -707,7 +708,7 @@ const LANGS = {
     // Premium
     help_premium_title: 'Spectre Premium',
     help_premium_sub: 'Le Premium débloque :',
-    help_premium_list: 'Vidéos et documents joints à tes fantômes<br>Message du futur — s\'ouvre à une date précise<br>Chasses au trésor — fantômes enchaînés<br>Ghost dédié — réservé à une seule personne<br>Mode Commerce — offres visibles à 50 m<br>Ouvertures illimitées (au lieu de 3/jour)<br>5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>3 teintes de ghost supplémentaires',
+    help_premium_list: 'Vidéos et documents joints à tes fantômes<br>Message du futur — s\'ouvre à une date précise<br>Chasses au trésor — fantômes enchaînés<br>Fantôme dédié — réservé à une seule personne<br>Mode Commerce — offres visibles à 50 m<br>Ouvertures illimitées (au lieu de 3/jour)<br>5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>3 teintes de ghost supplémentaires',
     help_premium_hint: 'Active ton code dans Profil → Mon compte. Le paiement en ligne n\'est pas encore disponible — contacte-nous pour obtenir un code.',
     // Réglages
     help_settings_title: 'Réglages',
@@ -1110,11 +1111,12 @@ const LANGS = {
     map_share_btn: '↗ Share',
     dep_success_title: 'Ghost anchored',
     dep_success_sub: 'Your trace rests in this place.<br>A soul will discover it… perhaps.',
-    dep_success_sub_dedicated: 'Your ghost is anchored.<br>Share this link to dedicate it:',
+    dep_success_sub_dedicated: 'Your ghost is anchored.',
     dep_success_hint: 'Tap to continue',
     dep_notif_btn: 'Know when it\'s discovered',
     dep_notif_ok: '✓ You\'ll be notified',
     dep_copy_link_btn: 'Copy link',
+    dep_copy_link_hint: 'to send it to someone',
     dep_copy_link_done: 'Link copied',
     prem_video_label: 'Video',
     prem_video_sub: 'Up to 20 sec · opens only on site',
@@ -5033,7 +5035,7 @@ function updatePremiumUI() {
       premiumHtml: `<label class="form-label prem-label-row"><span>${t.prem_video_optional || 'Vidéo'}</span><span class="prem-badge-inline">✦ Premium</span></label><button class="media-btn" data-action="triggerVideo" type="button"><span class="media-icon">${_videoIconSvg}</span><span>${t.dep_video_btn || 'Ajouter une vidéo'}</span><span class="prem-btn-hint">max 50 Mo · 20 sec</span></button>` },
     { id: 'premSection_chain',     icon: '🔗', label: t.prem_chain_label || 'Chaîne de fantômes', sub: t.prem_chain_sub || 'Chasse au trésor urbaine · enchaîne tes ghosts',
       premiumHtml: null }, // chainContent géré séparément
-    { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Ghost secret réservé à une seule personne',
+    { id: 'premSection_dedicated', icon: '💌', label: t.prem_dedicated_label || 'Pour quelqu\'un', sub: t.prem_dedicated_sub || 'Fantôme secret réservé à une seule personne',
       premiumHtml: null }, // dedicatedContent géré séparément
     // Phase 1d v103 — Galerie de fichiers
     { id: 'premSection_attachments', icon: '📎', label: t.prem_attach_label || 'Documents', sub: t.prem_attach_sub || 'PDF, JPG, PNG · jusqu\'à 3 fichiers',
@@ -9068,6 +9070,7 @@ function _showDepositSuccessScreen(ghostId) {
   _maybeShowSuccessNotifPrompt();
   const subEl = document.getElementById('successSubText');
   const copyBtn = document.getElementById('successCopyLinkBtn');
+  const copyHint = document.getElementById('successCopyLinkHint');
   // Ghost dédié sans UID : lien de partage — Lot AO, un bouton "Copier le
   // lien" plutôt que l'URL affichée en clair sur 2 lignes (qui, en plus,
   // mordait sur le bouton "Savoir quand il est découvert" juste en dessous).
@@ -9082,8 +9085,10 @@ function _showDepositSuccessScreen(ghostId) {
       const label = document.getElementById('successCopyLinkLabel');
       if (label) label.textContent = t.dep_copy_link_btn;
     }
+    if (copyHint) copyHint.style.display = 'block';
   } else {
     if (subEl) subEl.innerHTML = t.dep_success_sub;
+    if (copyHint) copyHint.style.display = 'none';
     if (copyBtn) copyBtn.style.display = 'none';
   }
 }
