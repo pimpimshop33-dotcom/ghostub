@@ -3095,18 +3095,34 @@ button, [role="button"], input, textarea, select,
 
 /* Dots de navigation */
 .ob-dots{display:flex;gap:8px;justify-content:center;padding:12px 0 0;flex-shrink:0;}
-.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(var(--ghost-blue-rgb),.25);border:none;cursor:pointer;transition:all .2s;padding:0;flex-shrink:0;}
-.ob-dot.active{background:rgba(var(--ghost-blue-rgb),.9);width:18px;border-radius:4px;}
+/* Lot AR — un des 4 points de pagination faisait ~54px (capture Pipo) :
+   .ob-dot est un <button>, donc hérité de la règle générique
+   button,[role="button"]{min-width/height:44px} pensée pour les cibles
+   tactiles — min-width/height:44px l'emportait sur le width:6px voulu.
+   Le dessin reste 8px, la zone tactile s'agrandit via un ::after
+   transparent (44×44, centré) plutôt qu'en gonflant le point lui-même. */
+.ob-dot{
+  position:relative;
+  width:8px;height:8px;min-width:8px;min-height:8px;
+  border-radius:50%;background:rgba(var(--ghost-blue-rgb),.25);
+  border:none;cursor:pointer;transition:all .2s;padding:0;flex-shrink:0;
+}
+.ob-dot::after{
+  content:'';position:absolute;top:50%;left:50%;
+  width:44px;height:44px;transform:translate(-50%,-50%);
+}
+.ob-dot.active{background:rgba(var(--ghost-blue-rgb),.9);width:22px;min-width:22px;border-radius:4px;}
+body.light-theme .ob-dot.active{background:var(--amber);}
 
 /* CTA bouton final */
 .ob-cta{width:100%;padding:0 0 12px;flex-shrink:0;opacity:0;pointer-events:none;}
 #obCta .btn-primary{margin-bottom:10px;}
 .ob-free-hint{font-size:11px;color:rgba(var(--ghost-blue-rgb),.3);text-align:center;margin-top:6px;}
 .ob-swipe-hint{font-size:var(--text-sm);color:rgba(var(--ghost-blue-rgb),.35);letter-spacing:.5px;padding-bottom:8px;text-align:center;animation:obHintFade 2s ease-in-out infinite;flex-shrink:0;}
-body.light-theme .ob-swipe-hint{color:rgba(58,42,148,.45) !important;}
+body.light-theme .ob-swipe-hint{color:rgba(95,91,107,.45) !important;}
 /* Bouton "Passer →" — CSP audit 4.6 : propriétés reprises depuis l'ancien style="" inline */
 .ob-skip{position:absolute;top:14px;right:16px;z-index:10;background:none;border:none;font-size:12px;color:rgba(var(--ghost-blue-rgb),.45);font-family:'Instrument Sans',sans-serif;cursor:pointer;padding:6px 8px;}
-body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
+body.light-theme .ob-skip{color:rgba(95,91,107,.55) !important;}
 .ob-back-btn-hidden{display:none;flex-shrink:0;}
 @keyframes obHintFade{0%,100%{opacity:.4;}50%{opacity:.9;}}
 

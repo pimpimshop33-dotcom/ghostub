@@ -9748,8 +9748,12 @@ function _showScreenBase(id, fromPopstate = false) {
   if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false;
     _setNotifBtnState(localStorage.getItem('notif_enabled') === '1'); const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
   if (id === 'screenOnboard') {
-    const btn = document.getElementById('obBackBtn');
-    if (btn) btn.style.display = currentUser ? 'flex' : 'none';
+    // Lot AR — Pipo (capture) : un "← retour" flottait centré au-dessus du
+    // ghost sur l'intro. Ce bouton (affiché ici pour un utilisateur déjà
+    // connecté revoyant l'intro depuis Réglages) n'a pas sa place sur cet
+    // écran : il ne doit plus jamais s'afficher — laissé caché par sa
+    // classe CSS par défaut (.ob-back-btn-hidden) au lieu d'être forcé en
+    // display:flex via inline style.
     goObScene(0);
   }
   // Autofocus sur le premier input
