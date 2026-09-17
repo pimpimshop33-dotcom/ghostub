@@ -1684,7 +1684,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
   const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
-  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, size)}</svg></span>`;
+  return `${openTag}<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, size)}</svg></span>`;
 }
 // Icône statique (sans fanage) pour les contextes SANS document fantôme
 // complet : sélecteur de Sceau sur Déposer, sealedEmoji du Détail avant
@@ -1693,7 +1693,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
 function _traceSealIconHTML(emoji, { size = 40 } = {}) {
   const [c1, c2] = TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS;
   const uid = 'ts' + (_traceIdSeq++);
-  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
+  return `<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
 }
 // Images préchargées des 7 expressions du Trace, pour le Sceau dessiné en
 // Canvas sur la Ghost Card (_drawGhostCardMark) — Canvas 2D ne peut pas

@@ -112,6 +112,14 @@ input,textarea,select{font-size:16px !important;}
    reste (width/height/opacity/filter, continus par fantôme) est posé en JS
    par _hydrateTraceMarks(), pas en style="" — CSP audit 4.6. */
 .trace-mark{display:inline-flex;flex-shrink:0;}
+/* Lot AM : halo sombre par défaut pour TOUTE instance du Trace (viewBox 200×200,
+   _traceBodyMarkup) — jusqu'ici seul _hydrateTraceMarks() (Radar/Carte, fanage)
+   le posait en JS ; le sélecteur de Sceau (Déposer) et le sealedEmoji (Détail),
+   qui n'appellent jamais _hydrateTraceMarks, restaient sans halo et devenaient
+   quasi invisibles en Mode jour. Halo générique ici en CSS ; sur les marqueurs
+   hydratés, le filter inline (saturate + fanage) de _hydrateTraceMarks prend
+   le dessus (spécificité), donc pas de double filtre ni de conflit. */
+.trace-svg{filter:drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));}
 /* CSP audit 4.6 : remplace les style="display:none;" inline statiques (état
    initial du markup) qu'un JS bascule ensuite via .style.display directement
    (ce JS-là n'est pas concerné par le retrait de unsafe-inline — l'inline
@@ -422,23 +430,18 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .btn-secondary:hover{border-color:var(--border-bright);color:var(--warm);}
 
 /* ── RADAR ─────────────────────────────────────────────── */
-/* La maquette n'a pas de variante thème clair — le fond forcé sombre
-   ci-dessous (bokeh contextuel) reste donc sombre même si l'utilisateur a
-   le thème clair actif ; sans ça le texte hérite des teintes clair-sur-clair
-   de body.light-theme (--ether/--warm-dim etc. redéfinis foncés pour un fond
-   clair) et devient illisible sur un fond maintenant sombre. On restaure ici
-   les valeurs thème sombre de ces variables, uniquement dans ce sous-arbre. */
-body.light-theme #screenRadar{
-  --void:#05060c;--deep:#0A0B14;--surface:rgba(20,22,43,.5);--surface2:rgba(20,22,43,.7);
-  --spirit:#7ab8f5;--spirit-dim:rgba(122,184,245,.45);--spirit-glow:rgba(122,184,245,.10);
-  --ether:#c8daf5;--warm:#e8d4a8;--warm-dim:rgba(232,212,168,.55);
-  --border:rgba(122,184,245,.10);--border-bright:rgba(122,184,245,.28);
-  --amber:#e8a030;--amber-dim:rgba(232,160,48,.30);--mist:#3db87a;
-  --premium-rgb:255,200,80;--tier-gold-rgb:245,223,160;--mist-rgb:61,184,122;
-  --ghost-blue-rgb:168,180,255;--accent-green-rgb:100,220,160;
-  --spirit-rgb:122,184,245;
-  color:#e8d4a8;
-}
+/* Lot AM : ce bloc forçait les variables THÈME SOMBRE sur tout le sous-arbre
+   #screenRadar même quand body.light-theme est actif. À l'origine (cf. Lot
+   M/S), le fond bokeh du Radar restait sombre EN PERMANENCE, y compris en
+   Mode jour — ce bloc compensait pour que le texte reste lisible sur ce
+   fond resté sombre. Mais le bokeh forcé sombre est maintenant scopé
+   `body:not(.light-theme):has(#screenRadar.active,...)` (cf. plus haut) —
+   il ne s'applique donc PLUS en Mode jour, où le Radar utilise le fond
+   clair normal de l'app. Ce bloc devenait alors contradictoire : des
+   couleurs pensées pour fond sombre (--spirit-dim pâle, --border quasi
+   transparent, etc.) posées sur un fond maintenant CLAIR — exactement la
+   cause du Radar "tout délavé" remonté par Pipo. Supprimé : le Radar hérite
+   désormais des mêmes tokens Mode jour que le reste de l'app. */
 /* Typographie EXACTE de la maquette : Inter pour tout le texte de l'écran,
    Cormorant Garamond réservé au titre. Le titre est réaffirmé via un
    sélecteur `#screenRadar .radar-title` (1 ID + 1 classe) pour battre en
@@ -2542,21 +2545,30 @@ body.light-theme{
 }
 body.light-theme .phone{background:#d8d2ec;border-color:rgba(80,60,200,.22);box-shadow:0 40px 80px rgba(80,60,200,.12);}
 body.light-theme .phone::after{display:none;}
+/* Lot AM — jeu de tokens Mode jour revu avec un vrai calcul de contraste
+   (cf. scripts/contrast Node ad hoc, tableau dans le résumé de lot) : les
+   textes (--ether/--spirit-dim/--warm-dim) passaient déjà large ; --amber
+   et --accent-green-rgb ne passaient PAS 4.5:1 en texte plein (4.00:1 et
+   3.92:1) — assombris jusqu'à passer. Les bordures d'éléments interactifs
+   NON remplis (chips, boutons-icônes) ont leur propre traitement plus bas
+   (alpha relevée) : à alpha basse (.1-.3, pensée pour fond sombre), AUCUNE
+   teinte ne passe 3:1 sur fond clair — c'est le alpha-blending lui-même qui
+   lave la couleur vers le fond, pas une histoire de teinte. */
 body.light-theme :root,body.light-theme{
-  --void:#cac4e2;--deep:#d2cce8;--surface:rgba(190,184,222,.75);--surface2:rgba(200,194,228,.88);
-  --ghost:rgba(80,60,200,.05);--spirit:#5040b4;--spirit-dim:rgba(58,42,148,.78);
-  --spirit-glow:rgba(80,60,200,.1);--ether:#3a2e8c;--warm:#1a1530;
-  --warm-dim:rgba(26,21,48,.78);--border:rgba(80,60,200,.32);--border-bright:rgba(80,60,200,.55);
-  --amber:#9c6418;--amber-dim:rgba(156,100,24,.55);--mist:#1f6b40;
-  --premium-rgb:140,95,10;
+  --void:#cac4e2;--deep:#d2cce8;--surface:rgba(248,246,255,.92);--surface2:rgba(240,238,250,.95);
+  --ghost:rgba(80,60,200,.05);--spirit:#4B57C9;--spirit-dim:rgba(58,42,148,.78);
+  --spirit-glow:rgba(80,60,200,.1);--ether:#1B1838;--warm:#1a1530;
+  --warm-dim:rgba(26,21,48,.78);--border:rgba(60,45,150,.28);--border-bright:rgba(60,45,150,.6);
+  --amber:#8c5a0a;--amber-dim:rgba(140,90,10,.55);--mist:#1f6b40;
+  --premium-rgb:130,85,10;
   --tier-gold-rgb:150,108,12;
   --mist-rgb:31,107,64;
-  --ghost-blue-rgb:65,50,170;
-  --accent-green-rgb:20,130,80;
+  --ghost-blue-rgb:60,45,150;
+  --spirit-rgb:75,87,201;
+  --accent-green-rgb:10,110,60;
   --lettre-ink-rgb:100,70,25;
   --seal-ink-rgb:120,30,30;
   --seal-ink2-rgb:110,25,25;
-  --spirit-rgb:60,55,175;
 }
 body.light-theme .ghost-envelope{background:linear-gradient(160deg,rgba(220,218,240,.98) 0%,rgba(210,208,232,.99) 100%) !important;}
 body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
@@ -2568,7 +2580,32 @@ body.light-theme .nav-item.active{color:var(--spirit);}
 body.light-theme .btn-primary{background:linear-gradient(135deg,rgba(80,60,200,.22),rgba(80,60,200,.1));border-color:rgba(80,60,200,.5);color:var(--ether);}
 body.light-theme .auth-tab.active{background:rgba(220,218,240,.9);}
 body.light-theme .stat-card{background:rgba(210,208,232,.7);border-color:rgba(80,60,200,.35);}
-body.light-theme .form-input,.body.light-theme .form-textarea{background:rgba(235,233,248,.9);border-color:rgba(80,60,200,.38);color:var(--warm);}
+body.light-theme .form-input,body.light-theme .form-textarea{background:rgba(235,233,248,.9);border-color:rgba(60,45,150,.65);color:var(--warm);}
+
+/* ── Lot AM : bordures d'éléments interactifs non remplis (ou faiblement
+   remplis) — alpha .04-.3 pensée pour fond sombre, sous 3:1 quelle que soit
+   la teinte sur fond clair (alpha-blending, cf. tableau du résumé de lot).
+   Un seul bloc groupé plutôt qu'une redéfinition par composant. ── */
+body.light-theme .dep-chip-toggle,
+body.light-theme .filter-btn,
+body.light-theme .map-header-btn,
+body.light-theme .lettre-media-icon-btn,
+body.light-theme .attachment-item{
+  border-color:rgba(60,45,150,.6);
+}
+body.light-theme .dep-chip-toggle:hover,
+body.light-theme .lettre-media-icon-btn:hover{border-color:rgba(60,45,150,.85);}
+body.light-theme .dep-chip-toggle--biz{border-color:rgba(var(--premium-rgb),.75);}
+body.light-theme .dep-chip-toggle--biz:hover{border-color:rgba(var(--premium-rgb),1);}
+body.light-theme .dep-chip-toggle--anon.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.14);}
+body.light-theme .dep-chip-toggle--biz.active{border-color:var(--amber);background:rgba(var(--premium-rgb),.14);}
+body.light-theme .filter-btn{background:rgba(255,255,255,.5);}
+body.light-theme .filter-btn.active{background:rgba(232,160,48,.18) !important;border-color:rgba(var(--premium-rgb),.8) !important;}
+body.light-theme .map-header-btn{color:rgba(60,45,150,.85);background:rgba(255,255,255,.5);}
+body.light-theme .type-btn,body.light-theme .radius-btn,body.light-theme .dur-btn{border-color:rgba(60,45,150,.4);}
+body.light-theme .type-btn.active{border-color:rgba(var(--premium-rgb),.7);}
+body.light-theme .radius-btn.active,body.light-theme .dur-btn.active{border-color:var(--spirit);}
+body.light-theme .cond-btn{border-color:rgba(60,45,150,.4);}
 
 /* ── Cartes fantôme (.ghost-envelope) — texte pensé pour fond sombre, à réécrire pour fond clair ── */
 body.light-theme .envelope-location{color:rgba(40,28,90,.92) !important;-webkit-text-fill-color:rgba(40,28,90,.92) !important;}
@@ -2866,6 +2903,11 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   color: initial !important;
   filter: none !important;
 }
+/* Lot AM : le reset ci-dessus (.emoji-opt *{filter:none !important}) efface
+   aussi le halo sombre de .trace-svg (Sceaux du sélecteur Déposer, qui
+   réutilise .emoji-opt) — sans lui le Trace est quasi invisible en Mode
+   jour (cf. .trace-svg plus haut). Exception ciblée, après le reset. */
+.emoji-opt svg.trace-svg{filter:drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5)) !important;}
 /* Icônes de Sceau (SVG monochrome, stroke=currentColor) — cause réelle du
    bug 2 (BUG-REGRESSIONS-TRACE-COLORE.md) : ".emoji-opt *" ci-dessus cible
    TOUS les descendants, y compris le <path> À L'INTÉRIEUR du <svg>, pas
