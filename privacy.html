@@ -2,45 +2,154 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Politique de Confidentialité — Ghostub</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#060608">
+<title>Politique de confidentialité — Ghostub</title>
 <style>
-  body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #222; line-height: 1.7; }
-  h1 { color: #6B5CE7; }
-  h2 { color: #333; margin-top: 32px; }
+  :root {
+    --void: #060608;
+    --surface: #0d0d12;
+    --surface2: #12121a;
+    --ink: #e8e4dc;
+    --ink-dim: rgba(232,228,220,0.62);
+    --spirit: #9dabff;
+    --amber: #f0c868;
+    --border: rgba(157,171,255,0.14);
+    --link: #b0bcff;
+  }
+  body.light-theme {
+    --void: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f1efe9;
+    --ink: #201f1c;
+    --ink-dim: rgba(32,31,28,0.66);
+    --spirit: #5a6ad0;
+    --amber: #a5730f;
+    --border: rgba(90,106,208,0.18);
+    --link: #4a58c0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--void);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Instrument Sans", Arial, sans-serif;
+    line-height: 1.7;
+    margin: 0;
+    padding: env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+  .brand img { width: 34px; height: 34px; }
+  .brand-name { font-size: 20px; font-weight: 600; letter-spacing: .02em; }
+  h1 { font-size: 22px; margin: 0 0 6px; color: var(--ink); }
+  .updated { color: var(--ink-dim); font-size: 13px; margin: 0 0 32px; }
+  h2 { font-size: 15px; color: var(--spirit); margin: 30px 0 8px; text-transform: uppercase; letter-spacing: .04em; }
+  p, li { font-size: 14.5px; color: var(--ink); }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  a { color: var(--link); }
+  .todo { color: var(--amber); font-weight: 600; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin: 10px 0; }
+  .back { display: inline-block; margin-bottom: 20px; color: var(--ink-dim); text-decoration: none; font-size: 13px; }
+  footer { margin-top: 40px; font-size: 12px; color: var(--ink-dim); }
 </style>
 </head>
 <body>
-<h1>👻 Politique de Confidentialité — Ghostub</h1>
-<p><em>Dernière mise à jour : juin 2026</em></p>
+<script src="theme-init.js"></script>
+<div class="wrap">
+  <a class="back" href="index.html">← Retour à Ghostub</a>
+  <div class="brand">
+    <img src="assets/brand/ghostub-mark-trace.svg" alt="" aria-hidden="true">
+    <span class="brand-name">Ghostub</span>
+  </div>
+  <h1>Politique de confidentialité</h1>
+  <p class="updated">Dernière mise à jour : 17 septembre 2026 — cette page décrit ce que l'application fait réellement aujourd'hui, dans le code en production.</p>
 
-<h2>1. Données collectées</h2>
-<p>Lors de l'utilisation de l'application, nous collectons : adresse email, pseudonyme, données de géolocalisation (uniquement lors de l'utilisation active), contenu déposé (messages, audio, photos), et données techniques (identifiant Firebase, horodatage).</p>
+  <h2>1. Qui traite tes données</h2>
+  <div class="card">
+    <p><strong>Éditeur :</strong> <span class="todo">[À COMPLÉTER : dénomination et statut juridique — personne physique/EI/société]</span><br>
+    <strong>Adresse :</strong> <span class="todo">[À COMPLÉTER]</span><br>
+    <strong>SIRET :</strong> <span class="todo">[À COMPLÉTER si applicable]</span><br>
+    <strong>Directeur de publication :</strong> <span class="todo">[À COMPLÉTER]</span><br>
+    <strong>Contact / DPO :</strong> <a href="mailto:appghostub@gmail.com">appghostub@gmail.com</a></p>
+  </div>
 
-<h2>2. Finalité du traitement</h2>
-<p>Ces données servent à faire fonctionner le service, authentifier l'utilisateur, afficher les messages proches, et assurer la modération de la plateforme.</p>
+  <h2>2. Données que nous traitons</h2>
+  <div class="card">
+    <ul>
+      <li><strong>Compte :</strong> email, pseudonyme, identifiant Firebase (UID).</li>
+      <li><strong>Position GPS :</strong> utilisée pour détecter les fantômes proches et ancrer un dépôt à un lieu ; la position d'un fantôme déposé est enregistrée (latitude/longitude + geohash) et reste visible tant que le fantôme existe. Ta position de déplacement en temps réel n'est pas historisée sous forme de trajet — elle sert uniquement, à l'instant présent, à calculer les distances et l'affichage de présence.</li>
+      <li><strong>Contenu déposé :</strong> texte, message vocal, photo, vidéo et documents joints (vidéo/documents réservés Premium).</li>
+      <li><strong>Interactions :</strong> réactions, résonances, favoris.</li>
+      <li><strong>Statistiques :</strong> nombre de découvertes/dépôts, série (streak), score de rang (<code>userStats</code>).</li>
+      <li><strong>Personnalisation :</strong> couleur et caractère de ton Trace (<code>traceColor</code>).</li>
+      <li><strong>Statut Premium :</strong> abonnement actif ou non, code d'activation utilisé.</li>
+      <li><strong>Signalements :</strong> messages que tu signales, ou dont tu fais l'objet.</li>
+      <li><strong>Notifications :</strong> si tu les actives, pour être averti qu'un de tes fantômes a été découvert.</li>
+      <li><strong>Capteur d'orientation (boussole) :</strong> lu localement sur ton appareil pour orienter l'aiguille vers un fantôme proche. Il n'est <strong>jamais transmis à nos serveurs ni stocké</strong>.</li>
+      <li><strong>Mesure d'usage locale :</strong> un petit journal technique (les 200 derniers événements, ex. <code>quota_check_failed</code>) est conservé uniquement dans le stockage local de ton navigateur (<code>localStorage</code>), pour du débogage. Il n'est aujourd'hui envoyé à aucun serveur.</li>
+    </ul>
+  </div>
 
-<h2>3. Base légale</h2>
-<p>Le traitement est fondé sur votre consentement (article 6.1.a du RGPD), donné lors de la création du compte.</p>
+  <h2>3. Finalités et base légale</h2>
+  <div class="card">
+    <p>Ces données servent à faire fonctionner le service (authentification, affichage des fantômes proches, dépôt, notifications), à assurer la modération, et à personnaliser ton expérience (rang, Trace). Le traitement repose sur l'exécution du contrat qui te lie à Ghostub dès la création du compte (art. 6.1.b du RGPD) et, pour la géolocalisation précise, sur ton consentement explicite donné lors de l'autorisation demandée par ton navigateur (art. 6.1.a).</p>
+  </div>
 
-<h2>4. Partage des données</h2>
-<p>Vos données ne sont pas vendues. Elles sont hébergées chez Firebase (Google LLC) pour l'authentification et la base de données, et Cloudinary pour les fichiers audio et photos.</p>
+  <h2>4. Sous-traitants et hébergement</h2>
+  <div class="card">
+    <ul>
+      <li><strong>GitHub Pages</strong> — hébergement du site (frontend statique).</li>
+      <li><strong>Google Firebase</strong> — authentification, base de données (Firestore), fonctions serveur (Cloud Functions, région <code>europe-west9</code>), tâches planifiées (Cloud Scheduler) et gestion des secrets (Secret Manager).</li>
+      <li><strong>Cloudinary</strong> — hébergement des photos, vidéos et documents joints à un fantôme.</li>
+      <li><strong>OpenStreetMap France</strong> (tuiles cartographiques) et la bibliothèque <strong>Leaflet</strong> (chargée depuis le CDN unpkg.com) — affichage de la carte.</li>
+      <li><strong>Nominatim (OpenStreetMap)</strong> — retrouve le nom du lieu à partir de tes coordonnées GPS lors d'un dépôt.</li>
+      <li><strong>Google Fonts</strong> — polices de caractères chargées à distance.</li>
+    </ul>
+    <p class="todo">[À COMPLÉTER par Pipo : confirmer la localisation exacte des données pour chaque sous-traitant (UE ou hors UE) et les garanties de transfert le cas échéant — Firebase et Google Fonts sont opérés par Google, dont certains traitements peuvent avoir lieu hors UE.]</p>
+  </div>
 
-<h2>5. Durée de conservation</h2>
-<p>Les données sont conservées tant que le compte est actif. En cas de suppression, elles sont effacées sous 30 jours.</p>
+  <h2>5. Durées de conservation</h2>
+  <div class="card">
+    <ul>
+      <li>Un fantôme expiré est marqué comme tel, puis <strong>définitivement supprimé 60 jours</strong> après son expiration (tâche automatique <code>cleanExpiredGhosts</code>).</li>
+      <li>Les médias associés (Cloudinary) sont supprimés au moment où le fantôme lui-même est supprimé.</li>
+      <li>Un fantôme « éternel » est conservé sans limite de durée jusqu'à suppression manuelle par son auteur.</li>
+      <li><strong>Compte :</strong> tu peux supprimer tous tes fantômes et réponses à tout moment depuis ton profil (« Tout supprimer »). <span class="todo">[À COMPLÉTER / À IMPLÉMENTER : la suppression du compte d'authentification lui-même n'est pas encore automatisée aujourd'hui — en l'état, elle doit être demandée par email à appghostub@gmail.com.]</span></li>
+    </ul>
+  </div>
 
-<h2>6. Vos droits (RGPD)</h2>
-<p>Vous disposez des droits d'accès, rectification, effacement, opposition et portabilité. Pour les exercer : <a href="mailto:appghostub@gmail.com">appghostub@gmail.com</a></p>
+  <h2>6. Modération</h2>
+  <div class="card">
+    <p>Les dépôts passent par une modération automatique et tu peux signaler tout message inapproprié. Un fantôme signalé plusieurs fois est retiré. Chaque personne est limitée à 5 fantômes actifs simultanément.</p>
+  </div>
 
-<h2>7. Géolocalisation</h2>
-<p>La géolocalisation est utilisée uniquement pour détecter les messages proches. Elle n'est jamais transmise à d'autres utilisateurs.</p>
+  <h2>7. Premium et paiement</h2>
+  <div class="card">
+    <p>Le Premium (« Spectre ») s'active aujourd'hui uniquement par un code fourni par nos soins ; il n'entraîne aucun prélèvement automatique. <strong>Le paiement en ligne n'est pas encore disponible</strong> dans l'application : aucune donnée bancaire n'est collectée par Ghostub à ce jour.</p>
+  </div>
 
-<h2>8. Mineurs</h2>
-<p>L'application est déconseillée aux moins de 13 ans. Nous ne collectons pas sciemment de données sur des mineurs de moins de 13 ans.</p>
+  <h2>8. Tes droits (RGPD)</h2>
+  <div class="card">
+    <p>Tu disposes des droits d'accès, de rectification, d'effacement, d'opposition et de portabilité sur tes données. Pour les exercer, écris à <a href="mailto:appghostub@gmail.com">appghostub@gmail.com</a>. Tu peux aussi introduire une réclamation auprès de la CNIL (<a href="https://www.cnil.fr" target="_blank" rel="noopener">cnil.fr</a>).</p>
+  </div>
 
-<h2>9. Contact</h2>
-<p>Éditeur : Ghostub — application indépendante<br>
-Email : <a href="mailto:appghostub@gmail.com">appghostub@gmail.com</a><br>
-Application : Ghostub</p>
+  <h2>9. Âge minimum</h2>
+  <div class="card">
+    <p>Ghostub est déconseillé aux moins de 13 ans. Nous ne collectons pas sciemment de données concernant des mineurs de moins de 13 ans.</p>
+  </div>
+
+  <h2>10. Cookies et stockage local</h2>
+  <div class="card">
+    <p>Ghostub n'utilise pas de cookies publicitaires ni de traceur tiers, donc aucun bandeau de consentement n'est nécessaire. L'application utilise le stockage local de ton navigateur (<code>localStorage</code>) pour retenir tes préférences (thème, langue, éléments déjà vus) et un cache technique (service worker) pour fonctionner hors connexion — ces données restent sur ton appareil.</p>
+  </div>
+
+  <h2>11. Contact</h2>
+  <div class="card">
+    <p>Pour toute question sur cette politique : <a href="mailto:appghostub@gmail.com">appghostub@gmail.com</a></p>
+  </div>
+
+  <footer>Ghostub — <a href="terms.html">Conditions générales d'utilisation</a></footer>
+</div>
 </body>
 </html>
