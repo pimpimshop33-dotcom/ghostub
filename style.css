@@ -322,6 +322,15 @@ body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMa
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   letter-spacing:1.5px;
 }
+/* Wordmark "Ghostub" — "ub" dans l'ambre de l'app, même variable que l'onglet
+   actif de la nav du bas (.nav-item.active{color:var(--amber)}) — pas une
+   nouvelle teinte. Utilisé partout où "Ghostub" apparaît comme logo/titre
+   (jamais dans les phrases courantes). --amber a déjà une variante Mode jour
+   (cf. body.light-theme), donc le contraste suit automatiquement.
+   !important nécessaire ici : .ob-title/.auth-logo-title peuvent appliquer
+   un dégradé en background-clip:text — sans ça, "ub" hériterait du
+   -webkit-text-fill-color:transparent du parent. */
+.wordmark-ub{color:var(--amber) !important;-webkit-text-fill-color:var(--amber) !important;background:none !important;-webkit-background-clip:border-box !important;background-clip:border-box !important;}
 .ob-sub{font-size:16px !important;line-height:1.65 !important;color:#CBC9DC !important;}
 body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ob-ghost-big{

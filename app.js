@@ -4973,6 +4973,7 @@ window.shareMapLocation = async () => {
     // Canvas 2D n'interprète pas var(--...) (contrairement au DOM/CSSOM) :
     // résoudre la valeur réelle à chaque génération pour rester correct si le thème change.
     const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
+    const amber = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim();
 
     // Fond
     const bg = ctx.createLinearGradient(0, 0, 0, H);
@@ -5002,9 +5003,8 @@ window.shareMapLocation = async () => {
 
     // App name
     ctx.textAlign = 'center';
-    ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
     ctx.font = '500 36px "Instrument Sans", sans-serif';
-    ctx.fillText('GHOSTUB', W/2, 100);
+    _drawWordmarkCanvas(ctx, W/2, 100, `rgba(${ghostBlueRgb},0.45)`, amber);
 
     // Compteur central
     ctx.fillStyle = 'rgba(230,225,255,0.95)';
@@ -5151,13 +5151,30 @@ function _drawGhostCardBackground(ctx, W, H) {
   ctx.fillStyle = refl; ctx.fillRect(0, H*0.75, W, H*0.25);
 }
 
+// Wordmark "GHOSTUB" en Canvas — "UB" dans l'ambre de l'app, même logique
+// que .wordmark-ub en CSS (style.css) mais Canvas ne sait pas résoudre
+// var(--amber) : la couleur doit être une valeur littérale déjà résolue par
+// l'appelant (cf. getComputedStyle(...).getPropertyValue('--amber')).
+// ctx.textAlign doit être 'center' en entrée (comme tous les appelants ici) ;
+// restauré avant de sortir. Respecte ctx.letterSpacing déjà posé par l'appelant.
+function _drawWordmarkCanvas(ctx, centerX, y, colorMain, colorUb) {
+  ctx.textAlign = 'left';
+  const ghostW = ctx.measureText('GHOST').width;
+  const ubW = ctx.measureText('UB').width;
+  const startX = centerX - (ghostW + ubW) / 2;
+  ctx.fillStyle = colorMain;
+  ctx.fillText('GHOST', startX, y);
+  ctx.fillStyle = colorUb;
+  ctx.fillText('UB', startX + ghostW, y);
+  ctx.textAlign = 'center';
+}
+
 // ── Header app ────────────────────────────────────────
-function _drawGhostCardHeader(ctx, W, ghostBlueRgb) {
+function _drawGhostCardHeader(ctx, W, ghostBlueRgb, amber) {
   ctx.textAlign = 'center';
   ctx.letterSpacing = '8px';
-  ctx.fillStyle = `rgba(${ghostBlueRgb},0.45)`;
   ctx.font = '400 36px "Instrument Sans", sans-serif';
-  ctx.fillText('GHOSTUB', W/2, 100);
+  _drawWordmarkCanvas(ctx, W/2, 100, `rgba(${ghostBlueRgb},0.45)`, amber);
   ctx.letterSpacing = '0px';
 
   // Séparateur haut
@@ -5294,9 +5311,10 @@ window.generateGhostCard = async () => {
     // résoudre la valeur réelle à chaque génération pour rester correct si le thème change.
     const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
     const premiumRgb = getComputedStyle(document.documentElement).getPropertyValue('--premium-rgb').trim();
+    const amber = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim();
 
     _drawGhostCardBackground(ctx, W, H);
-    _drawGhostCardHeader(ctx, W, ghostBlueRgb);
+    _drawGhostCardHeader(ctx, W, ghostBlueRgb, amber);
     _drawGhostCardMark(ctx, W, H, ghostBlueRgb);
     _drawGhostCardMessage(ctx, W, H, ghostBlueRgb);
     _drawGhostCardLocation(ctx, W, H, premiumRgb);
@@ -6725,20 +6743,25 @@ function _drawYearCardBackground(ctx, W, H) {
   });
 }
 
-function _drawYearCardHeader(ctx, W, name, rank) {
+// Lot AK : ghostBlueRgb/premiumRgb/amber sont désormais résolus par
+// l'appelant (generateYearCard) et passés ici, au lieu des littéraux
+// 'rgba(var(--ghost-blue-rgb),...)' / 'rgba(var(--premium-rgb),...)' passés
+// tels quels à Canvas — Canvas 2D n'interprète pas var(--…) (contrairement
+// au DOM/CSSOM), donc fillStyle/strokeStyle échouaient silencieusement et
+// gardaient la valeur précédente : header "GHOSTUB" et titre invisibles.
+function _drawYearCardHeader(ctx, W, name, rank, ghostBlueRgb, premiumRgb, amber) {
   ctx.textAlign = 'center';
 
-  // App name
-  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.4)';
+  // App name — "UB" dans l'ambre de l'app, comme le wordmark CSS (Lot AK)
   ctx.font = '500 34px "Instrument Sans", sans-serif';
-  ctx.fillText('GHOSTUB', W/2, 110);
+  _drawWordmarkCanvas(ctx, W/2, 110, `rgba(${ghostBlueRgb},0.4)`, amber);
 
   // Ligne déco
-  ctx.strokeStyle = 'rgba(var(--ghost-blue-rgb),0.12)'; ctx.lineWidth = 1;
+  ctx.strokeStyle = `rgba(${ghostBlueRgb},0.12)`; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(80,140); ctx.lineTo(W-80,140); ctx.stroke();
 
   // Titre
-  ctx.fillStyle = 'rgba(var(--premium-rgb),0.85)';
+  ctx.fillStyle = `rgba(${premiumRgb},0.85)`;
   ctx.font = 'italic 62px "Cormorant Garamond", Georgia, serif';
   ctx.fillText(_currentLang === 'en' ? 'My year in ghosts' : 'Mon année en fantômes', W/2, 230);
 
@@ -6746,12 +6769,12 @@ function _drawYearCardHeader(ctx, W, name, rank) {
   ctx.fillStyle = 'rgba(230,225,255,0.9)';
   ctx.font = '500 44px "Instrument Sans", sans-serif';
   ctx.fillText(name, W/2, 310);
-  ctx.fillStyle = 'rgba(var(--ghost-blue-rgb),0.5)';
+  ctx.fillStyle = `rgba(${ghostBlueRgb},0.5)`;
   ctx.font = '34px "Instrument Sans", sans-serif';
   ctx.fillText(rank.icon + ' ' + rank.label, W/2, 370);
 
   // Ligne déco milieu
-  ctx.strokeStyle = 'rgba(var(--premium-rgb),0.15)';
+  ctx.strokeStyle = `rgba(${premiumRgb},0.15)`;
   ctx.beginPath(); ctx.moveTo(120,420); ctx.lineTo(W-120,420); ctx.stroke();
 }
 
@@ -6849,9 +6872,14 @@ window.generateYearCard = async () => {
     const canvas = document.createElement('canvas');
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
+    // Canvas 2D n'interprète pas var(--...) : résoudre la valeur réelle
+    // (cf. commentaire sur _drawYearCardHeader).
+    const ghostBlueRgb = getComputedStyle(document.documentElement).getPropertyValue('--ghost-blue-rgb').trim();
+    const premiumRgb = getComputedStyle(document.documentElement).getPropertyValue('--premium-rgb').trim();
+    const amber = getComputedStyle(document.documentElement).getPropertyValue('--amber').trim();
 
     _drawYearCardBackground(ctx, W, H);
-    _drawYearCardHeader(ctx, W, name, rank);
+    _drawYearCardHeader(ctx, W, name, rank, ghostBlueRgb, premiumRgb, amber);
     _drawYearCardStats(ctx, W, H, discovered, deposited, resonances);
     _drawYearCardExtras(ctx, W, streak, firstReads, topLocation);
     _drawYearCardFooter(ctx, W, H);
