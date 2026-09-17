@@ -184,13 +184,13 @@ const LANGS = {
     dep_lettre_salutation: 'À qui passera par ici,',
     dep_lettre_stamp_label: 'Sceau :',
     // Lot AI — Sceaux = expressions du Trace
-    seal_aria_classic: 'Sceau Trace classique',
-    seal_aria_smiling: 'Sceau Trace souriant',
-    seal_aria_loving: 'Sceau Trace amoureux',
-    seal_aria_sleepy: 'Sceau Trace endormi',
-    seal_aria_amazed: 'Sceau Trace émerveillé',
-    seal_aria_ardent: 'Sceau Trace ardent',
-    seal_aria_chatty: 'Sceau Trace bavard',
+    seal_aria_classic: 'Sceau classique',
+    seal_aria_smiling: 'Sceau souriant',
+    seal_aria_loving: 'Sceau amoureux',
+    seal_aria_sleepy: 'Sceau endormi',
+    seal_aria_amazed: 'Sceau émerveillé',
+    seal_aria_ardent: 'Sceau ardent',
+    seal_aria_chatty: 'Sceau bavard',
     seal_more_label: 'Plus de Sceaux',
     dep_lettre_placeholder: 'Une pensée, un souvenir, un secret… que vous laissez à qui saura le trouver.',
     dep_lettre_signature: '— ancré ici, à jamais',
@@ -340,9 +340,10 @@ const LANGS = {
     trace_color_rose: 'Rose',
     trace_color_crimson: 'Braise',
     trace_color_locked: 'Teinte réservée aux membres Premium',
-    mon_trace_title: 'Mon Trace',
-    mon_trace_sub: 'Choisis ton fantôme : chaque couleur a son caractère.',
-    mon_trace_premium_hint: '✦ 3 fantômes réservés aux membres Premium',
+    mon_trace_title: 'Mon ghost',
+    mon_trace_sub: 'Choisis ton ghost : chaque couleur a son caractère.',
+    mon_trace_premium_hint: '✦ 3 ghosts réservés aux membres Premium',
+    mon_trace_aria: 'Teinte de mon ghost',
     // Collection de cartes (Lot L)
     collection_title: 'Ma collection',
     profile_resonances: 'Résonances',
@@ -695,8 +696,8 @@ const LANGS = {
     help_streak_body: 'Dépose ou découvre un fantôme chaque jour pour faire grandir ta série, visible sur le Radar — un jour de grâce automatique évite de la perdre si tu en sautes un. De temps en temps, un souvenir refait surface : Ghostub te rappelle qu\'il y a 1 mois, 3 mois, 6 mois ou 1 an, tu laissais une trace à un endroit précis.',
     // Profil
     help_profile_title: 'Ton profil',
-    help_profile_trace_title: 'Mon Trace',
-    help_profile_trace_body: 'Choisis la couleur ET le caractère de ton fantôme personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).',
+    help_profile_trace_title: 'Mon ghost',
+    help_profile_trace_body: 'Choisis la couleur ET le caractère de ton ghost personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).',
     help_profile_rank_title: 'Mon rang',
     help_profile_rank_body: 'Une seule progression. Tu gagnes 1 point à chaque fantôme découvert, déposé, ou qui résonne, et 3 points par jour de série — 11 rangs, de Curieux à Légende.',
     help_empreinte_title: 'Mon empreinte',
@@ -706,7 +707,7 @@ const LANGS = {
     // Premium
     help_premium_title: 'Spectre Premium',
     help_premium_sub: 'Le Premium débloque :',
-    help_premium_list: 'Vidéos et documents joints à tes fantômes<br>Message du futur — s\'ouvre à une date précise<br>Chasses au trésor — fantômes enchaînés<br>Ghost dédié — réservé à une seule personne<br>Mode Commerce — offres visibles à 50 m<br>Ouvertures illimitées (au lieu de 3/jour)<br>5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>3 teintes de Trace supplémentaires',
+    help_premium_list: 'Vidéos et documents joints à tes fantômes<br>Message du futur — s\'ouvre à une date précise<br>Chasses au trésor — fantômes enchaînés<br>Ghost dédié — réservé à une seule personne<br>Mode Commerce — offres visibles à 50 m<br>Ouvertures illimitées (au lieu de 3/jour)<br>5 ou 10 lectures par fantôme déposé (au lieu de 1)<br>3 teintes de ghost supplémentaires',
     help_premium_hint: 'Active ton code dans Profil → Mon compte. Le paiement en ligne n\'est pas encore disponible — contacte-nous pour obtenir un code.',
     // Réglages
     help_settings_title: 'Réglages',
@@ -873,13 +874,13 @@ const LANGS = {
     dep_lettre_salutation: 'To whoever passes through,',
     dep_lettre_stamp_label: 'Seal:',
     // Lot AI — Seals = Trace expressions
-    seal_aria_classic: 'Classic Trace seal',
-    seal_aria_smiling: 'Smiling Trace seal',
-    seal_aria_loving: 'Loving Trace seal',
-    seal_aria_sleepy: 'Sleepy Trace seal',
-    seal_aria_amazed: 'Amazed Trace seal',
-    seal_aria_ardent: 'Ardent Trace seal',
-    seal_aria_chatty: 'Chatty Trace seal',
+    seal_aria_classic: 'Classic seal',
+    seal_aria_smiling: 'Smiling seal',
+    seal_aria_loving: 'Loving seal',
+    seal_aria_sleepy: 'Sleepy seal',
+    seal_aria_amazed: 'Amazed seal',
+    seal_aria_ardent: 'Ardent seal',
+    seal_aria_chatty: 'Chatty seal',
     seal_more_label: 'More seals',
     dep_lettre_placeholder: 'A thought, a memory, a secret… for whoever may find it.',
     dep_lettre_signature: '— anchored here, forever',
@@ -1030,9 +1031,14 @@ const LANGS = {
     trace_color_rose: 'Rose',
     trace_color_crimson: 'Ember',
     trace_color_locked: 'Premium-only tint',
-    mon_trace_title: 'My Trace',
-    mon_trace_sub: 'Choose your ghost: every color has its own character.',
-    mon_trace_premium_hint: '✦ 3 ghosts reserved for Premium members',
+    // Lot AQ — "ghost" already means the deposited messages in English, so
+    // the personal avatar is "spirit" here (FR keeps "ghost", no clash with
+    // "fantôme"). Flagged to Pipo: this reads oddly next to the "Spirit"
+    // tint name (one of the 6 colors) — worth a naming pass if it bothers.
+    mon_trace_title: 'My spirit',
+    mon_trace_sub: 'Choose your spirit: every color has its own character.',
+    mon_trace_premium_hint: '✦ 3 spirits reserved for Premium members',
+    mon_trace_aria: 'Tint of my spirit',
     // Card collection (Lot L)
     collection_title: 'My collection',
     profile_first_reader: 'First reads',
@@ -1384,8 +1390,8 @@ const LANGS = {
     help_streak_body: 'Deposit or discover a ghost every day to grow your streak, visible on the Radar — an automatic grace day keeps it alive if you miss one. Every now and then, a memory resurfaces too: Ghostub reminds you that 1 month, 3 months, 6 months, or 1 year ago, you left a trace at a specific place.',
     // Profile
     help_profile_title: 'Your profile',
-    help_profile_trace_title: 'My Trace',
-    help_profile_trace_body: 'Choose the color AND the character of your personal ghost, the one that represents you — 3 free tints (Spirit, Orchid, Mist), 3 Premium-only (Amber, Rose, Ember).',
+    help_profile_trace_title: 'My spirit',
+    help_profile_trace_body: 'Choose the color AND the character of your personal spirit, the one that represents you — 3 free tints (Spirit, Orchid, Mist), 3 Premium-only (Amber, Rose, Ember).',
     help_profile_rank_title: 'My rank',
     help_profile_rank_body: 'A single progression. You gain 1 point for every ghost discovered, deposited, or resonated on, and 3 points per streak day — 11 ranks, from Curious to Legend.',
     help_empreinte_title: 'My footprint',
@@ -1395,7 +1401,7 @@ const LANGS = {
     // Premium
     help_premium_title: 'Premium Spectre',
     help_premium_sub: 'Premium unlocks:',
-    help_premium_list: 'Videos and documents attached to your ghosts<br>Future message — opens on a specific date<br>Treasure hunts — chained ghosts<br>Dedicated ghost — reserved for one person<br>Commerce Mode — offers visible within 50 m<br>Unlimited opens (instead of 3/day)<br>5 or 10 reads per ghost you drop (instead of 1)<br>3 extra Trace tints',
+    help_premium_list: 'Videos and documents attached to your ghosts<br>Future message — opens on a specific date<br>Treasure hunts — chained ghosts<br>Dedicated ghost — reserved for one person<br>Commerce Mode — offers visible within 50 m<br>Unlimited opens (instead of 3/day)<br>5 or 10 reads per ghost you drop (instead of 1)<br>3 extra spirit tints',
     help_premium_hint: 'Activate your code in Profile → My account. Online payment isn\'t available yet — contact us to get a code.',
     // Settings
     help_settings_title: 'Settings',
