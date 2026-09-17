@@ -269,8 +269,8 @@
         <div id="userCoords" aria-label="Coordonnées GPS"></div>
       </div>
       <div class="radar-header-actions">
-        <button class="audio-toggle" data-action="nav" data-screen="screenHelp" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip">❓</button>
-        <button class="audio-toggle" id="audioToggleBtn" data-action="toggleAudioEnabled" aria-label="Activer/désactiver les sons" title="Sons">🔊</button>
+        <button class="audio-toggle" data-action="nav" data-screen="screenHelp" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/></svg></button>
+        <button class="audio-toggle" id="audioToggleBtn" data-action="toggleAudioEnabled" aria-label="Activer/désactiver les sons" title="Sons"><svg class="ui-icon" id="audioToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 7a7 7 0 0 1 0 10"/></svg></button>
       </div>
     </div>
     <!-- Bandeau mode invité — masqué par défaut, affiché/masqué par showScreen() -->
@@ -301,7 +301,7 @@
       <span class="rank-next" id="rankNext">→ Flâneur</span>
     </div>
     <div class="vibe-bar" aria-live="polite" aria-atomic="false">
-      <div class="vibe-emoji" aria-hidden="true">📳</div>
+      <div class="vibe-emoji" aria-hidden="true"><svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M4 8l-1.5 2L4 12"/><path d="M20 8l1.5 2L20 12"/></svg></div>
       <div class="vibe-label" data-i18n="radar_vibe_label">Détection active · présences en attente</div>
       <div id="resoStatus" class="reso-status" data-tip="Résonance quotidienne disponible" data-i18n-tip="radar_reso_tip" aria-label="Résonance quotidienne">✦ 1</div>
       <div id="streakDisplay" class="streak-display u-hidden" aria-label="Streak de découvertes"></div>

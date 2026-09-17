@@ -747,6 +747,15 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 }
 .ghost-dot-secret .ghost-dot-emoji{color:#C7BCEE;}
 .ghost-dot-rare .ghost-dot-emoji{color:#F4D998;}
+/* Lot AS — "halo bleu flou"/"contour marron" (capture Pipo) : ghostReveal
+   (ci-dessous) anime un drop-shadow(currentColor) sur CE point, distinct
+   du fanage de _traceMarkHTML déjà corrigé — cette lueur bleue (#9DABFF,
+   commune à tous les ghosts) et or-tan (#F4D998, rare) n'avait pas de
+   variante jour. Encre pour le commun, ambre pour le rare, violet secret
+   conservé (teinte volontairement distincte, cf. Lot AR). */
+body.light-theme .ghost-dot-emoji{color:rgba(28,26,36,.35);}
+body.light-theme .ghost-dot-rare .ghost-dot-emoji{color:rgba(159,99,23,.55);}
+body.light-theme .ghost-dot-secret .ghost-dot-emoji{color:rgba(150,60,220,.4);}
 /* Pic recalé sur 0%/100% (au lieu de 17%) : le nouveau .radar-sweep (valeurs
    exactes de la maquette) a son pic angulaire à 0deg — RADAR_SWEEP_PEAK_FRACTION
    dans app.js est passé de .17 à 0 en conséquence, même décalage relatif
@@ -1911,6 +1920,9 @@ body.light-theme .ghost-float .trace-svg{filter:none;}
 .rank-progress-fraction{color:var(--spirit-dim);font-size:12px;}
 .rank-progress-track{height:5px;border-radius:3px;background:rgba(var(--spirit-rgb),.12);overflow:hidden;margin-bottom:8px;}
 .rank-progress-track-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,rgba(var(--spirit-rgb),.7),rgba(232,160,48,.85));transition:width .5s ease;}
+/* Lot AS — même règle que .rank-progress-fill ci-dessus : ambre uni en jour. */
+body.light-theme .rank-progress-track{background:var(--track-bg);}
+body.light-theme .rank-progress-track-fill{background:var(--amber);}
 .rank-progress-rule{font-size:11px;color:var(--spirit-dim);line-height:1.5;}
 .rank-progress-max{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:var(--amber);text-align:center;padding:4px 0;}
 .rank-cards-grid{
@@ -2886,6 +2898,11 @@ body.light-theme .reply-item{background:var(--surface);}
 /* Dégradé indigo → lavande → doré (maquette "Nocturne Précieux"), pas
    ambre → vert comme avant. */
 .rank-progress-fill{position:relative;overflow:hidden;height:100%;border-radius:2px;width:0%;background:linear-gradient(90deg,rgba(108,122,224,.85) 0%,rgba(199,188,238,.85) 50%,rgba(244,217,152,.9) 100%);transition:width .8s cubic-bezier(.25,.46,.45,.94);box-shadow:0 0 8px rgba(199,188,238,.25);}
+/* Lot AS — "la barre de rang encore en dégradé bleu→jaune" (capture Pipo,
+   demandé ambre uni au Lot AR — oublié, ce dégradé-ci est codé en dur, pas
+   dérivé des variables --*-rgb neutralisées). */
+body.light-theme .rank-progress-fill{background:var(--amber);box-shadow:none;}
+body.light-theme .rank-progress-wrap{background:var(--track-bg);}
 /* Scintillement continu (Lot G3) : bande claire qui balaie le dégradé en boucle lente */
 .rank-progress-fill::after{
   content:'';position:absolute;inset:0;

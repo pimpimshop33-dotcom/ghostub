@@ -1816,20 +1816,36 @@ let _traceIdSeq = 0;
 // valeurs soient appliquées via de vraies écritures JS sur .style (hors
 // périmètre CSP). Tous les appelants actuels le font déjà.
 function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
-  const [c1, c2] = discovered ? _discoveredColors() : _categoryColors(g.emoji);
+  let [c1, c2] = discovered ? _discoveredColors() : _categoryColors(g.emoji);
+  const light = _isLightTheme();
 
   let opacity = 1, saturation = 100;
   if (!discovered) {
     const { pct } = GhostService.computeLifetime(g);
-    // pct 0 (frais) -> saturation 100% ; pct 100 (bientôt expiré) -> 15%
-    // (gris-lavande pâle). L'opacité ne fane que si fadeOpacity=true (radar) :
-    // sur la Carte, les marqueurs ont déjà leur propre opacité selon la
-    // distance (jusqu'à ×0.25) — cumuler les deux faisait tomber des ghosts
-    // âgés+lointains à ~9% d'opacité combinée, quasi invisibles
-    // (BUG-REGRESSIONS-TRACE-COLORE.md, bug 1). La saturation seule suffit à
-    // communiquer le fanage sans ce risque de disparition.
-    saturation = 100 - (pct / 100) * 85;
-    if (fadeOpacity) opacity = 1 - (pct / 100) * 0.65;
+    if (light) {
+      // Lot AS — "remplissage gris-lavande opaque" (capture Pipo) : le
+      // filtre CSS saturate() (ci-dessous, nuit) désature vers un gris
+      // NEUTRE, qui vire au bleu-lavande sale une fois posé sur les
+      // teintes jour déjà pleines. En jour, fanage = interpolation directe
+      // de la couleur vers un gris CHAUD (#D9D5CC, celui des anneaux du
+      // Radar) — jamais plus loin qu'à 70% de la cible, pour qu'un ghost
+      // âgé garde un soupçon de sa teinte — et opacité qui ne descend
+      // jamais sous ~45% (au lieu de 35% en nuit) pour rester net sur blanc.
+      const t = (pct / 100) * 0.7;
+      c1 = _lerpHex(c1, '#D9D5CC', t);
+      c2 = _lerpHex(c2, '#D9D5CC', t);
+      if (fadeOpacity) opacity = 1 - (pct / 100) * 0.55;
+    } else {
+      // pct 0 (frais) -> saturation 100% ; pct 100 (bientôt expiré) -> 15%
+      // (gris-lavande pâle). L'opacité ne fane que si fadeOpacity=true (radar) :
+      // sur la Carte, les marqueurs ont déjà leur propre opacité selon la
+      // distance (jusqu'à ×0.25) — cumuler les deux faisait tomber des ghosts
+      // âgés+lointains à ~9% d'opacité combinée, quasi invisibles
+      // (BUG-REGRESSIONS-TRACE-COLORE.md, bug 1). La saturation seule suffit à
+      // communiquer le fanage sans ce risque de disparition.
+      saturation = 100 - (pct / 100) * 85;
+      if (fadeOpacity) opacity = 1 - (pct / 100) * 0.65;
+    }
   }
 
   const uid = 'tm' + (_traceIdSeq++);
@@ -1896,12 +1912,22 @@ function _renderDepositSealPicker() {
 // JS sur .style, jamais un style="" du markup, donc hors périmètre CSP
 // (cf. commentaire sur _traceMarkHTML).
 function _hydrateTraceMarks(root) {
+  // Lot AS — cette écriture directe sur .style.filter (nécessaire, cf.
+  // commentaire au-dessus) l'emportait sur l'allègement CSS du drop-shadow
+  // en Mode jour posé au Lot AR (body.light-theme .trace-svg{filter:...}) —
+  // un style="" inline gagne toujours contre une règle de classe. D'où le
+  // "halo bleu flou" persistant sur le Radar malgré ce fix : il fallait
+  // aussi le faire ici, pas seulement en CSS.
+  const light = _isLightTheme();
+  const shadow = light
+    ? 'drop-shadow(0 0 1px rgba(28,26,36,.3)) drop-shadow(0 1px 1px rgba(28,26,36,.18))'
+    : 'drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5))';
   (root || document).querySelectorAll('.trace-mark[data-trace-w]').forEach(el => {
     const w = el.dataset.traceW;
     el.style.width = w + 'px';
     el.style.height = w + 'px';
     el.style.opacity = el.dataset.traceOp;
-    el.style.filter = `saturate(${el.dataset.traceSat}%) drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5))`;
+    el.style.filter = light ? shadow : `saturate(${el.dataset.traceSat}%) ${shadow}`;
   });
 }
 // Hydrate un marqueur Leaflet créé par buildLeafletMap() : animation-delay
@@ -2054,6 +2080,13 @@ function _hexToRgba(hex, alpha) {
   const b = parseInt(h.substring(4, 6), 16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+// Lot AS — interpole un hex vers une cible (gris chaud du fanage jour,
+// cf. _traceMarkHTML) ; t=0 couleur d'origine, t=1 cible pleine.
+function _lerpHex(hex, targetHex, t) {
+  const a = hex.replace('#', ''), b = targetHex.replace('#', '');
+  const mix = (i) => Math.round(parseInt(a.substring(i, i + 2), 16) * (1 - t) + parseInt(b.substring(i, i + 2), 16) * t);
+  return '#' + [0, 2, 4].map(i => mix(i).toString(16).padStart(2, '0')).join('');
+}
 
 window.setTraceColor = async (colorId) => {
   const color = TRACE_COLORS.find(c => c.id === colorId);
@@ -2120,7 +2153,14 @@ function _rankIconHTML(rank, { size = 14 } = {}) {
   // du Lot F ("le neutre n'est jamais un Sceau parmi d'autres") pour CE seul
   // cas. Ne pas étendre aux autres rangs sans nouvelle validation produit.
   if (rank.icon === '👻') {
-    return `<img src="assets/brand/ghostub-mark-trace.svg" class="ui-icon rank-icon" width="${size}" height="${size}" aria-hidden="true">`;
+    // Lot AS — "mini-icône de rang bleutée à gauche de Haunter" (capture
+    // Pipo) : l'asset statique ghostub-mark-trace.svg reste toujours dans
+    // sa teinte nuit d'origine, détonnant au milieu d'une interface jour
+    // encre/ambre. Rendu live via _traceBodyMarkup (mêmes couleurs
+    // théme-aware que partout ailleurs) au lieu de l'image figée.
+    const [c1, c2] = _categoryColors('👻');
+    const uid = 'rki' + (_traceIdSeq++);
+    return `<span class="ui-icon rank-icon" style="display:inline-flex;width:${size}px;height:${size}px;"><svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup('👻', c1, c2, uid, size)}</svg></span>`;
   }
   return _uiIconHTML(rank.icon, { size, className: 'ui-icon rank-icon' });
 }
@@ -4405,6 +4445,16 @@ function getTierBadgeHTML(tier) {
 }
 
 // ── Audio toggle ──────────────────────────────────────────
+// Lot AS — "icône son rose" (emoji système 🔊/🔇) → SVG encre, cohérent
+// avec le reste de l'app. Le bouton reste un <svg id="audioToggleIcon">
+// fixe dans index.html ; on ne change que ses <path> selon l'état, plutôt
+// que btn.textContent qui écrasait le SVG entier (Lot AS bug initial).
+const _AUDIO_ICON_ON = '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 7a7 7 0 0 1 0 10"/>';
+const _AUDIO_ICON_OFF = '<path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M17 9l5 6M22 9l-5 6"/>';
+function _setAudioIcon(enabled) {
+  const icon = document.getElementById('audioToggleIcon');
+  if (icon) icon.innerHTML = enabled ? _AUDIO_ICON_ON : _AUDIO_ICON_OFF;
+}
 window.toggleAudioEnabled = () => {
   const btn = document.getElementById('audioToggleBtn');
   const key = 'ghostub_audio_enabled';
@@ -4413,7 +4463,7 @@ window.toggleAudioEnabled = () => {
   localStorage.setItem(key, next ? '1' : '0');
   AudioService.setEnabled(next);
   HapticsService.setEnabled(next);
-  btn.textContent = next ? '🔊' : '🔇';
+  _setAudioIcon(next);
   btn.classList.toggle('muted', !next);
 };
 // Restore audio preference
@@ -4423,7 +4473,7 @@ window.toggleAudioEnabled = () => {
     AudioService.setEnabled(false);
     HapticsService.setEnabled(false);
     const btn = document.getElementById('audioToggleBtn');
-    if (btn) { btn.textContent = '🔇'; btn.classList.add('muted'); }
+    if (btn) { _setAudioIcon(false); btn.classList.add('muted'); }
   }
 })();
 
