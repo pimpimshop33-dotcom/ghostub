@@ -7212,23 +7212,19 @@ function _stopRadarPingLoop() {
 // cf. _compassTick ci-dessous), juste l'unité de temps de référence utilisée
 // pour convertir ce facteur en un facteur effectif selon le dt réel écoulé.
 const COMPASS_TICK_MS = 120;
-// Sous ce seuil, on n'écrit pas le DOM (évite de redéclencher la transition
-// CSS pour un mouvement imperceptible, cause du "sursaut" remonté par Pipo —
-// cf. LOT-AB-boussole-aiguille-qui-saccade.md). Remonté 0.6°→1.8° (Lot AC) :
-// le bruit magnétomètre réel du téléphone est plus fort que la simulation
-// ne le reproduisait, il fallait lisser plus fort, pas changer d'approche.
-// Lot AG : un seuil unique flickait en rafale (skip/pas-skip) quand le signal
-// stagnait pile autour de sa frontière — chaque frame ré-évaluait diff >= 1.8°
-// indépendamment, donc un bruit de ±0.1° autour de 1.8° faisait alterner la
-// décision (et donc l'étiquette debug, qui suit fidèlement cette même
-// décision) à chaque tick, sans qu'aucune des deux valeurs ne soit "fausse".
-// Remplacé par une hystérésis à deux bornes : il faut dépasser le seuil haut
-// (ENGAGE) pour déclencher une mise à jour, puis une fois en train de suivre
-// on continue tant que diff reste au-dessus du seuil bas (DISENGAGE) — un
-// signal qui oscille entre les deux bornes ne peut plus faire de va-et-vient,
-// il faut effectivement retomber sous DISENGAGE pour se re-figer.
-const COMPASS_JITTER_ENGAGE_DEG = 2.0;
-const COMPASS_JITTER_DISENGAGE_DEG = 1.0;
+// Lot AB/AC/AG (obsolète, retiré au Lot AH) : un seuil "n'écrit pas le DOM
+// sous X°" — même à deux bornes avec hystérésis — transforme un mouvement
+// continu (le lissage rAF bouge déjà de quelques dixièmes de degré par
+// frame) en marches d'escalier : dès qu'on écrit le transform, l'écart à la
+// dernière valeur affichée retombe à ~0, donc l'hystérésis ne reste jamais
+// "en train de suivre" plus d'une frame — l'aiguille n'avance que par sauts
+// ≥ seuil, ce qui *est* la saccade, pas une protection contre elle.
+// Remplacé par une zone morte douce appliquée à la CIBLE du lissage (pas au
+// rendu) : un écart infra-COMPASS_SOFT_DEADBAND_DEG entre le cap brut et le
+// cap lissé réduit progressivement (smoothstep) le facteur de lissage
+// appliqué au lieu de bloquer l'écriture — un tremblement de main ne déplace
+// quasiment pas l'aiguille, mais rien ne devient jamais un palier discret.
+const COMPASS_SOFT_DEADBAND_DEG = 3;
 // Fenêtre glissante (Lot AC) : nombre de dernières lectures brutes gardées,
 // peu importe leur espacement temporel — remplace l'ancien comportement qui
 // ne moyennait que les lectures reçues depuis le tick précédent (~120ms,
@@ -7261,9 +7257,22 @@ let _compassLastFrameTs = null; // performance.now() du frame précédent (Lot A
 let _compassRawHeading = null;
 let _compassDispersion = 0; // dispersion de la fenêtre courante (Lot AE, cf. _averageAngleDeg)
 let _compassSmoothedHeading = null;
-let _compassDisplayedHeading = null;
-let _compassFollowing = false; // Lot AG — état de l'hystérésis anti-tremblement (cf. COMPASS_JITTER_ENGAGE/DISENGAGE_DEG)
+// Angle cumulatif non-wrappé utilisé pour le rendu (Lot AH) — contrairement à
+// _compassSmoothedHeading (toujours dans [0, 360)), celui-ci peut dépasser 360
+// ou devenir négatif : au passage 359°→1°, on ajoute +2° au lieu de retomber à
+// 1°, donc la transition CSS/JS interpole toujours par le plus court chemin,
+// jamais par un tour complet dans le mauvais sens.
+let _compassRenderAngle = null;
+let _compassLastWrittenAngle = null; // dernier angle réellement écrit dans le DOM — économie d'écriture (Lot AH), pas un seuil anti-tremblement
 let _compassPermissionDenied = false;
+// Références DOM mises en cache à l'attache (Lot AH) — pas de getElementById
+// à chaque frame rAF, invalidées dans _detachCompassListener.
+let _compassRadarScreenEl = null;
+let _compassMapScreenEl = null;
+let _compassRadarNeedleEl = null;
+let _compassRadarWidgetEl = null;
+let _compassMapNeedleEl = null;
+let _compassMapWidgetEl = null;
 // Lectures brutes accumulées depuis le dernier tick — moyennées (vecteurs,
 // wraparound-safe) avant lissage, au lieu de ne garder que le dernier event
 // (le magnétomètre est naturellement bruité, les events arrivent souvent
@@ -7314,26 +7323,24 @@ function _handleCompassEvent(e) {
 // Diagnostic uniquement (?compassDebug=1) — écrit les valeurs réelles reçues
 // du capteur pour voir si le bruit vient des lectures brutes elles-mêmes
 // (capteur/OS) ou d'ailleurs, avant de retoucher aux constantes de lissage.
-function _updateCompassDebugPanel(deg, skipped) {
+function _updateCompassDebugPanel(delta, gain) {
   if (!_compassDebugEnabled) return;
   const el = document.getElementById('compassDebugPanel');
   if (!el) return;
   const raw = _compassRawHeading === null ? '—' : _compassRawHeading.toFixed(1);
   const smoothed = _compassSmoothedHeading === null ? '—' : _compassSmoothedHeading.toFixed(1);
-  const shown = _compassDisplayedHeading === null ? '—' : _compassDisplayedHeading.toFixed(1);
+  const renderAngle = _compassRenderAngle === null ? '—' : _compassRenderAngle.toFixed(2);
   const baseFactor = _compassSmoothFactor(_compassDispersion);
   const effFactor = _compassEffectiveFactor(baseFactor, _compassLastDtMs);
-  const threshold = _compassFollowing ? COMPASS_JITTER_DISENGAGE_DEG : COMPASS_JITTER_ENGAGE_DEG;
   el.textContent =
     `event: ${_compassEventName || '—'}\n` +
     `dt réel entre frames: ${_compassLastDtMs.toFixed(1)}ms (réf ${COMPASS_TICK_MS}ms)\n` +
     `events/frame: ${_compassEventsSinceTick}\n` +
     `raw(avg ${_compassRawBuffer.length}): ${raw}°\n` +
     `dispersion: ${_compassDispersion.toFixed(4)} → facteur base: ${baseFactor.toFixed(4)} → effectif: ${effFactor.toFixed(4)}\n` +
+    `delta (raw-smoothed): ${delta === null ? '—' : delta.toFixed(2)}° → gain zone morte: ${gain === null ? '—' : gain.toFixed(3)}\n` +
     `smoothed: ${smoothed}°\n` +
-    `hystérésis: ${_compassFollowing ? 'following' : 'locked'} (seuil actif ${threshold}°)\n` +
-    `affiché: ${shown}°${skipped ? ' (skip)' : ''}\n` +
-    `deg calculé ce frame: ${deg === null ? '—' : deg.toFixed(1)}°`;
+    `renderAngle (unwrapped): ${renderAngle}°`;
   _compassEventsSinceTick = 0;
 }
 
@@ -7416,45 +7423,53 @@ function _compassTick(nowTs) {
     _compassRawHeading = avg;
     _compassDispersion = dispersion;
   }
-  if (_compassRawHeading === null) { _updateCompassDebugPanel(null, false); return; }
+  if (_compassRawHeading === null) { _updateCompassDebugPanel(null, null); return; }
   const baseFactor = _compassSmoothFactor(_compassDispersion);
   const effFactor = _compassEffectiveFactor(baseFactor, dtMs);
+  let delta = 0;
+  let gain = 1;
   if (_compassSmoothedHeading === null) {
     _compassSmoothedHeading = _compassRawHeading;
   } else {
-    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, effFactor);
+    // Zone morte douce (Lot AH) : appliquée à la CIBLE du lissage, pas au
+    // rendu — un écart infra-COMPASS_SOFT_DEADBAND_DEG entre brut et lissé
+    // réduit continûment (smoothstep) le facteur appliqué au lieu de bloquer
+    // l'écriture DOM ; aucun palier discret, juste un lissage plus doux.
+    delta = ((_compassRawHeading - _compassSmoothedHeading + 540) % 360) - 180;
+    const rawGain = Math.min(1, Math.abs(delta) / COMPASS_SOFT_DEADBAND_DEG);
+    gain = rawGain * rawGain * (3 - 2 * rawGain); // smoothstep
+    _compassSmoothedHeading = _lerpAngleDeg(_compassSmoothedHeading, _compassRawHeading, effFactor * gain);
   }
-  const deg = Math.round(_compassSmoothedHeading * 10) / 10;
-  // Seuil anti-tremblement : si le mouvement depuis la dernière valeur
-  // affichée est imperceptible, ne pas réécrire le transform — ça évite de
-  // redéclencher la transition CSS en continu (donnait une impression de
-  // vibration même quand le cap réel est quasi stable).
-  if (_compassDisplayedHeading !== null) {
-    const diff = Math.abs(((deg - _compassDisplayedHeading + 540) % 360) - 180);
-    const threshold = _compassFollowing ? COMPASS_JITTER_DISENGAGE_DEG : COMPASS_JITTER_ENGAGE_DEG;
-    if (diff < threshold) {
-      _compassFollowing = false;
-      _updateCompassDebugPanel(deg, true);
-      return;
+  // Angle cumulatif non-wrappé (Lot AH) : jamais de tour complet à l'envers
+  // au passage du nord (359°→1°), contrairement à rotate(deg) avec deg dans
+  // [0, 360) que la transition/interpolation prendrait par le "long" chemin.
+  if (_compassRenderAngle === null) {
+    _compassRenderAngle = _compassSmoothedHeading;
+  } else {
+    const renderMod = ((_compassRenderAngle % 360) + 360) % 360;
+    const step = ((_compassSmoothedHeading - renderMod + 540) % 360) - 180;
+    _compassRenderAngle += step;
+  }
+  // Écriture DOM seulement si l'angle a assez bougé (économie, pas un seuil
+  // anti-tremblement — 0.05° est imperceptible, ça ne crée jamais de palier).
+  if (_compassLastWrittenAngle === null || Math.abs(_compassRenderAngle - _compassLastWrittenAngle) >= 0.05) {
+    _compassLastWrittenAngle = _compassRenderAngle;
+    // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
+    // (#radarCompassWidget/#mapCompassWidget dans index.html), pas plus
+    // accroché à .radar-center ni recréé avec le marqueur Leaflet : seule
+    // l'aiguille tourne, le cadran reste fixe. Lot AH : on n'écrit que le
+    // widget de l'écran réellement actif (l'autre est display:none derrière
+    // un .screen inactif — inutile de le toucher à 60fps).
+    const transform = `rotate(${_compassRenderAngle.toFixed(2)}deg)`;
+    if (_compassRadarScreenEl?.classList.contains('active')) {
+      if (_compassRadarNeedleEl) _compassRadarNeedleEl.style.transform = transform;
+      _compassRadarWidgetEl?.classList.add('visible');
+    } else if (_compassMapScreenEl?.classList.contains('active')) {
+      if (_compassMapNeedleEl) _compassMapNeedleEl.style.transform = transform;
+      _compassMapWidgetEl?.classList.add('visible');
     }
-    _compassFollowing = true;
   }
-  _compassDisplayedHeading = deg;
-  // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
-  // (#radarCompassWidget/#mapCompassWidget dans index.html), pas plus
-  // accroché à .radar-center ni recréé avec le marqueur Leaflet : seule
-  // l'aiguille tourne, le cadran reste fixe.
-  const radarNeedle = document.getElementById('radarCompassNeedle');
-  if (radarNeedle) {
-    radarNeedle.style.transform = `rotate(${deg}deg)`;
-    document.getElementById('radarCompassWidget')?.classList.add('visible');
-  }
-  const mapNeedle = document.getElementById('mapCompassNeedle');
-  if (mapNeedle) {
-    mapNeedle.style.transform = `rotate(${deg}deg)`;
-    document.getElementById('mapCompassWidget')?.classList.add('visible');
-  }
-  _updateCompassDebugPanel(deg, false);
+  _updateCompassDebugPanel(delta, gain);
 }
 
 function _hideCompassWidgets() {
@@ -7468,6 +7483,15 @@ function _attachCompassListener() {
   window.addEventListener(_compassEventName, _handleCompassEvent);
   _compassListening = true;
   _compassLastFrameTs = null;
+  // Cache DOM (Lot AH) : évite un getElementById par frame dans _compassTick.
+  // Les écrans/widgets sont statiques (jamais recréés) — un cache pris à
+  // l'attache reste valide tant qu'on ne s'est pas détaché.
+  _compassRadarScreenEl = document.getElementById('screenRadar');
+  _compassMapScreenEl = document.getElementById('screenMap');
+  _compassRadarNeedleEl = document.getElementById('radarCompassNeedle');
+  _compassRadarWidgetEl = document.getElementById('radarCompassWidget');
+  _compassMapNeedleEl = document.getElementById('mapCompassNeedle');
+  _compassMapWidgetEl = document.getElementById('mapCompassWidget');
   if (!_compassRafId) _compassRafId = requestAnimationFrame(_compassTick);
   document.getElementById('compassPermBtn')?.classList.add('u-hidden');
   if (_compassDebugEnabled) document.getElementById('compassDebugPanel')?.classList.remove('u-hidden');
@@ -7483,9 +7507,15 @@ function _detachCompassListener() {
   _compassRawHeading = null;
   _compassDispersion = 0;
   _compassSmoothedHeading = null;
-  _compassDisplayedHeading = null;
-  _compassFollowing = false;
+  _compassRenderAngle = null;
+  _compassLastWrittenAngle = null;
   _compassRawBuffer = [];
+  _compassRadarScreenEl = null;
+  _compassMapScreenEl = null;
+  _compassRadarNeedleEl = null;
+  _compassRadarWidgetEl = null;
+  _compassMapNeedleEl = null;
+  _compassMapWidgetEl = null;
   _hideCompassWidgets();
   document.getElementById('compassDebugPanel')?.classList.add('u-hidden');
 }

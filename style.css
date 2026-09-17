@@ -556,10 +556,32 @@ body.light-theme #screenRadar{
   transition:opacity .3s ease;
 }
 .compass-widget.visible{opacity:1;}
-.compass-dial{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 10px rgba(0,0,0,.45));}
+/* Lot AH : l'ombre était un filter:drop-shadow sur .compass-dial, qui
+   contient l'aiguille tournante — le navigateur devait recalculer le filtre
+   à chaque frame rAF pendant la rotation (coûteux, amplifiait la saccade sur
+   la Carte où le thread principal est déjà chargé par Leaflet). Déplacée sur
+   ce pseudo-élément statique (rien à l'intérieur ne transforme), dimensionné
+   sur le disque réel du cadran (cercle r=29 sur viewBox 64 → marge ~4.69%
+   de chaque côté, cf. index.html #radarCompassWidget/#mapCompassWidget) pour
+   ne pas déborder au-delà du cadran visible.
+*/
+.compass-widget::before{
+  content:'';
+  position:absolute;
+  inset:4.7%;
+  border-radius:50%;
+  box-shadow:0 3px 10px rgba(0,0,0,.45);
+  pointer-events:none;
+}
+.compass-dial{width:100%;height:100%;display:block;}
 .compass-dial-bg{fill:rgba(20,17,36,.82);stroke:rgba(var(--ghost-blue-rgb),.4);stroke-width:1.2;}
 .compass-letter{font-family:'Instrument Sans',sans-serif;font-size:9px;font-weight:600;fill:var(--spirit-dim);}
-.compass-needle{transform-box:fill-box;transform-origin:50% 50%;transition:transform .28s ease-out;}
+/* Lot AH : transition CSS retirée — le JS (_compassTick, app.js) écrit déjà
+   le transform à chaque frame rAF avec l'angle exact ; la transition
+   redémarrait à chaque écriture et créait un mouvement "avance-freine" en
+   plus du lissage JS (double lissage en conflit = saccade). will-change
+   indique au navigateur de composer la rotation sur son propre calque. */
+.compass-needle{transform-box:fill-box;transform-origin:50% 50%;will-change:transform;}
 .compass-needle-n{fill:var(--amber);}
 .compass-needle-s{fill:rgba(var(--spirit-rgb),.55);}
 .compass-needle-hub{fill:var(--ether);}
