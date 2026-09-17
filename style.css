@@ -120,6 +120,12 @@ input,textarea,select{font-size:16px !important;}
    hydratés, le filter inline (saturate + fanage) de _hydrateTraceMarks prend
    le dessus (spécificité), donc pas de double filtre ni de conflit. */
 .trace-svg{filter:drop-shadow(0 0 2px rgba(10,8,24,.65)) drop-shadow(0 1px 2px rgba(10,8,24,.5));}
+/* Lot AR — ce contour sombre existe pour rester lisible sur un fond
+   variable (tuiles de Carte, disque nocturne) ; en Mode jour les teintes
+   sont déjà pleines/saturées (TRACE_*_DAY) et ce même filtre, pensé pour
+   fond sombre, retombait en "tache floue" sur le disque blanc du Radar
+   (capture) — contour ink discret plutôt que disparu partout (Carte). */
+body.light-theme .trace-svg{filter:drop-shadow(0 0 1px rgba(28,26,36,.3)) drop-shadow(0 1px 1px rgba(28,26,36,.18));}
 /* CSP audit 4.6 : remplace les style="display:none;" inline statiques (état
    initial du markup) qu'un JS bascule ensuite via .style.display directement
    (ce JS-là n'est pas concerné par le retrait de unsafe-inline — l'inline
@@ -234,8 +240,24 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
    pour un fond nocturne) et la vignette sombre des bords devaient
    disparaître ou presque, sinon elles retombent en nappe lavande/bleutée
    sur le blanc, exactement ce que Pipo ne veut plus voir. */
-body.light-theme .bokeh-light{opacity:.06;}
+/* Lot AR — "aucune nappe" (Pipo, vue PC) : même à .06 d'opacité, les 9
+   taches de bokeh (200-320px, floutées) restaient visibles comme des
+   ronds sur le fond ivoire uni en pleine largeur — masquées entièrement. */
+body.light-theme .bokeh-light{opacity:0;}
 body.light-theme .bokeh-vignette{opacity:0;}
+/* Lot AR — .bokeh-scene::before (dégradé radial bleu nuit, z-index:0 sous
+   .phone) n'avait jamais reçu d'override clair : invisible en mobile (la
+   colonne .phone couvre tout le viewport) mais visible en pleine largeur
+   ordinateur, en "grandes nappes gris-bleu" de part et d'autre de la
+   colonne (capture Pipo) — c'était la vraie source du bug PC, pas les
+   taches .bokeh-light (déjà neutralisées ci-dessus). */
+body.light-theme .bokeh-scene::before{opacity:0;}
+/* Ombre très légère autour de la colonne de l'appli, visible seulement
+   quand il y a de la marge de part et d'autre (viewport large) — remplace
+   la nappe supprimée pour garder une séparation douce avec le fond ivoire. */
+@media (min-width:700px){
+  body.light-theme .phone{box-shadow:0 8px 40px rgba(28,26,36,.08);}
+}
 @media (max-width:400px){
   .bokeh-light{transform:scale(.8);}
 }
@@ -324,7 +346,10 @@ body:not(.light-theme):has(#screenRadar.active, #screenDeposit.active, #screenMa
    (déjà discrète en Mode nuit) reste visible sur blanc ; encore plus
    estompée ici, on garde seulement le halo autour du Trace lui-même
    (.ob-scene0-halo, inchangé — Pipo : "juste un halo très léger"). */
-body.light-theme #screenOnboard::before{opacity:.35;}
+body.light-theme #screenOnboard::before{
+  opacity:.5;
+  background:linear-gradient(0deg,rgba(181,112,26,.05) 0%,rgba(181,112,26,.03) 40%,transparent 100%);
+}
 @keyframes fogRise{
   0%,100%{opacity:.6;transform:scaleY(1);}
   50%{opacity:1;transform:scaleY(1.08);}
@@ -359,7 +384,7 @@ body.light-theme .ob-title{
    -webkit-text-fill-color:transparent du parent. */
 .wordmark-ub{color:var(--amber) !important;-webkit-text-fill-color:var(--amber) !important;background:none !important;-webkit-background-clip:border-box !important;background-clip:border-box !important;}
 .ob-sub{font-size:16px !important;line-height:1.65 !important;color:#CBC9DC !important;}
-body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
+body.light-theme .ob-sub{color:rgba(95,91,107,.65) !important;}
 .ob-ghost-big{
   width:190px !important;
   height:190px !important;
@@ -376,6 +401,9 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .ob-glow-ring.ob-ring2{border:1px solid rgba(232,160,48,.1) !important;animation-delay:1.5s !important;}
 .ob-ghost-wrap{position:relative;width:190px;height:190px;margin:0 auto;}
 .ob-scene0-halo{position:absolute;inset:-45px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.30) 0%,transparent 70%);animation:obHaloPulse 5s ease-in-out infinite;pointer-events:none;}
+/* Lot AR — la "grosse tache lavande" derrière le ghost sur l'intro (capture
+   Pipo) : halo neutre/ambré très léger en Mode jour au lieu du bleu nuit. */
+body.light-theme .ob-scene0-halo{background:radial-gradient(circle,rgba(181,112,26,.14) 0%,transparent 70%);}
 @keyframes obHaloPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
 
 /* Brume sous les visuels onboarding */
@@ -416,6 +444,7 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
 .auth-logo-block{text-align:center;margin-bottom:24px;}
 .auth-logo-badge{position:relative;display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:8px;}
 .auth-logo-glow{position:absolute;inset:-24px;border-radius:50%;background:radial-gradient(circle,rgba(147,162,255,0.28) 0%,transparent 70%);pointer-events:none;}
+body.light-theme .auth-logo-glow{background:radial-gradient(circle,rgba(181,112,26,.14) 0%,transparent 70%);}
 .auth-logo-img{width:64px;height:64px;position:relative;}
 .auth-logo-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;color:var(--ether);}
 .auth-pass-hint{font-size:10px;color:var(--spirit-dim);margin-top:3px;}
@@ -584,13 +613,13 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
    légère, anneaux/faisceau en bleu jour, centre en bleu jour plein (pas
    blanc), comme demandé par Pipo. */
 body.light-theme .radar{
-  background:radial-gradient(circle,rgba(var(--spirit-rgb),.10) 0%,rgba(var(--spirit-rgb),.04) 45%,transparent 75%);
-  border-color:rgba(60,45,150,.35);
+  background:#FFFFFF;
+  border-color:#D9D5CC;
   box-shadow:none;
 }
-body.light-theme .radar-ring{border-color:rgba(60,45,150,.25);}
-body.light-theme .radar-sweep{background:conic-gradient(from 0deg, rgba(var(--spirit-rgb),.18), transparent 55deg);}
-body.light-theme .radar-center{background:var(--spirit);box-shadow:0 0 12px 4px rgba(var(--spirit-rgb),.4);}
+body.light-theme .radar-ring{border-color:#D9D5CC;}
+body.light-theme .radar-sweep{background:conic-gradient(from 0deg, rgba(181,112,26,.14), transparent 55deg);}
+body.light-theme .radar-center{background:#1C1A24;box-shadow:0 0 12px 4px rgba(28,26,36,.25);}
 /* ── BOUSSOLE — widget autonome (Lot AA) ──────────────────
    Remplace l'ancienne flèche accrochée à .radar-center/.user-map-dot (Lot Z,
    revert Pipo) : un vrai cadran (lettres cardinales fixes) + aiguille
@@ -643,8 +672,8 @@ body.light-theme .radar-center{background:var(--spirit);box-shadow:0 0 12px 4px 
 .compass-needle-n{fill:var(--amber);}
 .compass-needle-s{fill:rgba(var(--spirit-rgb),.55);}
 .compass-needle-hub{fill:var(--ether);}
-body.light-theme .compass-dial-bg{fill:rgba(230,228,244,.92);stroke:rgba(80,60,200,.35);}
-body.light-theme .compass-letter{fill:rgba(58,42,148,.78);}
+body.light-theme .compass-dial-bg{fill:#FFFFFF;stroke:#D9D5CC;}
+body.light-theme .compass-letter{fill:rgba(95,91,107,.78);}
 body.light-theme .compass-needle-hub{fill:var(--warm);}
 /* Radar : coin haut-droit de .radar-wrap (position:relative ci-dessus) —
    dans le coin du carré englobant, hors du disque circulaire du radar, donc
@@ -952,6 +981,14 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .ghost-badge-archive{font-size:9px;background:rgba(200,160,80,.12);border:1px solid rgba(200,160,80,.3);border-radius:20px;padding:1px 6px;color:rgba(200,160,80,.8);margin-left:4px;}
 .ghost-badge-old{font-size:9px;background:rgba(var(--ghost-blue-rgb),.06);border:1px solid rgba(var(--ghost-blue-rgb),.15);border-radius:20px;padding:1px 6px;color:var(--spirit-dim);margin-left:4px;}
 .ghost-badge-virgin{font-size:9px;background:rgba(122,184,245,.14);border:1px solid rgba(122,184,245,.38);border-radius:20px;padding:1px 6px;color:rgba(122,184,245,.95);margin-left:4px;}
+body.light-theme .ghost-badge-virgin{background:var(--amber-bg);border-color:var(--amber-bg-border);color:var(--amber);}
+/* Lot AR — cartes de rang "obtenu" : même ambre que le reste de l'accent
+   jour (var(--premium-rgb), déjà conforme au contraste) plutôt que l'or
+   fixe 232,160,48 pensé pour fond sombre — Mode nuit inchangé (règle de
+   base ci-dessus, non touchée). */
+body.light-theme .rank-card-unlocked{border-color:rgba(var(--premium-rgb),.4);}
+body.light-theme .rank-card-unlocked .rank-card-state{color:rgba(var(--premium-rgb),.85);}
+body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),.22);}
 .envelope-reso.reso-high{color:rgba(var(--premium-rgb),.9);text-shadow:0 0 8px rgba(var(--premium-rgb),.4);-webkit-text-fill-color:rgba(var(--premium-rgb),.9)!important;}
 .envelope-reso.reso-mid{color:rgba(var(--ghost-blue-rgb),.8);-webkit-text-fill-color:rgba(var(--ghost-blue-rgb),.8)!important;}
 
@@ -1813,7 +1850,13 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 }
 /* Mode jour : halo plus léger, le Trace (contour + visage sombre) reste
    lisible sur fond blanc sans qu'on touche à son propre dessin. */
-body.light-theme .ghost-float-halo{ opacity:.65; filter:blur(2px); }
+body.light-theme .ghost-float-halo{ opacity:.45; filter:blur(2px); }
+/* Lot AR — même "halo flou gris-lavande baveux" que .success-ghost (capture
+   Pipo sur le Profil) : le drop-shadow générique de .trace-svg (pensé pour
+   se détacher d'un fond sombre/de tuiles de carte) n'a plus lieu d'être
+   sur le ghost flottant en Mode jour — seule l'ombre elliptique au sol
+   (.ghost-float-halo ci-dessus) marque sa présence. */
+body.light-theme .ghost-float .trace-svg{filter:none;}
 
 /* ── "Mon Trace" — sélecteur de teinte/caractère (Lot K, carte Lot AP) ──
    Pipo : "les ronds de couleur sont incompréhensibles" — carte titrée avec
@@ -2023,7 +2066,7 @@ body.light-theme .ghost-float-halo{ opacity:.65; filter:blur(2px); }
 /* Lot AN : ces blocs Leaflet (popup, contrôle de zoom) sont codés en noir
    quasi opaque en dur — corrects sur fond nocturne, mais "blocs noirs"
    plaqués sur la Carte en Mode jour, exactement ce que Pipo signale. */
-body.light-theme .leaflet-popup-content-wrapper{background:#FFFFFF !important;border-color:rgba(var(--premium-rgb),.35) !important;color:var(--warm) !important;box-shadow:0 8px 24px rgba(60,45,150,.18) !important;}
+body.light-theme .leaflet-popup-content-wrapper{background:#FFFFFF !important;border-color:rgba(var(--premium-rgb),.35) !important;color:var(--warm) !important;box-shadow:0 8px 24px rgba(28,26,36,.18) !important;}
 body.light-theme .leaflet-popup-tip{background:#FFFFFF !important;}
 body.light-theme .leaflet-control-zoom{border-color:rgba(var(--premium-rgb),.35) !important;background:rgba(255,255,255,.92) !important;}
 body.light-theme .leaflet-control-zoom a{color:rgba(var(--premium-rgb),.9) !important;border-bottom-color:rgba(var(--premium-rgb),.2) !important;}
@@ -2053,7 +2096,7 @@ body.light-theme .leaflet-control-zoom a:hover{background:rgba(var(--premium-rgb
    resté noir. Fond blanc + halo doux autour du Trace, cohérent avec le
    reste du Mode jour (Lot AN). */
 body.light-theme .deposit-success{
-  background:radial-gradient(ellipse at 50% 45%,rgba(75,87,201,.08) 0%,#FFFFFF 60%);
+  background:radial-gradient(ellipse at 50% 45%,rgba(181,112,26,.06) 0%,#FAF8F4 60%);
   backdrop-filter:blur(6px) saturate(1.05);-webkit-backdrop-filter:blur(6px) saturate(1.05);
 }
 body.light-theme .deposit-success.show::before{border-color:rgba(var(--premium-rgb),.4);}
@@ -2096,7 +2139,10 @@ body.light-theme .deposit-success.show::after{border-color:rgba(var(--spirit-rgb
   filter:drop-shadow(0 0 30px rgba(232,160,48,.7)) drop-shadow(0 0 60px rgba(var(--spirit-rgb),.35));
   position:relative;z-index:2;
 }
-body.light-theme .success-ghost{filter:drop-shadow(0 0 24px rgba(var(--premium-rgb),.35)) drop-shadow(0 0 44px rgba(var(--spirit-rgb),.25));}
+/* Lot AR — le double drop-shadow (ambre + "spirit") pensé pour fond sombre
+   retombait en halo gris-lavande baveux sur fond clair (capture Pipo) : pas
+   de drop-shadow du tout sur ce ghost en Mode jour. */
+body.light-theme .success-ghost{filter:none;}
 .success-title{
   font-family:'Cormorant Garamond',serif;
   font-size:var(--serif-md);font-style:italic;font-weight:400;
@@ -2368,12 +2414,12 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
 .envelope-sealed.opened { animation: envelopeFade .35s ease forwards; }
 
 /* ── Variante thème clair — le fond bleu-nuit codé en dur ne s'adaptait jamais ── */
-body.light-theme .envelope-sealed{background:var(--surface);border-color:rgba(80,60,200,.25);}
-body.light-theme .envelope-sealed-flap{background:linear-gradient(180deg,rgba(80,60,200,.14) 0%,rgba(80,60,200,.05) 100%);border-bottom-color:rgba(80,60,200,.18);}
-body.light-theme .envelope-sealed-triangle{background:rgba(80,60,200,.1);}
-body.light-theme .envelope-sealed-emoji{background:rgba(80,60,200,.08) !important;border-color:rgba(80,60,200,.3) !important;}
-body.light-theme .envelope-sealed-label{color:rgba(40,28,90,.92) !important;-webkit-text-fill-color:rgba(40,28,90,.92) !important;}
-body.light-theme .envelope-sealed-hint{color:rgba(70,50,150,.65) !important;-webkit-text-fill-color:rgba(70,50,150,.65) !important;}
+body.light-theme .envelope-sealed{background:var(--surface);border-color:rgba(28,26,36,.25);}
+body.light-theme .envelope-sealed-flap{background:linear-gradient(180deg,rgba(28,26,36,.14) 0%,rgba(28,26,36,.05) 100%);border-bottom-color:rgba(28,26,36,.18);}
+body.light-theme .envelope-sealed-triangle{background:rgba(28,26,36,.1);}
+body.light-theme .envelope-sealed-emoji{background:rgba(28,26,36,.08) !important;border-color:rgba(28,26,36,.3) !important;}
+body.light-theme .envelope-sealed-label{color:rgba(28,26,36,.92) !important;-webkit-text-fill-color:rgba(28,26,36,.92) !important;}
+body.light-theme .envelope-sealed-hint{color:rgba(95,91,107,.65) !important;-webkit-text-fill-color:rgba(95,91,107,.65) !important;}
 @keyframes envelopeFade { from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-16px);} }
 
 /* Bouton Briser le sceau */
@@ -2403,14 +2449,14 @@ body.light-theme .envelope-sealed-hint{color:rgba(70,50,150,.65) !important;-web
   transform: scale(.98);
 }
 body.light-theme .envelope-open-btn{
-  background: rgba(80,60,200,.1) !important;
-  border-color: rgba(80,60,200,.32) !important;
-  color: rgba(40,28,90,.92) !important;
-  -webkit-text-fill-color: rgba(40,28,90,.92) !important;
+  background: rgba(28,26,36,.1) !important;
+  border-color: rgba(28,26,36,.32) !important;
+  color: rgba(28,26,36,.92) !important;
+  -webkit-text-fill-color: rgba(28,26,36,.92) !important;
 }
 body.light-theme .envelope-open-btn:hover{
-  background: rgba(80,60,200,.18) !important;
-  border-color: rgba(80,60,200,.5) !important;
+  background: rgba(28,26,36,.18) !important;
+  border-color: rgba(28,26,36,.5) !important;
 }
 #sealBreakFlash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(220,228,255,.95) 0%,rgba(var(--ghost-blue-rgb),.5) 40%,transparent 75%);}
 @keyframes sealFlash{0%{opacity:0;}8%{opacity:1;}40%{opacity:.4;}100%{opacity:0;}}
@@ -2460,8 +2506,8 @@ body.light-theme .envelope-open-btn:hover{
 .discovery-toast-tier-secret{color:rgba(200,130,255,.9);}
 body.light-theme .discovery-toast{
   background:rgba(240,238,248,.97);
-  border-color:rgba(80,60,200,.25);
-  box-shadow:0 8px 28px rgba(80,60,200,.18),0 0 16px rgba(80,60,200,.06);
+  border-color:rgba(28,26,36,.25);
+  box-shadow:0 8px 28px rgba(28,26,36,.18),0 0 16px rgba(28,26,36,.06);
 }
 body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,24,.4));}
 
@@ -2709,50 +2755,67 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 @keyframes scratchHint{0%,100%{opacity:.85;transform:translateY(0) scale(1);}50%{opacity:1;transform:translateY(-6px) scale(1.08);}}
 .scratch-hint-overlay{position:absolute;left:0;right:0;bottom:0;height:64px;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:8px;z-index:10;pointer-events:none;border-radius:0 0 20px 20px;background:none;transition:opacity .3s ease;}
 
-/* ── LIGHT THEME (minimal override) ───────────────────── */
+/* ── LIGHT THEME — passe définitive (Lot AR) ────────────
+   Retour de Pipo après les Lots AN→AQ : "encore trop de bleu et c'est pas
+   très beau". La palette du Lot AN posait un fond blanc mais teintait tout
+   ce qui est DESSUS en bleu-lavande (surfaces, bordures, textes, accents) —
+   effet délavé et froid, les ghosts colorés ne ressortaient pas.
+   Nouveau principe : neutre et chaud partout, la couleur est réservée aux
+   ghosts + UN accent (l'ambre de la marque). --ghost-blue-rgb et
+   --spirit-rgb (les deux "bleus" de la palette nuit, cf. leurs rôles
+   commentés dans :root) pointent maintenant vers une encre neutre
+   (28,26,36) au lieu d'un bleu — c'était la source du "bleu partout" :
+   tout rgba(var(--ghost-blue-rgb)/--spirit-rgb, α) en hérite automatiquement,
+   sans repasser composant par composant. */
 body.light-theme{
-  background:#FFFFFF;color:#1a1530;
+  background:#FAF8F4;color:#1C1A24;
   background-image:none;
 }
-body.light-theme .phone{background:#FFFFFF;border-color:rgba(60,45,150,.14);box-shadow:none;}
+body.light-theme .phone{background:#FAF8F4;border-color:rgba(28,26,36,.10);box-shadow:none;}
 body.light-theme .phone::after{display:none;}
-/* Lot AN — Pipo : le fond lavande/bleuté du Mode jour "ne marche pas, trop
-   de choses se fondent dedans" → fond BLANC. Inversion du rapport de
-   contraste par rapport au Lot AM : avant, le fond était teinté et les
-   surfaces à peine plus claires ; maintenant le fond est blanc et ce sont
-   les SURFACES (cartes, lettre, panneaux) qui portent une légère teinte
-   lavande (#F4F2FB) + une bordure nette pour se détacher du blanc. Textes/
-   accents/bordures interactives inchangés (déjà validés au contraste au
-   Lot AM, cf. tableau du résumé de ce lot pour la ré-vérification sur
-   fond blanc). */
 body.light-theme :root,body.light-theme{
-  --void:#FFFFFF;--deep:#FCFBFF;--surface:#F4F2FB;--surface2:#EEEBF9;
-  --ghost:rgba(80,60,200,.04);--spirit:#4B57C9;--spirit-dim:rgba(58,42,148,.78);
-  --spirit-glow:rgba(80,60,200,.1);--ether:#1B1838;--warm:#1a1530;
-  --warm-dim:rgba(26,21,48,.78);--border:rgba(60,45,150,.20);--border-bright:rgba(60,45,150,.45);
-  --amber:#8c5a0a;--amber-dim:rgba(140,90,10,.55);--mist:#1f6b40;
-  --premium-rgb:130,85,10;
-  --tier-gold-rgb:150,108,12;
+  --void:#FAF8F4;--deep:#FAF8F4;--surface:#FFFFFF;--surface2:#FFFFFF;
+  --ghost:rgba(28,26,36,.03);--spirit:#1C1A24;--spirit-dim:rgba(95,91,107,.85);
+  --spirit-glow:rgba(28,26,36,.06);--ether:#1C1A24;--warm:#1C1A24;
+  --warm-dim:#5F5B6B;--border:#E6E2DA;--border-bright:#C9C5CF;
+  /* Script de contraste (résumé de lot) : #B5701A (spec) échouait à 4.5:1
+     en texte normal (3.74:1 sur #FAF8F4, 3.96:1 sur blanc) — assombri à
+     #9F6317 (4.6-4.9:1), toujours "l'ambre de la marque" à l'œil, cette
+     fois conforme partout où l'accent sert de TEXTE (liens, pastilles),
+     pas seulement de bordure/icône (3:1 aurait suffi pour celles-ci). */
+  --amber:#9F6317;--amber-dim:rgba(159,99,23,.55);--mist:#1f6b40;
+  --premium-rgb:159,99,23;
+  --tier-gold-rgb:159,99,23;
   --mist-rgb:31,107,64;
-  --ghost-blue-rgb:60,45,150;
-  --spirit-rgb:75,87,201;
+  --ghost-blue-rgb:28,26,36;
+  --spirit-rgb:28,26,36;
   --accent-green-rgb:10,110,60;
-  --lettre-ink-rgb:100,70,25;
+  --lettre-ink-rgb:28,26,36;
   --seal-ink-rgb:120,30,30;
   --seal-ink2-rgb:110,25,25;
+  --text-tertiary:#8E8A98;
+  --amber-bg:#FFF4E2;--amber-bg-border:#EBD3A8;
+  --track-bg:#EFECE6;
 }
-body.light-theme .auth-tab{background:var(--surface);color:rgba(27,24,56,.55);}
-body.light-theme .ghost-envelope{background:var(--surface) !important;}
-body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
-body.light-theme .envelope-emoji{background:rgba(80,60,200,.08) !important;border-color:rgba(80,60,200,.35) !important;}
-body.light-theme .resonance-btn{background:rgba(80,60,200,.07) !important;border-color:rgba(80,60,200,.4) !important;color:var(--spirit) !important;}
-body.light-theme .bottom-nav{background:rgba(255,255,255,.98);border-top-color:rgba(60,45,150,.16);}
-body.light-theme .nav-item{color:rgba(58,42,148,.72);}
-body.light-theme .nav-item.active{color:var(--spirit);}
-body.light-theme .btn-primary{background:linear-gradient(135deg,rgba(80,60,200,.22),rgba(80,60,200,.1));border-color:rgba(80,60,200,.5);color:var(--ether);}
-body.light-theme .auth-tab.active{background:var(--surface2);}
-body.light-theme .stat-card{background:var(--surface);border-color:rgba(80,60,200,.35);}
-body.light-theme .form-input,body.light-theme .form-textarea{background:rgba(235,233,248,.9);border-color:rgba(60,45,150,.65);color:var(--warm);}
+/* Accent unique ambre — liens, onglet actif, compteur, "ub" (déjà séparé) :
+   ces cas précis ne doivent PAS hériter du neutre --spirit ci-dessus. */
+body.light-theme .nav-item.active{color:var(--amber);}
+body.light-theme .help-legal-link,
+body.light-theme .profile-share-btn{color:var(--amber) !important;}
+body.light-theme .profile-share-btn{background:var(--amber-bg) !important;border-color:var(--amber-bg-border) !important;}
+body.light-theme .auth-tab{background:var(--surface);color:rgba(95,91,107,.75);border:1px solid var(--border);}
+body.light-theme .ghost-envelope{background:var(--surface) !important;border-color:var(--border) !important;}
+body.light-theme .ghost-envelope:hover{border-color:var(--border-bright) !important;}
+body.light-theme .envelope-emoji{background:#F5F3EE !important;border-color:var(--border) !important;}
+body.light-theme .resonance-btn{background:var(--amber-bg) !important;border-color:var(--amber-bg-border) !important;color:var(--amber) !important;}
+body.light-theme .bottom-nav{background:rgba(255,255,255,.98);border-top-color:var(--border);}
+body.light-theme .nav-item{color:rgba(95,91,107,.8);}
+/* Bouton principal ("Sceller le fantôme"…) : fond encre plein, texte blanc
+   — au lieu d'un dégradé bleu translucide illisible sur blanc. */
+body.light-theme .btn-primary{background:#1C1A24;border-color:#1C1A24;color:#FFFFFF;}
+body.light-theme .auth-tab.active{background:#1C1A24;color:#FFFFFF;border-color:#1C1A24;}
+body.light-theme .stat-card{background:var(--surface);border-color:var(--border);}
+body.light-theme .form-input,body.light-theme .form-textarea{background:#FFFFFF;border-color:var(--border-bright);color:var(--warm);}
 
 /* ── Lot AM : bordures d'éléments interactifs non remplis (ou faiblement
    remplis) — alpha .04-.3 pensée pour fond sombre, sous 3:1 quelle que soit
@@ -2766,33 +2829,39 @@ body.light-theme .filter-btn,
 body.light-theme .map-header-btn,
 body.light-theme .lettre-media-icon-btn,
 body.light-theme .attachment-item{
-  border-color:rgba(60,45,150,.6);
+  border-color:var(--border-bright);
 }
 body.light-theme .dep-chip-toggle:hover,
-body.light-theme .lettre-media-icon-btn:hover{border-color:rgba(60,45,150,.85);}
+body.light-theme .lettre-media-icon-btn:hover{border-color:#1C1A24;}
 body.light-theme .dep-chip-toggle--biz{border-color:rgba(var(--premium-rgb),.75);}
 body.light-theme .dep-chip-toggle--biz:hover{border-color:rgba(var(--premium-rgb),1);}
-body.light-theme .dep-chip-toggle--anon.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.10);font-weight:600;}
-body.light-theme .dep-chip-toggle--biz.active{border-color:var(--amber);background:rgba(var(--premium-rgb),.14);font-weight:600;}
+/* Lot AR — "sélection neutre" : une seule convention pour toutes les
+   pastilles (durée, portée, filtres carte, conditions, anonymat) —
+   bordure 2px encre + fond blanc, jamais de sélection bleue ni ambre
+   (l'ambre reste réservé à l'accent unique listé plus haut ; seul le
+   commerce/Premium — biz — garde son survol ambre, cohérent avec le
+   badge Premium). */
+body.light-theme .dep-chip-toggle--anon.active{border-width:2px;border-color:#1C1A24;background:#FFFFFF;font-weight:600;}
+body.light-theme .dep-chip-toggle--biz.active{border-color:var(--amber);background:var(--amber-bg);font-weight:600;}
 body.light-theme .filter-btn{background:var(--surface);}
-body.light-theme .filter-btn.active{background:rgba(232,160,48,.18) !important;border-color:rgba(var(--premium-rgb),.8) !important;font-weight:600;}
-body.light-theme .map-header-btn{color:rgba(60,45,150,.85);background:var(--surface);}
-body.light-theme .type-btn,body.light-theme .radius-btn,body.light-theme .dur-btn{border-color:rgba(60,45,150,.4);}
-body.light-theme .type-btn.active{border-color:rgba(var(--premium-rgb),.7);background:rgba(var(--premium-rgb),.10) !important;font-weight:600;}
-body.light-theme .radius-btn.active,body.light-theme .dur-btn.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.10) !important;font-weight:600;}
-body.light-theme .cond-btn{border-color:rgba(60,45,150,.4);}
-body.light-theme .cond-btn.active{background:rgba(var(--premium-rgb),.10);border-color:rgba(var(--premium-rgb),.7);}
+body.light-theme .filter-btn.active{background:#FFFFFF !important;border-width:2px !important;border-color:#1C1A24 !important;font-weight:600;}
+body.light-theme .map-header-btn{color:#1C1A24;background:var(--surface);}
+body.light-theme .type-btn,body.light-theme .radius-btn,body.light-theme .dur-btn{border-color:var(--border-bright);}
+body.light-theme .type-btn.active{border-width:2px;border-color:#1C1A24;background:#FFFFFF !important;font-weight:600;}
+body.light-theme .radius-btn.active,body.light-theme .dur-btn.active{border-width:2px;border-color:#1C1A24;background:#FFFFFF !important;font-weight:600;}
+body.light-theme .cond-btn{border-color:var(--border-bright);}
+body.light-theme .cond-btn.active{background:#FFFFFF;border-width:2px;border-color:#1C1A24;}
 
 /* ── Cartes fantôme (.ghost-envelope) — texte pensé pour fond sombre, à réécrire pour fond clair ── */
-body.light-theme .envelope-location{color:rgba(40,28,90,.92) !important;-webkit-text-fill-color:rgba(40,28,90,.92) !important;}
-body.light-theme .envelope-hint{color:rgba(70,50,150,.7) !important;-webkit-text-fill-color:rgba(70,50,150,.7) !important;}
+body.light-theme .envelope-location{color:rgba(28,26,36,.92) !important;-webkit-text-fill-color:rgba(28,26,36,.92) !important;}
+body.light-theme .envelope-hint{color:rgba(95,91,107,.7) !important;-webkit-text-fill-color:rgba(95,91,107,.7) !important;}
 body.light-theme .envelope-dist.dist-near{background:rgba(40,160,90,.16);color:rgba(20,110,60,.95) !important;-webkit-text-fill-color:rgba(20,110,60,.95) !important;}
-body.light-theme .envelope-dist.dist-mid{background:rgba(80,60,200,.12);color:rgba(60,42,150,.9) !important;-webkit-text-fill-color:rgba(60,42,150,.9) !important;}
-body.light-theme .envelope-dist.dist-far{background:rgba(80,60,200,.08);color:rgba(80,60,200,.68) !important;-webkit-text-fill-color:rgba(80,60,200,.68) !important;}
-body.light-theme .envelope-reso{color:rgba(80,60,200,.6) !important;-webkit-text-fill-color:rgba(80,60,200,.6) !important;}
-body.light-theme .envelope-footer{border-top-color:rgba(80,60,200,.12);}
-body.light-theme .envelope-tag{color:rgba(70,50,150,.62) !important;-webkit-text-fill-color:rgba(70,50,150,.62) !important;}
-body.light-theme .envelope-views{color:rgba(70,50,150,.58) !important;-webkit-text-fill-color:rgba(70,50,150,.58) !important;}
+body.light-theme .envelope-dist.dist-mid{background:rgba(28,26,36,.10);color:rgba(28,26,36,.75) !important;-webkit-text-fill-color:rgba(28,26,36,.75) !important;}
+body.light-theme .envelope-dist.dist-far{background:rgba(28,26,36,.08);color:rgba(28,26,36,.68) !important;-webkit-text-fill-color:rgba(28,26,36,.68) !important;}
+body.light-theme .envelope-reso{color:rgba(28,26,36,.6) !important;-webkit-text-fill-color:rgba(28,26,36,.6) !important;}
+body.light-theme .envelope-footer{border-top-color:rgba(28,26,36,.12);}
+body.light-theme .envelope-tag{color:rgba(95,91,107,.62) !important;-webkit-text-fill-color:rgba(95,91,107,.62) !important;}
+body.light-theme .envelope-views{color:rgba(95,91,107,.58) !important;-webkit-text-fill-color:rgba(95,91,107,.58) !important;}
 body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40,190,.95) !important;-webkit-text-fill-color:rgba(120,40,190,.95) !important;}
 
 /* ── Fonds "nuit" fixes sans variante Mode jour — Lot Y ──
@@ -2913,7 +2982,7 @@ body.light-theme .reply-item{background:var(--surface);}
    de zoom Leaflet en haut-droit (vérifié par capture d'écran, même
    technique body:has() que le Lot Y). */
 body:has(#screenMap.active) .compass-perm-btn{top:calc(var(--sat) + 156px);right:auto;left:12px;}
-body.light-theme .compass-perm-btn{background:rgba(230,228,244,.95);color:var(--ether);border-color:rgba(80,60,200,.35);}
+body.light-theme .compass-perm-btn{background:rgba(230,228,244,.95);color:var(--ether);border-color:rgba(28,26,36,.35);}
 
 /* ── AUDIO TOGGLE ──────────────────────────────────────── */
 .audio-toggle{background:none;border:1px solid rgba(var(--ghost-blue-rgb),.12);border-radius:8px;padding:4px 8px;font-size:var(--text-md);cursor:pointer;color:var(--spirit-dim);transition:all .2s;min-height:36px;min-width:36px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;}
@@ -3233,7 +3302,7 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
    taille réduite d'un cran (17px texte réel → 15px placeholder) pour qu'il
    "recule" aussi visuellement. opacity:1 explicite car Firefox applique
    sinon SA PROPRE opacité en plus de celle du rgba() ici. Mode jour : voir
-   l'override body.light-theme plus bas — #C4C0D8 gris-lavande volontairement
+   l'override body.light-theme plus bas — #C9C5CF (token Lot AR) volontairement
    sous les seuils de contraste (idem, décoratif). */
 .lettre-textarea::placeholder,
 .lettre-textarea::-webkit-input-placeholder{
@@ -3246,7 +3315,7 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
 .lettre-textarea:focus::placeholder,
 .lettre-textarea:focus::-webkit-input-placeholder{opacity:.6 !important;}
 body.light-theme .lettre-textarea::placeholder,
-body.light-theme .lettre-textarea::-webkit-input-placeholder{color:#C4C0D8 !important;}
+body.light-theme .lettre-textarea::-webkit-input-placeholder{color:#C9C5CF !important;}
 /* Même traitement (cohérence) pour les autres champs de Déposer : nom du
    lieu, champs Commerce — .form-input/.form-textarea n'avaient aucune règle
    ::placeholder, donc la couleur par défaut du navigateur (variable selon

@@ -5725,7 +5725,7 @@ function applyTheme(theme) {
   // deux balises à chaque changement, quel que soit le media qui matche.
   const metaDark = document.querySelector('meta[name="theme-color"][media*="dark"]');
   const metaLight = document.querySelector('meta[name="theme-color"][media*="light"]');
-  const themeColor = isLight ? '#FFFFFF' : '#060608';
+  const themeColor = isLight ? '#FAF8F4' : '#060608';
   if (metaDark) metaDark.setAttribute('content', themeColor);
   if (metaLight) metaLight.setAttribute('content', themeColor);
   // Active le bon
