@@ -7981,6 +7981,11 @@ function _renderLockedGhostDetail() {
   document.querySelector('#screenDetail .btn-secondary').style.display = 'none';
   const msgRBtnLocked = document.getElementById('msgReportBtn');
   if (msgRBtnLocked) msgRBtnLocked.style.display = 'none';
+  // Lot AL : ce chemin ne passe pas par _renderGhostDetailMedia() — sans ce
+  // reset, les classes has-photo/has-video/has-audio du fantôme PRÉCÉDENT
+  // resteraient posées sur #scratchZone (un fantôme bloqué après un
+  // fantôme-photo garderait la mise en page "avec média", cadre vide).
+  document.getElementById('scratchZone')?.classList.remove('has-photo', 'has-video', 'has-audio');
 }
 
 function _renderGhostDetailMessage(isOwner) {
@@ -8054,6 +8059,14 @@ function _renderGhostResonanceButtonState() {
   }
 }
 
+// Lot AL : l'ensemble message+médias remplit l'écran, pas le message seul
+// (cf. #scratchZone en CSS). Classes d'état posées ici sur #scratchZone à
+// CHAQUE rendu (toggle avec un booléen explicite, jamais juste .add()) pour
+// qu'un fantôme sans média efface bien l'état du précédent au swipe.
+// Signalement : plus de bouton séparé sur la photo/vidéo (masquait l'image)
+// — report() est déjà 100% générique au niveau du fantôme (pas du média),
+// donc #msgReportBtn (sur le message) et #reportBtn (lien du bas) suffisent
+// comme point d'entrée unique, pas besoin d'un 3e bouton redondant.
 function _renderGhostDetailMedia() {
   // Passer en secret désactivé (Lot P) — plus aucun nouveau fantôme secret,
   // même en convertissant un fantôme existant après coup.
@@ -8061,33 +8074,24 @@ function _renderGhostDetailMedia() {
 
   const audioEl = document.getElementById('detailAudio');
   if (selectedGhost.audioUrl) {
-    audioEl.innerHTML = `
-      <div class="detail-media-block">
-        <div class="detail-media-label">🎙 Message vocal</div>
-        <audio controls src="${escapeHTML(selectedGhost.audioUrl)}" class="detail-audio-el" aria-label="Message vocal du fantôme"></audio>
-      </div>`;
+    audioEl.innerHTML = `<audio controls src="${escapeHTML(selectedGhost.audioUrl)}" class="detail-audio-el" aria-label="Message vocal du fantôme"></audio>`;
   } else { audioEl.innerHTML = ''; }
 
   const photoEl = document.getElementById('detailPhoto');
-  if (selectedGhost.videoUrl) {
-    photoEl.innerHTML = `
-      <div class="detail-media-block-rel">
-        <div class="detail-media-label">🎥 Vidéo</div>
-        <div class="detail-video-wrap">
-          <video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" class="detail-video-el" aria-label="Vidéo du fantôme"></video>
-          <button data-action="openReportModal" aria-label="Signaler cette vidéo" title="Signaler cette vidéo" class="detail-media-report-btn">⚑ Signaler</button>
-        </div>
-      </div>`;
-  } else if (selectedGhost.photoUrl) {
-    photoEl.innerHTML = `
-      <div class="detail-media-block-rel">
-        <div class="detail-media-label">📷 Photo</div>
-        <div class="detail-photo-wrap">
-          <img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy" data-action="openPhotoViewer" data-arg="${escapeHTML(selectedGhost.photoUrl)}" role="button" tabindex="0" aria-label="Agrandir la photo en plein écran">
-          <button data-action="openReportModal" aria-label="Signaler cette photo comme inappropriée" title="Signaler cette photo" class="detail-media-report-btn detail-media-report-btn--hover">⚑ Signaler</button>
-        </div>
-      </div>`;
+  const hasVideo = !!selectedGhost.videoUrl;
+  const hasPhoto = !hasVideo && !!selectedGhost.photoUrl;
+  if (hasVideo) {
+    photoEl.innerHTML = `<video controls playsinline src="${escapeHTML(selectedGhost.videoUrl)}" class="detail-video-el" aria-label="Vidéo du fantôme"></video>`;
+  } else if (hasPhoto) {
+    photoEl.innerHTML = `<img src="${escapeHTML(selectedGhost.photoUrl)}" alt="Photo associée à ce fantôme" class="detail-photo-img" loading="lazy" data-action="openPhotoViewer" data-arg="${escapeHTML(selectedGhost.photoUrl)}" role="button" tabindex="0" aria-label="Agrandir la photo en plein écran">`;
   } else { photoEl.innerHTML = ''; }
+
+  const zone = document.getElementById('scratchZone');
+  if (zone) {
+    zone.classList.toggle('has-photo', hasPhoto);
+    zone.classList.toggle('has-video', hasVideo);
+    zone.classList.toggle('has-audio', !!selectedGhost.audioUrl);
+  }
 }
 
 async function _loadGhostReplies(id) {

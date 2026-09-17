@@ -943,21 +943,54 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .detail-swipe-info{display:flex;align-items:center;gap:0;flex-shrink:0;}
 .blocked-back-btn{margin-top:4px;}
 .envelope-open-btn-label{position:relative;z-index:1;}
-.detail-msg-wrap{position:relative;}
-#scratchZone{position:relative;min-height:160px;}
+.detail-msg-wrap{position:relative;display:flex;flex-direction:column;}
+/* Lot AL — c'est l'ENSEMBLE message+médias qui remplit l'écran, pas le
+   message seul (le Lot AK imposait le plein écran au message dans tous les
+   cas : un message d'un mot devenait un immense cadre vide, et la photo
+   jointe passait sous la ligne de flottaison). #scratchZone porte le
+   min-height plein écran et la logique flex ; .detail-msg-wrap (au-dessus)
+   n'a plus qu'à suivre le flex:1 de .detail-message qu'il contient.
+   has-photo/has-video/has-audio posées par _renderGhostDetailMedia() à
+   chaque rendu (swipe inclus, cf. app.js). */
+#scratchZone{
+  position:relative;
+  display:flex;flex-direction:column;gap:14px;
+  min-height:calc(100dvh - var(--sat) - 44px - 80px - var(--sab) - 14px);
+}
+.detail-msg-wrap{flex-shrink:0;}
+/* Sans média : le message seul remplit tout l'espace (comportement Lot AK
+   conservé), centré verticalement ET horizontalement. */
+#scratchZone:not(.has-photo):not(.has-video) .detail-msg-wrap{flex:1;display:flex;}
+#scratchZone:not(.has-photo):not(.has-video) .detail-message{
+  flex:1;justify-content:center;text-align:center;
+}
+/* Avec photo/vidéo : le message repasse en hauteur naturelle (mini 96px,
+   maxi 40dvh puis scroll interne si le texte est long) et la photo/vidéo
+   prend le reste de la hauteur disponible, entièrement visible. */
+#scratchZone.has-photo .detail-message,
+#scratchZone.has-video .detail-message{
+  flex:none;min-height:96px;max-height:40dvh;overflow-y:auto;
+}
+#detailPhoto{display:flex;min-height:0;}
+#scratchZone.has-photo #detailPhoto,
+#scratchZone.has-video #detailPhoto{flex:1;}
+.detail-photo-img,.detail-video-el{
+  width:100%;flex:1;min-height:0;object-fit:contain;
+  border-radius:12px;border:1px solid var(--border);background:var(--surface);
+}
+.detail-video-el{background:#000;}
 .detail-read-count{text-align:center;font-size:12px;padding:8px 0 4px;font-family:'Instrument Sans',sans-serif;letter-spacing:.3px;}
 /* Hover du bouton signaler message — remplace onmouseover/onmouseout inline */
 .msg-report-btn{display:none;position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:11px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif;align-items:center;gap:4px;touch-action:manipulation;transition:all .2s;}
 .msg-report-btn:hover{background:rgba(255,60,60,.18);}
 .detail-location{font-size:13px;color:var(--warm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
 .detail-distance{flex-shrink:0;font-size:11px;color:var(--spirit-dim);}
-/* Message — fenêtre éclairée dans la nuit. Lot AK : prend toute la page dès
-   l'ouverture (min-height = viewport moins barre du haut/nav du bas/marges
-   du .scroll — mêmes constantes que la barre compacte et la réserve
-   #bottomNav ci-dessous, cf. body.has-bottom-nav .screen .scroll) —
-   display:flex;align-items:center (inchangé) centre verticalement un
-   message court ; un message long dépasse ce plancher et .scroll (overflow
-   auto) prend le relais pour le scroll, sans JS de recalcul nécessaire. */
+/* Message — fenêtre éclairée dans la nuit. Lot AL : la taille plein écran
+   est désormais portée par #scratchZone (l'ensemble message+médias), pas
+   par ce cadre seul — ici juste un plancher raisonnable (~96px) pour ne
+   jamais s'écraser ; display:flex;align-items:center centre verticalement
+   un message court quand il a la place (cf. règles flex:1/has-photo
+   ci-dessus qui pilotent la vraie taille selon le contexte). */
 .detail-message{
   font-family:'Cormorant Garamond',serif;
   font-size:var(--serif-sm) !important;font-style:italic;font-weight:400;
@@ -966,7 +999,7 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
   background:linear-gradient(180deg,rgba(232,225,210,.06) 0%,rgba(232,225,210,.025) 100%) !important;
   border:1px solid rgba(var(--lettre-ink-rgb),.16);
   border-radius:16px !important;
-  min-height:calc(100dvh - var(--sat) - 44px - 80px - var(--sab) - 14px);
+  min-height:96px;
   display:flex;align-items:center;
   padding:36px 26px !important;margin-bottom:0;letter-spacing:.01em;
   box-shadow:inset 0 1px 0 rgba(255,235,200,.05),0 4px 22px rgba(0,0,0,.18);
@@ -1595,18 +1628,16 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .detail-chain-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(var(--ghost-blue-rgb),.5);margin-bottom:8px;}
 .detail-chain-hint{font-family:'Cormorant Garamond',serif;font-size:16px;font-style:italic;color:var(--ether);margin-bottom:10px;}
 .detail-chain-follow-btn{width:100%;padding:10px;background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:12px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;}
-.detail-media-block{margin-bottom:12px;}
-.detail-media-block-rel{margin-bottom:12px;position:relative;}
-.detail-media-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:6px;}
+/* .detail-media-block(-rel)/.detail-media-label/.detail-media-report-btn/
+   .detail-photo-wrap/.detail-video-wrap retirés au Lot AL : plus de libellé
+   emoji au-dessus du média, plus de bouton "Signaler" posé sur l'image (il
+   la masquait) — #msgReportBtn + le lien "Signaler ce fantôme" du bas
+   suffisent, le signalement est déjà générique au niveau du fantôme, pas du
+   média. .detail-photo-img/.detail-video-el redéfinis plus haut (règles
+   flex du bloc #scratchZone) — ne pas les redéclarer ici avec d'anciennes
+   valeurs (max-height fixe, pas de flex), la dernière règle du fichier
+   l'emporterait sur le nouveau layout plein-écran. */
 .detail-audio-el{width:100%;border-radius:12px;}
-.detail-video-wrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
-.detail-video-el{width:100%;max-height:320px;display:block;background:#000;}
-.detail-media-report-btn{position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:12px;padding:5px 9px;cursor:pointer;font-family:'Instrument Sans',sans-serif;display:flex;align-items:center;gap:5px;touch-action:manipulation;transition:all .2s;}
-/* Seule la version "photo" avait le hover JS d'origine — pas la vidéo,
-   incohérence préexistante reproduite volontairement, pas harmonisée. */
-.detail-media-report-btn--hover:hover{background:rgba(255,60,60,.18);}
-.detail-photo-wrap{position:relative;display:inline-block;width:100%;}
-.detail-photo-img{width:100%;border-radius:12px;border:1px solid var(--border);max-height:min(65dvh,560px);object-fit:contain;background:var(--surface);display:block;cursor:pointer;}
 .dedicated-link-hint{font-size:11px;opacity:.7;}
 .dedicated-link-btn{font-size:10px;color:rgba(var(--ghost-blue-rgb),.8);word-break:break-all;background:none;border:none;cursor:pointer;text-align:left;padding:4px 0;}
 /* Écran de secours si l'initialisation Firebase échoue entièrement (app.js) */
@@ -2557,8 +2588,7 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
    Mode nuit) : on ajoute ici uniquement l'override clair manquant,
    plutôt que de toucher la règle de base et risquer de changer le rendu
    Mode nuit déjà validé. */
-body.light-theme .msg-report-btn,
-body.light-theme .detail-media-report-btn{background:rgba(230,225,245,.92) !important;}
+body.light-theme .msg-report-btn{background:rgba(230,225,245,.92) !important;}
 body.light-theme .dep-mini-loader{background:rgba(230,225,245,.75);}
 body.light-theme .empreinte-map-wrap,
 body.light-theme .ppm-map{background:rgba(210,208,232,.75);}
