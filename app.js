@@ -353,7 +353,7 @@ const LANGS = {
     profile_map_empty: 'Votre empreinte est vide.<br>Déposez ou découvrez des fantômes !',
     profile_map_err: 'Impossible de charger l\'empreinte',
     profile_share_map: '🗺 Partager mon empreinte',
-    profile_share_profile: '👻 Partager mon profil',
+    profile_share_profile: 'Partager mon profil',
     profile_logout: '🚪 Déconnexion',
     profile_delete_btn: '🗑 Supprimer tous mes fantômes',
     profile_delete_confirm_title: '🗑 Supprimer tous mes fantômes ?',
@@ -991,7 +991,7 @@ const LANGS = {
     profile_map_empty: 'Your footprint is empty.<br>Drop or discover ghosts!',
     profile_map_err: 'Could not load your footprint',
     profile_share_map: '🗺 Share my footprint',
-    profile_share_profile: '👻 Share my profile',
+    profile_share_profile: 'Share my profile',
     profile_logout: '🚪 Sign out',
     profile_delete_btn: '🗑 Delete all my ghosts',
     profile_delete_confirm_title: '🗑 Delete all my ghosts?',
@@ -1790,12 +1790,27 @@ const TRACE_COLORS = [
 ];
 const TRACE_COLOR_IDS = TRACE_COLORS.map(c => c.id);
 let userTraceColor = 'violet';
+// Lot AO — l'avatar était une image générique (_BRAND_MARK_HTML) recolorée
+// par filter:hue-rotate() CSS : un autre asset que le Trace affiché partout
+// ailleurs (Radar/Carte/Sceau/Détail), d'où la forme "bizarre" remontée par
+// Pipo. Rendu maintenant par _traceBodyMarkup, même helper que partout —
+// une paire [c1,c2] par teinte, dans le même esprit que TRACE_CATEGORY_COLORS
+// (couleur pleine + teinte pâle du même ton).
+const TRACE_COLOR_PAIRS = {
+  spirit:  ['#9DABFF', '#C7BCEE'],
+  violet:  ['#B478E8', '#DCC0F5'],
+  mist:    ['#6EE0B0', '#B8F0D8'],
+  amber:   ['#F0C868', '#F8E0A8'],
+  rose:    ['#FF9DC4', '#FBD2E4'],
+  crimson: ['#E85A6E', '#F2A8B4'],
+};
 
 function _applyTraceColor(colorId) {
   const avatar = document.getElementById('profileAvatar');
   if (!avatar) return;
-  TRACE_COLOR_IDS.forEach(id => avatar.classList.remove('trace-color-' + id));
-  avatar.classList.add('trace-color-' + (TRACE_COLOR_IDS.includes(colorId) ? colorId : 'violet'));
+  const [c1, c2] = TRACE_COLOR_PAIRS[colorId] || TRACE_COLOR_PAIRS.violet;
+  const uid = 'pa' + (_traceIdSeq++);
+  avatar.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="68" height="68">${_traceBodyMarkup('👻', c1, c2, uid, 68)}</svg>`;
 }
 
 function _renderTraceColorPicker() {
@@ -1804,7 +1819,7 @@ function _renderTraceColorPicker() {
   wrap.innerHTML = TRACE_COLORS.map(c => {
     const locked = c.premium && !isPremium;
     const active = c.id === userTraceColor;
-    return `<button type="button" class="trace-color-swatch trace-color-swatch-${c.id}${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">🔒</span>' : ''}</button>`;
+    return `<button type="button" class="trace-color-swatch trace-color-swatch-${c.id}${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" aria-pressed="${active}" aria-label="${t[c.labelKey] || c.id}">${locked ? '<span class="trace-color-swatch-lock" aria-hidden="true">' + _uiIconHTML('🔒', { size: 11 }) + '</span>' : ''}</button>`;
   }).join('');
 }
 
@@ -1854,6 +1869,7 @@ const UI_ICON_PATHS = {
   '✦': '<path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/>',
   '🔔': '<path d="M12 3a5 5 0 0 0-5 5v3.5c0 .8-.3 1.6-.9 2.1L4.5 15h15l-1.6-1.4a2.8 2.8 0 0 1-.9-2.1V8a5 5 0 0 0-5-5z"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0"/>',
   '🔗': '<path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/><path d="M9.5 14.5l5-5"/>',
+  '🔒': '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
 };
 function _uiIconHTML(emoji, { size = 16, className = 'ui-icon' } = {}) {
   const path = UI_ICON_PATHS[emoji];
@@ -2656,9 +2672,9 @@ onAuthStateChanged(auth, async user => {
     const pending = sessionStorage.getItem('pendingGhost');
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
     document.getElementById('profileName').textContent = escapeHTML(user.displayName || user.email);
-    // Avatar = Trace unifié (Lot F/J1), plus l'initiale du pseudo/email —
-    // même asset que partout ailleurs (radar, carte, dépôt).
-    document.getElementById('profileAvatar').innerHTML = _BRAND_MARK_HTML;
+    // Avatar = Trace unifié (Lot AO), rendu par _applyTraceColor() juste
+    // plus bas dès que userTraceColor est connu — pas besoin d'un premier
+    // rendu générique ici entre-temps.
     const userDoc = await getDoc(doc(db, COLL.USERS, user.uid));
     isPremium = userDoc.exists() && userDoc.data().premium === true;
     // Teinte du Trace de profil (Lot K) — "violet" par défaut si jamais choisi
@@ -3984,7 +4000,7 @@ function _renderTraceCollection(stats) {
     if (unlocked) unlockedCount++;
     const tier = tierNames[i] || threshold;
     return `<div class="trace-card ${unlocked ? 'unlocked' : 'locked'}" title="${escapeHTML(tier)} · ${threshold}">` +
-      `<div class="trace-card-icon" aria-hidden="true">${unlocked ? '✦' : '🔒'}</div>` +
+      `<div class="trace-card-icon" aria-hidden="true">${unlocked ? '✦' : _uiIconHTML('🔒', { size: 15, className: 'ui-icon trace-card-lock-icon' })}</div>` +
       `<div class="trace-card-count">${threshold}</div>` +
       `</div>`;
   }).join('');
@@ -4657,18 +4673,13 @@ function updatePremiumUI() {
       ? '1.5px solid rgba(var(--premium-rgb),.6)'
       : '1px solid var(--border-bright)';
     avatar.style.boxShadow = isPremium ? '0 0 14px rgba(var(--premium-rgb),.2)' : '';
-    // Badge ✦ Premium sous l'avatar
-    const existingBadge = document.getElementById('premiumAvatarBadge');
-    if (isPremium && !existingBadge) {
-      const badge = document.createElement('div');
-      badge.id = 'premiumAvatarBadge';
-      badge.innerHTML = _uiIconHTML('✦', { size: 10 }) + ' Premium';
-      badge.style.cssText = 'font-size:10px;color:rgba(var(--premium-rgb),.85);background:rgba(var(--premium-rgb),.1);border:1px solid rgba(var(--premium-rgb),.3);border-radius:20px;padding:2px 10px;margin-top:4px;letter-spacing:.5px;display:inline-block;';
-      avatar.parentNode.insertBefore(badge, avatar.nextSibling);
-    } else if (!isPremium && existingBadge) {
-      existingBadge.remove();
-    }
   }
+  // Badge Premium — toujours présent dans le DOM (index.html), simplement
+  // masqué/affiché : Lot AO, ne pas l'insérer comme enfant de la bague
+  // avatar (.profile-avatar-ring est un flex row, un 2e enfant y pousse
+  // l'avatar hors du centre au lieu de rester en dessous).
+  const premiumBadge = document.getElementById('premiumAvatarBadge');
+  if (premiumBadge) premiumBadge.classList.toggle('u-hidden', !isPremium);
   const pricingSection = document.getElementById('pricingSection');
   if (isPremium) {
     planEl.style.display = 'block';

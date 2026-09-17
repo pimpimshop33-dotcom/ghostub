@@ -826,10 +826,20 @@
           <div class="profile-avatar-big" id="profileAvatar" aria-hidden="true"></div>
         </div>
         <div class="profile-name-big" id="profileName">…</div>
+        <!-- Lot AO : pastille hors du flux de la bague avatar (le badge y était
+             inséré comme enfant flex, ce qui poussait l'avatar hors du centre) —
+             toujours présente dans le DOM, simplement masquée/affichée. -->
+        <div id="premiumAvatarBadge" class="premium-avatar-badge u-hidden">
+          <svg class="ui-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/></svg>
+          Premium
+        </div>
         <!-- Teinte du Trace (Lot K) — personnalisation de l'avatar profil -->
         <div class="trace-color-picker" id="traceColorPicker" role="group" aria-label="Teinte de mon Trace"></div>
         <div class="profile-share-row">
-          <button data-action="shareMyProfile" class="profile-share-btn" data-i18n="profile_share_profile">↗ Partager mon profil</button>
+          <button data-action="shareMyProfile" class="profile-share-btn">
+            <svg class="ui-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 20V10a6 6 0 0 1 12 0v10l-2-2-2 2-2-2-2 2-2-2z"/><circle cx="9.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/><circle cx="14.5" cy="10.5" r=".9" fill="currentColor" stroke="none"/></svg>
+            <span data-i18n="profile_share_profile">Partager mon profil</span>
+          </button>
           <button data-action="generateYearCard" id="yearCardBtn" class="profile-year-btn" data-i18n="profile_year_btn">✦ Mon année</button>
         </div>
       </div>
