@@ -9348,8 +9348,8 @@ function _showScreenBase(id, fromPopstate = false) {
     if (bizForm)    bizForm.style.display    = 'none';
     if (extra)      extra.style.display      = 'none';
     if (icon)       icon.textContent         = '○';
-    if (btn2)       { btn2.style.borderColor = 'rgba(var(--premium-rgb),.2)'; btn2.style.background = 'rgba(var(--premium-rgb),.06)'; }
-    if (subLabel)   { subLabel.textContent = t.dep_biz_link_off; subLabel.style.color = 'rgba(255,235,180,1)'; }
+    if (btn2)       { btn2.classList.remove('active'); btn2.setAttribute('aria-pressed', 'false'); }
+    if (subLabel)   subLabel.textContent = t.dep_biz_link_off;
     // Reset step 2 sections
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id2 => {
       const el = document.getElementById(id2); if (el) el.style.display = '';
@@ -9475,10 +9475,9 @@ window.toggleBusinessMode = () => {
     bizForm.style.display    = 'block';
     extra.style.display      = 'block'; // pour compatibilité depositGhost
     icon.textContent         = '●';
-    btn.style.borderColor    = 'rgba(var(--premium-rgb),.6)';
-    btn.style.background     = 'rgba(var(--premium-rgb),.1)';
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
     subLabel.textContent     = t.dep_biz_link_on;
-    subLabel.style.color     = 'rgba(var(--premium-rgb),.7)';
     document.getElementById('depositEmoji').value = '🏪';
     // Masquer durée/disparaît/rayon/condition/"Plus d'options" — un dépôt
     // Commerce a des réglages fixes (1 mois, 50m), rien à ajuster.
@@ -9543,10 +9542,9 @@ window.toggleBusinessMode = () => {
     bizForm.style.display    = 'none';
     extra.style.display      = 'none';
     icon.textContent         = '○';
-    btn.style.borderColor    = 'rgba(var(--premium-rgb),.2)';
-    btn.style.background     = 'rgba(var(--premium-rgb),.06)';
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
     subLabel.textContent     = t.dep_biz_link_off;
-    subLabel.style.color     = 'rgba(255,235,180,1)';
     // Réafficher les sections step 2
     ['step2DurWrap','step2MaxOpenWrap','step2RadiusWrap','step2CondWrap','depMoreOptionsBtn'].forEach(id => {
       const el = document.getElementById(id);

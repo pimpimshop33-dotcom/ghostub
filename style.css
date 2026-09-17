@@ -3009,10 +3009,32 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   border-radius:0 !important;
   overflow:hidden;
 }
-.lettre-textarea::placeholder{
-  color:rgba(var(--ghost-blue-rgb),.32) !important;
+/* Lot AM : le placeholder se confondait presque avec du texte tapé
+   (.32 d'un bleu clair ≈ la même luminosité que --ether plein) — Pipo veut
+   "plus flou, plus clair" = nettement en retrait derrière le vrai texte.
+   opacity:1 explicite car Firefox applique sinon SA PROPRE opacité en plus
+   de celle du rgba() ici, ce qui désynchronise le rendu entre navigateurs. */
+.lettre-textarea::placeholder,
+.lettre-textarea::-webkit-input-placeholder{
+  color:rgba(var(--spirit-rgb),.38) !important;
+  opacity:1 !important;
   font-style:italic !important;
+  transition:opacity .2s ease;
 }
+.lettre-textarea:focus::placeholder,
+.lettre-textarea:focus::-webkit-input-placeholder{opacity:.6 !important;}
+/* Même traitement (cohérence) pour les autres champs de Déposer : nom du
+   lieu, champs Commerce — .form-input/.form-textarea n'avaient aucune règle
+   ::placeholder, donc la couleur par défaut du navigateur (variable selon
+   navigateur/OS). */
+.form-input::placeholder,.form-textarea::placeholder,
+.form-input::-webkit-input-placeholder,.form-textarea::-webkit-input-placeholder{
+  color:rgba(var(--spirit-rgb),.4) !important;
+  opacity:1 !important;
+  transition:opacity .2s ease;
+}
+.form-input:focus::placeholder,.form-textarea:focus::placeholder,
+.form-input:focus::-webkit-input-placeholder,.form-textarea:focus::-webkit-input-placeholder{opacity:.6 !important;}
 
 /* Compteur subtil en bas à droite */
 .lettre-counter{
@@ -3044,18 +3066,37 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
   -webkit-text-fill-color:rgba(var(--lettre-ink-rgb),.50) !important;
   text-align:right;letter-spacing:.3px;
 }
-/* Lien discret "rester anonyme" (Lot Q) — un vrai second choix pour qui le
-   cherche, volontairement en retrait dans la hiérarchie visuelle. */
-.anon-toggle-link{
-  background:none;border:none;padding:2px 0;
-  font-family:'Instrument Sans',sans-serif;font-size:11px;
-  color:var(--spirit-dim);opacity:.65;cursor:pointer;
-  display:inline-flex;align-items:center;gap:4px;
-  text-decoration:underline;text-decoration-color:transparent;
-  transition:all .2s;touch-action:manipulation;
+/* Lot AM : "rester anonyme" (lien nu, sans forme) et "mode Commerce"
+   (rectangle sombre à angles droits sans bordure, posé en inline JS) ne se
+   ressemblaient pas et ne se lisaient pas comme des boutons — Pipo : "deux
+   pastilles jumelles". Même composant .dep-chip-toggle pour les deux (taille/
+   forme/transition identiques) ; seule la couleur diffère via les modifiers
+   --anon/--biz (le Commerce garde son ambre discret, signal Premium). */
+.dep-chip-toggle{
+  height:40px;padding:0 16px;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  border-radius:20px;
+  border:1px solid rgba(var(--ghost-blue-rgb),.28);
+  background:transparent;
+  color:var(--spirit-dim);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;
+  cursor:pointer;touch-action:manipulation;
+  transition:all .2s;
 }
-.anon-toggle-link:hover{opacity:.9;text-decoration-color:currentColor;}
-.anon-toggle-link.active{color:var(--warm);opacity:.9;text-decoration-color:currentColor;}
+.dep-chip-toggle:hover{border-color:rgba(var(--ghost-blue-rgb),.5);color:var(--ether);}
+/* État actif : bordure pleine 1.5px + fond léger + texte clair — spirit
+   blue pour anonyme, ambre pour Commerce (cohérent avec leur bordure au
+   repos respective). */
+.dep-chip-toggle--anon.active{
+  border-width:1.5px;border-color:var(--spirit);
+  background:rgba(var(--spirit-rgb),.16);color:var(--ether);
+}
+.dep-chip-toggle--biz{border-color:rgba(232,160,48,.45);color:rgba(232,160,48,.85);}
+.dep-chip-toggle--biz:hover{border-color:rgba(232,160,48,.7);color:var(--warm);}
+.dep-chip-toggle--biz.active{
+  border-width:1.5px;border-color:var(--amber);
+  background:rgba(232,160,48,.16);color:var(--warm);
+}
 
 /* ── Le sceau — CTA principal qui remplace "Déposer ici" ── */
 .lettre-seal-btn{
@@ -3223,20 +3264,12 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 }
 .dep-more-options-chevron{flex-shrink:0;font-size:20px;color:var(--spirit-dim);}
 
-/* ── Liens discrets sous le sceau : anonyme · mode Commerce ── */
+/* ── Pastilles sous le sceau : anonyme · mode Commerce (cf. .dep-chip-toggle
+   plus haut, Lot AM) ── */
 .dep-bottom-links-row{
   display:flex;align-items:center;justify-content:center;gap:18px;
   margin-top:10px;
 }
-.dep-biz-link{
-  background:none;border:none;padding:2px 0;
-  font-family:'Instrument Sans',sans-serif;font-size:11px;
-  color:rgba(var(--premium-rgb),.75);opacity:.85;cursor:pointer;
-  display:inline-flex;align-items:center;gap:4px;
-  text-decoration:underline;text-decoration-color:transparent;
-  transition:all .2s;touch-action:manipulation;
-}
-.dep-biz-link:hover{opacity:1;text-decoration-color:currentColor;}
 
 /* ── Écran 2 "Plus d'options" — bottom sheet (réutilise le pattern
    .report-modal/.share-modal + .sheet-handle, cf. plus bas). ── */
