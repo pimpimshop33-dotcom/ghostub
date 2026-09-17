@@ -3084,20 +3084,26 @@ body.light-theme .ob-skip{color:rgba(58,42,148,.55) !important;}
   border-radius:0 !important;
   overflow:hidden;
 }
-/* Lot AM : le placeholder se confondait presque avec du texte tapé
-   (.32 d'un bleu clair ≈ la même luminosité que --ether plein) — Pipo veut
-   "plus flou, plus clair" = nettement en retrait derrière le vrai texte.
-   opacity:1 explicite car Firefox applique sinon SA PROPRE opacité en plus
-   de celle du rgba() ici, ce qui désynchronise le rendu entre navigateurs. */
+/* Lot AM puis AN : le placeholder se confondait presque avec du texte tapé
+   — Pipo veut "encore plus discret", une invite décorative (le champ a déjà
+   son label/aria) pas une information à lire. Alpha .38→.20 en Mode nuit,
+   taille réduite d'un cran (17px texte réel → 15px placeholder) pour qu'il
+   "recule" aussi visuellement. opacity:1 explicite car Firefox applique
+   sinon SA PROPRE opacité en plus de celle du rgba() ici. Mode jour : voir
+   l'override body.light-theme plus bas — #C4C0D8 gris-lavande volontairement
+   sous les seuils de contraste (idem, décoratif). */
 .lettre-textarea::placeholder,
 .lettre-textarea::-webkit-input-placeholder{
-  color:rgba(var(--spirit-rgb),.38) !important;
+  color:rgba(var(--spirit-rgb),.20) !important;
   opacity:1 !important;
   font-style:italic !important;
+  font-size:15px !important;
   transition:opacity .2s ease;
 }
 .lettre-textarea:focus::placeholder,
 .lettre-textarea:focus::-webkit-input-placeholder{opacity:.6 !important;}
+body.light-theme .lettre-textarea::placeholder,
+body.light-theme .lettre-textarea::-webkit-input-placeholder{color:#C4C0D8 !important;}
 /* Même traitement (cohérence) pour les autres champs de Déposer : nom du
    lieu, champs Commerce — .form-input/.form-textarea n'avaient aucune règle
    ::placeholder, donc la couleur par défaut du navigateur (variable selon
