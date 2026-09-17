@@ -136,9 +136,9 @@
           <div class="ob-radar">
             <div class="ob-radar-ring"></div><div class="ob-radar-ring ob-rring2"></div><div class="ob-radar-ring ob-rring3"></div>
             <div class="ob-radar-sweep"></div><div class="ob-radar-center"></div>
-            <img class="ob-ghost-dot ob-dot1" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
-            <div class="ob-ghost-dot ob-dot2">🔮</div>
-            <div class="ob-ghost-dot ob-dot3">💬</div>
+            <span class="ob-ghost-dot ob-dot1" id="obGhostDot1"></span>
+            <span class="ob-ghost-dot ob-dot2" id="obGhostDot2"></span>
+            <span class="ob-ghost-dot ob-dot3" id="obGhostDot3"></span>
           </div>
         </div>
         <div class="ob-scene-text">
@@ -148,11 +148,15 @@
       </div>
       <div class="ob-scene" id="obScene2" role="group" aria-roledescription="slide" aria-label="Slide 3 : Ouvrir" aria-hidden="true">
         <div class="ob-scene-visual" aria-hidden="true">
-          <div class="ob-envelope">
-            <div class="ob-env-flap"></div>
-            <div class="ob-env-body">
-              <img class="ob-env-emoji" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
-              <div class="ob-env-lines"><div class="ob-env-line"></div><div class="ob-env-line ob-line2"></div><div class="ob-env-line ob-line3"></div></div>
+          <div class="ob-envelope-v2">
+            <div class="ob-env-v2-flap">
+              <div class="ob-env-v2-triangle"></div>
+              <span class="ob-env-v2-seal" id="obEnvSeal"></span>
+            </div>
+            <div class="ob-env-v2-body">
+              <div class="ob-env-v2-line"></div>
+              <div class="ob-env-v2-line ob-env-v2-line2"></div>
+              <div class="ob-env-v2-line ob-env-v2-line3"></div>
             </div>
           </div>
         </div>
@@ -164,8 +168,13 @@
       <div class="ob-scene" id="obScene3" role="group" aria-roledescription="slide" aria-label="Slide 4 : Résonner" aria-hidden="true">
         <div class="ob-scene-visual" aria-hidden="true">
           <div class="ob-reso-wrap">
+            <div class="ob-reso-wave ob-reso-wave1"></div>
+            <div class="ob-reso-wave ob-reso-wave2"></div>
+            <div class="ob-reso-wave ob-reso-wave3"></div>
             <div class="ob-reso-btn">✦ Résonner</div>
-            <div class="ob-reso-particles" id="obResoParticles" aria-hidden="true"></div>
+            <span class="ob-reso-star ob-reso-star1" aria-hidden="true">✦</span>
+            <span class="ob-reso-star ob-reso-star2" aria-hidden="true">✧</span>
+            <span class="ob-reso-star ob-reso-star3" aria-hidden="true">✦</span>
           </div>
         </div>
         <div class="ob-scene-text">

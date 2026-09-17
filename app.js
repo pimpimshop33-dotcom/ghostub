@@ -5850,6 +5850,9 @@ function applyTheme(theme) {
   if (typeof _applyTraceColor === 'function' && typeof userTraceColor !== 'undefined') {
     _applyTraceColor(userTraceColor);
   }
+  // Lot AS — mêmes couleurs théme-aware pour les petits ghosts de l'intro
+  // (mini-radar slide 2, sceau de l'enveloppe slide 3).
+  if (typeof _renderIntroIllustrations === 'function') _renderIntroIllustrations();
 }
 
 function toggleTheme() {
@@ -10929,36 +10932,41 @@ function goObScene(n) {
     cta.classList.remove('visible');
     if (hint) hint.style.display = '';
   }
-  if (n === 3) spawnObParticles();
 }
 window.goObScene = goObScene;
 
-function spawnObParticles() {
-  const wrap = document.getElementById('obResoParticles');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  // 'mark' remplace l'ancien emoji 👻 brut par le mark "Trace" (cf. _BRAND_MARK_HTML)
-  const syms = ['✦','✧','·','mark','✦','✦'];
-  for (let i = 0; i < 10; i++) {
-    const p = document.createElement('div');
-    p.className = 'ob-reso-p';
-    p.setAttribute('aria-hidden', 'true');
-    const angle = (i / 10) * 2 * Math.PI;
-    const dist = 50 + Math.random() * 40;
-    p.style.setProperty('--tx', Math.cos(angle) * dist + 'px');
-    p.style.setProperty('--ty', Math.sin(angle) * dist - 20 + 'px');
-    p.style.setProperty('--d', (1 + Math.random()).toFixed(1) + 's');
-    p.style.setProperty('--delay', (i * 0.15).toFixed(2) + 's');
-    // opacity (pas color) : s'applique aussi bien au texte qu'au mark SVG ci-dessous
-    p.style.color = 'rgba(var(--ghost-blue-rgb),1)';
-    p.style.opacity = (0.4 + Math.random() * 0.6).toFixed(2);
-    const sym = syms[i % syms.length];
-    if (sym === 'mark') {
-      p.innerHTML = '<img src="assets/brand/ghostub-mark-trace.svg" class="ob-particle-mark-icon" aria-hidden="true">';
-    } else {
-      p.textContent = sym;
-    }
-    wrap.appendChild(p);
+// Lot AS — remplace spawnObParticles() (particules volant jusqu'à 90px du
+// centre, débordaient sur le titre/texte, capture Pipo) : la slide 4 est
+// maintenant des ondes + étoiles fixes en CSS pur (.ob-reso-wave/-star,
+// style.css), rien à générer en JS. Reste ici : peupler les vrais petits
+// ghosts du mini-radar (slide 2) et le sceau de l'enveloppe (slide 3),
+// théme-aware — rendu une fois au chargement et à chaque bascule jour/nuit
+// (cf. applyTheme()).
+function _renderIntroIllustrations() {
+  const dots = [
+    { id: 'obGhostDot1', emoji: '👻', size: 26 },
+    { id: 'obGhostDot2', emoji: '❤️', size: 24 },
+    { id: 'obGhostDot3', emoji: '🌸', size: 24 },
+  ];
+  dots.forEach(({ id, emoji, size }) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const [c1, c2] = _categoryColors(emoji);
+    const uid = 'obd' + (_traceIdSeq++);
+    el.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
+  });
+  const seal = document.getElementById('obEnvSeal');
+  if (seal) {
+    const [c1, c2] = _categoryColors('👻');
+    const uid = 'obs' + (_traceIdSeq++);
+    seal.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="24" height="24">${_traceBodyMarkup('👻', c1, c2, uid, 24)}</svg>`;
+  }
+}
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _renderIntroIllustrations);
+  } else {
+    _renderIntroIllustrations();
   }
 }
 

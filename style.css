@@ -406,8 +406,19 @@ body.light-theme .ob-sub{color:rgba(95,91,107,.65) !important;}
 body.light-theme .ob-scene0-halo{background:radial-gradient(circle,rgba(181,112,26,.14) 0%,transparent 70%);}
 @keyframes obHaloPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
 
-/* Brume sous les visuels onboarding */
-.ob-scene-visual{position:relative;}
+/* Lot AS — gabarit commun aux 4 slides (capture Pipo, slide "Résonnez" :
+   l'illustration décorative flottait en position:absolute PAR-DESSUS le
+   titre/texte, illisible). Zone d'illustration à hauteur FIXE, overflow
+   masqué : rien de ce qui vit dedans (particules, ondes, sceau animé) ne
+   peut plus déborder dans la zone titre/texte qui vient après, quelle que
+   soit la taille de l'écran (testé 360×740 et 412×915). */
+.ob-scene-visual{
+  position:relative;
+  height:36vh;max-height:280px;min-height:200px;
+  width:100%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
 .ob-scene-visual::before{display:none;}
 .ob-scene-visual::after{display:none;}
 @keyframes fogDrift{0%,100%{opacity:.5;transform:translateX(-50%) scaleX(1);}50%{opacity:.75;transform:translateX(-46%) scaleX(1.06);}}
@@ -3154,24 +3165,48 @@ body.light-theme .ob-skip{color:rgba(95,91,107,.55) !important;}
 .ob-rring3{width:100%;height:100%;}
 .ob-radar-sweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,transparent 0%,rgba(var(--ghost-blue-rgb),.14) 14%,transparent 16%);animation:sweep 4s linear infinite;}
 .ob-radar-center{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--spirit);transform:translate(-50%,-50%);box-shadow:0 0 12px var(--spirit);}
-.ob-ghost-dot{position:absolute;font-size:var(--serif-sm);animation:ghostReveal 4s linear infinite;}
+body.light-theme .ob-radar-sweep{background:conic-gradient(from 0deg,transparent 0%,rgba(181,112,26,.16) 14%,transparent 16%);}
+/* Lot AS — "anciens Sceaux" (pictos bulle/cœur/lune, emojis) sur le mini-
+   radar de la slide 2 → de vrais petits ghosts (_traceBodyMarkup, cf.
+   _renderIntroIllustrations dans app.js), positions/délais inchangés. */
+.ob-ghost-dot{position:absolute;width:30px;height:30px;display:flex;align-items:center;justify-content:center;animation:ghostReveal 4s linear infinite;}
 .ob-dot1{left:62%;top:28%;}
 .ob-dot2{animation-delay:1.3s;left:35%;top:55%;}
 .ob-dot3{animation-delay:2.6s;left:70%;top:65%;}
 
-/* Enveloppe */
-.ob-envelope{width:200px;background:rgba(8,8,20,.85);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:16px;overflow:hidden;}
-.ob-env-flap{height:50px;background:linear-gradient(180deg,rgba(var(--ghost-blue-rgb),.12) 0%,rgba(var(--ghost-blue-rgb),.04) 100%);border-bottom:1px solid rgba(var(--ghost-blue-rgb),.15);display:flex;align-items:center;justify-content:center;}
-.ob-env-body{padding:16px;display:flex;align-items:center;gap:12px;}
-.ob-env-emoji{font-size:var(--serif-md);}
-.ob-env-lines{flex:1;display:flex;flex-direction:column;gap:6px;}
-.ob-env-line{height:8px;border-radius:4px;background:rgba(var(--ghost-blue-rgb),.18);}
-.ob-line2{width:75%;}.ob-line3{width:50%;}
+/* Lot AS — vraie enveloppe scellée (cohérente avec .envelope-sealed du
+   Détail : corps + rabat triangulaire), ghost en sceau de cire au centre
+   du rabat, au lieu d'un rectangle à bandeau qui ne ressemblait à rien. */
+.ob-envelope-v2{width:160px;background:var(--surface);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.35);}
+.ob-env-v2-flap{height:52px;position:relative;overflow:hidden;transform-origin:top center;animation:obEnvBreathe 4s ease-in-out infinite;}
+.ob-env-v2-triangle{position:absolute;inset:0;clip-path:polygon(0 0,100% 0,50% 100%);background:linear-gradient(180deg,rgba(var(--ghost-blue-rgb),.14) 0%,rgba(var(--ghost-blue-rgb),.05) 100%);border-bottom:1px solid rgba(var(--ghost-blue-rgb),.15);}
+@keyframes obEnvBreathe{0%,100%{transform:rotateX(0deg);}50%{transform:rotateX(-8deg);}}
+.ob-env-v2-seal{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:26px;height:26px;display:flex;align-items:center;justify-content:center;z-index:2;filter:drop-shadow(0 0 10px rgba(232,180,90,.5));animation:sealPulse 3s ease-in-out infinite;}
+.ob-env-v2-body{padding:22px 18px 18px;display:flex;flex-direction:column;gap:8px;}
+.ob-env-v2-line{height:7px;border-radius:4px;background:rgba(var(--ghost-blue-rgb),.16);}
+.ob-env-v2-line2{width:80%;}.ob-env-v2-line3{width:55%;}
+body.light-theme .ob-envelope-v2{border-color:var(--border);box-shadow:0 8px 24px rgba(28,26,36,.08);}
 
-/* Résonance */
-.ob-reso-wrap{position:relative;display:flex;align-items:center;justify-content:center;}
+/* Résonance — ondes concentriques qui pulsent autour du bouton, plutôt
+   qu'une pluie de particules volant jusqu'à 90px du centre (débordait sur
+   le titre, capture Pipo) : contenues par .ob-scene-visual (overflow
+   hidden) + rayon max raisonnable (56px) ci-dessous. */
+.ob-reso-wrap{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%;}
 .ob-reso-btn{padding:14px 28px;background:rgba(var(--ghost-blue-rgb),.12);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:14px;color:var(--ether);font-family:'Instrument Sans',sans-serif;font-size:var(--text-md);position:relative;z-index:2;-webkit-text-fill-color:var(--ether) !important;}
-.ob-reso-particles{position:absolute;inset:-20px;pointer-events:none;}
+.ob-reso-wave{position:absolute;left:50%;top:50%;width:60px;height:60px;border-radius:50%;border:1px solid rgba(var(--ghost-blue-rgb),.35);transform:translate(-50%,-50%) scale(1);animation:obResoWave 3s ease-out infinite;pointer-events:none;}
+.ob-reso-wave2{animation-delay:1s;}
+.ob-reso-wave3{animation-delay:2s;}
+@keyframes obResoWave{0%{transform:translate(-50%,-50%) scale(1);opacity:.7;}100%{transform:translate(-50%,-50%) scale(2.4);opacity:0;}}
+.ob-reso-star{position:absolute;font-size:12px;color:rgba(var(--ghost-blue-rgb),.55);animation:obResoStarFloat 3.5s ease-in-out infinite;pointer-events:none;}
+.ob-reso-star1{top:14%;left:22%;animation-delay:.3s;}
+.ob-reso-star2{top:20%;right:18%;animation-delay:1.4s;}
+.ob-reso-star3{bottom:16%;left:28%;animation-delay:2.3s;}
+@keyframes obResoStarFloat{0%,100%{opacity:.35;transform:translateY(0);}50%{opacity:.9;transform:translateY(-6px);}}
+body.light-theme .ob-reso-wave{border-color:rgba(181,112,26,.35);}
+body.light-theme .ob-reso-star{color:rgba(181,112,26,.55);}
+@media (prefers-reduced-motion:reduce){
+  .ob-env-v2-flap,.ob-env-v2-seal,.ob-reso-wave,.ob-reso-star{animation:none !important;}
+}
 
 /* Force emoji natural rendering — bypass ALL inheritance */
 .emoji-opt, .emoji-opt * {
