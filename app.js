@@ -1916,13 +1916,29 @@ function _findTraceColor(colorId) {
   return TRACE_COLORS.find(c => c.id === colorId) || TRACE_COLORS.find(c => c.id === 'violet');
 }
 
+// Lot AQ — le même "ghost" flottant (couleur + visage du compte) apparaît à
+// 2 endroits dans l'app : l'avatar du Profil et l'en-tête de l'écran Aide
+// (les pages légales statiques, sans app.js, portent leur propre copie du
+// Spirit — cf. privacy.html/terms.html). Une seule fonction pose le SVG +
+// la couleur du halo (doré en Premium, sinon celle de la teinte) aux deux
+// endroits, pour rester synchronisés sans dupliquer la logique.
+const GHOST_FLOAT_TARGETS = [
+  { avatarId: 'profileAvatar', haloId: 'profileAvatarHalo' },
+  { avatarId: 'helpHeroGhost', haloId: 'helpHeroGhostHalo' },
+];
 function _applyTraceColor(colorId) {
-  const avatar = document.getElementById('profileAvatar');
-  if (!avatar) return;
   const color = _findTraceColor(colorId);
   const [c1, c2] = TRACE_COLOR_PAIRS[color.id] || TRACE_COLOR_PAIRS.violet;
-  const uid = 'pa' + (_traceIdSeq++);
-  avatar.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="68" height="68">${_traceBodyMarkup(color.face, c1, c2, uid, 68)}</svg>`;
+  const haloColor = isPremium ? 'rgba(240,200,100,.45)' : _hexToRgba(color.swatch, .35);
+  GHOST_FLOAT_TARGETS.forEach(({ avatarId, haloId }) => {
+    const avatar = document.getElementById(avatarId);
+    if (avatar) {
+      const uid = 'gf' + (_traceIdSeq++);
+      avatar.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="128" height="128">${_traceBodyMarkup(color.face, c1, c2, uid, 128)}</svg>`;
+    }
+    const halo = document.getElementById(haloId);
+    if (halo) halo.style.setProperty('--ghost-float-halo-color', haloColor);
+  });
 }
 
 // Lot AP — "les ronds de couleur sont incompréhensibles" (Pipo) : chaque
@@ -1943,10 +1959,16 @@ function _renderTraceColorPicker() {
     const uid = 'tp' + (_traceIdSeq++);
     const miniTrace = `<svg class="trace-svg" viewBox="0 0 200 200" width="40" height="40">${_traceBodyMarkup(c.face, c1, c2, uid, 40)}</svg>`;
     const ariaLabel = locked ? `${label} — ${t.trace_color_locked || 'Teinte réservée Premium'}` : label;
+    // Lot AQ — Pipo : la pastille ✦ reste utile même une fois débloquée (elle
+    // rappelle que cette teinte est une des 3 Premium), juste plus discrète
+    // (pas de disque ambre plein, cf. .trace-pick-lock.unlocked).
+    const badge = c.premium
+      ? `<span class="trace-pick-lock${locked ? '' : ' unlocked'}" aria-hidden="true">${_uiIconHTML('✦', { size: 10 })}</span>`
+      : '';
     return `<button type="button" class="trace-pick-btn${active ? ' active' : ''}${locked ? ' locked' : ''}" data-action="setTraceColor" data-arg="${c.id}" data-swatch="${c.swatch}" aria-pressed="${active}" aria-label="${escapeHTML(ariaLabel)}">` +
       `<span class="trace-pick-icon">${miniTrace}</span>` +
       `<span class="trace-pick-name">${escapeHTML(label)}</span>` +
-      (locked ? `<span class="trace-pick-lock" aria-hidden="true">${_uiIconHTML('✦', { size: 10 })}</span>` : '') +
+      badge +
       `</button>`;
   }).join('');
   const hint = document.getElementById('monTracePremiumHint');
@@ -4930,14 +4952,11 @@ function updatePremiumUI() {
   if (typeof _renderAttachmentsList === 'function') _renderAttachmentsList();
   // Verrou 5/10 lectures (A2-bis) — gratuit reste forcé à 1
   if (typeof _updateMaxOpenLockUI === 'function') _updateMaxOpenLockUI();
-  // Badge avatar Premium
-  const avatar = document.getElementById('profileAvatar');
-  if (avatar) {
-    avatar.style.border = isPremium
-      ? '1.5px solid rgba(var(--premium-rgb),.6)'
-      : '1px solid var(--border-bright)';
-    avatar.style.boxShadow = isPremium ? '0 0 14px rgba(var(--premium-rgb),.2)' : '';
-  }
+  // Lot AQ — plus de cadre autour du ghost flottant ; le statut Premium se
+  // lit sur la pastille "✦ Premium" + le halo doré sous le ghost (posé par
+  // _applyTraceColor, qui lit `isPremium`) — on le rafraîchit ici pour
+  // suivre un changement de statut sans changer de teinte.
+  if (typeof _applyTraceColor === 'function') _applyTraceColor(userTraceColor);
   // Badge Premium — toujours présent dans le DOM (index.html), simplement
   // masqué/affiché : Lot AO, ne pas l'insérer comme enfant de la bague
   // avatar (.profile-avatar-ring est un flex row, un 2e enfant y pousse

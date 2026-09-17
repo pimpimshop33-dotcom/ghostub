@@ -1624,7 +1624,6 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .help-back-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
 .help-back-btn{background:none;border:none;cursor:pointer;font-size:13px;color:var(--spirit-dim);font-family:'Instrument Sans',sans-serif;padding:0;}
 .help-hero{text-align:center;margin-bottom:28px;}
-.help-hero-icon{width:36px;height:36px;margin-bottom:8px;}
 .help-hero-title{font-size:20px;font-weight:700;color:var(--ether);margin-bottom:4px;}
 .help-hero-sub{font-size:13px;color:var(--spirit-dim);}
 .help-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px;}
@@ -1759,42 +1758,62 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .help-legal-link{color:rgba(var(--ghost-blue-rgb),.8);text-decoration:underline;}
 .help-footer{text-align:center;padding:16px 0;}
 .help-footer-text{font-size:12px;color:var(--spirit-dim);opacity:.5;}
-/* Conteneur neutre autour du Trace (Lot V — l'anneau dégradé + le fond
-   flouté du Lot J1 ont été retirés : Pipo les trouvait trop flous). Ne sert
-   plus qu'au centrage/à la taille, cf. .profile-avatar-big pour le flottement
-   propre à l'icône.
-   Lot AO : width/height égaux + border-radius:50% explicite — un rayon fixe
-   (34px/30px) sur une boîte de 116/104px n'est PAS un cercle, ça donnait la
-   "gélule aux coins arrondis" remontée par Pipo. */
-.profile-avatar-ring{
+/* ── Ghost flottant — composant partagé (Lot AQ) ─────────────────────
+   Un seul visuel pour l'avatar du Profil, l'en-tête de l'écran Aide et
+   les pages légales : le Trace de l'utilisateur (couleur + visage
+   choisis), SANS cadre ni fond de disque (Pipo : "plus aucun cadre" —
+   le cercle du Lot AO, même invisible, recadrait encore le SVG via
+   border-radius:50%/overflow:hidden, d'où la silhouette "gélule").
+   Il flotte doucement au-dessus d'un halo elliptique dont la couleur
+   suit la teinte du Trace (doré en Premium, cf. _applyTraceColor).
+   .ghost-float-wrap = conteneur positionné (centrage + place pour
+   l'amplitude du flottement) ; .ghost-float porte l'animation (via son
+   svg.trace-svg enfant) ; .ghost-float-halo est l'ombre en dessous,
+   qui se resserre quand le ghost monte et s'élargit quand il descend
+   (même durée que le flottement → synchronisés). CSS pur (transform
+   uniquement → GPU), will-change, prefers-reduced-motion respecté. */
+.ghost-float-wrap{
   position:relative;
-  width:116px;height:116px;border-radius:50%;
+  width:150px;height:158px;
   margin:0 auto 14px;
   display:flex;align-items:center;justify-content:center;
 }
-.profile-avatar-big{
+.ghost-float{
   position:relative;z-index:1;
-  width:104px;height:104px;border-radius:50%;
+  width:128px;height:128px;
   display:flex;align-items:center;justify-content:center;
-  font-size:50px;font-weight:700;color:var(--warm);margin:0;
-  overflow:hidden;
+  margin:0;
 }
-/* Lot AO : l'avatar est maintenant le Trace rendu en direct (_traceBodyMarkup,
-   svg.trace-svg), plus une <img> recolorée par filter — cf. _applyTraceColor
-   (app.js). Un tour complet à 360° (Lot V, profileIconSpin) donnait
-   l'impression que le Trace "penchait/tombait" à mi-cycle (capture Pipo à
-   ~35°) : remplacé par un flottement subtil (translation + rotation faibles,
-   va-et-vient) plutôt qu'une rotation continue. */
-.profile-avatar-big .trace-svg{
-  animation: profileIconFloat 5s ease-in-out infinite;
+.ghost-float .trace-svg{
+  animation: ghostFloatBob 3.5s ease-in-out infinite;
+  will-change: transform;
 }
-@keyframes profileIconFloat{
+@keyframes ghostFloatBob{
   0%,100%{ transform: translateY(0) rotate(0deg); }
-  50%{ transform: translateY(-3px) rotate(3deg); }
+  50%{ transform: translateY(-6px) rotate(2deg); }
+}
+.ghost-float-halo{
+  position:absolute;left:50%;bottom:10px;z-index:0;
+  width:64px;height:16px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:radial-gradient(ellipse at center, var(--ghost-float-halo-color, rgba(157,171,255,.35)) 0%, transparent 72%);
+  filter:blur(1px);
+  animation: ghostHaloPulse 3.5s ease-in-out infinite;
+  will-change: width, opacity;
+  pointer-events:none;
+}
+@keyframes ghostHaloPulse{
+  0%,100%{ width:64px; opacity:.55; }
+  50%{ width:46px; opacity:.8; }
 }
 @media (prefers-reduced-motion: reduce){
-  .profile-avatar-big .trace-svg{ animation: none !important; }
+  .ghost-float .trace-svg{ animation: none !important; }
+  .ghost-float-halo{ animation: none !important; }
 }
+/* Mode jour : halo plus léger, le Trace (contour + visage sombre) reste
+   lisible sur fond blanc sans qu'on touche à son propre dessin. */
+body.light-theme .ghost-float-halo{ opacity:.65; filter:blur(2px); }
 
 /* ── "Mon Trace" — sélecteur de teinte/caractère (Lot K, carte Lot AP) ──
    Pipo : "les ronds de couleur sont incompréhensibles" — carte titrée avec
@@ -1803,22 +1822,25 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .mon-trace-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:16px 14px;margin:14px 0;text-align:center;}
 .mon-trace-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-style:italic;color:var(--ether);margin-bottom:2px;}
 .mon-trace-sub{font-size:11px;color:var(--spirit-dim);margin-bottom:14px;}
-.trace-color-picker{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+/* Lot AQ — 6 ghosts sur UNE seule ligne (capture Pipo : "5 + 1", Braise
+   isolée). Grille à 6 colonnes égales plutôt qu'un flex qui enroule ; les
+   boutons rétrécissent ensemble (min 44px) au lieu de passer à la ligne. */
+.trace-color-picker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;}
 .trace-pick-btn{
   position:relative;
-  display:flex;flex-direction:column;align-items:center;gap:4px;
-  width:56px;
-  background:transparent;border:2px solid transparent;border-radius:14px;
-  padding:4px 2px 6px;cursor:pointer;touch-action:manipulation;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  min-width:44px;width:100%;
+  background:transparent;border:2px solid transparent;border-radius:12px;
+  padding:4px 1px 5px;cursor:pointer;touch-action:manipulation;
   transition:transform .2s,border-color .2s,background .2s;
 }
 .trace-pick-btn:hover{transform:translateY(-1px);}
 .trace-pick-icon{
-  width:50px;height:50px;border-radius:12px;
+  width:40px;height:40px;border-radius:11px;
   display:flex;align-items:center;justify-content:center;
   background:var(--surface2);
 }
-.trace-pick-name{font-size:10px;color:var(--warm-dim);letter-spacing:.2px;}
+.trace-pick-name{font-size:10.5px;color:var(--warm-dim);letter-spacing:0;white-space:nowrap;}
 /* .active pose border-color/background en JS (_renderTraceColorPicker,
    app.js) — la couleur de sélection est celle DE LA TEINTE elle-même
    ("bordure 2px de la couleur", pas un bleu générique fixe pour les 6). */
@@ -1830,6 +1852,12 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
   display:flex;align-items:center;justify-content:center;
   background:var(--amber);color:#2a1c04;
   box-shadow:0 0 0 2px var(--surface);
+}
+/* Lot AQ — la pastille ✦ reste visible même après déblocage Premium (Pipo :
+   "l'info reste utile, en plus discret") : plus de disque ambre plein, juste
+   l'icône teintée, sans halo ni contour. */
+.trace-pick-lock.unlocked{
+  background:transparent;box-shadow:none;color:rgba(var(--premium-rgb),.75);
 }
 .mon-trace-premium-hint{font-size:11px;color:rgba(var(--premium-rgb),.85);margin-top:12px;}
 
