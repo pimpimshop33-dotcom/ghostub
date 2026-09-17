@@ -7217,7 +7217,18 @@ const COMPASS_TICK_MS = 120;
 // cf. LOT-AB-boussole-aiguille-qui-saccade.md). Remonté 0.6°→1.8° (Lot AC) :
 // le bruit magnétomètre réel du téléphone est plus fort que la simulation
 // ne le reproduisait, il fallait lisser plus fort, pas changer d'approche.
-const COMPASS_JITTER_THRESHOLD_DEG = 1.8;
+// Lot AG : un seuil unique flickait en rafale (skip/pas-skip) quand le signal
+// stagnait pile autour de sa frontière — chaque frame ré-évaluait diff >= 1.8°
+// indépendamment, donc un bruit de ±0.1° autour de 1.8° faisait alterner la
+// décision (et donc l'étiquette debug, qui suit fidèlement cette même
+// décision) à chaque tick, sans qu'aucune des deux valeurs ne soit "fausse".
+// Remplacé par une hystérésis à deux bornes : il faut dépasser le seuil haut
+// (ENGAGE) pour déclencher une mise à jour, puis une fois en train de suivre
+// on continue tant que diff reste au-dessus du seuil bas (DISENGAGE) — un
+// signal qui oscille entre les deux bornes ne peut plus faire de va-et-vient,
+// il faut effectivement retomber sous DISENGAGE pour se re-figer.
+const COMPASS_JITTER_ENGAGE_DEG = 2.0;
+const COMPASS_JITTER_DISENGAGE_DEG = 1.0;
 // Fenêtre glissante (Lot AC) : nombre de dernières lectures brutes gardées,
 // peu importe leur espacement temporel — remplace l'ancien comportement qui
 // ne moyennait que les lectures reçues depuis le tick précédent (~120ms,
@@ -7251,6 +7262,7 @@ let _compassRawHeading = null;
 let _compassDispersion = 0; // dispersion de la fenêtre courante (Lot AE, cf. _averageAngleDeg)
 let _compassSmoothedHeading = null;
 let _compassDisplayedHeading = null;
+let _compassFollowing = false; // Lot AG — état de l'hystérésis anti-tremblement (cf. COMPASS_JITTER_ENGAGE/DISENGAGE_DEG)
 let _compassPermissionDenied = false;
 // Lectures brutes accumulées depuis le dernier tick — moyennées (vecteurs,
 // wraparound-safe) avant lissage, au lieu de ne garder que le dernier event
@@ -7311,6 +7323,7 @@ function _updateCompassDebugPanel(deg, skipped) {
   const shown = _compassDisplayedHeading === null ? '—' : _compassDisplayedHeading.toFixed(1);
   const baseFactor = _compassSmoothFactor(_compassDispersion);
   const effFactor = _compassEffectiveFactor(baseFactor, _compassLastDtMs);
+  const threshold = _compassFollowing ? COMPASS_JITTER_DISENGAGE_DEG : COMPASS_JITTER_ENGAGE_DEG;
   el.textContent =
     `event: ${_compassEventName || '—'}\n` +
     `dt réel entre frames: ${_compassLastDtMs.toFixed(1)}ms (réf ${COMPASS_TICK_MS}ms)\n` +
@@ -7318,6 +7331,7 @@ function _updateCompassDebugPanel(deg, skipped) {
     `raw(avg ${_compassRawBuffer.length}): ${raw}°\n` +
     `dispersion: ${_compassDispersion.toFixed(4)} → facteur base: ${baseFactor.toFixed(4)} → effectif: ${effFactor.toFixed(4)}\n` +
     `smoothed: ${smoothed}°\n` +
+    `hystérésis: ${_compassFollowing ? 'following' : 'locked'} (seuil actif ${threshold}°)\n` +
     `affiché: ${shown}°${skipped ? ' (skip)' : ''}\n` +
     `deg calculé ce frame: ${deg === null ? '—' : deg.toFixed(1)}°`;
   _compassEventsSinceTick = 0;
@@ -7417,7 +7431,13 @@ function _compassTick(nowTs) {
   // vibration même quand le cap réel est quasi stable).
   if (_compassDisplayedHeading !== null) {
     const diff = Math.abs(((deg - _compassDisplayedHeading + 540) % 360) - 180);
-    if (diff < COMPASS_JITTER_THRESHOLD_DEG) { _updateCompassDebugPanel(deg, true); return; }
+    const threshold = _compassFollowing ? COMPASS_JITTER_DISENGAGE_DEG : COMPASS_JITTER_ENGAGE_DEG;
+    if (diff < threshold) {
+      _compassFollowing = false;
+      _updateCompassDebugPanel(deg, true);
+      return;
+    }
+    _compassFollowing = true;
   }
   _compassDisplayedHeading = deg;
   // Widget boussole autonome (Lot AA) — overlay séparé sur Radar et Carte
@@ -7464,6 +7484,7 @@ function _detachCompassListener() {
   _compassDispersion = 0;
   _compassSmoothedHeading = null;
   _compassDisplayedHeading = null;
+  _compassFollowing = false;
   _compassRawBuffer = [];
   _hideCompassWidgets();
   document.getElementById('compassDebugPanel')?.classList.add('u-hidden');
