@@ -229,7 +229,6 @@ const LANGS = {
     dep_btn: '👻 Ancrer ce fantôme',
     dep_btn_upload: '⬆ Upload…',
     dep_btn_saving: '✓ Upload · Sauvegarde…',
-    dep_success: '👻 Votre trace est ancrée dans ce lieu…',
     dep_err_msg: 'Écrivez un message.',
     dep_err_long: 'Message trop long (600 caractères max).',
     dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
@@ -389,9 +388,12 @@ const LANGS = {
     map_share_btn: '↗ Partager',
     dep_success_title: 'Fantôme ancré',
     dep_success_sub: 'Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.',
+    dep_success_sub_dedicated: 'Ton ghost est ancré.<br>Partage ce lien pour le dédier :',
     dep_success_hint: 'Appuie pour continuer',
-    dep_notif_btn: '🔔 Savoir quand il est découvert',
+    dep_notif_btn: 'Savoir quand il est découvert',
     dep_notif_ok: '✓ Tu seras averti',
+    dep_copy_link_btn: 'Copier le lien',
+    dep_copy_link_done: 'Lien copié',
     prem_video_label: 'Vidéo',
     prem_video_sub: 'Jusqu\'à 20 sec · s\'ouvre uniquement sur place',
     prem_video_optional: 'Vidéo',
@@ -431,6 +433,7 @@ const LANGS = {
     toast_link_copied: '🔗 Lien copié dans le presse-papier',
     toast_share_copy_fallback: 'Copiez manuellement le lien ci-dessus',
     toast_copied: '✓ Copié !',
+    toast_copy_failed: 'Impossible de copier le lien',
     toast_copy_link: '📋 Copier le lien',
     toast_delete_ghost: '🗑 Fantôme supprimé',
     toast_delete_err: 'Erreur — réessayez.',
@@ -864,7 +867,6 @@ const LANGS = {
     dep_btn: '👻 Anchor this ghost',
     dep_btn_upload: '⬆ Uploading…',
     dep_btn_saving: '✓ Upload · Saving…',
-    dep_success: '👻 Your trace is anchored to this place…',
     dep_err_msg: 'Write a message.',
     dep_err_long: 'Message too long (600 chars max).',
     dep_err_gps: 'Location required — enable it in your browser.',
@@ -1024,9 +1026,12 @@ const LANGS = {
     map_share_btn: '↗ Share',
     dep_success_title: 'Ghost anchored',
     dep_success_sub: 'Your trace rests in this place.<br>A soul will discover it… perhaps.',
+    dep_success_sub_dedicated: 'Your ghost is anchored.<br>Share this link to dedicate it:',
     dep_success_hint: 'Tap to continue',
-    dep_notif_btn: '🔔 Know when it\'s discovered',
+    dep_notif_btn: 'Know when it\'s discovered',
     dep_notif_ok: '✓ You\'ll be notified',
+    dep_copy_link_btn: 'Copy link',
+    dep_copy_link_done: 'Link copied',
     prem_video_label: 'Video',
     prem_video_sub: 'Up to 20 sec · opens only on site',
     prem_video_optional: 'Video',
@@ -1066,6 +1071,7 @@ const LANGS = {
     toast_link_copied: '🔗 Link copied to clipboard',
     toast_share_copy_fallback: 'Copy the link manually above',
     toast_copied: '✓ Copied!',
+    toast_copy_failed: 'Could not copy the link',
     toast_copy_link: '📋 Copy link',
     toast_delete_ghost: '🗑 Ghost deleted',
     toast_delete_err: 'Error — try again.',
@@ -1846,6 +1852,8 @@ const UI_ICON_PATHS = {
   '📅': '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/>',
   '🔥': '<path d="M12 21.5a6.3 6.3 0 0 0 6.3-6.3c0-2.6-1.6-4-2.6-6-1 1.6-1.7 2.2-1.7 2.2.5-3-1.2-5.7-3.1-7.4-.7 2.8.6 4.2-.9 6.2C8.9 11.5 8 12.8 8 14.6a4 4 0 0 0 4 4"/>',
   '✦': '<path d="M12 3l1.7 5.6L19.5 10.5l-5.8 1.9L12 18l-1.7-5.6L4.5 10.5l5.8-1.9L12 3z"/>',
+  '🔔': '<path d="M12 3a5 5 0 0 0-5 5v3.5c0 .8-.3 1.6-.9 2.1L4.5 15h15l-1.6-1.4a2.8 2.8 0 0 1-.9-2.1V8a5 5 0 0 0-5-5z"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0"/>',
+  '🔗': '<path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/><path d="M9.5 14.5l5-5"/>',
 };
 function _uiIconHTML(emoji, { size = 16, className = 'ui-icon' } = {}) {
   const path = UI_ICON_PATHS[emoji];
@@ -3486,7 +3494,8 @@ window._requestSuccessNotif = async (e) => {
     localStorage.setItem('notif_enabled', '1');
     _startNotifIntervals();
     checkDiscoveries();
-    btn.textContent = t.dep_notif_ok;
+    const label = document.getElementById('successNotifLabel');
+    if (label) label.textContent = t.dep_notif_ok;
     btn.style.color = 'rgba(var(--accent-green-rgb),.9)';
     btn.style.borderColor = 'rgba(var(--accent-green-rgb),.3)';
     btn.style.background = 'rgba(var(--accent-green-rgb),.08)';
@@ -8611,14 +8620,25 @@ function _resetDepositStateAfterSuccess(depositBtn) {
 function _showDepositSuccessScreen(ghostId) {
   document.getElementById('depositSuccess').classList.add('show');
   _maybeShowSuccessNotifPrompt();
-  // Ghost dédié sans UID : afficher le lien de partage
-  if (isPremium && !document.getElementById('dedicatedUidInput')?.value.trim()) {
-    const _dedEl = document.getElementById('successSubText');
-    if (_dedEl && ghostId) {
-      const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
-      window._lastDedicatedLink = _link;
-      _dedEl.innerHTML = 'Ton ghost est ancré.<br><span class="dedicated-link-hint">Partage ce lien pour le dédier :</span><br><button data-action="copyDedicatedLink" class="dedicated-link-btn">' + _link + '</button>';
+  const subEl = document.getElementById('successSubText');
+  const copyBtn = document.getElementById('successCopyLinkBtn');
+  // Ghost dédié sans UID : lien de partage — Lot AO, un bouton "Copier le
+  // lien" plutôt que l'URL affichée en clair sur 2 lignes (qui, en plus,
+  // mordait sur le bouton "Savoir quand il est découvert" juste en dessous).
+  const isDedicated = isPremium && !document.getElementById('dedicatedUidInput')?.value.trim() && !!ghostId;
+  if (isDedicated) {
+    const _link = 'https://pimpimshop33-dotcom.github.io/ghostub/?ghost=' + ghostId + '&dedicated=1&ref=' + (currentUser.uid.slice(0,8));
+    window._lastDedicatedLink = _link;
+    if (subEl) subEl.innerHTML = t.dep_success_sub_dedicated;
+    if (copyBtn) {
+      copyBtn.style.display = 'flex';
+      copyBtn.classList.remove('copied');
+      const label = document.getElementById('successCopyLinkLabel');
+      if (label) label.textContent = t.dep_copy_link_btn;
     }
+  } else {
+    if (subEl) subEl.innerHTML = t.dep_success_sub;
+    if (copyBtn) copyBtn.style.display = 'none';
   }
 }
 
@@ -8628,7 +8648,10 @@ function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location
   localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
   // Particules dorées
   setTimeout(() => _launchDepositParticles(), 80);
-  showToast('success', t.dep_success);
+  // Lot AO : plus de toast "Votre trace est ancrée…" ici — il s'affichait
+  // PAR-DESSUS l'écran de succès plein écran (z-index 9000 > 2000) qui dit
+  // déjà "Fantôme ancré" avec son propre sous-titre fixe, et mordait sur le
+  // bouton "Savoir quand il est découvert" juste en dessous. Un seul message.
   // Badge premier déposant dans ce lieu
   if (userLat && userLng) {
     const _dFields = buildGeohashFields(userLat, userLng);
@@ -8661,7 +8684,7 @@ function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location
 function _armDepositSuccessDismiss() {
   const successEl = document.getElementById('depositSuccess');
   const dismissSuccess = (e) => {
-    if (e.target.closest('#successNotifBtn')) return;
+    if (e.target.closest('#successNotifBtn') || e.target.closest('#successCopyLinkBtn')) return;
     successEl.classList.remove('show');
     successEl.removeEventListener('click', dismissSuccess);
     showScreen('screenRadar');
@@ -10835,7 +10858,21 @@ const ACTIONS = {
   triggerVideo: () => triggerVideo(),
   triggerAttachments: () => triggerAttachments(),
   followChain: () => followChain(),
-  copyDedicatedLink: () => navigator.clipboard.writeText(window._lastDedicatedLink).then(() => showToast('link', 'Lien copié !')),
+  // Lot AO : le libellé du bouton lui-même passe à "Lien copié" 2s plutôt
+  // qu'un toast générique — l'écran de succès plein écran a déjà retiré son
+  // propre toast pour éviter les chevauchements, pas la peine d'en ajouter
+  // un autre ici.
+  copyDedicatedLink: (el) => {
+    navigator.clipboard.writeText(window._lastDedicatedLink).then(() => {
+      const label = document.getElementById('successCopyLinkLabel');
+      el.classList.add('copied');
+      if (label) label.textContent = t.dep_copy_link_done;
+      setTimeout(() => {
+        el.classList.remove('copied');
+        if (label) label.textContent = t.dep_copy_link_btn;
+      }, 2000);
+    }).catch(() => showToast('error', t.toast_copy_failed, 3000));
+  },
 };
 
 function _dispatchAction(el, event) {

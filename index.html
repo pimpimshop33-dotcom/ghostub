@@ -93,10 +93,19 @@
 <div class="phone" role="application">
 
   <div class="deposit-success" id="depositSuccess" role="status" aria-live="polite">
-    <img class="success-ghost" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
-    <div class="success-title" data-i18n="dep_success_title">Fantôme ancré</div>
-    <div class="success-sub" id="successSubText" data-i18n="dep_success_sub">Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.</div>
-    <button id="successNotifBtn" data-action="requestSuccessNotif" class="success-notif-btn" data-i18n="dep_notif_btn">🔔 Savoir quand il est découvert</button>
+    <div class="success-content">
+      <img class="success-ghost" src="assets/brand/ghostub-mark-trace.svg" aria-hidden="true">
+      <div class="success-title" data-i18n="dep_success_title">Fantôme ancré</div>
+      <div class="success-sub" id="successSubText" data-i18n="dep_success_sub">Votre trace repose dans ce lieu.<br>Une âme la découvrira… peut-être.</div>
+      <button id="successNotifBtn" data-action="requestSuccessNotif" class="success-notif-btn">
+        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a5 5 0 0 0-5 5v3.5c0 .8-.3 1.6-.9 2.1L4.5 15h15l-1.6-1.4a2.8 2.8 0 0 1-.9-2.1V8a5 5 0 0 0-5-5z"/><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0"/></svg>
+        <span id="successNotifLabel" data-i18n="dep_notif_btn">Savoir quand il est découvert</span>
+      </button>
+      <button id="successCopyLinkBtn" data-action="copyDedicatedLink" class="success-copy-link-btn" aria-label="Copier le lien de partage">
+        <svg class="ui-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 17"/><path d="M16 12l2.5-2.5a3.5 3.5 0 0 0-5-5L11 7"/><path d="M9.5 14.5l5-5"/></svg>
+        <span id="successCopyLinkLabel" data-i18n="dep_copy_link_btn">Copier le lien</span>
+      </button>
+    </div>
     <div class="success-hint" data-i18n="dep_success_hint">Appuie pour continuer</div>
   </div>
 
