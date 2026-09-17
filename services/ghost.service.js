@@ -62,8 +62,8 @@ export function timeRemaining(g) {
   if (remaining <= 0) return 'Expiré';
   const h = Math.floor(remaining / 3_600_000);
   const d = Math.floor(h / 24);
-  if (d > 0) return `expire dans ${d}j`;
-  return `expire dans ${h}h`;
+  if (d > 0) return `expire dans ${d} j`;
+  return `expire dans ${h} h`;
 }
 
 // ── CYCLE DE VIE ──────────────────────────────────────────────────────────────

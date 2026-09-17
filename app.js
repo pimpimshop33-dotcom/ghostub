@@ -105,7 +105,7 @@ const LANGS = {
     radar_filter_empty: 'Aucun fantôme dans ce filtre.',
     radar_new_ghost: '👻 {n} nouveau{x} fantôme{s} à proximité',
     // Detail
-    detail_first_reader: '🥇 Vous êtes le premier à lire ce message',
+    detail_first_reader: 'Tu es le premier à lire ce message',
     detail_ghost_gone: 'Ce fantôme n\'existe plus.',
     detail_location_unknown: 'Lieu inconnu',
     detail_sealed_label: 'Une trace vous attend ici',
@@ -154,7 +154,7 @@ const LANGS = {
     detail_reported: '✓ Déjà signalé',
     detail_secret_on: '🔮 Mode secret activé',
     detail_secret_off: '🔮 Passer en secret',
-    detail_first_toast: '🥇 Vous êtes le premier à lire ce message !',
+    detail_first_toast: 'Tu es le premier à lire ce message !',
     detail_views: '👁 {n} personne{s} {verbe} lu ce message avant vous',
     detail_vocal: '🎙 Message vocal',
     detail_video_label: '🎥 Vidéo',
@@ -843,8 +843,8 @@ const LANGS = {
     detail_reported: '✓ Already reported',
     detail_secret_on: '🔮 Secret mode on',
     detail_secret_off: '🔮 Switch to secret',
-    detail_first_reader: '🥇 You are the first to read this message',
-    detail_first_toast: '🥇 You are the first to read this message!',
+    detail_first_reader: 'You are the first to read this message',
+    detail_first_toast: 'You are the first to read this message!',
     detail_views: '👁 {n} person{s} {verbe} read this message before you',
     detail_vocal: '🎙 Voice message',
     detail_video_label: '🎥 Video',
@@ -8455,7 +8455,11 @@ function _renderGhostDetailMessage(isOwner) {
 function _renderGhostDetailMeta() {
   document.getElementById('detailTime').textContent = timeAgo(selectedGhost.createdAt);
   document.getElementById('detailDuration').textContent = timeRemaining(selectedGhost);
-  document.getElementById('detailRadius').textContent = (t.detail_radius_prefix || 'visible à ') + escapeHTML(selectedGhost.radius || '10m');
+  // Lot AS — "visible à 10m" → "visible à 10 m" (espace manquant, capture
+  // Pipo). La valeur stockée ("10m", "50m"…) ne change pas, seul l'affichage
+  // insère l'espace entre le nombre et l'unité.
+  const _radiusDisplay = (selectedGhost.radius || '10m').replace(/^(\d+)([a-zA-Z]+)$/, '$1 $2');
+  document.getElementById('detailRadius').textContent = (t.detail_radius_prefix || 'visible à ') + escapeHTML(_radiusDisplay);
 
   // ── Mode Commerce : masquer Partager et la réaction courte ──
   const isBizGhost = !!selectedGhost.businessMode;
@@ -9387,7 +9391,8 @@ async function _doOpenEnvelope() {
       const readCountEl = document.getElementById('detailReadCount');
       if (readCountEl) {
         if (wasFirst) {
-          readCountEl.innerHTML = `<span class="first-reader-badge">${t.detail_first_reader || t.detail_first_reader}</span>`;
+          // Lot AS — médaille 🥇 (emoji système) → SVG ✦ ambre + tutoiement.
+          readCountEl.innerHTML = `<span class="first-reader-badge">${_uiIconHTML('✦', { size: 12, className: 'ui-icon first-reader-icon' })} ${t.detail_first_reader}</span>`;
         } else {
           const prev = selectedGhost.openCount || 0;
           readCountEl.innerHTML = `<span class="already-read-badge">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;

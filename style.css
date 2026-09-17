@@ -1058,17 +1058,24 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
    n'a plus qu'à suivre le flex:1 de .detail-message qu'il contient.
    has-photo/has-video/has-audio posées par _renderGhostDetailMedia() à
    chaque rendu (swipe inclus, cf. app.js). */
+/* Lot AS — "cadre trop grand pour un petit message" (capture Pipo,
+   « Vivement !!! » dans un cadre presque vide) : #scratchZone imposait un
+   min-height plein écran (Lot AK, quand le haut de l'écran était encombré)
+   et .detail-message était flex:1 dedans, donc s'étirait toujours à cette
+   hauteur même pour trois mots. Le haut est compact depuis — le cadre
+   suit maintenant le CONTENU (min confortable, max = place disponible,
+   scroll interne au-delà), le reste du bloc s'enchaîne normalement sous
+   la barre du haut ; la place libre part en bas de l'écran, pas dans le
+   cadre. */
 #scratchZone{
   position:relative;
   display:flex;flex-direction:column;gap:14px;
-  min-height:calc(100dvh - var(--sat) - 44px - 80px - var(--sab) - 14px);
 }
 .detail-msg-wrap{flex-shrink:0;}
-/* Sans média : le message seul remplit tout l'espace (comportement Lot AK
-   conservé), centré verticalement ET horizontalement. */
-#scratchZone:not(.has-photo):not(.has-video) .detail-msg-wrap{flex:1;display:flex;}
 #scratchZone:not(.has-photo):not(.has-video) .detail-message{
-  flex:1;justify-content:center;text-align:center;
+  min-height:34dvh;
+  max-height:calc(100dvh - var(--sat) - 44px - 80px - var(--sab) - 14px);
+  justify-content:center;text-align:center;overflow-y:auto;
 }
 /* Avec photo/vidéo : le message repasse en hauteur naturelle (mini 96px,
    maxi 40dvh puis scroll interne si le texte est long) et la photo/vidéo
@@ -1137,7 +1144,10 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
    séparateurs "·", plus de pastilles/bordures. Mêmes ids qu'avant. */
 .detail-info{display:flex;flex-wrap:wrap;align-items:baseline;margin:14px 0 18px;font-size:12px;color:var(--spirit-dim);}
 .detail-badge{font-size:12px;color:var(--spirit-dim);}
-.detail-badge + .detail-badge::before{content:' · ';}
+/* Lot AS — "moimeme· il y a 1 min·" (espaces manquants, capture Pipo) :
+   un espace normal en bord de content: généré peut être collapsé par les
+   règles de white-space — espace insécable (\00a0), toujours préservé. */
+.detail-badge + .detail-badge::before{content:'\00a0·\00a0';}
 /* Bouton Résonner — halo ambre */
 .resonance-btn{
   width:100%;padding:12px;
@@ -1796,6 +1806,7 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .chain-next-marker{font-size:20px;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),.9));}
 .chain-existing-marker{font-size:28px;filter:drop-shadow(0 0 12px rgba(var(--ghost-blue-rgb),.9));animation:floatG 2s ease-in-out infinite;}
 .first-reader-badge{color:rgba(var(--accent-green-rgb),.9);}
+.first-reader-icon{color:var(--amber);vertical-align:-1px;margin-right:2px;}
 .already-read-badge{color:var(--spirit-dim);}
 .scratch-hint-hand{font-size:28px;filter:drop-shadow(0 0 10px rgba(255,200,140,1)) drop-shadow(0 0 18px rgba(255,160,80,.9));animation:scratchHint 1.4s ease-in-out infinite;}
 .scratch-hint-text{font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:rgba(240,232,216,.9);letter-spacing:.8px;text-shadow:0 0 8px rgba(var(--ghost-blue-rgb),1),0 1px 4px rgba(0,0,0,1);}
