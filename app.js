@@ -1569,94 +1569,80 @@ function _traceEyesClassic(uid) {
   return `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
     `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>`;
 }
+// Lot AL — un seul rendu du Trace à toutes les tailles (retire le mode
+// "compact" du Lot AJ : Carte et Radar montraient deux personnages
+// différents — contour lumineux d'un côté, silhouette pleine beige opaque
+// de l'autre). Les grosses formes du Lot AJ (lisibles en petit) sont
+// gardées, mais RECOLORÉES en lumineux — même dégradé perle (te-) que les
+// yeux classiques, plus jamais #0A0B14 sombre — sauf les bouches
+// "ouvertes"/"o" (💬, ✨), qui restent en perle sombre cerclée de clair
+// pour se détacher du remplissage doux (une bouche claire s'y fondrait).
 const TRACE_FACE_VARIANTS = {
   '👻': (uid) => _traceEyesClassic(uid),
-  '🌸': (uid) => _traceEyesClassic(uid) +
-    `<path d="M84 117 Q100 129 116 117" stroke="#171A33" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".55"/>`,
+  '🌸': (uid) =>
+    `<path d="M66 97 Q78 79 90 97" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M110 97 Q122 79 134 97" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M72 116 Q100 144 128 116" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>`,
   '❤️': (uid) => {
-    const heart = (cx, cy) => `<path d="M${cx} ${cy - 2} C ${cx - 6} ${cy - 9} ${cx - 13} ${cy - 3} ${cx - 10} ${cy + 3} C ${cx - 7} ${cy + 8} ${cx} ${cy + 11} ${cx} ${cy + 11} C ${cx} ${cy + 11} ${cx + 7} ${cy + 8} ${cx + 10} ${cy + 3} C ${cx + 13} ${cy - 3} ${cx + 6} ${cy - 9} ${cx} ${cy - 2} Z" fill="url(#te-${uid})"/>`;
-    return heart(79, 92) + heart(121, 92);
-  },
-  '🌙': () =>
-    `<path d="M71.5 94 Q79 99.5 86.5 94" stroke="#171A33" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>` +
-    `<path d="M113.5 94 Q121 99.5 128.5 94" stroke="#171A33" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".6"/>`,
-  '✨': (uid) =>
-    `<ellipse cx="79" cy="94" rx="8.5" ry="10.5" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="8.5" ry="10.5" fill="url(#te-${uid})"/>` +
-    `<circle cx="75.5" cy="89.5" r="2" fill="#FFFFFF"/><circle cx="117.5" cy="89.5" r="2" fill="#FFFFFF"/>` +
-    `<circle cx="100" cy="123" r="4.2" fill="none" stroke="#171A33" stroke-width="2.2" opacity=".55"/>`,
-  '🔥': (uid) => _traceEyesClassic(uid) +
-    `<path d="M70.5 83 L84 87.5" stroke="#171A33" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><path d="M129.5 83 L116 87.5" stroke="#171A33" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>`,
-  '💬': (uid) => _traceEyesClassic(uid) +
-    `<ellipse cx="100" cy="121" rx="6" ry="8" fill="#171A33" opacity=".55"/>`,
-};
-// Lot AJ — mode compact (size ≤ 48px) : à cette échelle, le contour fin
-// (fill 22%→8% d'opacité, traits de visage 2.2-3.2 à opacity .55-.6 sur un
-// viewBox de 200) donne des traits de l'ordre de 0.4px, sombres sur fond
-// sombre — les 7 Sceaux se ressemblaient tous. Silhouette pleine (couleur
-// franche par Sceau) + traits de visage épais et opaques, pour rester
-// lisibles/distinguables au premier coup d'œil à 30-40px.
-const TRACE_FACE_VARIANTS_COMPACT = {
-  '👻': () => `<ellipse cx="78" cy="92" rx="10" ry="13" fill="#0A0B14"/><ellipse cx="122" cy="92" rx="10" ry="13" fill="#0A0B14"/>`,
-  '🌸': () =>
-    `<path d="M66 97 Q78 79 90 97" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
-    `<path d="M110 97 Q122 79 134 97" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
-    `<path d="M72 116 Q100 144 128 116" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>`,
-  '❤️': () => {
-    const heart = (cx, cy) => `<path d="M${cx} ${cy - 2} C ${cx - 8} ${cy - 11} ${cx - 16} ${cy - 4} ${cx - 13} ${cy + 4} C ${cx - 9} ${cy + 11} ${cx} ${cy + 15} ${cx} ${cy + 15} C ${cx} ${cy + 15} ${cx + 9} ${cy + 11} ${cx + 13} ${cy + 4} C ${cx + 16} ${cy - 4} ${cx + 8} ${cy - 11} ${cx} ${cy - 2} Z" fill="#0A0B14"/>`;
+    const heart = (cx, cy) => `<path d="M${cx} ${cy - 2} C ${cx - 8} ${cy - 11} ${cx - 16} ${cy - 4} ${cx - 13} ${cy + 4} C ${cx - 9} ${cy + 11} ${cx} ${cy + 15} ${cx} ${cy + 15} C ${cx} ${cy + 15} ${cx + 9} ${cy + 11} ${cx + 13} ${cy + 4} C ${cx + 16} ${cy - 4} ${cx + 8} ${cy - 11} ${cx} ${cy - 2} Z" fill="url(#te-${uid})"/>`;
     return heart(78, 90) + heart(122, 90) +
-      `<path d="M86 122 Q100 132 114 122" stroke="#0A0B14" stroke-width="7" stroke-linecap="round" fill="none"/>`;
+      `<path d="M86 122 Q100 132 114 122" stroke="url(#te-${uid})" stroke-width="7" stroke-linecap="round" fill="none"/>`;
   },
-  '🌙': (c1) =>
-    `<path d="M66 90 Q78 104 90 90" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
-    `<path d="M110 90 Q122 104 134 90" stroke="#0A0B14" stroke-width="9" stroke-linecap="round" fill="none"/>` +
-    `<circle cx="100" cy="122" r="6" fill="#0A0B14"/>` +
-    // Deux "z" hors de la tête (silhouette ≈ x 48-152, y 38-168), en haut à droite.
+  '🌙': (uid, c1) =>
+    `<path d="M66 90 Q78 104 90 90" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<path d="M110 90 Q122 104 134 90" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
+    `<circle cx="100" cy="122" r="6" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>` +
+    // Deux "z" hors de la tête (silhouette ≈ x 48-152, y 38-168), en haut à droite —
+    // colorées c1 (teinte du Sceau), pas le visage : lisibles sur le fond, pas "sur" le Trace.
     `<path d="M138 30 L150 30 L138 42 L150 42" stroke="${c1}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
     `<path d="M150 16 L159 16 L150 25 L159 25" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
-  '✨': () =>
-    `<circle cx="78" cy="92" r="16" fill="#0A0B14"/><circle cx="122" cy="92" r="16" fill="#0A0B14"/>` +
+  '✨': (uid) =>
+    `<circle cx="78" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="122" cy="92" r="16" fill="url(#te-${uid})"/>` +
     `<circle cx="72" cy="86" r="5" fill="#FFFFFF"/><circle cx="116" cy="86" r="5" fill="#FFFFFF"/>` +
-    `<circle cx="100" cy="126" r="8" fill="#0A0B14"/>`,
-  '🔥': () =>
-    `<path d="M60 70 L92 84" stroke="#0A0B14" stroke-width="10" stroke-linecap="round"/>` +
-    `<path d="M140 70 L108 84" stroke="#0A0B14" stroke-width="10" stroke-linecap="round"/>` +
-    `<circle cx="80" cy="98" r="9" fill="#0A0B14"/><circle cx="120" cy="98" r="9" fill="#0A0B14"/>` +
-    `<path d="M84 126 L116 126" stroke="#0A0B14" stroke-width="8" stroke-linecap="round"/>`,
-  '💬': () =>
-    `<ellipse cx="78" cy="92" rx="10" ry="13" fill="#0A0B14"/><ellipse cx="122" cy="92" rx="10" ry="13" fill="#0A0B14"/>` +
-    `<ellipse cx="100" cy="126" rx="17" ry="20" fill="#0A0B14"/>`,
+    `<circle cx="100" cy="126" r="8" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
+  '🔥': (uid) =>
+    `<path d="M60 70 L92 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/><path d="M140 70 L108 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/>` +
+    `<circle cx="80" cy="98" r="9" fill="url(#te-${uid})"/><circle cx="120" cy="98" r="9" fill="url(#te-${uid})"/>` +
+    `<path d="M84 126 L116 126" stroke="url(#te-${uid})" stroke-width="8" stroke-linecap="round"/>`,
+  '💬': (uid) => _traceEyesClassic(uid) +
+    `<ellipse cx="100" cy="126" rx="17" ry="20" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
 };
-function _traceFaceHTML(emoji, uid, { compact = false, c1 } = {}) {
-  if (compact) {
-    const fn = TRACE_FACE_VARIANTS_COMPACT[emoji] || TRACE_FACE_VARIANTS_COMPACT['👻'];
-    return fn(c1);
-  }
+function _traceFaceHTML(emoji, uid, c1) {
   const fn = TRACE_FACE_VARIANTS[emoji] || TRACE_FACE_VARIANTS['👻'];
-  return fn(uid);
+  return fn(uid, c1);
+}
+// Opacité du remplissage du corps — .22 à partir de 48px (Carte, Ghost
+// Card, taille de référence "contour doux"), remontée en continu jusqu'à
+// .35 sous 20px (listes compactes, sélecteur de Sceau) pour rester visible
+// sans changer de dessin — un seul personnage, juste plus "rempli" en
+// petit. Le ratio entre les deux arrêts du dégradé (0.08/0.22) est conservé.
+function _traceFillOpacity(size) {
+  const MAX_SIZE = 48, MIN_SIZE = 20, OP_LARGE = .22, OP_SMALL = .35;
+  if (size >= MAX_SIZE) return OP_LARGE;
+  if (size <= MIN_SIZE) return OP_SMALL;
+  const t = (MAX_SIZE - size) / (MAX_SIZE - MIN_SIZE);
+  return OP_LARGE + (OP_SMALL - OP_LARGE) * t;
 }
 // Corps du Trace (silhouette/halo/dégradé + visage) — partagé par
 // _traceMarkHTML (par fantôme, avec fanage) et _traceSealIconHTML (icône
-// statique du sélecteur de Sceau / sealedEmoji, sans fanage). `compact`
-// (Lot AJ) bascule vers une silhouette pleine + visage épais opaque,
-// utilisée automatiquement ≤48px par les deux appelants — au-dessus, rendu
-// contour existant inchangé (marqueurs Carte, Ghost Card).
-function _traceBodyMarkup(emoji, c1, c2, uid, { compact = false } = {}) {
+// statique du sélecteur de Sceau / sealedEmoji, sans fanage). Un seul style
+// à toutes les tailles (Lot AL) — contour dégradé + remplissage doux +
+// halo, celui de la Carte/l'intro ; seule l'opacité du remplissage varie
+// en continu selon `size` (cf. _traceFillOpacity).
+function _traceBodyMarkup(emoji, c1, c2, uid, size = 48) {
   const path = `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38"`;
-  if (compact) {
-    return `<defs><linearGradient id="tc-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs>` +
-      `${path} fill="url(#tc-${uid})" stroke="${c1}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>` +
-      _traceFaceHTML(emoji, uid, { compact: true, c1 });
-  }
+  const fillOp1 = _traceFillOpacity(size);
+  const fillOp2 = fillOp1 * (0.08 / 0.22);
   return `<defs>` +
     `<linearGradient id="ts-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="1"/><stop offset="60%" stop-color="${c2}" stop-opacity=".8"/><stop offset="100%" stop-color="${c2}" stop-opacity=".4"/></linearGradient>` +
-    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity=".22"/><stop offset="100%" stop-color="${c2}" stop-opacity=".08"/></linearGradient>` +
+    `<linearGradient id="tf-${uid}" x1="20%" y1="0%" x2="80%" y2="100%"><stop offset="0%" stop-color="${c1}" stop-opacity="${fillOp1.toFixed(3)}"/><stop offset="100%" stop-color="${c2}" stop-opacity="${fillOp2.toFixed(3)}"/></linearGradient>` +
     `<radialGradient id="te-${uid}" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#F5F3FF"/><stop offset="28%" stop-color="#AEBBFF"/><stop offset="65%" stop-color="#5C6BC9"/><stop offset="100%" stop-color="#171A33"/></radialGradient>` +
     `</defs>` +
     // Contour épaissi (4.2 → 8) : Pipo remonte qu'à taille agrandie le Trace
     // restait "trop fin" — le ratio trait/silhouette compte plus que la
     // taille globale du marqueur pour la lisibilité au premier coup d'œil.
     `${path} fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
-    _traceFaceHTML(emoji, uid, { compact: false });
+    _traceFaceHTML(emoji, uid, c1);
 }
 
 let _traceIdSeq = 0;
@@ -1698,7 +1684,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
   const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
-  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, { compact: size <= 48 })}</svg></span>`;
+  return `${openTag}<svg viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, size)}</svg></span>`;
 }
 // Icône statique (sans fanage) pour les contextes SANS document fantôme
 // complet : sélecteur de Sceau sur Déposer, sealedEmoji du Détail avant
@@ -1707,7 +1693,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
 function _traceSealIconHTML(emoji, { size = 40 } = {}) {
   const [c1, c2] = TRACE_CATEGORY_COLORS[emoji] || TRACE_DEFAULT_COLORS;
   const uid = 'ts' + (_traceIdSeq++);
-  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, { compact: size <= 48 })}</svg>`;
+  return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" aria-hidden="true">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
 }
 // Images préchargées des 7 expressions du Trace, pour le Sceau dessiné en
 // Canvas sur la Ghost Card (_drawGhostCardMark) — Canvas 2D ne peut pas
@@ -1718,7 +1704,7 @@ function _traceSealIconHTML(emoji, { size = 40 } = {}) {
 const _traceFaceImages = {};
 Object.keys(TRACE_CATEGORY_COLORS).forEach(emoji => {
   const [c1, c2] = TRACE_CATEGORY_COLORS[emoji];
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">${_traceBodyMarkup(emoji, c1, c2, 'card' + _traceIdSeq++)}</svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">${_traceBodyMarkup(emoji, c1, c2, 'card' + _traceIdSeq++, 220)}</svg>`;
   const img = new Image();
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   _traceFaceImages[emoji] = img;
