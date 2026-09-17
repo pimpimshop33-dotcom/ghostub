@@ -5407,9 +5407,18 @@ function getInitialTheme() {
 function applyTheme(theme) {
   const isLight = theme === 'light';
   document.body.classList.toggle('light-theme', isLight);
-  // Mise à jour theme-color dynamique
+  // Mise à jour theme-color dynamique — Lot AN : les deux <meta theme-color>
+  // ne portaient qu'un media="(prefers-color-scheme: ...)" statique, jamais
+  // mis à jour au toggle. La barre de statut Android suivait donc la
+  // préférence SYSTÈME, pas le thème choisi dans l'app (ex. app en Mode
+  // jour manuel sur un téléphone resté en dark système → barre de statut
+  // sombre alors que l'appli est blanche). On écrit le contenu réel des
+  // deux balises à chaque changement, quel que soit le media qui matche.
   const metaDark = document.querySelector('meta[name="theme-color"][media*="dark"]');
   const metaLight = document.querySelector('meta[name="theme-color"][media*="light"]');
+  const themeColor = isLight ? '#FFFFFF' : '#060608';
+  if (metaDark) metaDark.setAttribute('content', themeColor);
+  if (metaLight) metaLight.setAttribute('content', themeColor);
   // Active le bon
   document.querySelector('meta[name="theme-color"]:not([media])')?.remove();
   const btn = document.getElementById('themeToggleBtn');

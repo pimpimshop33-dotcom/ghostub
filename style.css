@@ -230,6 +230,12 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
   position:fixed;inset:0;pointer-events:none;z-index:0;
   background:radial-gradient(ellipse at center,transparent 35%,rgba(2,4,8,.65) 100%);
 }
+/* Lot AN : fond Mode jour passé au blanc — les taches de bokeh (pensées
+   pour un fond nocturne) et la vignette sombre des bords devaient
+   disparaître ou presque, sinon elles retombent en nappe lavande/bleutée
+   sur le blanc, exactement ce que Pipo ne veut plus voir. */
+body.light-theme .bokeh-light{opacity:.06;}
+body.light-theme .bokeh-vignette{opacity:0;}
 @media (max-width:400px){
   .bokeh-light{transform:scale(.8);}
 }
@@ -545,6 +551,20 @@ body.light-theme .ob-sub{color:rgba(58,42,148,.65) !important;}
   background:#F1EEFF;transform:translate(-50%,-50%);
   box-shadow:0 0 12px 4px rgba(241,238,255,0.5);
 }
+/* Lot AN — Mode jour, fond blanc : le disque/anneaux/faisceau de la
+   maquette (couleurs EXACTES ci-dessus, #F1EEFF quasi blanc au centre)
+   sont pensés pour se détacher d'un fond nocturne — sur blanc, le disque
+   disparaît et le centre devient invisible. Disque en surface lavande très
+   légère, anneaux/faisceau en bleu jour, centre en bleu jour plein (pas
+   blanc), comme demandé par Pipo. */
+body.light-theme .radar{
+  background:radial-gradient(circle,rgba(var(--spirit-rgb),.10) 0%,rgba(var(--spirit-rgb),.04) 45%,transparent 75%);
+  border-color:rgba(60,45,150,.35);
+  box-shadow:none;
+}
+body.light-theme .radar-ring{border-color:rgba(60,45,150,.25);}
+body.light-theme .radar-sweep{background:conic-gradient(from 0deg, rgba(var(--spirit-rgb),.18), transparent 55deg);}
+body.light-theme .radar-center{background:var(--spirit);box-shadow:0 0 12px 4px rgba(var(--spirit-rgb),.4);}
 /* ── BOUSSOLE — widget autonome (Lot AA) ──────────────────
    Remplace l'ancienne flèche accrochée à .radar-center/.user-map-dot (Lot Z,
    revert Pipo) : un vrai cadran (lettres cardinales fixes) + aiguille
@@ -1882,6 +1902,14 @@ body:not(.light-theme) #chainMiniMap .leaflet-layer img{
 .leaflet-control-zoom{border:1px solid rgba(232,160,48,.2) !important;background:rgba(4,8,15,.9) !important;backdrop-filter:blur(8px);}
 .leaflet-control-zoom a{color:rgba(232,160,48,.7) !important;background:transparent !important;border-bottom:1px solid rgba(232,160,48,.12) !important;font-size:16px !important;line-height:28px !important;width:28px !important;height:28px !important;}
 .leaflet-control-zoom a:hover{color:var(--amber) !important;background:rgba(232,160,48,.1) !important;}
+/* Lot AN : ces blocs Leaflet (popup, contrôle de zoom) sont codés en noir
+   quasi opaque en dur — corrects sur fond nocturne, mais "blocs noirs"
+   plaqués sur la Carte en Mode jour, exactement ce que Pipo signale. */
+body.light-theme .leaflet-popup-content-wrapper{background:#FFFFFF !important;border-color:rgba(var(--premium-rgb),.35) !important;color:var(--warm) !important;box-shadow:0 8px 24px rgba(60,45,150,.18) !important;}
+body.light-theme .leaflet-popup-tip{background:#FFFFFF !important;}
+body.light-theme .leaflet-control-zoom{border-color:rgba(var(--premium-rgb),.35) !important;background:rgba(255,255,255,.92) !important;}
+body.light-theme .leaflet-control-zoom a{color:rgba(var(--premium-rgb),.9) !important;border-bottom-color:rgba(var(--premium-rgb),.2) !important;}
+body.light-theme .leaflet-control-zoom a:hover{background:rgba(var(--premium-rgb),.12) !important;}
 
 /* ── DEPOSIT SUCCESS ───────────────────────────────────── */
 .deposit-success{
@@ -2197,7 +2225,7 @@ body.has-bottom-nav .screen .scroll{padding-bottom:calc(80px + var(--sab)) !impo
 .envelope-sealed.opened { animation: envelopeFade .35s ease forwards; }
 
 /* ── Variante thème clair — le fond bleu-nuit codé en dur ne s'adaptait jamais ── */
-body.light-theme .envelope-sealed{background:rgba(222,219,240,.92);border-color:rgba(80,60,200,.25);}
+body.light-theme .envelope-sealed{background:var(--surface);border-color:rgba(80,60,200,.25);}
 body.light-theme .envelope-sealed-flap{background:linear-gradient(180deg,rgba(80,60,200,.14) 0%,rgba(80,60,200,.05) 100%);border-bottom-color:rgba(80,60,200,.18);}
 body.light-theme .envelope-sealed-triangle{background:rgba(80,60,200,.1);}
 body.light-theme .envelope-sealed-emoji{background:rgba(80,60,200,.08) !important;border-color:rgba(80,60,200,.3) !important;}
@@ -2540,25 +2568,25 @@ button:focus-visible,[role="button"]:focus-visible{outline:2px solid var(--amber
 
 /* ── LIGHT THEME (minimal override) ───────────────────── */
 body.light-theme{
-  background:#e8e6f0;color:#1a1530;
+  background:#FFFFFF;color:#1a1530;
   background-image:none;
 }
-body.light-theme .phone{background:#d8d2ec;border-color:rgba(80,60,200,.22);box-shadow:0 40px 80px rgba(80,60,200,.12);}
+body.light-theme .phone{background:#FFFFFF;border-color:rgba(60,45,150,.14);box-shadow:none;}
 body.light-theme .phone::after{display:none;}
-/* Lot AM — jeu de tokens Mode jour revu avec un vrai calcul de contraste
-   (cf. scripts/contrast Node ad hoc, tableau dans le résumé de lot) : les
-   textes (--ether/--spirit-dim/--warm-dim) passaient déjà large ; --amber
-   et --accent-green-rgb ne passaient PAS 4.5:1 en texte plein (4.00:1 et
-   3.92:1) — assombris jusqu'à passer. Les bordures d'éléments interactifs
-   NON remplis (chips, boutons-icônes) ont leur propre traitement plus bas
-   (alpha relevée) : à alpha basse (.1-.3, pensée pour fond sombre), AUCUNE
-   teinte ne passe 3:1 sur fond clair — c'est le alpha-blending lui-même qui
-   lave la couleur vers le fond, pas une histoire de teinte. */
+/* Lot AN — Pipo : le fond lavande/bleuté du Mode jour "ne marche pas, trop
+   de choses se fondent dedans" → fond BLANC. Inversion du rapport de
+   contraste par rapport au Lot AM : avant, le fond était teinté et les
+   surfaces à peine plus claires ; maintenant le fond est blanc et ce sont
+   les SURFACES (cartes, lettre, panneaux) qui portent une légère teinte
+   lavande (#F4F2FB) + une bordure nette pour se détacher du blanc. Textes/
+   accents/bordures interactives inchangés (déjà validés au contraste au
+   Lot AM, cf. tableau du résumé de ce lot pour la ré-vérification sur
+   fond blanc). */
 body.light-theme :root,body.light-theme{
-  --void:#cac4e2;--deep:#d2cce8;--surface:rgba(248,246,255,.92);--surface2:rgba(240,238,250,.95);
-  --ghost:rgba(80,60,200,.05);--spirit:#4B57C9;--spirit-dim:rgba(58,42,148,.78);
+  --void:#FFFFFF;--deep:#FCFBFF;--surface:#F4F2FB;--surface2:#EEEBF9;
+  --ghost:rgba(80,60,200,.04);--spirit:#4B57C9;--spirit-dim:rgba(58,42,148,.78);
   --spirit-glow:rgba(80,60,200,.1);--ether:#1B1838;--warm:#1a1530;
-  --warm-dim:rgba(26,21,48,.78);--border:rgba(60,45,150,.28);--border-bright:rgba(60,45,150,.6);
+  --warm-dim:rgba(26,21,48,.78);--border:rgba(60,45,150,.20);--border-bright:rgba(60,45,150,.45);
   --amber:#8c5a0a;--amber-dim:rgba(140,90,10,.55);--mist:#1f6b40;
   --premium-rgb:130,85,10;
   --tier-gold-rgb:150,108,12;
@@ -2570,22 +2598,26 @@ body.light-theme :root,body.light-theme{
   --seal-ink-rgb:120,30,30;
   --seal-ink2-rgb:110,25,25;
 }
-body.light-theme .ghost-envelope{background:linear-gradient(160deg,rgba(220,218,240,.98) 0%,rgba(210,208,232,.99) 100%) !important;}
+body.light-theme .auth-tab{background:var(--surface);color:rgba(27,24,56,.55);}
+body.light-theme .ghost-envelope{background:var(--surface) !important;}
 body.light-theme .ghost-envelope:hover{border-color:rgba(80,60,200,.35) !important;}
 body.light-theme .envelope-emoji{background:rgba(80,60,200,.08) !important;border-color:rgba(80,60,200,.35) !important;}
 body.light-theme .resonance-btn{background:rgba(80,60,200,.07) !important;border-color:rgba(80,60,200,.4) !important;color:var(--spirit) !important;}
-body.light-theme .bottom-nav{background:rgba(230,228,244,.98);border-top-color:rgba(80,60,200,.25);}
+body.light-theme .bottom-nav{background:rgba(255,255,255,.98);border-top-color:rgba(60,45,150,.16);}
 body.light-theme .nav-item{color:rgba(58,42,148,.72);}
 body.light-theme .nav-item.active{color:var(--spirit);}
 body.light-theme .btn-primary{background:linear-gradient(135deg,rgba(80,60,200,.22),rgba(80,60,200,.1));border-color:rgba(80,60,200,.5);color:var(--ether);}
-body.light-theme .auth-tab.active{background:rgba(220,218,240,.9);}
-body.light-theme .stat-card{background:rgba(210,208,232,.7);border-color:rgba(80,60,200,.35);}
+body.light-theme .auth-tab.active{background:var(--surface2);}
+body.light-theme .stat-card{background:var(--surface);border-color:rgba(80,60,200,.35);}
 body.light-theme .form-input,body.light-theme .form-textarea{background:rgba(235,233,248,.9);border-color:rgba(60,45,150,.65);color:var(--warm);}
 
 /* ── Lot AM : bordures d'éléments interactifs non remplis (ou faiblement
    remplis) — alpha .04-.3 pensée pour fond sombre, sous 3:1 quelle que soit
    la teinte sur fond clair (alpha-blending, cf. tableau du résumé de lot).
-   Un seul bloc groupé plutôt qu'une redéfinition par composant. ── */
+   Un seul bloc groupé plutôt qu'une redéfinition par composant.
+   Lot AN : fond passé au blanc — non sélectionné = surface (#F4F2FB) +
+   bordure fine ; sélectionné = fond rgba(spirit,.10) + bordure pleine +
+   texte gras bleu jour, "évident au premier coup d'œil" (Pipo). ── */
 body.light-theme .dep-chip-toggle,
 body.light-theme .filter-btn,
 body.light-theme .map-header-btn,
@@ -2597,15 +2629,16 @@ body.light-theme .dep-chip-toggle:hover,
 body.light-theme .lettre-media-icon-btn:hover{border-color:rgba(60,45,150,.85);}
 body.light-theme .dep-chip-toggle--biz{border-color:rgba(var(--premium-rgb),.75);}
 body.light-theme .dep-chip-toggle--biz:hover{border-color:rgba(var(--premium-rgb),1);}
-body.light-theme .dep-chip-toggle--anon.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.14);}
-body.light-theme .dep-chip-toggle--biz.active{border-color:var(--amber);background:rgba(var(--premium-rgb),.14);}
-body.light-theme .filter-btn{background:rgba(255,255,255,.5);}
-body.light-theme .filter-btn.active{background:rgba(232,160,48,.18) !important;border-color:rgba(var(--premium-rgb),.8) !important;}
-body.light-theme .map-header-btn{color:rgba(60,45,150,.85);background:rgba(255,255,255,.5);}
+body.light-theme .dep-chip-toggle--anon.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.10);font-weight:600;}
+body.light-theme .dep-chip-toggle--biz.active{border-color:var(--amber);background:rgba(var(--premium-rgb),.14);font-weight:600;}
+body.light-theme .filter-btn{background:var(--surface);}
+body.light-theme .filter-btn.active{background:rgba(232,160,48,.18) !important;border-color:rgba(var(--premium-rgb),.8) !important;font-weight:600;}
+body.light-theme .map-header-btn{color:rgba(60,45,150,.85);background:var(--surface);}
 body.light-theme .type-btn,body.light-theme .radius-btn,body.light-theme .dur-btn{border-color:rgba(60,45,150,.4);}
-body.light-theme .type-btn.active{border-color:rgba(var(--premium-rgb),.7);}
-body.light-theme .radius-btn.active,body.light-theme .dur-btn.active{border-color:var(--spirit);}
+body.light-theme .type-btn.active{border-color:rgba(var(--premium-rgb),.7);background:rgba(var(--premium-rgb),.10) !important;font-weight:600;}
+body.light-theme .radius-btn.active,body.light-theme .dur-btn.active{border-color:var(--spirit);background:rgba(var(--spirit-rgb),.10) !important;font-weight:600;}
 body.light-theme .cond-btn{border-color:rgba(60,45,150,.4);}
+body.light-theme .cond-btn.active{background:rgba(var(--premium-rgb),.10);border-color:rgba(var(--premium-rgb),.7);}
 
 /* ── Cartes fantôme (.ghost-envelope) — texte pensé pour fond sombre, à réécrire pour fond clair ── */
 body.light-theme .envelope-location{color:rgba(40,28,90,.92) !important;-webkit-text-fill-color:rgba(40,28,90,.92) !important;}
@@ -2625,14 +2658,14 @@ body.light-theme .secret-badge{background:rgba(150,60,220,.14);color:rgba(120,40
    Mode nuit) : on ajoute ici uniquement l'override clair manquant,
    plutôt que de toucher la règle de base et risquer de changer le rendu
    Mode nuit déjà validé. */
-body.light-theme .msg-report-btn{background:rgba(230,225,245,.92) !important;}
-body.light-theme .dep-mini-loader{background:rgba(230,225,245,.75);}
+body.light-theme .msg-report-btn{background:var(--surface2) !important;}
+body.light-theme .dep-mini-loader{background:var(--surface2);}
 body.light-theme .empreinte-map-wrap,
-body.light-theme .ppm-map{background:rgba(210,208,232,.75);}
+body.light-theme .ppm-map{background:var(--surface);}
 body.light-theme .empreinte-stat-box,
-body.light-theme .empreinte-stat-box-last{background:rgba(210,208,232,.75);}
-body.light-theme .map-filter-bar .filter-btn{background:rgba(210,208,232,.75);}
-body.light-theme .reply-item{background:rgba(210,208,232,.6);}
+body.light-theme .empreinte-stat-box-last{background:var(--surface);}
+body.light-theme .map-filter-bar .filter-btn{background:var(--surface);}
+body.light-theme .reply-item{background:var(--surface);}
 
 /* ── RANK / PROGRESSION BAR ─────────────────────────────── */
 .rank-bar{display:flex;align-items:center;gap:10px;padding:6px 20px 2px;}
@@ -3176,6 +3209,20 @@ body.light-theme .lettre-counter.near{color:rgba(180,90,10,.85) !important;-webk
 }
 .lettre-seal-btn:active{transform:scale(.98) translateY(0);}
 .lettre-seal-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+/* Lot AN : sur fond blanc, le dégradé bordeaux translucide (18%) devenait
+   un rose pâle "ton sur ton" avec le texte — Pipo veut un fond FRANC, texte
+   blanc, pour le CTA principal de l'écran. */
+body.light-theme .lettre-seal-btn{
+  background:linear-gradient(135deg,#8C2A2A 0%,#7A2020 100%);
+  border-color:#6E1C1C;
+  color:#FFFFFF;
+  -webkit-text-fill-color:#FFFFFF !important;
+  box-shadow:0 4px 16px rgba(122,32,32,.28);
+}
+body.light-theme .lettre-seal-btn:hover{
+  background:linear-gradient(135deg,#9C3030 0%,#872626 100%);
+  box-shadow:0 6px 20px rgba(122,32,32,.35);
+}
 
 /* Icône en pseudo-élément pour survivre aux changements de textContent —
    Lot AI : le Trace (même asset que la marque) plutôt que l'étoile ✦
