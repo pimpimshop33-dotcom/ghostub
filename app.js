@@ -7296,10 +7296,11 @@ function renderRadarDots() {
     dot.style.left = cx + '%';
     dot.style.top = cy + '%';
 
-    // Indicateur de type de média (Lot G-bis) : remplace l'info perdue avec
-    // le retrait de la liste d'enveloppes sous le radar — priorité vidéo >
-    // photo > voix, pas de badge si texte seul (déjà l'état par défaut).
-    const _mediaIcon = g.videoUrl ? '🎥' : g.photoUrl ? '📷' : g.audioUrl ? '🎙' : null;
+    // Info média (Lot G-bis, badge visuel retiré au Lot AL — Pipo : sur le
+    // Radar, tout fantôme = le Trace de son Sceau, quel que soit son média,
+    // jamais un emoji de média comme marqueur). L'info "contient une photo/
+    // vidéo/message vocal" reste disponible en accessibilité (aria-label),
+    // pas affichée sur le marqueur lui-même.
     const _mediaLabel = g.videoUrl ? (_currentLang === 'en' ? 'video' : 'vidéo')
       : g.photoUrl ? (_currentLang === 'en' ? 'photo' : 'photo')
       : g.audioUrl ? (_currentLang === 'en' ? 'voice message' : 'message vocal')
@@ -7337,24 +7338,16 @@ function renderRadarDots() {
     const _dotEmojiEl = dot.querySelector('.ghost-dot-emoji');
     if (_dotEmojiEl) _dotEmojiEl.style.animationDelay = delay.toFixed(2) + 's';
     _hydrateTraceMarks(dot);
-    // FIX (bug pré-existant, hors Lot G-bis mais bloquant pour l'indicateur de
-    // média) : appendChild() doit venir APRÈS dot.innerHTML= ci-dessus, sinon
-    // innerHTML remplace tout le contenu et efface silencieusement les badges
-    // — c'est pour ça que le badge 🏪 Commerce n'apparaissait jamais non plus.
+    // FIX (bug pré-existant, hors Lot G-bis) : appendChild() doit venir
+    // APRÈS dot.innerHTML= ci-dessus, sinon innerHTML remplace tout le
+    // contenu et efface silencieusement le badge — c'est pour ça que le
+    // badge 🏪 Commerce n'apparaissait jamais.
     if (g.businessMode) {
       const bizBadge = document.createElement('div');
       bizBadge.textContent = '🏪';
       bizBadge.style.cssText = 'position:absolute;top:-8px;right:-8px;font-size:14px;filter:drop-shadow(0 0 4px rgba(var(--premium-rgb),.6));';
       dot.style.position = 'absolute';
       dot.appendChild(bizBadge);
-    }
-    if (_mediaIcon) {
-      const mediaBadge = document.createElement('div');
-      mediaBadge.textContent = _mediaIcon;
-      mediaBadge.setAttribute('aria-hidden', 'true');
-      mediaBadge.style.cssText = 'position:absolute;bottom:-6px;right:-6px;font-size:12px;filter:drop-shadow(0 0 4px rgba(0,0,0,.7));';
-      dot.style.position = 'absolute';
-      dot.appendChild(mediaBadge);
     }
     radar.appendChild(dot);
 
