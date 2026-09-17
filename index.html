@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=220"></script>
+<script type="module" src="app.js?v=221"></script>
 
-<link rel="stylesheet" href="style.css?v=205">
+<link rel="stylesheet" href="style.css?v=206">
 </head>
 <body>
 <!-- Skip link pour accessibilité clavier -->
@@ -335,18 +335,22 @@
   <!-- DETAIL -->
   <div class="screen" id="screenDetail" aria-label="Détail du fantôme">
     <div class="swipe-nav">
-      <button class="back-btn detail-back-btn" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" aria-label="Retour au radar">← retour</button>
+      <button class="back-btn detail-back-btn" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" aria-label="Retour au radar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+      <div class="detail-nav-location">
+        <span class="detail-location" id="detailLocation">…</span>
+        <span class="detail-distance" id="detailDistance"></span>
+      </div>
       <div class="detail-swipe-info">
         <span class="swipe-counter" id="swipeCounter" aria-live="polite"></span>
         <div class="swipe-arrows" role="group" aria-label="Navigation entre fantômes">
-          <button class="swipe-arrow" id="swipePrev" data-action="swipeGhost" data-arg="-1" aria-label="Fantôme précédent">‹</button>
-          <button class="swipe-arrow" id="swipeNext" data-action="swipeGhost" data-arg="1" aria-label="Fantôme suivant">›</button>
+          <button class="swipe-arrow" id="swipePrev" data-action="swipeGhost" data-arg="-1" aria-label="Fantôme précédent"><span class="swipe-arrow-visual">‹</span></button>
+          <button class="swipe-arrow" id="swipeNext" data-action="swipeGhost" data-arg="1" aria-label="Fantôme suivant"><span class="swipe-arrow-visual">›</span></button>
         </div>
       </div>
     </div>
     <div class="scroll">
-      <div class="detail-location" id="detailLocation">📍 …</div>
-      <div class="detail-distance" id="detailDistance"></div>
       <!-- Overlay fantôme bloqué par condition -->
       <div class="ghost-blocked-overlay" id="ghostBlockedOverlay">
         <div class="blocked-icon" id="blockedIcon">🌙</div>
@@ -373,14 +377,10 @@
         </button>
       </div>
       <div id="envelopeContent" class="u-hidden">
-        <!-- Infos du fantôme — déplacées AU-DESSUS du message (juin 2026) pour éviter l'encombrement sous le cadre-lettre -->
-        <div class="detail-info">
-          <div class="detail-badge" id="detailAuthor"></div>
-          <div class="detail-badge" id="detailTime"></div>
-          <div class="detail-badge" id="detailDuration"></div>
-          <div class="detail-badge" id="detailRadius"></div>
-        </div>
-        <!-- scratchZone : le canvas de grattage est injecté ICI, borné à ce div -->
+        <!-- scratchZone : le canvas de grattage est injecté ICI, borné à ce div.
+             Lot AK : le message prend toute la page dès l'ouverture — remplit
+             la hauteur disponible du .scroll (cf. #scratchZone en CSS), les
+             badges/infos passent SOUS (juste après ce bloc, cf. .detail-info). -->
         <div id="scratchZone">
           <div class="detail-msg-wrap">
             <div class="detail-message" id="detailMessage" tabindex="-1"></div>
@@ -391,9 +391,18 @@
           <!-- Annotation "vu par X personnes" -->
           <div id="detailReadCount" class="u-hidden detail-read-count"></div>
         </div>
+        <!-- Méta discrète — descendue sous le cadre-lettre (Lot AK). Mêmes ids
+             qu'avant (#detailAuthor/#detailTime/#detailDuration/#detailRadius),
+             seule la présentation change (plus de pastilles, un fil "·"). -->
+        <div class="detail-info">
+          <span class="detail-badge" id="detailAuthor"></span>
+          <span class="detail-badge" id="detailTime"></span>
+          <span class="detail-badge" id="detailDuration"></span>
+          <span class="detail-badge" id="detailRadius"></span>
+        </div>
         <div id="detailChain" class="u-hidden"></div>
-        <!-- Résonner — fusionné visuellement au bas du cadre-lettre -->
-        <button class="resonance-btn resonance-btn--fused" id="resonanceBtn" data-action="resonate">
+        <!-- Résonner -->
+        <button class="resonance-btn" id="resonanceBtn" data-action="resonate">
           <span id="resonanceCount">✦ Résonner</span>
         </button>
         <!-- Réactions des autres — affichées AVANT la barre de saisie (juin 2026) -->

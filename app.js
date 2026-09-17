@@ -105,6 +105,7 @@ const LANGS = {
     detail_sealed_label: 'Une trace vous attend ici',
     detail_anonymous: 'Anonyme',
     detail_from_you: 'de vous',
+    detail_radius_prefix: 'visible à ',
     detail_open_aria: 'Ouvrir le fantôme et révéler le message',
     dep_dur_24h: '24h',
     dep_dur_7d: '7 jours',
@@ -738,6 +739,7 @@ const LANGS = {
     detail_sealed_label: 'A trace is waiting here',
     detail_anonymous: 'Anonymous',
     detail_from_you: 'from you',
+    detail_radius_prefix: 'visible within ',
     detail_open_aria: 'Open the ghost and reveal the message',
     dep_dur_24h: '24h',
     dep_dur_7d: '7 days',
@@ -7882,7 +7884,7 @@ async function _resolveGhostForOpen(id) {
 }
 
 function _renderGhostDetailHeader() {
-  document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
+  document.getElementById('detailLocation').textContent = escapeHTML(selectedGhost.location || t.detail_location_unknown);
   // Sceau visible dans le détail — seul autre endroit avec l'écran de dépôt
   // où il apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md). Lot AI : expression
   // du Trace (_traceSealIconHTML) plutôt que le picto générique d'avant.
@@ -7961,7 +7963,7 @@ function _checkGhostOpenCondition(isOwner) {
     if (!condCheck.ok) {
       showScreen('screenDetail');
       setNav('nav-radar');
-      document.getElementById('detailLocation').textContent = '📍 ' + escapeHTML(selectedGhost.location || t.detail_location_unknown);
+      document.getElementById('detailLocation').textContent = escapeHTML(selectedGhost.location || t.detail_location_unknown);
       showBlockedOverlay(condCheck);
       return false;
     }
@@ -7989,7 +7991,7 @@ function _renderGhostDetailMessage(isOwner) {
   // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
   const msgReportBtn = document.getElementById('msgReportBtn');
   if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
-  document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : '🌫️ ' + escapeHTML(selectedGhost.author || '');
+  document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : escapeHTML(selectedGhost.author || '');
 
   // ── Mode Commerce : afficher le code promo ──
   const existingPromo = document.getElementById('detailPromoBlock');
@@ -8007,9 +8009,9 @@ function _renderGhostDetailMessage(isOwner) {
 }
 
 function _renderGhostDetailMeta() {
-  document.getElementById('detailTime').textContent = '🕰 ' + timeAgo(selectedGhost.createdAt);
-  document.getElementById('detailDuration').textContent = '⏳ ' + timeRemaining(selectedGhost);
-  document.getElementById('detailRadius').textContent = '📡 ' + escapeHTML(selectedGhost.radius || '10m');
+  document.getElementById('detailTime').textContent = timeAgo(selectedGhost.createdAt);
+  document.getElementById('detailDuration').textContent = timeRemaining(selectedGhost);
+  document.getElementById('detailRadius').textContent = (t.detail_radius_prefix || 'visible à ') + escapeHTML(selectedGhost.radius || '10m');
 
   // ── Mode Commerce : masquer Partager et la réaction courte ──
   const isBizGhost = !!selectedGhost.businessMode;

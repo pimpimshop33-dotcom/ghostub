@@ -932,9 +932,15 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 /* ── DETAIL ────────────────────────────────────────────── */
 .back-btn{display:flex;align-items:center;gap:5px;font-size:var(--text-base);color:var(--spirit-dim);cursor:pointer;padding:calc(var(--sat) + 12px) 20px 0;transition:color .2s;background:none;border:none;font-family:'Instrument Sans',sans-serif;min-height:44px;}
 .back-btn:hover{color:var(--amber);}
-/* CSP audit 4.6 : ex-style="" inline de l'écran Detail */
-.detail-back-btn{padding:12px 0 0;}
-.detail-swipe-info{display:flex;align-items:center;gap:8px;}
+/* Barre du haut compacte, une ligne ~44px (Lot AK) — retour en icône seule,
+   lieu+distance tronqués au milieu, compteur/flèches discrets à droite.
+   Remplace l'ancien "← retour" en toutes lettres + gros carrés ambrés +
+   bloc lieu/distance séparé au-dessus du cadre-lettre. */
+.swipe-nav{display:flex;align-items:center;gap:2px;padding:var(--sat) 4px 0 8px;flex-shrink:0;}
+.detail-back-btn{flex-shrink:0;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--spirit-dim);}
+.detail-back-btn:hover{color:var(--amber);}
+.detail-nav-location{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;overflow:hidden;}
+.detail-swipe-info{display:flex;align-items:center;gap:0;flex-shrink:0;}
 .blocked-back-btn{margin-top:4px;}
 .envelope-open-btn-label{position:relative;z-index:1;}
 .detail-msg-wrap{position:relative;}
@@ -943,9 +949,15 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 /* Hover du bouton signaler message — remplace onmouseover/onmouseout inline */
 .msg-report-btn{display:none;position:absolute;top:8px;right:8px;background:rgba(10,8,20,.75);backdrop-filter:blur(6px);border:1px solid rgba(255,100,100,.35);border-radius:10px;color:rgba(255,120,100,.9);font-size:11px;padding:4px 8px;cursor:pointer;font-family:'Instrument Sans',sans-serif;align-items:center;gap:4px;touch-action:manipulation;transition:all .2s;}
 .msg-report-btn:hover{background:rgba(255,60,60,.18);}
-.detail-location{font-size:var(--text-sm);text-transform:uppercase;letter-spacing:2px;color:var(--spirit-dim);margin-bottom:4px;}
-.detail-distance{font-size:var(--text-base);color:var(--spirit-dim);margin-bottom:16px;}
-/* Message — fenêtre éclairée dans la nuit */
+.detail-location{font-size:13px;color:var(--warm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+.detail-distance{flex-shrink:0;font-size:11px;color:var(--spirit-dim);}
+/* Message — fenêtre éclairée dans la nuit. Lot AK : prend toute la page dès
+   l'ouverture (min-height = viewport moins barre du haut/nav du bas/marges
+   du .scroll — mêmes constantes que la barre compacte et la réserve
+   #bottomNav ci-dessous, cf. body.has-bottom-nav .screen .scroll) —
+   display:flex;align-items:center (inchangé) centre verticalement un
+   message court ; un message long dépasse ce plancher et .scroll (overflow
+   auto) prend le relais pour le scroll, sans JS de recalcul nécessaire. */
 .detail-message{
   font-family:'Cormorant Garamond',serif;
   font-size:var(--serif-sm) !important;font-style:italic;font-weight:400;
@@ -953,11 +965,8 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
   line-height:1.7 !important;
   background:linear-gradient(180deg,rgba(232,225,210,.06) 0%,rgba(232,225,210,.025) 100%) !important;
   border:1px solid rgba(var(--lettre-ink-rgb),.16);
-  border-radius:16px 16px 0 0 !important;
-  /* Occupe l'espace dispo de l'écran Détail plutôt qu'un petit cadre isolé
-     (Lot Y) — badges/résonner/réactions restent accessibles par le scroll
-     en dessous, comme avant. */
-  min-height:min(56dvh,480px);
+  border-radius:16px !important;
+  min-height:calc(100dvh - var(--sat) - 44px - 80px - var(--sab) - 14px);
   display:flex;align-items:center;
   padding:36px 26px !important;margin-bottom:0;letter-spacing:.01em;
   box-shadow:inset 0 1px 0 rgba(255,235,200,.05),0 4px 22px rgba(0,0,0,.18);
@@ -985,8 +994,11 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
   to  {opacity:1;filter:blur(0);  letter-spacing:.01em;}
 }
 .detail-message.ink-revealing{animation:inkReveal 700ms ease-out forwards;}
-.detail-info{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);}
-.detail-badge{display:flex;align-items:center;gap:5px;background:rgba(var(--spirit-rgb),.04);border:1px solid var(--border);border-radius:20px;padding:5px 10px;font-size:var(--text-sm);color:var(--warm-dim);}
+/* Méta descendue sous le cadre-lettre (Lot AK) : fil de texte discret avec
+   séparateurs "·", plus de pastilles/bordures. Mêmes ids qu'avant. */
+.detail-info{display:flex;flex-wrap:wrap;align-items:baseline;margin:14px 0 18px;font-size:12px;color:var(--spirit-dim);}
+.detail-badge{font-size:12px;color:var(--spirit-dim);}
+.detail-badge + .detail-badge::before{content:' · ';}
 /* Bouton Résonner — halo ambre */
 .resonance-btn{
   width:100%;padding:12px;
@@ -1005,13 +1017,9 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 }
 .ghost-card-btn:active{transform:scale(.98);}
 .resonance-btn.resonated{color:var(--warm);border-color:var(--amber);background:rgba(232,160,48,.12);}
-/* Résonner fusionné au bas du cadre-lettre (juin 2026) */
-.resonance-btn--fused{
-  border-top:none !important;
-  border-radius:0 0 16px 16px !important;
-  margin-top:0 !important;margin-bottom:18px !important;
-  background:linear-gradient(180deg,rgba(232,160,48,.05),rgba(232,160,48,.11)) !important;
-}
+/* .resonance-btn--fused (fusion visuelle au bas du cadre-lettre) retirée au
+   Lot AK : la méta (.detail-info) s'intercale désormais entre le message et
+   ce bouton, la fusion n'avait plus de sens (bordure/radius orphelins). */
 /* Ligne d'actions secondaires — 2 colonnes (juin 2026) */
 .detail-actions-row{display:flex;gap:8px;margin-bottom:14px;}
 .detail-actions-row .btn-favorite,
@@ -2253,11 +2261,16 @@ body.light-theme .discovery-toast{
 body.light-theme .discovery-toast-icon{filter:drop-shadow(0 0 8px rgba(156,100,24,.4));}
 
 /* ── SWIPE NAV ─────────────────────────────────────────── */
-.swipe-nav{display:flex;justify-content:space-between;align-items:center;padding:10px 20px 0;}
-.swipe-arrows{display:flex;gap:4px;}
-.swipe-arrow{background:rgba(232,160,48,.08);border:1px solid rgba(232,160,48,.18);color:var(--amber);border-radius:8px;padding:4px 10px;font-size:16px;cursor:pointer;transition:all .2s;touch-action:manipulation;}
-.swipe-arrow:hover{background:rgba(232,160,48,.15);}
-.swipe-counter{font-size:var(--text-sm);color:var(--spirit-dim);letter-spacing:.5px;}
+/* .swipe-nav/.detail-back-btn/.detail-nav-location/.detail-swipe-info
+   redéfinis dans la section DETAIL ci-dessus (Lot AK, barre compacte). */
+.swipe-arrows{display:flex;gap:0;}
+/* Boutons ‹ › : zone tactile 44px (accessibilité), rendu visuel ~32px avec
+   bordure fine transparente — remplace les anciens "gros carrés ambrés"
+   (background plein + padding sur toute la zone de 44px). */
+.swipe-arrow{width:44px;height:44px;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;padding:0;color:var(--amber);cursor:pointer;touch-action:manipulation;}
+.swipe-arrow-visual{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(232,160,48,.22);border-radius:8px;font-size:15px;transition:background .2s;}
+.swipe-arrow:hover .swipe-arrow-visual{background:rgba(232,160,48,.12);}
+.swipe-counter{font-size:11px;color:var(--spirit-dim);letter-spacing:.3px;margin-right:2px;}
 
 /* ── GHOSTS BLOQUÉS ────────────────────────────────────── */
 .ghost-blocked-overlay{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px 24px;}
