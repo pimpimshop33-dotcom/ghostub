@@ -42,6 +42,12 @@ export const LIFECYCLE = {
  * @returns {boolean}
  */
 export function isExpired(g) {
+  // AT-8 — g.expired vérifié en premier : un fantôme fermé par
+  // maxOpenCount (expired:true posé avant l'échéance normale de sa
+  // duration) doit rester détecté comme expiré même si le calcul par durée
+  // dirait le contraire. Source unique désormais pour app.js aussi (cf.
+  // isExpired() dans app.js, qui délègue ici).
+  if (g.expired) return true;
   if (!g.createdAt) return false;
   if (!g.duration || g.duration === '♾ Éternel' || g.duration === 'Eternal') return false;
   const maxAge = DURATIONS_MS[g.duration];

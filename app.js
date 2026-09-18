@@ -17,7 +17,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=7';
-import GhostService from './services/ghost.service.js?v=1';
+import GhostService from './services/ghost.service.js?v=2';
 import LocationService from './services/location.service.js?v=1';
 import AudioService from './services/audio.service.js?v=1';
 import HapticsService from './services/haptics.service.js?v=1';
@@ -2428,21 +2428,13 @@ function escapeHTML(str) {
 
 const distanceMeters = (lat1, lng1, lat2, lng2) => LocationService.distanceMeters(lat1, lng1, lat2, lng2);
 
-// Vérifie si un fantôme est expiré selon sa durée
+// AT-8 — déléguée à GhostService.isExpired() (services/ghost.service.js),
+// désormais seule source de vérité pour cette logique : c'était l'une des 4
+// copies de la table des durées d'expiration (avec _checkEphemeralWindows,
+// déjà corrigée en AT-6, et GHOST_DURATIONS_MS côté Cloud Functions — cf.
+// rapport pour la limite d'unification cross-runtime navigateur/Node).
 function isExpired(g) {
-  if (g.expired) return true;
-  if (!g.createdAt) return false;
-  // Mapping langue-indépendant : on accepte les libellés FR ET EN
-  const durations = {
-    '24h': 86_400_000,
-    '7 jours': 604_800_000,
-    '7 days': 604_800_000,
-    '1 mois': 2_592_000_000,
-    '1 month': 2_592_000_000
-  };
-  const maxAge = durations[g.duration];
-  if (!maxAge) return false; // Éternel / Eternal / valeur inconnue → jamais expiré
-  return (Date.now() - g.createdAt.seconds * 1000) > maxAge;
+  return GhostService.isExpired(g);
 }
 
 // ── GEOHASH NEIGHBORS ────────────────────────────────────
