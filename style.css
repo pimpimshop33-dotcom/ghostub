@@ -1310,7 +1310,13 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
 .dep-biz-radius-emoji{font-size:16px;}
 .dep-biz-radius-text{flex-grow:1;font-size:11px;color:rgba(var(--premium-rgb),.7);line-height:1.5;}
 .dep-biz-reach-edit{background:none;border:none;color:rgba(var(--premium-rgb),.85);font-size:12px;padding:8px 0 8px 6px;cursor:pointer;flex-shrink:0;}
-.dep-biz-dur-toggle{display:flex;gap:6px;margin:-8px 0 14px;}
+/* Même piège .u-hidden que .ad-nudge-card/.compass-perm-btn : display
+   inconditionnel plus bas dans la feuille que .u-hidden (ligne 132) écrasait
+   toujours la bascule masquée (toggleBizDurEdit/toggleBusinessMode), même
+   spécificité — confirmé sur A54, la mini bascule 7j/1mois restait visible
+   en permanence. */
+.dep-biz-dur-toggle{gap:6px;margin:-8px 0 14px;}
+.dep-biz-dur-toggle:not(.u-hidden){display:flex;}
 .biz-dur-btn{flex:1;padding:8px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--warm-dim);cursor:pointer;}
 .biz-dur-btn.active{border-color:rgba(var(--premium-rgb),.5);color:rgba(var(--premium-rgb),.95);background:rgba(var(--premium-rgb),.08);}
 
@@ -1706,7 +1712,11 @@ body:not(.light-theme) #chainMiniMap .leaflet-tile-pane{
 /* AU-4 — ancien rendu accordéon de loadBizDashboard (biz-card/biz-opens-*/
    biz-expiry-*/biz-renew-btn/biz-empty) retiré : remplacé par l'écran dédié
    screenBizOffers (classes biz-current-*/biz-replay-* plus bas). */
-.profile-biz-section-link{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;text-align:left;padding:10px 0;cursor:pointer;color:inherit;font-family:inherit;}
+/* Même piège .u-hidden : display inconditionnel écrasait toujours .u-hidden
+   (même spécificité, règle plus bas dans la cascade) — le point d'entrée
+   "Mes offres Commerce" restait visible au Profil même sans offre. */
+.profile-biz-section-link{width:100%;align-items:center;gap:8px;background:none;border:none;text-align:left;padding:10px 0;cursor:pointer;color:inherit;font-family:inherit;}
+.profile-biz-section-link:not(.u-hidden){display:flex;}
 .profile-biz-section-summary{flex-grow:1;text-align:right;font-size:12px;color:var(--spirit-dim);}
 
 /* AU-4/maquette 6 — écran dédié "Mes offres" */
@@ -3628,12 +3638,18 @@ body.light-theme .lettre-seal-btn.lettre-seal-btn--commerce{
 }
 
 /* Carte de bascule anti-pub (maquette 7) */
+/* .u-hidden (display:none, définie plus haut dans la feuille) doit rester
+   décisive tant qu'elle est présente — pas de display:flex inconditionnel
+   sur .ad-nudge-card qui l'écraserait par ordre de cascade, même spécificité
+   (même piège que .compass-perm-btn plus haut : la carte restait affichée en
+   permanence, confirmé sur A54). */
 .ad-nudge-card{
   margin-top:12px;padding:15px;border-radius:16px;
   background:linear-gradient(180deg,rgba(var(--premium-rgb),.13),rgba(var(--premium-rgb),.05));
   border:1px solid rgba(var(--premium-rgb),.38);
-  display:flex;flex-direction:column;gap:11px;
+  flex-direction:column;gap:11px;
 }
+.ad-nudge-card:not(.u-hidden){display:flex;}
 .ad-nudge-head{display:flex;gap:10px;align-items:flex-start;}
 .ad-nudge-icon{
   width:32px;height:32px;border-radius:9px;flex-shrink:0;
@@ -3648,10 +3664,12 @@ body.light-theme .ad-nudge-checks{background:rgba(0,0,0,.04);}
 .ad-nudge-check{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ether);}
 .ad-nudge-check svg{color:rgba(var(--premium-rgb),.95);flex-shrink:0;}
 .ad-nudge-price{font-size:11.5px;color:rgba(var(--premium-rgb),.85);}
+/* Même piège .u-hidden que .ad-nudge-card ci-dessus. */
 .ad-nudge-override-link{
-  display:block;text-align:center;font-size:12.5px;color:var(--spirit-dim);
+  text-align:center;font-size:12.5px;color:var(--spirit-dim);
   text-decoration:none;padding:6px 0;margin-top:2px;
 }
+.ad-nudge-override-link:not(.u-hidden){display:block;}
 
 /* Icône en pseudo-élément pour survivre aux changements de textContent —
    Lot AI : le Trace (même asset que la marque) plutôt que l'étoile ✦

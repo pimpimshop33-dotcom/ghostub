@@ -10593,7 +10593,13 @@ function _revealEnvelopeInstant() {
   const revealed = document.getElementById('envelopeContent');
   if (sealed) sealed.style.display = 'none';
   if (revealed) {
-    revealed.style.display = '';
+    // #envelopeContent porte "u-hidden" dans le HTML et cette classe n'est
+    // jamais retirée — seul le style inline la contre. display:'' (au lieu
+    // de 'block' comme _doOpenEnvelope juste au-dessus) ne fait qu'effacer
+    // ce style inline : .u-hidden{display:none} reprenait alors la main et
+    // l'écran de détail restait vide à la relecture d'un fantôme déjà
+    // découvert (confirmé A54 — Playwright, revisite d'un fantôme Commerce).
+    revealed.style.display = 'block';
     revealed.classList.add('envelope-reveal');
   }
   // "Vu par X personnes" reflète le moment de la découverte, pas la
