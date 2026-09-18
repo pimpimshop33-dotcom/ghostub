@@ -22,6 +22,10 @@ import LocationService from './services/location.service.js';
 import AudioService from './services/audio.service.js';
 import HapticsService from './services/haptics.service.js';
 
+// AT-1/m14 — drapeau debug pour les logs de diagnostic verbeux (mini-carte,
+// etc.), actifs seulement en développement local.
+const DEBUG = ['localhost', '127.0.0.1'].includes(location.hostname);
+
 // ── Init audio on first user gesture ────────────────────
 document.addEventListener('click', () => { AudioService.init(); AudioService.resume(); }, { once: true });
 document.addEventListener('touchstart', () => { AudioService.init(); AudioService.resume(); }, { once: true });
@@ -1642,6 +1646,19 @@ function _isLightTheme() {
   return document.body.classList.contains('light-theme');
 }
 
+// AT-1/M13 — fond de carte nativement sombre au lieu du filtre CSS appliqué
+// à chaque <img> de tuile (coûteux au pinch-zoom). basemaps.cartocdn.com est
+// déjà whitelisté dans la CSP (index.html). {r} est toujours résolu par
+// Leaflet ('@2x' ou '' selon l'écran), même sans detectRetina.
+function _leafletTileUrl() {
+  return _isLightTheme()
+    ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+}
+function _leafletTileAttribution() {
+  return _isLightTheme() ? '© OSM France' : '© OpenStreetMap contributors © CARTO';
+}
+
 // ══════════════════════════════════════════════════════════
 // TRACE COLORÉ — teinte par catégorie (Sceau) + fanage temporel
 // (FEATURE-TRACE-COLORE-FANAGE.md)
@@ -2177,6 +2194,7 @@ let nearbyGhosts = [];
 let radarPingTargets = [];
 let selectedGhost = null;
 let map = null;
+let _ghostLayer = null; // AT-1/C7 — calque unique (marqueurs+zones+user dot), vidé/redessiné plutôt que la carte entière
 let _mapResizeObserver = null;
 let mediaRecorder = null;
 let audioChunks = [];
@@ -2507,10 +2525,22 @@ window.toggleHuntMode = () => {
 // buildLeafletMap() pour le contexte du dimensionnement via CSS et du
 // filet de sécurité ResizeObserver.
 function _setupLeafletMapInstance(container, centerLat, centerLng) {
-  // Si la carte existe déjà — réinitialiser pour redessiner marqueurs et zones
-  if (map && document.getElementById('leafletMap')) {
+  // AT-1/C7 — réutiliser l'instance existante si son conteneur est toujours
+  // le bon et reste attaché au DOM : évite la destruction/reconstruction
+  // complète (tuiles redemandées, marqueurs refaits, zoom perdu) à chaque
+  // aller-retour Radar ↔ Carte. On ne redessine que via _ghostLayer (cf.
+  // buildLeafletMap), jamais en reconstruisant la carte elle-même.
+  const existingEl = document.getElementById('leafletMap');
+  if (map && existingEl && map.getContainer() === existingEl && existingEl.isConnected) {
+    map.invalidateSize();
+    map.setView([centerLat, centerLng], map.getZoom());
+    return;
+  }
+
+  if (map) {
     try { map.remove(); } catch(e) { console.warn('[ghostub:buildLeafletMap]', e); }
     map = null;
+    _ghostLayer = null;
   }
 
   // position:absolute + inset:0 (pas une hauteur en % ni une valeur en px
@@ -2522,7 +2552,10 @@ function _setupLeafletMapInstance(container, centerLat, centerLng) {
   // toujours une hauteur définie en pourcentage de façon fiable.
   container.innerHTML = `<div id="leafletMap" class="leaflet-map-fill"></div>`;
 
-  map = L.map('leafletMap', { zoomControl: false, attributionControl: false })
+  // preferCanvas (AT-1/m9) : les cercles de rayon/zones sont rendus sur un
+  // seul <canvas> au lieu d'un <svg><circle> par élément — net gain au
+  // pinch-zoom quand il y a beaucoup de fantômes/zones affichés.
+  map = L.map('leafletMap', { zoomControl: false, attributionControl: false, preferCanvas: true })
           .setView([centerLat, centerLng], 16);
   // Zoom en haut à droite : en bas à droite, il chevauchait l'étiquette de
   // cluster (#mapHauntedLegend, centrée en bas) sur les écrans étroits ou
@@ -2540,7 +2573,8 @@ function _setupLeafletMapInstance(container, centerLat, centerLng) {
     _mapResizeObserver.observe(container);
   }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(map);
+  L.tileLayer(_leafletTileUrl(), { maxZoom: 20, attribution: _leafletTileAttribution() }).addTo(map);
+  _ghostLayer = L.layerGroup().addTo(map);
 }
 
 // Marqueur "vous êtes ici" + cercle de détection en mode chasse.
@@ -2553,7 +2587,7 @@ function _addUserPositionMarker(centerLat, centerLng) {
     html: '<div class="user-map-dot"></div>',
     iconSize: [16,16], iconAnchor: [8,8], className: ''
   });
-  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(map).bindPopup('📍 Vous êtes ici');
+  L.marker([centerLat, centerLng], { icon: userIcon }).addTo(_ghostLayer).bindPopup('📍 Vous êtes ici');
 
   // En mode chasse : cercle de détection autour de l'utilisateur
   if (huntMode) {
@@ -2564,19 +2598,22 @@ function _addUserPositionMarker(centerLat, centerLng) {
       fillOpacity: 1,
       weight: 1.5,
       dashArray: '4 4'
-    }).addTo(map);
+    }).addTo(_ghostLayer);
   }
 }
 
 // Dessine les marqueurs fantômes (mode chasse ou mode normal) pour la liste déjà filtrée.
 function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
+  // AT-1/m7 — un seul accès localStorage pour tout le rendu au lieu d'un
+  // getDiscoveredIds() (JSON.parse) par marqueur.
+  const _discoveredSet = new Set(getDiscoveredIds());
   _mapGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
     const delay = (i * 0.3).toFixed(2);
     const ghostRadius = Math.max(20, parseInt(g.radius || '50') || 50);
     const dist = distanceMeters(centerLat, centerLng, g.lat, g.lng);
     const isInRange = dist <= ghostRadius;
-    const alreadyOpened = getDiscoveredIds().includes(g.id);
+    const alreadyOpened = _discoveredSet.has(g.id);
     // Trace coloré par catégorie + fané par ancienneté (cf.
     // FEATURE-TRACE-COLORE-FANAGE.md) — plus d'icône de catégorie brute sur
     // la carte. Secret/business gardent leurs pictos dédiés (🔮/🏪), pas
@@ -2607,8 +2644,9 @@ function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
         iconSize: [76, 76], iconAnchor: [38, 38], className: ''
       });
 
-      // Cercle de rayon autour du fantôme
-      if (!alreadyOpened) {
+      // Cercle de rayon autour du fantôme — uniquement à proximité utile
+      // (AT-1/m9) : au-delà de ~500 m il n'apporte rien et coûte au rendu.
+      if (!alreadyOpened && dist <= 500) {
         L.circle([g.lat, g.lng], {
           radius: ghostRadius,
           color: isInRange ? 'rgba(100,255,180,0.5)' : 'rgba(var(--ghost-blue-rgb),0.2)',
@@ -2616,10 +2654,10 @@ function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
           fillOpacity: 1,
           weight: 1,
           dashArray: isInRange ? '' : '3 5'
-        }).addTo(map);
+        }).addTo(_ghostLayer);
       }
 
-      const huntMarker = L.marker([g.lat, g.lng], { icon: huntIcon }).addTo(map);
+      const huntMarker = L.marker([g.lat, g.lng], { icon: huntIcon }).addTo(_ghostLayer);
       // animation-delay (continu, par marqueur) posé en JS sur le DOM créé par
       // Leaflet — vraie écriture .style, pas un style="" du markup, hors
       // périmètre CSP (cf. commentaire sur .hunt-marker-* dans style.css).
@@ -2658,16 +2696,20 @@ function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
         html: ghostHtml,
         iconSize: [78, 78], iconAnchor: [39, 39], className: ''
       });
-      const ghostMarker = L.marker([g.lat, g.lng], { icon: ghostIcon }).addTo(map);
+      const ghostMarker = L.marker([g.lat, g.lng], { icon: ghostIcon }).addTo(_ghostLayer);
       _hydrateMapMarker(ghostMarker.getElement());
       ghostMarker.on('click', () => _openMapGhostSheet(g, dist));
     }
   });
 }
 
-// ── ZONES HANTÉES : clusters 3+ ghosts dans 80m — 3 niveaux ───────────
-function _renderMapHauntedZones(_mapGhosts) {
+// ── ZONES HANTÉES : clusters 3+ ghosts dans 300m — 3 niveaux ───────────
+// AT-1/m8 — le clustering (O(n²) de haversines) est calculé une seule fois
+// ici et son résultat est partagé par _renderMapHauntedZones ET
+// _renderMapHauntedLegend, qui refaisaient chacun le même calcul.
+function _computeHauntedClusters(_mapGhosts) {
   const _spotted = new Set();
+  const clusters = [];
   _mapGhosts.forEach((g) => {
     if (_spotted.has(g.id) || !g.lat || !g.lng) return;
     const cluster = _mapGhosts.filter(h =>
@@ -2679,21 +2721,25 @@ function _renderMapHauntedZones(_mapGhosts) {
     const clusterIds = [g.id, ...cluster.map(h => h.id)];
     clusterIds.forEach(id => _spotted.add(id));
     const n = clusterIds.length;
+    const level = n >= 8 ? 'infest' : n >= 5 ? 'haunted' : 'spot';
+    clusters.push({ g, n, level });
+  });
+  return clusters;
+}
 
+function _renderMapHauntedZones(clusters) {
+  clusters.forEach(({ g, n, level }) => {
     // Niveau : spot (3-4) | zone hantée (5-7) | infestation (8+)
-    let level, labelFr, labelEn, color, fillColor, fillOpacity, radius;
-    if (n >= 8) {
-      level = 'infest';
+    let labelFr, labelEn, color, fillColor, fillOpacity, radius;
+    if (level === 'infest') {
       labelFr = `🔥 Infestation · ${n}`; labelEn = `🔥 Infestation · ${n}`;
       color = 'rgba(255,80,60,0.7)'; fillColor = 'rgba(255,80,60,0.13)';
       fillOpacity = 1; radius = 250;
-    } else if (n >= 5) {
-      level = 'haunted';
+    } else if (level === 'haunted') {
       labelFr = `👻 Zone hantée · ${n}`; labelEn = `👻 Haunted zone · ${n}`;
       color = 'rgba(168,100,255,0.6)'; fillColor = 'rgba(168,100,255,0.10)';
       fillOpacity = 1; radius = 200;
     } else {
-      level = 'spot';
       labelFr = `✦ Ghost Spot · ${n}`; labelEn = `✦ Ghost Spot · ${n}`;
       color = 'rgba(var(--premium-rgb),0.5)'; fillColor = 'rgba(var(--premium-rgb),0.07)';
       fillOpacity = 1; radius = 150;
@@ -2708,7 +2754,7 @@ function _renderMapHauntedZones(_mapGhosts) {
       fillOpacity: 0.06,
       interactive: false,
       className: 'zone-halo-pulse'
-    }).addTo(map);
+    }).addTo(_ghostLayer);
 
     // Cercle principal avec bordure lumineuse — tap = fiche bottom sheet (Lot I3)
     L.circle([g.lat, g.lng], {
@@ -2718,32 +2764,24 @@ function _renderMapHauntedZones(_mapGhosts) {
       fillOpacity: 0.04,
       weight: level === 'infest' ? 2 : 1.5,
       dashArray: level === 'spot' ? '4 5' : ''
-    }).addTo(map).on('click', () => _openMapClusterSheet(level, n, labelFr, labelEn));
+    }).addTo(_ghostLayer).on('click', () => _openMapClusterSheet(level, n, labelFr, labelEn));
   });
 }
 
 // ── LÉGENDE zones hantées — injectée dans le conteneur Leaflet ──
-function _renderMapHauntedLegend(_mapGhosts) {
+function _renderMapHauntedLegend(clusters) {
   let legendEl = document.getElementById('mapHauntedLegend');
   if (!legendEl) {
     legendEl = document.createElement('div');
     legendEl.id = 'mapHauntedLegend';
-    legendEl.style.cssText = 'display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;align-items:center;gap:6px;padding:5px 12px;background:rgba(8,6,18,.85);backdrop-filter:blur(8px);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;flex-wrap:wrap;white-space:nowrap;pointer-events:none;';
+    // AT-1/M13-M14 — plus de backdrop-filter (posé au-dessus des tuiles,
+    // recalculé à chaque frame de pan/zoom) ; fond opaque équivalent au rendu.
+    legendEl.style.cssText = 'display:none;position:absolute;bottom:16px;left:50%;transform:translateX(-50%);z-index:1000;align-items:center;gap:6px;padding:5px 12px;background:rgba(8,6,18,.94);border:1px solid rgba(var(--ghost-blue-rgb),.2);border-radius:20px;flex-wrap:wrap;white-space:nowrap;pointer-events:none;';
     document.getElementById('leafletMap').appendChild(legendEl);
   }
   const zones = { spot: 0, haunted: 0, infest: 0 };
   const zoneGhosts = { spot: 0, haunted: 0, infest: 0 };
-  const _check = new Set();
-  _mapGhosts.forEach(g => {
-    if (_check.has(g.id) || !g.lat || !g.lng) return;
-    const cl = _mapGhosts.filter(h => h.id !== g.id && h.lat && h.lng && distanceMeters(g.lat, g.lng, h.lat, h.lng) <= 300);
-    if (cl.length < 2) return;
-    const n2 = cl.length + 1;
-    [g.id, ...cl.map(h => h.id)].forEach(id => _check.add(id));
-    if (n2 >= 8) { zones.infest++; zoneGhosts.infest += n2; }
-    else if (n2 >= 5) { zones.haunted++; zoneGhosts.haunted += n2; }
-    else { zones.spot++; zoneGhosts.spot += n2; }
-  });
+  clusters.forEach(({ n, level }) => { zones[level]++; zoneGhosts[level] += n; });
   if (legendEl) {
     const hasAny = zones.spot || zones.haunted || zones.infest;
     if (hasAny) {
@@ -2759,20 +2797,35 @@ function _renderMapHauntedLegend(_mapGhosts) {
   }
 }
 
+// AT-1/M14 — plafond de marqueurs affichés sur la carte, triés par distance.
+// Recopié ici plutôt qu'importé : src/config/performance.js n'est chargé par
+// personne (cf. AT-6), et QUERY_LIMIT=100 alimente nearbyGhosts sans plafond.
+const MAX_MAP_MARKERS = 40;
+
 function buildLeafletMap(centerLat, centerLng) {
   const container = document.getElementById('mapContainer');
 
   _setupLeafletMapInstance(container, centerLat, centerLng);
+  // AT-1/C7 — on redessine le contenu (marqueurs/zones/user dot) sans
+  // jamais reconstruire la carte : un calque dédié qu'on vide puis remplit.
+  _ghostLayer.clearLayers();
   _addUserPositionMarker(centerLat, centerLng);
 
   // Filtres flottants (Lot I4) — mêmes filtres Toutes/Récentes/Visions/Voix/
   // Vidéos que le Radar, appliqués à la liste source avant de dessiner
   // marqueurs et zones, pour rester cohérents entre eux.
-  const _mapGhosts = _filterGhostsByType(nearbyGhosts, _mapActiveFilter);
+  let _mapGhosts = _filterGhostsByType(nearbyGhosts, _mapActiveFilter);
+  if (_mapGhosts.length > MAX_MAP_MARKERS) {
+    _mapGhosts = _mapGhosts
+      .slice()
+      .sort((a, b) => distanceMeters(centerLat, centerLng, a.lat, a.lng) - distanceMeters(centerLat, centerLng, b.lat, b.lng))
+      .slice(0, MAX_MAP_MARKERS);
+  }
 
   _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng);
-  _renderMapHauntedZones(_mapGhosts);
-  _renderMapHauntedLegend(_mapGhosts);
+  const _clusters = _computeHauntedClusters(_mapGhosts);
+  _renderMapHauntedZones(_clusters);
+  _renderMapHauntedLegend(_clusters);
 
   // Le compteur reflète le filtre actif (Lot I4), pas le total non filtré
   const mapCountEl = document.getElementById('mapCount');
@@ -6461,7 +6514,10 @@ function _renderNearbyGhostsUI(count) {
   // faisceau radar sur chaque point (cf. renderRadarDots() / _radarPingLoop).
   const mc = document.getElementById('mapCount');
   if (mc) mc.textContent = count + ' ' + (_currentLang === 'fr' ? 'fantôme(s)' : 'ghost(s)');
-  if (map) { map.remove(); map = null; }
+  // AT-1/C7 — ne plus détruire la carte depuis le Radar : un pull-to-refresh
+  // condamnait sinon le passage suivant sur la Carte à une reconstruction
+  // complète. renderStaticMap() (appelé plus bas si la Carte est active)
+  // réutilise désormais l'instance existante.
   renderGhostList();
   renderRadarDots();
   // Reconstruire la carte si l'écran carte est actif
@@ -6971,7 +7027,7 @@ function _buildEmpreinteMapInstance(allPoints, deposits, discoveries) {
   _empreinteMap = L.map('empreinteLeaflet', { zoomControl: false, attributionControl: false })
     .setView([centerLat, centerLng], deposits.length + discoveries.length > 5 ? 12 : 14);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(_empreinteMap);
+  L.tileLayer(_leafletTileUrl(), { maxZoom: 20, attribution: _leafletTileAttribution() }).addTo(_empreinteMap);
 }
 
 // 4-5. Marqueurs dépôts (violet lumineux) et découvertes (doré)
@@ -7402,7 +7458,7 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs, r
     const coords = ghostDocs.filter(d => d.data().lat && d.data().lng).map(d => [d.data().lat, d.data().lng]);
     if (!coords.length) { mapEl.innerHTML = `<div class="ppm-map-empty">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
     const pubMap = L.map('publicEmpreinteMap', { zoomControl: false, attributionControl: false }).setView(coords[0], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM France' }).addTo(pubMap);
+    L.tileLayer(_leafletTileUrl(), { maxZoom: 19, attribution: _leafletTileAttribution() }).addTo(pubMap);
     coords.forEach(([lat, lng], i) => {
       const g = ghostDocs[i] && ghostDocs[i].data ? ghostDocs[i].data() : {};
       const emHtml = _ghostEmojiHTML(g);
@@ -7562,6 +7618,8 @@ function renderGhostList() {
   const list = document.getElementById('ghostList');
   const wrap = document.getElementById('ghostListWrap');
   const filtered = getFilteredGhosts();
+  // AT-1/m7 — un seul accès localStorage pour toute la liste.
+  const _discoveredSet = new Set(getDiscoveredIds());
   if (nearbyGhosts.length === 0) {
     const isFirstTime = getDiscoveryCount() === 0;
     if (wrap) wrap.classList.toggle('is-welcome', isFirstTime);
@@ -7608,7 +7666,7 @@ function renderGhostList() {
     // l'ancien _ghostEmojiHTML() qui n'était pas encore migré ici
     // (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 2).
     const emoji = g.secret ? '🔮' : g.businessMode ? '🏪'
-      : _traceMarkHTML(g, { size: 24, discovered: getDiscoveredIds().includes(g.id) });
+      : _traceMarkHTML(g, { size: 24, discovered: _discoveredSet.has(g.id) });
     // Âge du fantôme
     const ageMs = g.createdAt ? Date.now() - g.createdAt.seconds * 1000 : 0;
     const ageDays = ageMs / 86400000;
@@ -7702,6 +7760,8 @@ function renderRadarDots() {
   radarPingTargets = [];
 
   const radius = window._radarRadius || 200;
+  // AT-1/m7 — un seul accès localStorage pour tous les points du radar.
+  const _discoveredSet = new Set(getDiscoveredIds());
 
   // Filtrer : uniquement les fantômes à portée du radar
   const inRange = nearbyGhosts.filter(g =>
@@ -7780,7 +7840,7 @@ function renderRadarDots() {
     // — plus d'icône de catégorie brute sur le radar, uniquement le Trace.
     // Les secrets gardent leur 🔮 dédié (mécanique de révélation distincte).
     // Taille ~10% du diamètre du radar (34px/300px maquette) — cf. .ghost-dot-emoji
-    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: getDiscoveredIds().includes(g.id) });
+    const emoji = g.secret ? '🔮' : _traceMarkHTML(g, { size: 38, discovered: _discoveredSet.has(g.id) });
     const label = escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme'));
 
     // Synchronisation avec le sweep : pic d'animation calé sur l'angle du dot
@@ -8837,7 +8897,7 @@ window.setChainMarker = () => {
   preview.innerHTML = '<div id="chainMiniMap" class="chain-minimap"></div>';
   const initChainMap = () => {
     const cmap = L.map('chainMiniMap', { zoomControl: false, attributionControl: false }).setView([userLat, userLng], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', { maxZoom: 20, attribution: '© OSM France' }).addTo(cmap);
+    L.tileLayer(_leafletTileUrl(), { maxZoom: 20, attribution: _leafletTileAttribution() }).addTo(cmap);
     L.marker([userLat, userLng], { icon: L.divIcon({ html: '<div class="chain-user-pin">📍</div>', iconSize:[20,20], iconAnchor:[10,10], className:'' }) }).addTo(cmap);
     let nextMarker = null;
     cmap.on('click', e => {
@@ -10701,15 +10761,15 @@ function _buildDepositMiniMapInstance(loader) {
     touchZoom: false
   }).setView([userLat, userLng], 17);
 
-  const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '© OSM France'
+  const tileLayer = L.tileLayer(_leafletTileUrl(), {
+    maxZoom: 19, attribution: _leafletTileAttribution()
   }).addTo(_depositMiniMap);
 
   // Cacher le loader dès qu'une tuile charge
   let _tileLoaded = false;
   tileLayer.on('tileload', () => {
     _tileLoaded = true;
-    console.log('[MiniMap] ✅ Tuile chargée');
+    // AT-1/m14 — plus de console.log par tuile (des dizaines par init/pan).
     if (loader) loader.style.display = 'none';
   });
   tileLayer.on('tileerror', (e) => {
@@ -10754,8 +10814,8 @@ function _initDepositMiniMap() {
   const loader = document.getElementById('depositMiniLoader');
   const container = document.getElementById('depositMiniMap');
 
-  // ── DIAGNOSTIC v98 — visible dans console F12 ──
-  console.log('[MiniMap] init appelé', {
+  // ── DIAGNOSTIC v98 — derrière DEBUG (cf. AT-1/m14), plus en prod ──
+  if (DEBUG) console.log('[MiniMap] init appelé', {
     container: !!container,
     containerSize: container ? `${container.offsetWidth}x${container.offsetHeight}` : 'no-container',
     userLat,

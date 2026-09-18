@@ -88,8 +88,7 @@ body {
 
 /* PERF: will-change */
 .radar-sweep{will-change:transform;}
-.ghost-dot-emoji{will-change:opacity,filter;}
-.ghost-envelope{will-change:transform,box-shadow;}
+.ghost-dot-emoji{will-change:opacity;}
 .discovery-toast{will-change:transform,opacity;}
 .reso-particle{will-change:transform,opacity;}
 .ob-scene{will-change:opacity,transform;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 28px;text-align:center;opacity:0;transform:translateX(40px);pointer-events:none;transition:opacity .4s ease,transform .4s ease;}
@@ -243,7 +242,7 @@ button,[role="button"]{-webkit-tap-highlight-color:transparent;touch-action:mani
 /* Lot AR — "aucune nappe" (Pipo, vue PC) : même à .06 d'opacité, les 9
    taches de bokeh (200-320px, floutées) restaient visibles comme des
    ronds sur le fond ivoire uni en pleine largeur — masquées entièrement. */
-body.light-theme .bokeh-light{opacity:0;}
+body.light-theme .bokeh-light{opacity:0;animation:none;}
 body.light-theme .bokeh-vignette{opacity:0;}
 /* Lot AR — .bokeh-scene::before (dégradé radial bleu nuit, z-index:0 sous
    .phone) n'avait jamais reçu d'override clair : invisible en mobile (la
@@ -263,6 +262,12 @@ body.light-theme .bokeh-scene::before{opacity:0;}
 }
 @media (prefers-reduced-motion:reduce){
   .bokeh-light{animation:none !important;}
+}
+/* AT-1/m10 — a minima, suspendre l'animation (translate/scale en boucle sur
+   9 calques will-change:transform) quand Radar ou Carte est actif : c'est là
+   que le budget frame compte le plus (sweep radar / pan-zoom Leaflet). */
+body:has(#screenMap.active, #screenRadar.active) .bokeh-light{
+  animation-play-state: paused;
 }
 /* ── BOKEH CONTEXTUEL — ambiance par écran ─────────────── */
 /* Lot M/S : Radar, Déposer, Carte, Profil et Intro partagent le même
@@ -733,7 +738,9 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
 .ghost-dot-label{
   position:absolute;top:-22px;left:50%;transform:translateX(-50%);
   white-space:nowrap;font-size:var(--text-sm);color:var(--warm);
-  background:rgba(4,8,15,.92);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  /* AT-1/M14 — backdrop-filter retiré : fond déjà quasi opaque (.92), et cette
+     étiquette n'est révélée qu'au :hover/:focus, inatteignable au doigt. */
+  background:rgba(4,8,15,.92);
   border:1px solid rgba(232,160,48,.28);border-radius:8px;padding:2px 7px;
   pointer-events:none;opacity:0;transition:opacity .3s;
 }
@@ -755,6 +762,10 @@ body.light-theme .compass-needle-hub{fill:var(--warm);}
   opacity:0;
   animation:ghostReveal 4s linear infinite;
   color:#9DABFF; /* commun — CSP audit 4.6, ex-style="" inline de renderRadarDots() */
+  /* AT-1/M14 — halo statique sorti du @keyframes (cf. ghostReveal ci-dessous) :
+     même glow currentColor, mais sa taille n'est plus interpolée à chaque
+     frame (jusqu'à 100 points radar simultanés). */
+  filter:drop-shadow(0 0 6px currentColor);
 }
 .ghost-dot-secret .ghost-dot-emoji{color:#C7BCEE;}
 .ghost-dot-rare .ghost-dot-emoji{color:#F4D998;}
@@ -774,11 +785,11 @@ body.light-theme .ghost-dot-secret .ghost-dot-emoji{color:rgba(150,60,220,.4);}
    Couleur du drop-shadow = currentColor, fixée par fantôme en JS selon la
    rareté (commun/rare/secret) — cf. renderRadarDots(). */
 @keyframes ghostReveal{
-  0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1.3);filter:drop-shadow(0 0 10px currentColor);}
-  4%{opacity:.75;transform:translate(-50%,-50%) scale(1.05);filter:drop-shadow(0 0 6px currentColor);}
-  10%{opacity:.25;transform:translate(-50%,-50%) scale(.9);filter:drop-shadow(0 0 3px currentColor);}
-  16%,94%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:drop-shadow(0 0 0 transparent);}
-  96%{opacity:.9;transform:translate(-50%,-50%) scale(1.15);filter:drop-shadow(0 0 6px currentColor);}
+  0%,100%{opacity:1;transform:translate(-50%,-50%) scale(1.3);}
+  4%{opacity:.75;transform:translate(-50%,-50%) scale(1.05);}
+  10%{opacity:.25;transform:translate(-50%,-50%) scale(.9);}
+  16%,94%{opacity:0;transform:translate(-50%,-50%) scale(.4);}
+  96%{opacity:.9;transform:translate(-50%,-50%) scale(1.15);}
 }
 /* Hover : emoji révélé en lieu et place du point, le dot est interactif */
 .ghost-dot:hover .ghost-dot-label,.ghost-dot:focus .ghost-dot-label{opacity:1;}
@@ -1452,26 +1463,11 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
 .dur-btn.locked.active{opacity:.6;}
 .deposit-error{color:var(--red);font-size:var(--text-base);min-height:16px;margin-bottom:8px;}
 
-/* ── FILTRE UNIVERSEL POUR TOUTES LES CARTES LEAFLET ─── */
-/* OSM France clair → ambiance sombre bleu nuit
-   On cible directement les <img> des tuiles (sélecteur le plus fiable)
-   invert(1) : inverse clair→sombre
-   hue-rotate(180deg) : remet les couleurs dans le bon sens après invert
-   saturate(.7) : adoucit
-   brightness(.9) : luminosité finale
-   contrast(.9) : contraste nocturne doux */
-body:not(.light-theme) #depositMiniMap img.leaflet-tile,
-body:not(.light-theme) #leafletMap img.leaflet-tile,
-body:not(.light-theme) #empreinteLeaflet img.leaflet-tile,
-body:not(.light-theme) #publicEmpreinteMap img.leaflet-tile,
-body:not(.light-theme) #chainMiniMap img.leaflet-tile,
-body:not(.light-theme) #depositMiniMap .leaflet-layer img,
-body:not(.light-theme) #leafletMap .leaflet-layer img,
-body:not(.light-theme) #empreinteLeaflet .leaflet-layer img,
-body:not(.light-theme) #publicEmpreinteMap .leaflet-layer img,
-body:not(.light-theme) #chainMiniMap .leaflet-layer img{
-  filter:invert(1) hue-rotate(180deg) saturate(.7) brightness(.9) contrast(.9) !important;
-}
+/* AT-1/M13 — l'ancien filtre CSS par tuile (invert/hue-rotate/saturate/
+   brightness/contrast appliqué à chaque <img> de 256×256, jusqu'à ~100
+   simultanément au pinch-zoom) a été remplacé par une source de tuiles
+   nativement sombre (CartoDB dark_all, cf. _leafletTileUrl() dans app.js)
+   sur les 5 cartes Leaflet du projet. Coût du filtre : 0. */
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
   position:relative;width:40px;height:40px;
@@ -2062,11 +2058,11 @@ body.light-theme .rank-progress-track-fill{background:var(--amber);}
 .hunt-marker-opened{position:relative;font-size:52px;opacity:0.5;display:flex;align-items:center;justify-content:center;width:70px;height:70px;}
 .hunt-marker-inrange{position:relative;font-size:56px;animation:ghostFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 0 10px rgba(100,255,180,0.9));cursor:pointer;display:flex;align-items:center;justify-content:center;width:70px;height:70px;}
 .hunt-marker-locked{position:relative;display:flex;align-items:center;justify-content:center;width:76px;height:76px;cursor:pointer;}
-.hunt-marker-locked-emoji{font-size:52px;filter:blur(1px) grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;}
+.hunt-marker-locked-emoji{font-size:52px;filter:grayscale(0.5);opacity:0.7;animation:ghostFloat 2.8s ease-in-out infinite;}
 .hunt-marker-lock-badge{position:absolute;bottom:-2px;right:-2px;background:rgba(30,20,50,0.9);border:1px solid rgba(var(--ghost-blue-rgb),.4);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:14px;}
-.ghost-marker-near{position:relative;font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite,ghostPulseGlow 2s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;}
+.ghost-marker-near{position:relative;font-size:64px;animation:ghostFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 0 14px rgba(var(--ghost-blue-rgb),1)) drop-shadow(0 0 28px rgba(var(--ghost-blue-rgb),0.6));cursor:pointer;display:flex;align-items:center;justify-content:center;width:78px;height:78px;opacity:1;}
 .ghost-marker-close{position:relative;font-size:58px;animation:ghostFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(var(--ghost-blue-rgb),0.7));cursor:pointer;display:flex;align-items:center;justify-content:center;width:72px;height:72px;opacity:0.85;}
-.ghost-marker-far{position:relative;font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;filter:blur(1.5px) drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;}
+.ghost-marker-far{position:relative;font-size:50px;animation:ghostFloat 3.5s ease-in-out infinite;filter:drop-shadow(0 0 3px rgba(var(--ghost-blue-rgb),0.25));cursor:pointer;display:flex;align-items:center;justify-content:center;width:64px;height:64px;}
 /* Légende zones hantées (injectée en JS, cf. legendEl.style.cssText — hors
    périmètre CSP, écriture .style directe) — seuls les items internes en
    innerHTML avaient besoin de classes. */
@@ -2716,7 +2712,6 @@ body.light-theme .reply-char-count.near{color:rgba(180,90,10,.85) !important;}
 
 /* ── MARQUEURS CARTE ───────────────────────────────────── */
 @keyframes ghostFloat{0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-6px) scale(1.08);}}
-@keyframes ghostPulseGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(232,160,48,.9)) drop-shadow(0 0 22px rgba(232,160,48,.5));}50%{filter:drop-shadow(0 0 20px rgba(232,160,48,1)) drop-shadow(0 0 40px rgba(232,160,48,.8));}}
 @keyframes ghostPulseRing{0%{transform:translate(-50%,-50%) scale(0.6);opacity:.8;}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
 @keyframes ghostPulseRing2{0%{transform:translate(-50%,-50%) scale(0.6);opacity:.5;}100%{transform:translate(-50%,-50%) scale(3);opacity:0;}}
 .ghost-map-marker{position:relative;width:44px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:drop-shadow(0 4px 12px rgba(0,0,0,.6));}
