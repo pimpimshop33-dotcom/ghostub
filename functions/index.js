@@ -5,6 +5,7 @@ const { defineSecret } = require('firebase-functions/params');
 const { initializeApp, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const cloudinary = require('cloudinary').v2;
+const { adScore, AD_SCORE_THRESHOLD } = require('./ad-signals.js');
 if (!getApps().length) initializeApp();
 const db = getFirestore();
 const cloudinaryApiSecret = defineSecret('CLOUDINARY_API_SECRET');
@@ -494,6 +495,33 @@ exports.createGhostSecure = onCall({ region: 'europe-west9' }, async (request) =
         throw new HttpsError('permission-denied', 'Fonctionnalité réservée aux membres Premium.');
       }
 
+      // AU-1 — filtre anti-pub appliqué à TOUT LE MONDE en dépôt personnel
+      // (Premium inclus, cf. arbitrage du lot AU) ; seul businessMode
+      // exempte. Défense en profondeur : le client bloque déjà la
+      // soumission côté UI (cf. _buildDepositMessage dans app.js), mais rien
+      // n'empêche un appel direct au SDK/à cette fonction en le contournant.
+      const businessMode = d.businessMode === true;
+      const personalOverride = d.personalOverride === true;
+      let adReview = false;
+      if (!businessMode && adScore(message) >= AD_SCORE_THRESHOLD) {
+        if (!personalOverride) {
+          throw new HttpsError('failed-precondition', 'ad_content_requires_business');
+        }
+        // Échappatoire pour les faux positifs, limitée à 1 par 24h et par
+        // utilisateur (même mécanique que le cooldown de dépôt ci-dessous,
+        // horloge serveur) — au-delà, refusé avec un message clair.
+        const lastOverride = userData.lastAdOverrideAt;
+        if (lastOverride) {
+          const OVERRIDE_WINDOW_MS = 24 * 60 * 60 * 1000;
+          const elapsedOverride = Date.now() - lastOverride.toMillis();
+          if (elapsedOverride < OVERRIDE_WINDOW_MS) {
+            const remH = Math.ceil((OVERRIDE_WINDOW_MS - elapsedOverride) / 3_600_000);
+            throw new HttpsError('resource-exhausted', `Un seul message personnel de ce type par 24h — réessayez dans environ ${remH}h, ou publiez en mode Commerce.`);
+          }
+        }
+        adReview = true;
+      }
+
       if (!isPremium) {
         const lastCreated = userData.lastGhostCreatedAt;
         if (lastCreated) {
@@ -566,12 +594,17 @@ exports.createGhostSecure = onCall({ region: 'europe-west9' }, async (request) =
         state: 'fresh',
         expired: false,
         createdAt: FieldValue.serverTimestamp(),
+        // AU-1 — true seulement si publié via l'override "non, c'est un
+        // message personnel" malgré un score publicitaire élevé : signale
+        // le fantôme pour modération sans le bloquer.
+        adReview,
       };
 
       tx.set(ghostRef, ghost);
       tx.set(userRef, {
         lastGhostCreatedAt: FieldValue.serverTimestamp(),
         ghostCount: FieldValue.increment(1),
+        ...(adReview ? { lastAdOverrideAt: FieldValue.serverTimestamp() } : {}),
       }, { merge: true });
 
       return { ghostId: ghostRef.id };

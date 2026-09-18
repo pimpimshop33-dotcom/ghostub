@@ -246,6 +246,14 @@ service cloud.firestore {
           !request.resource.data.keys().hasAny(['lastGhostCreatedAt'])
           || request.resource.data.lastGhostCreatedAt == request.time
         )
+        // AU-1 — même protection que lastGhostCreatedAt : sans elle, un
+        // client pourrait forger une ancienne date pour contourner la
+        // limite d'1 override anti-pub par 24h (createGhostSecure, admin
+        // SDK, la lit pour ce calcul).
+        && (
+          !request.resource.data.keys().hasAny(['lastAdOverrideAt'])
+          || request.resource.data.lastAdOverrideAt == request.time
+        )
         && (
           !request.resource.data.keys().hasAny(['traceColor'])
           || isValidTraceColorValue(request.resource.data.traceColor)
@@ -256,6 +264,10 @@ service cloud.firestore {
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastGhostCreatedAt'])
           || request.resource.data.lastGhostCreatedAt == request.time
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['lastAdOverrideAt'])
+          || request.resource.data.lastAdOverrideAt == request.time
         )
         && (
           !request.resource.data.diff(resource.data).affectedKeys().hasAny(['traceColor'])
@@ -391,7 +403,8 @@ service cloud.firestore {
       allow read: if false; // lecture admin uniquement
       allow create: if isAuth()
         && request.resource.data.reporterUid == request.auth.uid
-        && request.resource.data.reason in ['spam', 'harcèlement', 'photo_inappropriée', 'contenu_inapproprié', 'fausses_informations', 'autre']
+        // AU-1 — 'publicite_deguisee' ajouté (motif de signalement "Publicité déguisée")
+        && request.resource.data.reason in ['spam', 'harcèlement', 'photo_inappropriée', 'contenu_inapproprié', 'fausses_informations', 'publicite_deguisee', 'autre']
         && request.resource.data.keys().hasOnly(['ghostId', 'ghostLocation', 'ghostAuthorUid', 'reporterUid', 'reason', 'createdAt'])
         && exists(/databases/$(database)/documents/ghosts/$(request.resource.data.ghostId))
         && ghostAuthor(request.resource.data.ghostId) == request.resource.data.ghostAuthorUid;

@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=238"></script>
+<script type="module" src="app.js?v=239"></script>
 
-<link rel="stylesheet" href="style.css?v=217">
+<link rel="stylesheet" href="style.css?v=218">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -550,6 +550,28 @@
             </div>
           </div>
 
+          <!-- AU-2 — carte de bascule anti-pub (maquette 7). Insérée sous le
+               champ de message, mise à jour en direct par _updateAdNudge()
+               (debounce ~600ms sur l'input, cf. app.js) — jamais seulement à
+               la validation. -->
+          <div id="adNudgeCard" class="ad-nudge-card u-hidden" role="status" aria-live="polite">
+            <div class="ad-nudge-head">
+              <span class="ad-nudge-icon" aria-hidden="true">
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16v11H4zM3 5h18v4H3zM9 13h6"/></svg>
+              </span>
+              <div class="ad-nudge-head-text">
+                <div class="ad-nudge-title" data-i18n="ad_nudge_title">On dirait une offre commerciale</div>
+                <div class="ad-nudge-sub" data-i18n="ad_nudge_sub">Publiée en mode Commerce, elle sera mieux placée : encadrée en doré sur la carte, visible par les passants à 50 m, avec le nombre de passages et de codes copiés.</div>
+              </div>
+            </div>
+            <div class="ad-nudge-checks">
+              <div class="ad-nudge-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span data-i18n="ad_nudge_check1">Statistiques de passage et d'ouverture</span></div>
+              <div class="ad-nudge-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span data-i18n="ad_nudge_check2">Code promo suivi, offre renouvelable en un geste</span></div>
+              <div class="ad-nudge-check"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg><span data-i18n="ad_nudge_check3">Ne compte pas dans vos 5 traces personnelles</span></div>
+            </div>
+            <div class="ad-nudge-price" data-i18n="ad_nudge_price">Commerce · 4,99 € par mois, sans engagement</div>
+          </div>
+
           <div id="step3VocalWrap" class="media-type-panel u-hidden">
             <label class="form-label" for="recordBtn" data-i18n="dep_vocal_label">Message vocal</label>
             <button class="media-btn" id="recordBtn" data-action="toggleRecording" type="button" aria-label="Enregistrer un message vocal">
@@ -672,7 +694,11 @@
         <div id="step3Sub" class="u-hidden" data-i18n="dep_pane3_sub">Tout est optionnel — les valeurs par défaut sont bonnes.</div>
 
         <button class="lettre-seal-btn" data-action="depositGhost" id="depositBtn" data-i18n="dep_seal_btn" aria-label="Sceller le fantôme">Sceller le fantôme</button>
-        <div class="lettre-seal-hint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
+        <div class="lettre-seal-hint" id="depositBtnHint" data-i18n="dep_seal_hint">ancré à ta position actuelle, en un geste</div>
+
+        <!-- AU-2 — lien d'override, affiché uniquement pendant que la carte
+             ad-nudge est active (cf. _updateAdNudge dans app.js). -->
+        <a href="#" id="adNudgeOverrideLink" class="ad-nudge-override-link u-hidden" data-action="declinePersonalOverride" data-i18n="ad_nudge_override">non, c'est un message personnel</a>
 
         <!-- Deux liens discrets sous le sceau (Lot AI) — remplace le gros bloc
              Mode Commerce ; mêmes ids/action/gating qu'avant, l'icône ○/●
@@ -1281,6 +1307,7 @@
       <div class="report-reason" data-action="submitReport" data-arg="photo_inappropriée" role="listitem" tabindex="0" data-i18n="report_photo">📷 Photo inappropriée ou choquante</div>
       <div class="report-reason" data-action="submitReport" data-arg="contenu_inapproprié" role="listitem" tabindex="0" data-i18n="report_inappropriate">⚠️ Message inapproprié ou offensant</div>
       <div class="report-reason" data-action="submitReport" data-arg="fausses_informations" role="listitem" tabindex="0" data-i18n="report_fake">❌ Fausses informations dangereuses</div>
+      <div class="report-reason" data-action="submitReport" data-arg="publicite_deguisee" role="listitem" tabindex="0" data-i18n="report_ad">🏪 Publicité déguisée</div>
       <div class="report-reason" data-action="submitReport" data-arg="autre" role="listitem" tabindex="0" data-i18n="report_other">💬 Autre raison</div>
     </div>
     <button class="report-cancel" data-action="closeModal" data-arg="reportModal" data-i18n="confirm_cancel">Annuler</button>

@@ -1,7 +1,8 @@
 {
   "scripts": {
     "check-i18n": "node scripts/check-i18n.js",
-    "check-constants": "node scripts/check-constants.js"
+    "check-constants": "node scripts/check-constants.js",
+    "check-ad-signals": "node scripts/check-ad-signals-sync.js"
   },
   "dependencies": {
     "firebase-admin": "^13.7.0"

@@ -21,6 +21,10 @@ import GhostService from './services/ghost.service.js?v=2';
 import LocationService from './services/location.service.js?v=1';
 import AudioService from './services/audio.service.js?v=1';
 import HapticsService from './services/haptics.service.js?v=1';
+// AU-1 — source unique du score publicitaire, copiée (pas dupliquée en
+// logique) dans functions/ad-signals.js pour createGhostSecure ; cf.
+// scripts/check-ad-signals-sync.js.
+import { adScore, AD_SCORE_THRESHOLD } from './shared/ad-signals.mjs?v=1';
 
 // AT-1/m14 — drapeau debug pour les logs de diagnostic verbeux (mini-carte,
 // etc.), actifs seulement en développement local.
@@ -235,6 +239,16 @@ const LANGS = {
     dep_lettre_signature: '— ancré ici, à jamais',
     dep_seal_btn: 'Sceller le fantôme',
     dep_seal_hint: 'ancré à ta position actuelle, en un geste',
+    // AU-2 — carte de bascule anti-pub (maquette 7)
+    ad_nudge_title: 'On dirait une offre commerciale',
+    ad_nudge_sub: 'Publiée en mode Commerce, elle sera mieux placée : encadrée en doré sur la carte, visible par les passants à 50 m, avec le nombre de passages et de codes copiés.',
+    ad_nudge_check1: 'Statistiques de passage et d\'ouverture',
+    ad_nudge_check2: 'Code promo suivi, offre renouvelable en un geste',
+    ad_nudge_check3: 'Ne compte pas dans vos 5 traces personnelles',
+    ad_nudge_price: 'Commerce · 4,99 € par mois, sans engagement',
+    ad_nudge_override: 'non, c\'est un message personnel',
+    ad_nudge_cta: 'Publier en mode Commerce',
+    ad_override_limited: 'Un seul message personnel avec ce type de contenu par 24h — réessaie plus tard, ou publie en mode Commerce.',
     // Lot AI — Déposer simplifié
     dep_more_options: "Plus d'options",
     dep_options_sheet_sub: 'Tout est facultatif. Les réglages par défaut conviennent.',
@@ -554,6 +568,7 @@ const LANGS = {
     report_photo: '📷 Photo inappropriée ou choquante',
     report_inappropriate: '⚠️ Message inapproprié ou offensant',
     report_fake: '❌ Fausses informations dangereuses',
+    report_ad: '🏪 Publicité déguisée',
     report_other: '💬 Autre raison',
     report_own: 'Vous ne pouvez pas signaler votre propre fantôme.',
     report_already: 'Vous avez déjà signalé ce fantôme.',
@@ -1004,6 +1019,15 @@ const LANGS = {
     dep_lettre_signature: '— anchored here, forever',
     dep_seal_btn: 'Seal the ghost',
     dep_seal_hint: 'anchored to your current spot, in one tap',
+    ad_nudge_title: 'This looks like a commercial offer',
+    ad_nudge_sub: 'Published in Commerce mode, it will be better placed: framed in gold on the map, visible to passers-by within 50 m, with the number of visits and copied codes.',
+    ad_nudge_check1: 'Visit and open statistics',
+    ad_nudge_check2: 'Tracked promo code, renewable in one tap',
+    ad_nudge_check3: 'Does not count in your 5 personal traces',
+    ad_nudge_price: 'Commerce · €4.99 per month, no commitment',
+    ad_nudge_override: 'no, it\'s a personal message',
+    ad_nudge_cta: 'Publish in Commerce mode',
+    ad_override_limited: 'Only one personal message with this kind of content per 24h — try again later, or publish in Commerce mode.',
     // Lot AI — Simplified deposit
     dep_more_options: 'More options',
     dep_options_sheet_sub: 'Everything is optional. The defaults are fine.',
@@ -1314,6 +1338,7 @@ const LANGS = {
     report_photo: '📷 Inappropriate or shocking photo',
     report_inappropriate: '⚠️ Inappropriate or offensive message',
     report_fake: '❌ Dangerous false information',
+    report_ad: '🏪 Disguised advertising',
     report_other: '💬 Other reason',
     report_own: 'You cannot report your own ghost.',
     report_already: 'You have already reported this ghost.',
@@ -9442,6 +9467,67 @@ function _readDepositFormInputs() {
 // code (le champ #depositMsg normal est masqué dans ce mode, cf toggleBusinessMode) ;
 // ces validations vivaient avant dans l'ancien wizardNext(1), disparu avec la
 // fusion en une seule page (Lot H) — reportées ici pour ne pas les perdre.
+// AU-2 — affiche/masque la carte de bascule anti-pub et repurpose le bouton
+// de dépôt principal ("Sceller le fantôme" → "Publier en mode Commerce",
+// doré) selon le score du message tapé. N'agit jamais en mode Commerce (ce
+// formulaire gère son propre bouton, cf. toggleBusinessMode) — un debounce
+// tardif après un switch ne doit pas écraser son libellé.
+function _updateAdNudge(score) {
+  if (_depositMode === 'business') return;
+  const card = document.getElementById('adNudgeCard');
+  const overrideLink = document.getElementById('adNudgeOverrideLink');
+  const btn = document.getElementById('depositBtn');
+  const hint = document.getElementById('depositBtnHint');
+  if (!card || !btn) return;
+  const active = score >= AD_SCORE_THRESHOLD;
+  window._adNudgeActive = active;
+  card.classList.toggle('u-hidden', !active);
+  if (overrideLink) overrideLink.classList.toggle('u-hidden', !active);
+  if (hint) hint.style.display = active ? 'none' : '';
+  btn.dataset.action = active ? 'acceptAdNudge' : 'depositGhost';
+  btn.classList.toggle('lettre-seal-btn--commerce', active);
+  btn.textContent = active ? t.ad_nudge_cta : t.dep_seal_btn;
+}
+
+function _hideAdNudge() {
+  window._adNudgeActive = false;
+  document.getElementById('adNudgeCard')?.classList.add('u-hidden');
+  document.getElementById('adNudgeOverrideLink')?.classList.add('u-hidden');
+}
+
+// Bouton "Publier en mode Commerce" de la carte : bascule vers le
+// formulaire Commerce (toggleBusinessMode gère le gate Premium) et reporte
+// le texte déjà tapé — tronqué à 80 caractères dans le titre, le reste dans
+// Détails (AU-3).
+window._acceptAdNudge = () => {
+  const msgEl = document.getElementById('depositMsg');
+  const fullText = msgEl ? msgEl.value.trim() : '';
+  toggleBusinessMode();
+  if (_depositMode === 'business') {
+    const bizTitleEl = document.getElementById('bizTitle');
+    const bizDescEl = document.getElementById('bizDesc');
+    if (bizTitleEl) bizTitleEl.value = fullText.slice(0, 80);
+    const rest = fullText.slice(80).trim();
+    if (bizDescEl && rest) {
+      bizDescEl.value = rest;
+      if (typeof window._openBizDetailsPanel === 'function') window._openBizDetailsPanel();
+    }
+    _hideAdNudge();
+  }
+  // Sinon (compte non Premium) : toggleBusinessMode a déjà affiché son
+  // propre message et redirigé vers l'écran Premium — la carte reste
+  // affichée, rien de plus à faire ici.
+};
+
+// Lien "non, c'est un message personnel" : publie tel quel, avec
+// personalOverride: true (accepté par le serveur mais limité à 1/24h et
+// marqué adReview: true pour la modération — cf. AU-1/createGhostSecure).
+window.declinePersonalOverride = async () => {
+  window._adPersonalOverride = true;
+  await window.depositGhost();
+  window._adPersonalOverride = false;
+};
+
 function _buildDepositMessage() {
   if (_depositMode === 'business') {
     const bizTitle = document.getElementById('bizTitle').value.trim();
@@ -9462,17 +9548,22 @@ function _buildDepositMessage() {
     return message;
   } else {
     const message = document.getElementById('depositMsg').value.trim();
-    // Filtre anti-pub pour les non-premium (Mode Commerce Premium requis pour les offres)
-    if (!isPremium && message) {
-      const spamWords = ['promo', 'soldes', 'remise', 'réduction', 'reduction', '% de', '% sur', 'gratuit', 'offre spéciale', 'offre speciale', 'achetez', 'commandez', 'livraison', 'prix', 'pas cher', 'discount', 'coupon', 'code promo'];
-      const msgLower = message.toLowerCase();
-      if (spamWords.some(w => msgLower.includes(w))) {
-        showToast('warning', '🏪 Pour les messages commerciaux, utilisez le Mode Commerce Premium.', 4000);
-        const msgEl = document.getElementById('depositMsg');
-        msgEl.style.borderColor = 'rgba(var(--premium-rgb),.5)';
-        setTimeout(() => msgEl.style.borderColor = '', 2000);
-        return null;
-      }
+    // AU-1 — le filtre anti-pub s'applique désormais à TOUT LE MONDE en
+    // dépôt personnel, Premium inclus (l'ancienne exemption !isPremium
+    // laissait un abonné Premium publier ses promos en dépôt normal sans
+    // jamais payer le Commerce, distinct). Seul businessMode (branche
+    // ci-dessus) exempte. La liste de 18 mots-clés (contournable — "-20%
+    // cafés" passait) est remplacée par adScore() (shared/ad-signals.mjs) :
+    // score cumulatif sur 4 familles de signaux plutôt qu'un mot isolé.
+    // AU-2 — le blocage n'est plus un toast : la carte ad-nudge (mise à jour
+    // en direct par le debounce sur l'input) gère déjà l'affichage ; ici on
+    // se contente de refuser la soumission tant qu'aucune décision n'a été
+    // prise, et de s'assurer que la carte est bien visible (cas d'une
+    // soumission plus rapide que le debounce de 600ms).
+    if (message && !window._adPersonalOverride && adScore(message) >= AD_SCORE_THRESHOLD) {
+      _updateAdNudge(adScore(message));
+      document.getElementById('depositMsg')?.focus();
+      return null;
     }
     return message;
   }
@@ -9556,6 +9647,10 @@ function _buildGhostDepositPayload(uploadResult, input) {
     // repli sur un pseudonyme poétique stable si aucun displayName.
     author: currentUser.displayName || getPoeticName(currentUser.uid),
     lat: userLat, lng: userLng,
+    // AU-1 — override explicite ("non, c'est un message personnel") : le
+    // serveur accepte malgré un score publicitaire élevé, mais limite à 1
+    // par 24h/utilisateur et marque le fantôme pour modération.
+    personalOverride: (_depositMode !== 'business' && !!window._adPersonalOverride) || null,
   };
 }
 
@@ -9568,14 +9663,19 @@ async function _submitGhostDeposit(ghostData, depositBtn, err) {
   } catch (e) {
     console.warn('[ghostub:createGhostSecure]', e);
     setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
-    // resource-exhausted couvre à la fois le cooldown et le plafond de 5
-    // fantômes actifs — le message précis vient du serveur (e.message),
-    // les autres cas retombent sur un message générique traduit.
+    // resource-exhausted couvre le cooldown, le plafond de 5 fantômes actifs
+    // ET désormais la limite d'1 override anti-pub par 24h (AU-1) — le
+    // message précis vient du serveur (e.message) dans tous les cas.
+    // failed-precondition/ad_content_requires_business : défense en
+    // profondeur si createGhostSecure est appelé directement (SDK, API)
+    // en contournant l'UI, qui bloque déjà côté client (cf. _buildDepositMessage).
     err.textContent = (e.code === 'functions/resource-exhausted' && e.message)
       ? e.message
       : (e.code === 'functions/permission-denied')
         ? t.dep_err_denied
-        : t.dep_err_generic;
+        : (e.code === 'functions/failed-precondition' && e.message === 'ad_content_requires_business')
+          ? t.ad_nudge_title
+          : t.dep_err_generic;
     return null;
   }
 }
@@ -9587,6 +9687,10 @@ function _resetDepositStateAfterSuccess(depositBtn) {
   _renderStreak();
   if (_suDep.freezeJustUsed) showToast('info', t.streak_freeze_used);
   document.getElementById('depositMsg').value = '';
+  _hideAdNudge();
+  window._adPersonalOverride = false;
+  const _depBtnReset = document.getElementById('depositBtn');
+  if (_depBtnReset) { _depBtnReset.dataset.action = 'depositGhost'; _depBtnReset.classList.remove('lettre-seal-btn--commerce'); }
   document.getElementById('depositLocation').value = '';
   document.getElementById('chainHint').value = '';
   const promoEl = document.getElementById('promoCode');
@@ -10702,6 +10806,10 @@ window.toggleBusinessMode = () => {
     if (s3b) s3b.textContent = t.dep_pane3_sub;
     const depBtnB = document.getElementById('depositBtn');
     if (depBtnB) depBtnB.textContent = t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme';
+    // AU-2 — resynchronise la carte ad-nudge / le bouton pour le texte
+    // actuellement dans #depositMsg (peut être resté au-dessus du seuil).
+    const msgElBack = document.getElementById('depositMsg');
+    if (msgElBack) _updateAdNudge(adScore(msgElBack.value));
   }
 };
 
@@ -11486,6 +11594,16 @@ document.addEventListener('DOMContentLoaded', () => {
       msg.style.height = 'auto';
       msg.style.height = msg.scrollHeight + 'px';
     });
+
+    // AU-2 — carte de bascule anti-pub, debounce ~600ms sur la saisie (pas
+    // seulement à la validation : l'utilisateur ne doit pas découvrir le
+    // problème après avoir terminé son message).
+    let _adNudgeDebounce = null;
+    msg.addEventListener('input', () => {
+      window._adPersonalOverride = false; // toute nouvelle frappe annule un override précédent
+      clearTimeout(_adNudgeDebounce);
+      _adNudgeDebounce = setTimeout(() => _updateAdNudge(adScore(msg.value)), 600);
+    });
   }
 
   // Ligne résumée du lieu (Lot AI) — synchro à chaque frappe manuelle
@@ -11987,6 +12105,8 @@ const ACTIONS = {
   logout: () => logout(),
   deleteMyGhosts: () => deleteMyGhosts(),
   deleteAccount: () => deleteAccount(),
+  acceptAdNudge: () => window._acceptAdNudge(),
+  declinePersonalOverride: (el, event) => { event?.preventDefault?.(); window.declinePersonalOverride(); },
   blockGhostAuthor: () => blockGhostAuthor(),
   toggleDepositedList: () => toggleDepositedList(),
   toggleDiscoveryHistory: () => toggleDiscoveryHistory(),

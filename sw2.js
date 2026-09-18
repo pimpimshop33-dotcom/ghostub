@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v137';
+const CACHE_NAME = 'ghostub-v138';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 // Audit 1.7 : addAll() sans .catch() — si ce seul fetch échouait (blip
@@ -41,7 +41,9 @@ self.addEventListener('fetch', e => {
   //    reconnus ici (seul world.service.js portait un ?v=) : un déploiement
   //    qui bumpe app.js?v= sans toucher CACHE_NAME pouvait livrer un app.js
   //    neuf important des services encore en cache-first sans version.
-  const isVersionedAsset = /\/(app\.js|style\.css|services\/[^/?]+\.js)\?v=/.test(url);
+  // AU-1 — shared/*.mjs (ad-signals) ajouté à la regex, même raison que
+  // services/*.js (AT-6) : app.js l'importe désormais avec un ?v=.
+  const isVersionedAsset = /\/(app\.js|style\.css|services\/[^/?]+\.js|shared\/[^/?]+\.mjs)\?v=/.test(url);
   if (isVersionedAsset) {
     e.respondWith(
       caches.match(e.request).then(cached => {
