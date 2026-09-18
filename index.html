@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=235"></script>
+<script type="module" src="app.js?v=236"></script>
 
 <link rel="stylesheet" href="style.css?v=216">
 </head>
@@ -958,6 +958,22 @@
         <div class="profile-panel-content" data-i18n="profile_free_sub">Vidéo 🎥 · Chaîne 🔗 · Mode Commerce 🏪 — réservés au Premium</div>
       </div>
 
+      <!-- AT-7/m19 — remonté au-dessus des cartes de plan tant que Stripe
+           n'est pas branché (les CTA "Devenir Premium"/"Activer le Plan
+           Commerce" ci-dessous ne font rien de réel) : le seul moyen
+           d'activer réellement Premium aujourd'hui — un code d'activation —
+           était caché tout en bas dans un <details> replié. -->
+      <div id="codeSection" class="profile-code-section">
+        <details class="profile-code-details">
+          <summary class="profile-code-summary" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
+          <div class="profile-code-row">
+            <input id="premiumCode" class="form-input profile-code-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium">
+            <button id="activateBtn" data-action="activatePremium" class="profile-code-activate-btn" data-i18n="profile_activate_btn">Activer</button>
+          </div>
+          <div id="premiumError" class="profile-code-error" role="alert" aria-live="polite"></div>
+        </details>
+      </div>
+
       <!-- ── CARDS PLANS (visibles si Free) ─────────────────── -->
       <div id="pricingSection" class="u-mb10">
         <!-- Premium — bordure légèrement lumineuse bleu spirit (Lot J2) -->
@@ -996,18 +1012,6 @@
             <div class="plan-feature-row"><span class="plan-check-gold">✓</span> Dashboard ouvertures</div>
           </div>
           <button id="stripeBtnCommerce" data-action="startStripeCheckout" data-arg="commerce" class="plan-card-cta plan-card-cta-commerce">🏪 Activer le Plan Commerce</button>
-        </div>
-
-        <!-- Code promo discret en bas -->
-        <div id="codeSection" class="profile-code-section">
-          <details class="profile-code-details">
-            <summary class="profile-code-summary" data-i18n="profile_code_question">Vous avez un code d'activation ?</summary>
-            <div class="profile-code-row">
-              <input id="premiumCode" class="form-input profile-code-input" type="text" placeholder="CODE-XXXX" aria-label="Code Premium">
-              <button id="activateBtn" data-action="activatePremium" class="profile-code-activate-btn" data-i18n="profile_activate_btn">Activer</button>
-            </div>
-            <div id="premiumError" class="profile-code-error" role="alert" aria-live="polite"></div>
-          </details>
         </div>
       </div>
       <!-- Paramètres -->

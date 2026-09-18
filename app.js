@@ -289,6 +289,7 @@ const LANGS = {
     // de succès sans aucun signal.
     dep_attachments_failed: '⚠️ {n} pièce{s} jointe{s} n\'{verbe} pas pu être envoyée{s}.',
     misc_error_generic: 'Erreur — réessaie plus tard.',
+    misc_close: 'Fermer',
     open_quota_network_err: 'Connexion instable — impossible de vérifier ton quota. Réessaie dans un instant.',
     stripe_btn_premium: '✦ Devenir Chasseur Premium',
     stripe_btn_commerce: '🏪 Activer le Plan Commerce',
@@ -1052,6 +1053,7 @@ const LANGS = {
     dep_upload_failed: 'Upload failed — check your connection and try again.',
     dep_attachments_failed: '⚠️ {n} attachment{s} could not be sent.',
     misc_error_generic: 'Error — please try again later.',
+    misc_close: 'Close',
     open_quota_network_err: 'Unstable connection — couldn\'t check your quota. Try again in a moment.',
     stripe_btn_premium: '✦ Become a Premium Hunter',
     stripe_btn_commerce: '🏪 Activate Commerce Plan',
@@ -2551,7 +2553,11 @@ window.addEventListener('online', updateOnlineStatus);
 window.addEventListener('offline', updateOnlineStatus);
 
 // ── FOCUS TRAP pour les modals ───────────────────────────
-function trapFocus(modalEl) {
+// onEscape (optionnel) : appelé APRÈS le nettoyage générique de closeModal()
+// (hide, overflow, focus rendu au déclencheur) — pour les modales qui
+// résolvent une Promise (showConfirm, showOpenLimitWarning, le priming géo)
+// et doivent donc être informées qu'Échap équivaut à "annuler".
+function trapFocus(modalEl, onEscape) {
   const focusable = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
   if (!focusable.length) return;
   const first = focusable[0];
@@ -2560,11 +2566,13 @@ function trapFocus(modalEl) {
 
   function handleKeydown(e) {
     if (e.key === 'Escape') {
-      modalEl.classList.remove('show');
-      modalEl._trapHandler && modalEl.removeEventListener('keydown', modalEl._trapHandler);
-      document.removeEventListener('keydown', handleKeydown);
-      // Rendre le focus au déclencheur si possible
-      if (modalEl._triggerEl) modalEl._triggerEl.focus();
+      // AT-7/m1 — Échap ne restaurait pas document.body.style.overflow posé
+      // par openModal() : un utilisateur au clavier fermant une modale avec
+      // Échap ne pouvait plus faire défiler l'app jusqu'au rechargement.
+      // closeModal() fait tout correctement (déjà utilisée pour la
+      // fermeture normale) — plus de duplication partielle ici.
+      closeModal(modalEl.id);
+      if (onEscape) onEscape();
       return;
     }
     if (e.key !== 'Tab') return;
@@ -2578,14 +2586,14 @@ function trapFocus(modalEl) {
   document.addEventListener('keydown', handleKeydown);
 }
 
-function openModal(modalId, triggerId) {
+function openModal(modalId, triggerId, onEscape) {
   const modal = document.getElementById(modalId);
   if (!modal) return;
   modal._triggerEl = triggerId ? document.getElementById(triggerId) : document.activeElement;
   modal.classList.add('show');
   // Empêcher le scroll en arrière-plan
   document.body.style.overflow = 'hidden';
-  setTimeout(() => trapFocus(modal), 50);
+  setTimeout(() => trapFocus(modal, onEscape), 50);
 }
 
 function closeModal(modalId) {
@@ -3079,18 +3087,23 @@ function getLocation() {
 function _maybeShowLocationPrimer() {
   return new Promise(resolve => {
     if (_lsGet('ghostub_geo_primed')) { resolve(true); return; }
-    _lsSet('ghostub_geo_primed', '1');
     const modal = document.getElementById('geoPrimerModal');
     if (!modal) { resolve(true); return; }
     window._geoPrimerResolve = resolve;
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
+    // AT-7/m19 — passe par openModal (piège de focus + Échap, cf. trapFocus)
+    // ; Échap équivaut à "Plus tard" (accepted=false).
+    openModal('geoPrimerModal', null, () => _dismissGeoPrimer(false));
   });
 }
 
 window._dismissGeoPrimer = (accepted) => {
-  const modal = document.getElementById('geoPrimerModal');
-  if (modal) { modal.classList.remove('show'); document.body.style.overflow = ''; }
+  // AT-7/m19 — n'écrire ghostub_geo_primed qu'après une réponse POSITIVE :
+  // avant ce fix, la clé était posée dès l'affichage de la modale (avant
+  // toute réponse), donc "Plus tard" valait "primed" — au passage suivant,
+  // la popup GPS native surgissait sans explication, exactement ce que le
+  // priming devait éviter.
+  if (accepted) _lsSet('ghostub_geo_primed', '1');
+  closeModal('geoPrimerModal');
   if (window._geoPrimerResolve) { window._geoPrimerResolve(accepted); window._geoPrimerResolve = null; }
 };
 
@@ -5499,10 +5512,17 @@ window.startStripeCheckout = async (plan) => {
     showToast('error', t.misc_error_generic || 'Erreur — réessaie plus tard.');
     console.warn('startStripeCheckout:', e);
   } finally {
+    // AT-7/m19 — btn.textContent détruisait le <span class="plan-cta-soon-
+    // badge"> enfant : le bouton ressemblait ensuite à un vrai bouton
+    // d'achat fonctionnel (plus de badge "Bientôt") qui en réalité ne fait
+    // toujours rien. innerHTML reconstruit la même structure qu'au rendu
+    // initial du plan (cf. renderPremiumPlans, mêmes classes/emoji).
     if (btn) {
-      btn.textContent = plan === 'premium'
+      const label = plan === 'premium'
         ? (t.stripe_btn_premium || '✦ Devenir Chasseur Premium')
         : (t.stripe_btn_commerce || '🏪 Activer le Plan Commerce');
+      const soon = '🔜 ' + (_currentLang === 'en' ? 'Soon' : 'Bientôt');
+      btn.innerHTML = escapeHTML(label) + '<span class="plan-cta-soon-badge">' + escapeHTML(soon) + '</span>';
       btn.disabled = false;
     }
   }
@@ -6278,12 +6298,14 @@ function showConfirm(title, subtitle, options = {}) {
       btnOk.style.opacity = '1';
     }
 
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-
+    // AT-7/m1 — #confirmModal ouvrait en contournant openModal() : ni piège
+    // de focus ni Échap, malgré son role="alertdialog" aria-modal="true".
+    // Échap équivaut à "Annuler" (comme un clic sur btnCancel).
+    let _resolved = false;
     const cleanup = (result) => {
-      modal.classList.remove('show');
-      document.body.style.overflow = '';
+      if (_resolved) return; // Échap + closeModal() déjà exécuté peuvent tous deux mener ici
+      _resolved = true;
+      closeModal('confirmModal');
       if (typedInput._cleanup) { typedInput._cleanup(); delete typedInput._cleanup; }
       btnOk.disabled = false;
       btnOk.style.opacity = '1';
@@ -6297,6 +6319,7 @@ function showConfirm(title, subtitle, options = {}) {
     const onCancel = () => cleanup(false);
     btnOk.addEventListener('click', onOk);
     btnCancel.addEventListener('click', onCancel);
+    openModal('confirmModal', null, () => cleanup(false));
     if (!options.requireTyped) setTimeout(() => btnCancel.focus(), 50);
   });
 }
@@ -7790,19 +7813,29 @@ window.checkPublicProfileParam = async () => {
   }
 };
 
+// AT-7/m13/m19 — instance Leaflet de la modale, à détruire explicitement
+// dans closePublicProfileModal() (sinon fuite cumulative des écouteurs
+// window de Leaflet sur une session qui ouvre plusieurs profils publics).
+let _publicProfileMap = null;
+
 window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs, rank) => {
   const existing = document.getElementById('publicProfileModal');
-  if (existing) existing.remove();
+  if (existing) { closePublicProfileModal(); }
   const modal = document.createElement('div');
   modal.id = 'publicProfileModal';
+  // AT-7/m19 — role/aria-modal manquants : seul cas du projet sans piège de
+  // focus, sans Échap, sans verrouillage du scroll ni aria-label sur le ✕.
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-label', escapeHTML(name));
   modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(6,6,14,.95);backdrop-filter:blur(12px);display:flex;flex-direction:column;align-items:center;padding:32px 20px;overflow-y:auto;';
   const initial = name.charAt(0).toUpperCase();
   const rankBadgeHTML = rank ? `<div class="ppm-rank-badge">${_rankIconHTML(rank, { size: 12 })} ${escapeHTML(rank.label)}</div>` : '';
   modal.innerHTML = `
-    <button data-action="closePublicProfileModal" class="ppm-close-btn">✕</button>
+    <button data-action="closePublicProfileModal" class="ppm-close-btn" aria-label="${escapeHTML(t.misc_close || 'Fermer')}">✕</button>
     <div class="ppm-avatar-initial">${initial}</div>
     <div class="ppm-name">${escapeHTML(name)}</div>
-    <div class="ppm-subtitle">Chasseur de fantômes</div>
+    <div class="ppm-subtitle">${t.profile_ghost_hunter || 'Chasseur de fantômes'}</div>
     ${rankBadgeHTML}
     <div class="ppm-stats-grid">
       <div class="ppm-stat-box">
@@ -7819,22 +7852,37 @@ window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs, r
     <button data-action="joinGhostub" class="ppm-join-btn">${t.profile_join_ghostub || '👻 Rejoindre Ghostub'}</button>
   `;
   document.body.appendChild(modal);
+  document.body.style.overflow = 'hidden';
+  modal._triggerEl = document.activeElement;
+  setTimeout(() => trapFocus(modal, () => closePublicProfileModal()), 50);
   setTimeout(() => {
     const mapEl = document.getElementById('publicEmpreinteMap');
     if (!mapEl || !ghostDocs.length) return;
     const coords = ghostDocs.filter(d => d.data().lat && d.data().lng).map(d => [d.data().lat, d.data().lng]);
     if (!coords.length) { mapEl.innerHTML = `<div class="ppm-map-empty">${t.profile_no_public_places || t.profile_no_public_place || 'Aucun lieu public'}</div>`; return; }
-    const pubMap = L.map('publicEmpreinteMap', { zoomControl: false, attributionControl: false }).setView(coords[0], 13);
-    L.tileLayer(_leafletTileUrl(), { maxZoom: 19, attribution: _leafletTileAttribution() }).addTo(pubMap);
+    _publicProfileMap = L.map('publicEmpreinteMap', { zoomControl: false, attributionControl: false }).setView(coords[0], 13);
+    L.tileLayer(_leafletTileUrl(), { maxZoom: 19, attribution: _leafletTileAttribution() }).addTo(_publicProfileMap);
     coords.forEach(([lat, lng], i) => {
       const g = ghostDocs[i] && ghostDocs[i].data ? ghostDocs[i].data() : {};
       const emHtml = _ghostEmojiHTML(g);
-      L.marker([lat, lng], { icon: L.divIcon({ html: '<div class="ppm-marker-emoji">' + emHtml + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(pubMap);
+      L.marker([lat, lng], { icon: L.divIcon({ html: '<div class="ppm-marker-emoji">' + emHtml + '</div>', className: '', iconSize: [24, 24], iconAnchor: [12, 12] }) }).addTo(_publicProfileMap);
     });
-    if (coords.length > 1) pubMap.fitBounds(coords, { padding: [20, 20], maxZoom: 14 });
-    setTimeout(() => pubMap.invalidateSize(), 300);
+    if (coords.length > 1) _publicProfileMap.fitBounds(coords, { padding: [20, 20], maxZoom: 14 });
+    setTimeout(() => _publicProfileMap && _publicProfileMap.invalidateSize(), 300);
   }, 200);
 };
+
+function closePublicProfileModal() {
+  if (_publicProfileMap) { try { _publicProfileMap.remove(); } catch(e) { console.warn('[ghostub:closePublicProfileModal]', e); } _publicProfileMap = null; }
+  const modal = document.getElementById('publicProfileModal');
+  if (modal) {
+    if (modal._trapHandler) document.removeEventListener('keydown', modal._trapHandler);
+    if (modal._triggerEl) modal._triggerEl.focus();
+    modal.remove();
+  }
+  document.body.style.overflow = '';
+}
+window.closePublicProfileModal = closePublicProfileModal;
 
 let _leaderboardLoaded = false;
 window.toggleLeaderboard = async () => {
@@ -8666,13 +8714,20 @@ window.requestCompassPermission = async () => {
 
 let currentGhostIndex = 0;
 
+// AT-7/m19 — currentGhostIndex indexait nearbyGhosts (trié par distance)
+// alors que la liste réellement affichée sur le Radar vient de
+// getFilteredGhosts() (filtre "photo"/"voix"/… actif) : le swipe faisait
+// défiler des fantômes absents de l'écran. Les deux fonctions ci-dessous
+// utilisent désormais la même liste que l'écran.
 function updateSwipeUI() {
-  const total = nearbyGhosts.length;
+  const total = getFilteredGhosts().length;
   const counter = document.getElementById('swipeCounter');
   const prev = document.getElementById('swipePrev');
   const next = document.getElementById('swipeNext');
   if (!counter) return;
-  if (total > 1) {
+  // currentGhostIndex === -1 : fantôme hors de la liste filtrée (lien
+  // profond, fantôme distant…) — pas de position à afficher, flèches masquées.
+  if (total > 1 && currentGhostIndex !== -1) {
     counter.textContent = (currentGhostIndex + 1) + ' / ' + total;
     prev.classList.toggle('disabled', currentGhostIndex === 0);
     next.classList.toggle('disabled', currentGhostIndex === total - 1);
@@ -8686,8 +8741,10 @@ function updateSwipeUI() {
 }
 
 window.swipeGhost = (dir) => {
+  if (currentGhostIndex === -1) return;
+  const filtered = getFilteredGhosts();
   const newIndex = currentGhostIndex + dir;
-  if (newIndex < 0 || newIndex >= nearbyGhosts.length) return;
+  if (newIndex < 0 || newIndex >= filtered.length) return;
   const scroll = document.querySelector('#screenDetail .scroll');
   scroll.classList.add(dir > 0 ? 'swipe-left' : 'swipe-right');
   setTimeout(() => {
@@ -8695,7 +8752,7 @@ window.swipeGhost = (dir) => {
     scroll.style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
     scroll.style.opacity = '0';
     currentGhostIndex = newIndex;
-    openGhost(nearbyGhosts[newIndex].id);
+    openGhost(filtered[newIndex].id);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         scroll.style.transition = 'transform .25s cubic-bezier(.25,.46,.45,.94),opacity .2s';
@@ -8733,8 +8790,12 @@ window.swipeGhost = (dir) => {
 // introuvable ou inaccessible (l'UI d'erreur est déjà posée) — le caller
 // doit alors sortir immédiatement d'openGhost.
 async function _resolveGhostForOpen(id) {
-  const idx = nearbyGhosts.findIndex(g => g.id === id);
-  if (idx !== -1) currentGhostIndex = idx;
+  // AT-7/m19 — indexé sur getFilteredGhosts() (même liste que le swipe,
+  // cf. updateSwipeUI/swipeGhost) ; -1 explicite (au lieu de laisser la
+  // valeur précédente) quand le fantôme n'en fait pas partie — cas d'un
+  // lien profond vers un fantôme hors du filtre actif ou hors rayon.
+  const idx = getFilteredGhosts().findIndex(g => g.id === id);
+  currentGhostIndex = idx;
   selectedGhost = nearbyGhosts.find(g => g.id === id);
   // FIX: Ne PAS appeler addDiscovery ici — seulement quand l'enveloppe est RÉELLEMENT ouverte
   // (déplacé dans _doOpenEnvelope)
@@ -9305,13 +9366,21 @@ window.resonate = async () => {
   Analytics.track('resonate');
 };
 
+// AT-7/m13 — instance Leaflet de la mini-carte de chaînage, détruite
+// explicitement à chaque nouvel appel (cf. plus bas) : preview.innerHTML
+// écrasait sinon le conteneur sans jamais appeler .remove(), laissant les
+// écouteurs window de Leaflet fuir à chaque "Ajouter un maillon" répété.
+let _chainMiniMap = null;
+
 window.setChainMarker = () => {
   if (!userLat) { alert(t.toast_gps_req); return; }
+  if (_chainMiniMap) { try { _chainMiniMap.remove(); } catch(e) { console.warn('[ghostub:setChainMarker]', e); } _chainMiniMap = null; }
   const preview = document.getElementById('chainMapPreview');
   preview.style.display = 'block';
   preview.innerHTML = '<div id="chainMiniMap" class="chain-minimap"></div>';
   const initChainMap = () => {
     const cmap = L.map('chainMiniMap', { zoomControl: false, attributionControl: false }).setView([userLat, userLng], 17);
+    _chainMiniMap = cmap;
     L.tileLayer(_leafletTileUrl(), { maxZoom: 20, attribution: _leafletTileAttribution() }).addTo(cmap);
     L.marker([userLat, userLng], { icon: L.divIcon({ html: '<div class="chain-user-pin">📍</div>', iconSize:[20,20], iconAnchor:[10,10], className:'' }) }).addTo(cmap);
     let nextMarker = null;
@@ -10204,12 +10273,14 @@ function showOpenLimitWarning(remaining, onConfirm) {
     premium.style.display = remaining <= 1 ? 'block' : 'none';
   }
 
-  modal.classList.add('show');
-  document.body.style.overflow = 'hidden';
-
+  // AT-7/m1 — #openLimitModal ouvrait en contournant openModal() : ni piège
+  // de focus ni Échap, malgré son role="dialog" aria-modal="true". Échap
+  // équivaut à "Annuler" (comme un clic sur cancelBtn).
+  let _resolved = false;
   const cleanup = () => {
-    modal.classList.remove('show');
-    document.body.style.overflow = '';
+    if (_resolved) return;
+    _resolved = true;
+    closeModal('openLimitModal');
     okBtn.removeEventListener('click', onOk);
     cancelBtn.removeEventListener('click', onCancel);
   };
@@ -10217,6 +10288,7 @@ function showOpenLimitWarning(remaining, onConfirm) {
   const onCancel = () => { cleanup(); onConfirm(false); };
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
+  openModal('openLimitModal', null, onCancel);
   setTimeout(() => (remaining > 0 ? okBtn : cancelBtn).focus(), 80);
 }
 
@@ -10280,10 +10352,20 @@ function _checkDistanceThenOpen() {
     const hint = document.getElementById('sealedHint');
     const origHint = hint.textContent;
 
+    // AT-7/m19 — getCurrentPosition() n'est pas annulable : après le timeout
+    // de secours (8s), un callback GPS tardif (ex. à 9s) tournait quand même
+    // et pouvait déclencher _doOpenEnvelope(), consommant une unité de quota
+    // alors que l'utilisateur a déjà vu "GPS lent" et a pu retaper le
+    // bouton. Ce drapeau, partagé entre le timer et les deux callbacks, ne
+    // laisse agir que le premier arrivé.
+    let settled = false;
+
     btn.disabled = true;
     hint.textContent = t.env_gps_checking;
     // FIX: Timeout de sécurité si géoloc bloque trop longtemps
     const fallbackTimer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
       btn.disabled = false;
       hint.textContent = t.env_gps_slow;
       setTimeout(() => { hint.textContent = origHint; }, 4000);
@@ -10292,6 +10374,7 @@ function _checkDistanceThenOpen() {
 
     if (!navigator.geolocation) {
       clearTimeout(fallbackTimer);
+      settled = true;
       btn.disabled = false;
       hint.textContent = t.env_gps_unavail;
       setTimeout(() => { hint.textContent = origHint; }, 4000);
@@ -10301,6 +10384,8 @@ function _checkDistanceThenOpen() {
 
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
+        if (settled) return;
+        settled = true;
         clearTimeout(fallbackTimer);
         btn.disabled = false;
         const dist = distanceMeters(
@@ -10321,6 +10406,8 @@ function _checkDistanceThenOpen() {
         resolve();
       },
       () => {
+        if (settled) return;
+        settled = true;
         clearTimeout(fallbackTimer);
         btn.disabled = false;
         // Fallback : utiliser la position radar déjà connue si disponible
@@ -11632,7 +11719,20 @@ function _clearHold() {
   if (btn) btn.classList.remove('holding');
 }
 
-window.goAuth = () => { _lsSet('ghostub_onboard_seen', '1'); showScreen('screenAuth'); };
+// AT-7/m18 — un utilisateur déjà connecté (non-anonyme) qui revoit l'intro
+// depuis Réglages puis tape le CTA final était éjecté vers screenAuth, écran
+// sans nav ni retour (le "← retour" du carrousel est volontairement absent
+// pour ce cas précis) — en PWA installée, aucun retour navigateur non plus :
+// seule issue, tuer l'app.
+window.goAuth = () => {
+  _lsSet('ghostub_onboard_seen', '1');
+  if (currentUser && !currentUser.isAnonymous) {
+    showScreen('screenRadar');
+    setNav('nav-radar');
+    return;
+  }
+  showScreen('screenAuth');
+};
 
 // ── "QUOI DE NEUF" (Lot AP) ────────────────────────────────
 // L'app a beaucoup changé depuis les dernières versions de l'Aide (Lots
@@ -11903,7 +12003,7 @@ const ACTIONS = {
   removeFavorite: (el) => removeFavorite(el.dataset.id),
   toggleCarnetEntry: (el) => toggleCarnetEntry(el.dataset.id, el.dataset.reactions === 'true', el),
   deleteOneGhost: (el) => deleteOneGhost(el.dataset.id),
-  closePublicProfileModal: () => document.getElementById('publicProfileModal').remove(),
+  closePublicProfileModal: () => closePublicProfileModal(),
   dismissWhatsNew: () => dismissWhatsNew(),
   joinGhostub: () => { window.location.href = 'https://pimpimshop33-dotcom.github.io/ghostub/'; },
   renewBusinessGhost: (el) => renewBusinessGhost(el.dataset.id),
