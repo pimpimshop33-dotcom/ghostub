@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=240"></script>
+<script type="module" src="app.js?v=241"></script>
 
-<link rel="stylesheet" href="style.css?v=219">
+<link rel="stylesheet" href="style.css?v=220">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -878,6 +878,35 @@
     </div>
   </div><!-- fin screenDeposit -->
 
+  <!-- AU-4/maquette 6 — Mes offres Commerce -->
+  <div class="screen" id="screenBizOffers" aria-label="Mes offres Commerce">
+    <div class="scroll biz-offers-scroll">
+      <div class="biz-offers-header">
+        <button data-action="goBack" class="biz-back-btn" aria-label="Retour">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <div class="biz-offers-header-text">
+          <div class="biz-offers-title" data-i18n="biz_offers_title">Mes offres</div>
+          <div class="biz-offers-sub" id="bizOffersSub"></div>
+        </div>
+      </div>
+
+      <div id="bizCurrentOfferWrap">
+        <div class="profile-panel-loading-italic" data-i18n="loading">Chargement…</div>
+      </div>
+
+      <div class="biz-offers-section-label" data-i18n="biz_offers_replay_label">Rediffuser une offre passée</div>
+      <div id="bizReplayList"></div>
+
+      <div class="biz-offers-new-wrap">
+        <button type="button" data-action="startNewBizOffer" class="biz-offers-new-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span data-i18n="biz_offers_new_btn">Nouvelle offre</span>
+        </button>
+      </div>
+    </div>
+  </div><!-- fin screenBizOffers -->
+
   <!-- MAP -->
   <div class="screen" id="screenMap" aria-label="Carte des fantômes">
     <div class="map-screen-wrap">
@@ -1007,13 +1036,13 @@
           <div id="empreinteStats" class="empreinte-stats-overlay"></div>
         </div>
       </div>
-      <!-- ── TABLEAU DE BORD COMMERÇANT (Premium) ──────── -->
-      <div id="bizDashboardSection" class="u-hidden profile-biz-section">
-        <div class="profile-panel-label-premium" data-i18n="profile_biz_section">🏪 Mes offres Commerce</div>
-        <div id="bizDashboardContent">
-          <div class="profile-panel-loading-italic" data-i18n="loading">Chargement…</div>
-        </div>
-      </div>
+      <!-- AU-4 — simple point d'entrée vers l'écran dédié screenBizOffers
+           (avant : liste complète des offres directement ici). -->
+      <button type="button" id="bizDashboardSection" class="u-hidden profile-biz-section-link" data-action="nav" data-screen="screenBizOffers" data-nav="nav-profile">
+        <span class="profile-panel-label-premium" data-i18n="profile_biz_section">🏪 Mes offres Commerce</span>
+        <span id="bizDashboardSummary" class="profile-biz-section-summary"></span>
+        <span class="dep-more-options-chevron" aria-hidden="true">›</span>
+      </button>
       <div id="discoveryHistory" class="u-hidden profile-panel">
         <div class="profile-panel-label" data-i18n="profile_discoveries_panel">Mes découvertes</div>
         <div id="discoveryHistoryList" class="profile-panel-content"></div>

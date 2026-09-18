@@ -183,9 +183,13 @@ service cloud.firestore {
         // inopérant pour tout le monde sauf l'auteur. Transition à sens
         // unique (false→true uniquement) : un non-auteur ne peut jamais
         // rouvrir un fantôme qu'il vient de fermer.
+        // AU-4 — 'promoCodeCopies' (+1 exactement) : window.copyPromoCode()
+        // laisse n'importe quel lecteur non-auteur incrémenter ce compteur
+        // quand il copie un code promo Commerce, pour alimenter la carte
+        // « Mes offres » de l'auteur.
         || (
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount', 'reportCount', 'expired'])
+            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount', 'reportCount', 'expired', 'promoCodeCopies'])
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['expired'])
             || request.resource.data.expired == true
@@ -201,6 +205,10 @@ service cloud.firestore {
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['viewCount'])
             || request.resource.data.viewCount == resource.data.get('viewCount', 0) + 1
+          )
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['promoCodeCopies'])
+            || request.resource.data.promoCodeCopies == resource.data.get('promoCodeCopies', 0) + 1
           )
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['activityScore'])

@@ -603,7 +603,7 @@ const LANGS = {
     confirm_delete_ghost_title: 'Supprimer ce fantôme ?',
     confirm_delete_ghost_sub: 'Ce message et ses réponses seront définitivement effacés.',
     confirm_renew_title: 'Renouveler l\'offre ?',
-    confirm_renew_sub: 'La durée de vie de cette offre sera remise à 1 mois à partir d\'aujourd\'hui.',
+    confirm_renew_sub: 'La durée de vie de cette offre sera remise à {duration} à partir d\'aujourd\'hui.',
     confirm_renew_btn: '↻ Renouveler',
     // Share
     share_title: '👻 Fantôme à {loc}',
@@ -781,6 +781,29 @@ const LANGS = {
     profile_map_score: 'Score empreinte',
     profile_map_trail: 'Traces',
     profile_biz_section: '🏪 Mes offres Commerce',
+    // AU-4 — écran dédié "Mes offres" (maquette 6)
+    biz_offers_title: 'Mes offres',
+    biz_offers_replay_label: 'Rediffuser une offre passée',
+    biz_offers_new_btn: 'Nouvelle offre',
+    biz_offers_empty: 'Aucune offre Commerce active pour le moment.',
+    biz_offers_replay_empty: 'Aucune offre passée à rediffuser.',
+    biz_stat_opens: 'ouvertures',
+    biz_stat_copies: 'codes copiés',
+    biz_expires_in: 'Expire dans {n} jour{s}',
+    biz_expires_today: 'Expire aujourd\'hui',
+    biz_online_label: 'en ligne',
+    biz_renew_btn: 'Renouveler',
+    biz_end_btn: 'Terminer',
+    biz_end_confirm_title: 'Terminer cette offre ?',
+    biz_end_confirm_sub: 'Elle disparaîtra immédiatement du Radar et de la Carte. Cette action est définitive.',
+    biz_end_confirm_btn: 'Terminer l\'offre',
+    biz_end_done: 'Offre terminée.',
+    biz_replay_btn_aria: 'Rediffuser cette offre',
+    biz_replay_loaded: '🏪 Offre passée rechargée — ajustez et publiez.',
+    detail_promo_label: 'Offre exclusive',
+    detail_promo_hint: 'Présentez ce message en caisse pour en bénéficier',
+    detail_promo_copy_aria: 'Copier le code promo',
+    detail_promo_copied: '✓ Code copié !',
     profile_discoveries_panel: 'Mes découvertes',
     profile_deposited_panel: 'Mes fantômes déposés',
     profile_favorites_panel: '★ Mes favoris',
@@ -1387,7 +1410,7 @@ const LANGS = {
     confirm_delete_ghost_title: 'Delete this ghost?',
     confirm_delete_ghost_sub: 'This message and its replies will be permanently deleted.',
     confirm_renew_title: 'Renew the offer?',
-    confirm_renew_sub: 'The lifespan of this offer will be reset to 1 month from today.',
+    confirm_renew_sub: 'The lifespan of this offer will be reset to {duration} from today.',
     confirm_renew_btn: '↻ Renew',
     // Share
     share_title: '👻 Ghost at {loc}',
@@ -1548,6 +1571,28 @@ const LANGS = {
     profile_map_score: 'Footprint score',
     profile_map_trail: 'Traces',
     profile_biz_section: '🏪 My commerce offers',
+    biz_offers_title: 'My offers',
+    biz_offers_replay_label: 'Replay a past offer',
+    biz_offers_new_btn: 'New offer',
+    biz_offers_empty: 'No active Commerce offer right now.',
+    biz_offers_replay_empty: 'No past offer to replay.',
+    biz_stat_opens: 'opens',
+    biz_stat_copies: 'copied codes',
+    biz_expires_in: 'Expires in {n} day{s}',
+    biz_expires_today: 'Expires today',
+    biz_online_label: 'online',
+    biz_renew_btn: 'Renew',
+    biz_end_btn: 'End',
+    biz_end_confirm_title: 'End this offer?',
+    biz_end_confirm_sub: 'It will disappear immediately from the Radar and the Map. This cannot be undone.',
+    biz_end_confirm_btn: 'End offer',
+    biz_end_done: 'Offer ended.',
+    biz_replay_btn_aria: 'Replay this offer',
+    biz_replay_loaded: '🏪 Past offer loaded — adjust and publish.',
+    detail_promo_label: 'Exclusive offer',
+    detail_promo_hint: 'Show this message at checkout to redeem it',
+    detail_promo_copy_aria: 'Copy the promo code',
+    detail_promo_copied: '✓ Code copied!',
     profile_discoveries_panel: 'My discoveries',
     profile_deposited_panel: 'My dropped ghosts',
     profile_favorites_panel: '★ My favorites',
@@ -5086,11 +5131,88 @@ function _renderProfileRankBadge() {
   const rank = getRank(_getCachedCombinedScore());
   el.innerHTML = _rankIconHTML(rank, { size: 10 }) + ' ' + escapeHTML(rank.label);
 }
+// AU-4 — indexé par id après chaque loadBizDashboard(), pour que
+// replayBizOffer()/renewBusinessGhost() n'aient pas à refaire un aller-retour
+// Firestore rien que pour relire le fantôme qu'on vient d'afficher.
+let _bizOffersCache = {};
+
+function _parseBizMessage(message) {
+  const lines = String(message || '').split('\n');
+  const m = /^🏪\s*([^:]+?)\s*:\s*(.*)$/.exec(lines[0] || '');
+  return {
+    type: m ? m[1].trim() : '',
+    title: m ? m[2].trim() : (lines[0] || ''),
+    desc: lines.slice(1).find(l => !l.startsWith('Code : ')) || '',
+  };
+}
+
+// AU-4 — tuiles de stats : uniquement des compteurs réellement incrémentés
+// quelque part dans le code. « passages »/viewCount était prévu par le lot
+// mais n'est écrit par aucun chemin (grep app.js/world.service.js/
+// functions/index.js : le champ n'existe que dans firestore.rules, jamais
+// posé) — retiré plutôt que d'afficher un zéro qui semblerait mesuré, cf.
+// arbitrage #5 du lot. openCount (ouverture d'enveloppe) et promoCodeCopies
+// (nouveau, ce sous-lot) sont, eux, vraiment écrits.
+function _renderBizCurrentCard(id, g) {
+  const { type, title } = _parseBizMessage(g.message);
+  const { pct } = GhostService.computeLifetime(g);
+  const durMs = GhostService.DURATIONS_MS[g.duration] || 0;
+  const msLeft = (g.createdAt && durMs) ? (g.createdAt.seconds * 1000 + durMs) - Date.now() : 0;
+  const daysLeft = Math.max(0, Math.ceil(msLeft / 86400000));
+  const expiryText = daysLeft <= 0
+    ? t.biz_expires_today
+    : t.biz_expires_in.replace('{n}', daysLeft).replace('{s}', daysLeft > 1 ? 's' : '');
+  const opens = g.openCount || 0;
+  const copies = g.promoCodeCopies || 0;
+  return `
+    <div class="biz-current-card">
+      <div class="biz-current-head">
+        <span class="biz-status-dot" aria-hidden="true"></span>
+        <div>
+          <div class="biz-current-eyebrow">${escapeHTML(type)} · ${escapeHTML(t.biz_online_label)}</div>
+          <div class="biz-current-title">${escapeHTML(title)}</div>
+        </div>
+      </div>
+      <div class="biz-current-stats">
+        <div class="biz-stat-box"><div class="biz-stat-num">${opens}</div><div class="biz-stat-label">${escapeHTML(t.biz_stat_opens)}</div></div>
+        <div class="biz-stat-box"><div class="biz-stat-num">${copies}</div><div class="biz-stat-label">${escapeHTML(t.biz_stat_copies)}</div></div>
+      </div>
+      <div class="biz-progress-row"><span>${escapeHTML(expiryText)}</span></div>
+      <div class="biz-progress-track"><div class="biz-progress-fill" style="width:${Math.round(pct)}%"></div></div>
+      <div class="biz-current-actions">
+        <button type="button" data-action="renewBusinessGhost" data-id="${escapeHTML(id)}" class="biz-current-renew-btn">↻ ${escapeHTML(t.biz_renew_btn)}</button>
+        <button type="button" data-action="endBizOffer" data-id="${escapeHTML(id)}" class="biz-current-end-btn">${escapeHTML(t.biz_end_btn)}</button>
+      </div>
+    </div>`;
+}
+
+function _renderBizReplayRow(id, g) {
+  const { type, title } = _parseBizMessage(g.message);
+  const opens = g.openCount || 0;
+  const opensLabel = _currentLang === 'fr' ? `${opens} ouverture${opens > 1 ? 's' : ''}` : `${opens} open${opens > 1 ? 's' : ''}`;
+  const monthLabel = g.createdAt
+    ? new Date(g.createdAt.seconds * 1000).toLocaleDateString(_currentLang === 'fr' ? 'fr-FR' : 'en-US', { month: 'long', year: 'numeric' })
+    : '';
+  return `
+    <div class="biz-replay-row">
+      <div class="biz-replay-info">
+        <div class="biz-replay-title">${escapeHTML(title)}</div>
+        <div class="biz-replay-meta">${escapeHTML(type)} · ${escapeHTML(opensLabel)} · ${escapeHTML(monthLabel)}</div>
+      </div>
+      <button type="button" data-action="replayBizOffer" data-id="${escapeHTML(id)}" class="biz-replay-btn" aria-label="${escapeHTML(t.biz_replay_btn_aria)}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      </button>
+    </div>`;
+}
+
 async function loadBizDashboard() {
   if (!currentUser) return;
-  const section  = document.getElementById('bizDashboardSection');
-  const content  = document.getElementById('bizDashboardContent');
-  if (!section || !content) return;
+  const entryBtn    = document.getElementById('bizDashboardSection');
+  const summaryEl   = document.getElementById('bizDashboardSummary');
+  const currentWrap = document.getElementById('bizCurrentOfferWrap');
+  const replayList  = document.getElementById('bizReplayList');
+  const subEl       = document.getElementById('bizOffersSub');
+  if (!entryBtn) return;
 
   let snap;
   try {
@@ -5104,73 +5226,54 @@ async function loadBizDashboard() {
     return;
   }
 
-  // Filtrer côté client les fantômes commerce
   const bizDocs = snap.docs.filter(d => d.data().businessMode === true);
-  if (bizDocs.length === 0) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
+  _bizOffersCache = {};
+  bizDocs.forEach(d => { _bizOffersCache[d.id] = d.data(); });
 
-  // Lire ghostStats pour avoir les openCount à jour (fallback si règles bloquent l'update direct)
-  const statsMap = {};
-  try {
-    const statsSnap = await getDocs(query(
-      collection(db, COLL.GHOST_STATS),
-      where('authorUid', '==', currentUser.uid)
-    ));
-    statsSnap.forEach(d => { statsMap[d.id] = d.data().openCount || 0; });
-  } catch(e) { console.warn('[ghostub:loadBizDashboard:ghostStats]', e); }
+  if (bizDocs.length === 0) { entryBtn.classList.add('u-hidden'); return; }
+  entryBtn.classList.remove('u-hidden');
 
-  let html = '';
-  bizDocs.forEach(d => {
-    const g   = d.data();
-    const id  = d.id;
-    const opens = Math.max(g.openCount || 0, statsMap[id] || 0);
-    const expired = isExpired(g);
-    const location = escapeHTML(g.location || t.detail_location_unknown);
-    const title = g.message ? escapeHTML(g.message.split('\n')[0].replace(/^🏪 [^:]+: /, '')) : location;
+  const active = bizDocs.filter(d => !GhostService.isExpired(d.data()));
+  const past = bizDocs.filter(d => GhostService.isExpired(d.data()))
+    .sort((a, b) => (b.data().createdAt?.seconds || 0) - (a.data().createdAt?.seconds || 0))
+    .slice(0, 5);
 
-    // Calcul expiration
-    let expiryHtml = '';
-    if (!expired && g.createdAt) {
-      const msCreated = g.createdAt.seconds * 1000;
-      const msExpiry  = msCreated + 30 * 24 * 3600 * 1000; // 1 mois
-      const daysLeft  = Math.ceil((msExpiry - Date.now()) / 86400000);
-      if (daysLeft <= 7 && daysLeft > 0) {
-        expiryHtml = `<span class="biz-expiry-soon">⏰ ${_currentLang === 'fr' ? 'Expire dans' : 'Expires in'} ${daysLeft}${_currentLang === 'fr' ? 'j' : 'd'}</span>`;
-      } else if (daysLeft <= 0) {
-        expiryHtml = `<span class="biz-expiry-expired">⏳ ${_currentLang === 'fr' ? 'Expirée' : 'Expired'}</span>`;
-      } else {
-        expiryHtml = `<span class="biz-expiry-normal">⏳ ${daysLeft}${_currentLang === 'fr' ? 'j restants' : 'd left'}</span>`;
-      }
-    }
+  if (summaryEl) {
+    summaryEl.textContent = active.length > 0
+      ? (_currentLang === 'fr' ? `${active.length} offre${active.length > 1 ? 's' : ''} active${active.length > 1 ? 's' : ''}` : `${active.length} active offer${active.length > 1 ? 's' : ''}`)
+      : (_currentLang === 'fr' ? 'aucune offre active' : 'no active offer');
+  }
 
-    // Badge ouvertures
-    const opensClass = opens >= 10 ? 'biz-opens-high' : opens >= 3 ? 'biz-opens-mid' : 'biz-opens-low';
+  // screenBizOffers n'est peut-être pas encore dans le DOM visible (cette
+  // fonction est aussi appelée juste pour rafraîchir le résumé du Profil) —
+  // les conteneurs de l'écran dédié restent alors simplement non peuplés.
+  if (!currentWrap || !replayList) return;
 
-    html += `
-      <div class="biz-card">
-        <div class="biz-card-row">
-          <span class="biz-card-emoji">🏪</span>
-          <div class="biz-card-info">
-            <div class="biz-card-title">${title}</div>
-            <div class="biz-card-location">${location}</div>
-            <div class="biz-card-meta">
-              <span class="biz-opens ${opensClass}">👁 ${opens} ${_currentLang === 'fr' ? 'ouverture' + (opens > 1 ? 's' : '') : 'open' + (opens > 1 ? 's' : '')}</span>
-              ${expiryHtml}
-              ${expired ? (_currentLang === 'fr' ? '<span class="biz-expired-badge">Expirée</span>' : '<span class="biz-expired-badge">Expired</span>') : ''}
-            </div>
-          </div>
-        </div>
-        ${!expired ? `<button data-action="renewBusinessGhost" data-id="${escapeHTML(id)}" class="biz-renew-btn">${_currentLang === 'fr' ? '↻ Renouveler pour 1 mois' : '↻ Renew for 1 month'}</button>` : ''}
-      </div>`;
-  });
-  content.innerHTML = html || `<div class="biz-empty">${_currentLang === 'fr' ? 'Aucune offre commerce active' : 'No active commerce offers'}</div>`;
+  if (subEl) {
+    subEl.textContent = active.length > 0
+      ? (_currentLang === 'fr' ? `${active.length} offre${active.length > 1 ? 's' : ''} en ligne` : `${active.length} offer${active.length > 1 ? 's' : ''} online`)
+      : t.biz_offers_empty;
+  }
+
+  currentWrap.innerHTML = active.length > 0
+    ? active.map(d => _renderBizCurrentCard(d.id, d.data())).join('')
+    : `<div class="biz-offers-section-label">${escapeHTML(t.biz_offers_empty)}</div>`;
+
+  replayList.innerHTML = past.length > 0
+    ? past.map(d => _renderBizReplayRow(d.id, d.data())).join('')
+    : `<div class="biz-offers-section-label">${escapeHTML(t.biz_offers_replay_empty)}</div>`;
 }
 
 window.renewBusinessGhost = async (ghostId) => {
   if (!currentUser || !isPremium) return;
+  const g = _bizOffersCache[ghostId];
+  const durMs = g ? (GhostService.DURATIONS_MS[g.duration] || 0) : 0;
   // AT-4/m17 — confirm_renew_title/sub/btn (définies FR/EN, jamais
   // appelées) remplacent le titre/sous-titre/libellé codés en dur.
-  const confirmed = await showConfirm(t.confirm_renew_title, t.confirm_renew_sub, { confirmLabel: t.confirm_renew_btn });
+  // AU-4 — {duration} substitué dynamiquement : depuis la mini bascule
+  // AU-3, une offre Commerce peut aussi durer 7 jours, pas seulement 1 mois.
+  const durLabel = durMs === GhostService.DURATIONS_MS['7 jours'] ? t.dep_dur_7d : t.dep_dur_1m;
+  const confirmed = await showConfirm(t.confirm_renew_title, t.confirm_renew_sub.replace('{duration}', durLabel), { confirmLabel: t.confirm_renew_btn });
   if (!confirmed) return;
   try {
     await updateDoc(doc(db, COLL.GHOSTS, ghostId), {
@@ -5182,6 +5285,62 @@ window.renewBusinessGhost = async (ghostId) => {
   } catch(e) {
     showToast('warning', t.toast_renew_err);
   }
+};
+
+window.endBizOffer = async (ghostId) => {
+  if (!currentUser) return;
+  const confirmed = await showConfirm(t.biz_end_confirm_title, t.biz_end_confirm_sub, { confirmLabel: t.biz_end_confirm_btn });
+  if (!confirmed) return;
+  try {
+    await updateDoc(doc(db, COLL.GHOSTS, ghostId), { expired: true });
+    showToast('success', t.biz_end_done);
+    loadBizDashboard();
+  } catch(e) {
+    showToast('warning', t.toast_renew_err);
+  }
+};
+
+window.startNewBizOffer = () => {
+  showScreen('screenDeposit');
+  setNav('nav-deposit');
+  if (_depositMode !== 'business') toggleBusinessMode();
+};
+
+// AU-4 — pré-remplit le formulaire Commerce avec une offre passée plutôt que
+// de la republier telle quelle : l'utilisateur doit pouvoir ajuster le
+// titre/code avant de publier un nouveau fantôme (createdAt/expiry repartent
+// à zéro, comme tout nouveau dépôt).
+window.replayBizOffer = (ghostId) => {
+  const g = _bizOffersCache[ghostId];
+  if (!g) return;
+  showScreen('screenDeposit');
+  setNav('nav-deposit');
+  if (_depositMode !== 'business') toggleBusinessMode();
+  // toggleBusinessMode() force durée/rayon et resynchronise la mini bascule
+  // dans son propre setTimeout(100) — on ne préremplit qu'après, sinon ce
+  // recalage écraserait la durée qu'on vient de restaurer depuis g.duration.
+  setTimeout(() => {
+    const { type, title, desc } = _parseBizMessage(g.message);
+    const typeBtn = [...document.querySelectorAll('#bizTypeSelector .type-btn')].find(b => b.dataset.val === type);
+    if (typeBtn) selectType(typeBtn);
+    const titleEl = document.getElementById('bizTitle');
+    if (titleEl) { titleEl.value = title; titleEl.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (desc) {
+      const descEl = document.getElementById('bizDesc');
+      if (descEl) descEl.value = desc;
+      window._openBizDetailsPanel();
+    }
+    if (g.promoCode) {
+      const codeEl = document.getElementById('promoCode');
+      if (codeEl) codeEl.value = g.promoCode;
+      window.selectBizPanel('code');
+    }
+    const durMs = GhostService.DURATIONS_MS[g.duration] || 0;
+    const durBtn = document.querySelector(`#bizDurToggle .biz-dur-btn[data-dur="${durMs === GhostService.DURATIONS_MS['7 jours'] ? '7d' : '1m'}"]`);
+    if (durBtn) window.selectBizDuration(durBtn);
+    _updateBizPreview();
+  }, 150);
+  showToast('info', t.biz_replay_loaded);
 };
 
 // ── LE CARNET — lecture complète + résumé des réactions (juin 2026) ────
@@ -8970,13 +9129,33 @@ function _renderGhostDetailMessage(isOwner) {
     const promoBlock = document.createElement('div');
     promoBlock.id = 'detailPromoBlock';
     promoBlock.style.cssText = 'margin:16px 0 0;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.35);border-radius:14px;padding:14px 16px;text-align:center;';
+    // AU-4 — code promo copiable au tap (bouton réel, pas un div avec un
+    // rôle bidon) : incrémente promoCodeCopies sur le fantôme, seule mesure
+    // fiable côté app (on ne sait jamais si le code a été utilisé en caisse,
+    // cf. rapport — jamais appelée "codes utilisés").
     promoBlock.innerHTML =
-      '<div class="promo-code-label">&#x1F3EA; Offre exclusive</div>' +
-      '<div class="promo-code-value">' + escapeHTML(selectedGhost.promoCode) + '</div>' +
-      '<div class="promo-code-hint">Présentez ce message en caisse pour en bénéficier</div>';
+      '<div class="promo-code-label">🏪 ' + escapeHTML(t.detail_promo_label) + '</div>' +
+      '<button type="button" class="promo-code-value" data-action="copyPromoCode" aria-label="' + escapeHTML(t.detail_promo_copy_aria) + '">' + escapeHTML(selectedGhost.promoCode) + '</button>' +
+      '<div class="promo-code-hint">' + escapeHTML(t.detail_promo_hint) + '</div>';
     document.getElementById('detailMessage').after(promoBlock);
   }
 }
+
+window.copyPromoCode = async () => {
+  const code = selectedGhost?.promoCode;
+  const ghostId = selectedGhost?.id;
+  if (!code || !ghostId) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    showToast('success', t.detail_promo_copied);
+  } catch(e) {
+    console.warn('[ghostub:copyPromoCode]', e);
+  }
+  // Incrémenté même si la copie presse-papier échoue (permission refusée,
+  // contexte non sécurisé…) : le geste de l'utilisateur reste un signal
+  // d'intérêt commercial valable.
+  updateDoc(doc(db, COLL.GHOSTS, ghostId), { promoCodeCopies: increment(1) }).catch(() => {});
+};
 
 function _renderGhostDetailMeta() {
   document.getElementById('detailTime').textContent = timeAgo(selectedGhost.createdAt);
@@ -11308,7 +11487,7 @@ document.addEventListener('focusin', (e) => {
 // ── GESTE RETOUR (glisser depuis le bord gauche) ─────────
 (function initEdgeSwipeBack() {
   let startX = 0, startY = 0, tracking = false;
-  const BACK_SCREENS = ['screenDetail','screenReply'];
+  const BACK_SCREENS = ['screenDetail','screenReply','screenBizOffers'];
 
   document.addEventListener('touchstart', (e) => {
     startX = e.touches[0].clientX;
@@ -12195,6 +12374,10 @@ const ACTIONS = {
   selectBizPanel: (el) => window.selectBizPanel(el.dataset.arg),
   toggleBizDurEdit: () => window.toggleBizDurEdit(),
   selectBizDuration: (el) => window.selectBizDuration(el),
+  copyPromoCode: () => window.copyPromoCode(),
+  startNewBizOffer: () => window.startNewBizOffer(),
+  replayBizOffer: (el) => window.replayBizOffer(el.dataset.id),
+  endBizOffer: (el) => window.endBizOffer(el.dataset.id),
   selectDur: (el) => selectDur(el),
   selectMaxOpen: (el) => selectMaxOpen(el),
   selectCond: (el) => selectCond(el),

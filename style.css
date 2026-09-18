@@ -1703,24 +1703,46 @@ body:not(.light-theme) #chainMiniMap .leaflet-tile-pane{
    ignorée par le parseur CSS — déjà le cas avec l'ancien style="" inline. */
 .ppm-map-empty{display:flex;align-items:center;justify-content:height:100%;font-size:12px;color:rgba(var(--ghost-blue-rgb),.4);}
 .ppm-marker-emoji{font-size:18px;}
-/* Dashboard commerçant (loadBizDashboard, app.js) */
-.biz-card{background:rgba(var(--premium-rgb),.04);border:1px solid rgba(var(--premium-rgb),.18);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
-.biz-card-row{display:flex;align-items:flex-start;gap:10px;}
-.biz-card-emoji{font-size:22px;flex-shrink:0;}
-.biz-card-info{flex:1;min-width:0;}
-.biz-card-title{font-size:13px;color:var(--ether);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
-.biz-card-location{font-size:11px;color:var(--spirit-dim);margin-top:2px;}
-.biz-card-meta{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;}
-.biz-opens{font-size:13px;font-weight:600;}
-.biz-opens-high{color:rgba(var(--accent-green-rgb),.9);}
-.biz-opens-mid{color:rgba(var(--premium-rgb),.8);}
-.biz-opens-low{color:var(--spirit-dim);}
-.biz-expiry-soon{color:rgba(255,160,60,.9);font-size:11px;}
-.biz-expiry-expired{color:rgba(255,100,100,.7);font-size:11px;}
-.biz-expiry-normal{color:var(--spirit-dim);font-size:11px;}
-.biz-expired-badge{color:rgba(255,100,100,.6);font-size:11px;}
-.biz-renew-btn{width:100%;margin-top:10px;padding:8px;background:rgba(var(--premium-rgb),.08);border:1px solid rgba(var(--premium-rgb),.3);border-radius:10px;color:rgba(var(--premium-rgb),.85);font-family:'Instrument Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;}
-.biz-empty{opacity:.5;font-style:italic;text-align:center;padding:12px 0;}
+/* AU-4 — ancien rendu accordéon de loadBizDashboard (biz-card/biz-opens-*/
+   biz-expiry-*/biz-renew-btn/biz-empty) retiré : remplacé par l'écran dédié
+   screenBizOffers (classes biz-current-*/biz-replay-* plus bas). */
+.profile-biz-section-link{width:100%;display:flex;align-items:center;gap:8px;background:none;border:none;text-align:left;padding:10px 0;cursor:pointer;color:inherit;font-family:inherit;}
+.profile-biz-section-summary{flex-grow:1;text-align:right;font-size:12px;color:var(--spirit-dim);}
+
+/* AU-4/maquette 6 — écran dédié "Mes offres" */
+.biz-offers-scroll{padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px;}
+.biz-offers-header{display:flex;align-items:center;gap:10px;}
+.biz-back-btn{width:36px;height:36px;border-radius:50%;border:1px solid rgba(var(--premium-rgb),.3);background:none;color:rgba(var(--premium-rgb),.9);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.biz-offers-header-text{display:flex;flex-direction:column;gap:1px;flex-grow:1;min-width:0;}
+.biz-offers-title{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;color:var(--ether);}
+.biz-offers-sub{font-size:12px;color:rgba(var(--premium-rgb),.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.biz-offers-section-label{font-size:11px;color:var(--spirit-dim);letter-spacing:.06em;text-transform:uppercase;padding:0 4px;}
+
+.biz-current-card{background:var(--surface2);border:1px solid rgba(var(--premium-rgb),.34);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:13px;}
+.biz-current-head{display:flex;align-items:flex-start;gap:10px;}
+.biz-current-eyebrow{font-size:10px;color:rgba(var(--premium-rgb),.9);letter-spacing:.08em;text-transform:uppercase;}
+.biz-current-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--ether);line-height:1.25;}
+.biz-status-dot{width:9px;height:9px;border-radius:50%;background:rgba(var(--accent-green-rgb),.9);margin-top:6px;flex-shrink:0;}
+.biz-status-dot.expired{background:rgba(255,100,100,.6);}
+.biz-current-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+.biz-stat-box{background:rgba(var(--premium-rgb),.08);border-radius:12px;padding:11px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.biz-stat-num{font-size:20px;font-weight:600;color:var(--ether);}
+.biz-stat-label{font-size:10.5px;color:var(--spirit-dim);text-align:center;}
+.biz-progress-row{display:flex;justify-content:space-between;font-size:12px;color:var(--spirit-dim);}
+.biz-progress-track{height:5px;border-radius:3px;background:rgba(var(--premium-rgb),.16);overflow:hidden;}
+.biz-progress-fill{height:100%;background:rgba(var(--premium-rgb),.85);}
+.biz-current-actions{display:flex;gap:8px;}
+.biz-current-renew-btn{flex-grow:1;height:44px;border-radius:22px;border:none;background:rgba(var(--premium-rgb),.9);color:#1A1406;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;}
+.biz-current-end-btn{width:100px;height:44px;border-radius:22px;border:1px solid rgba(var(--premium-rgb),.3);background:none;color:var(--spirit-dim);font-size:14px;cursor:pointer;}
+
+.biz-replay-row{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:11px 13px;margin-bottom:8px;}
+.biz-replay-info{display:flex;flex-direction:column;gap:2px;flex-grow:1;min-width:0;}
+.biz-replay-title{font-size:13.5px;color:var(--ether);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.biz-replay-meta{font-size:11.5px;color:var(--spirit-dim);}
+.biz-replay-btn{width:38px;height:38px;border-radius:11px;border:1px solid rgba(var(--premium-rgb),.3);background:none;color:rgba(var(--premium-rgb),.9);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+
+.biz-offers-new-wrap{padding-top:4px;}
+.biz-offers-new-btn{width:100%;height:50px;border-radius:25px;border:1px solid rgba(var(--premium-rgb),.34);background:none;color:var(--warm);font-size:15px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;cursor:pointer;}
 /* Classement (loadLeaderboard, app.js) */
 .leaderboard-msg{font-size:12px;color:var(--spirit-dim);}
 .leaderboard-msg-italic{font-size:12px;color:var(--spirit-dim);font-style:italic;}
@@ -1855,7 +1877,10 @@ body:not(.light-theme) #chainMiniMap .leaflet-tile-pane{
 /* Reste divers (sceau, promo, mini-carte chaîne, lecture, grattage, toasts) */
 .sealed-emoji-wrap{color:var(--ether);display:inline-flex;}
 .promo-code-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(var(--premium-rgb),.7);margin-bottom:8px;}
-.promo-code-value{font-size:20px;font-weight:700;color:rgba(var(--premium-rgb),.95);letter-spacing:1px;}
+/* AU-4 — devenu un <button> (copie au tap) : reset des styles natifs, léger
+   fond + bordure en pointillé pour signaler que c'est tapable. */
+.promo-code-value{font-size:20px;font-weight:700;color:rgba(var(--premium-rgb),.95);letter-spacing:1px;background:rgba(var(--premium-rgb),.08);border:1px dashed rgba(var(--premium-rgb),.4);border-radius:10px;padding:6px 16px;font-family:inherit;cursor:pointer;}
+.promo-code-value:active{background:rgba(var(--premium-rgb),.16);}
 .promo-code-hint{font-size:11px;color:var(--spirit-dim);margin-top:6px;}
 .chain-minimap{width:100%;height:120px;}
 .chain-user-pin{font-size:16px;}
