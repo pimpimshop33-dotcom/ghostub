@@ -1809,17 +1809,17 @@ function _isLightTheme() {
   return document.body.classList.contains('light-theme');
 }
 
-// AT-1/M13 — fond de carte nativement sombre au lieu du filtre CSS appliqué
-// à chaque <img> de tuile (coûteux au pinch-zoom). basemaps.cartocdn.com est
-// déjà whitelisté dans la CSP (index.html). {r} est toujours résolu par
-// Leaflet ('@2x' ou '' selon l'écran), même sans detectRetina.
+// AT-1/M13 (révisé) — CartoDB dark_all exige désormais une clé API (tuiles
+// revenues estampillées "API KEY REQUIRED" en prod) : retour à OSM France
+// pour les deux thèmes. Le fond sombre vient d'un filtre CSS unique sur
+// .leaflet-tile-pane (cf. style.css), pas d'une source de tuiles différente.
+// Fonctions gardées (plutôt qu'inlinées aux 5 sites d'appel) pour rester le
+// point unique de définition de l'URL/attribution des tuiles.
 function _leafletTileUrl() {
-  return _isLightTheme()
-    ? 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png'
-    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+  return 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 }
 function _leafletTileAttribution() {
-  return _isLightTheme() ? '© OSM France' : '© OpenStreetMap contributors © CARTO';
+  return '© OSM France';
 }
 
 // ══════════════════════════════════════════════════════════

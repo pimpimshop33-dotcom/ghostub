@@ -1475,11 +1475,21 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
 .dur-btn.locked.active{opacity:.6;}
 .deposit-error{color:var(--red);font-size:var(--text-base);min-height:16px;margin-bottom:8px;}
 
-/* AT-1/M13 — l'ancien filtre CSS par tuile (invert/hue-rotate/saturate/
-   brightness/contrast appliqué à chaque <img> de 256×256, jusqu'à ~100
-   simultanément au pinch-zoom) a été remplacé par une source de tuiles
-   nativement sombre (CartoDB dark_all, cf. _leafletTileUrl() dans app.js)
-   sur les 5 cartes Leaflet du projet. Coût du filtre : 0. */
+/* AT-1/M13 (révisé) — CartoDB dark_all exige une clé API (tuiles revenues
+   "API KEY REQUIRED" en prod) : retour à OSM France pour les deux thèmes
+   (cf. _leafletTileUrl() dans app.js). Le filtre nocturne n'est plus posé
+   par tuile (invert/hue-rotate/saturate/brightness/contrast sur chaque
+   <img> de 256×256, jusqu'à ~100 simultanément au pinch-zoom) mais une
+   seule fois sur .leaflet-tile-pane, le calque qui contient toutes les
+   tuiles d'une carte — un seul élément filtré au lieu de N images, sans
+   toucher aux marqueurs/cercles/contrôles (panes Leaflet séparées). */
+body:not(.light-theme) #depositMiniMap .leaflet-tile-pane,
+body:not(.light-theme) #leafletMap .leaflet-tile-pane,
+body:not(.light-theme) #empreinteLeaflet .leaflet-tile-pane,
+body:not(.light-theme) #publicEmpreinteMap .leaflet-tile-pane,
+body:not(.light-theme) #chainMiniMap .leaflet-tile-pane{
+  filter:invert(1) hue-rotate(180deg) saturate(.7) brightness(.9) contrast(.9);
+}
 /* Pin principal — cercle ambre qui brille */
 .dep-mini-pin-wrap{
   position:relative;width:40px;height:40px;
@@ -2111,7 +2121,6 @@ body.light-theme .rank-progress-track-fill{background:var(--amber);}
 .leaflet-popup-content-wrapper{background:#0b0f1a !important;border:1px solid rgba(232,160,48,.3) !important;border-radius:12px !important;color:var(--warm) !important;box-shadow:0 8px 24px rgba(0,0,0,.8),0 0 20px rgba(232,160,48,.06) !important;}
 .leaflet-popup-tip{background:#0b0f1a !important;}
 .leaflet-popup-content{font-family:'Instrument Sans',sans-serif;font-size:var(--text-base);line-height:1.5;}
-.leaflet-tile-pane{filter:none;}
 .leaflet-overlay-pane svg text,.leaflet-label,.leaflet-tooltip{text-shadow:0 0 4px rgba(0,0,0,.95),0 0 8px rgba(0,0,0,.8) !important;font-weight:600 !important;}
 .leaflet-control-zoom{border:1px solid rgba(232,160,48,.2) !important;background:rgba(4,8,15,.9) !important;backdrop-filter:blur(8px);}
 .leaflet-control-zoom a{color:rgba(232,160,48,.7) !important;background:transparent !important;border-bottom:1px solid rgba(232,160,48,.12) !important;font-size:16px !important;line-height:28px !important;width:28px !important;height:28px !important;}
