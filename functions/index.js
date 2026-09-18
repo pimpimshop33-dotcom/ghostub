@@ -241,6 +241,96 @@ exports.onGhostMediaCleanup = onDocumentDeleted(
   }
 );
 
+// AT-5/M12 — nettoie sur Cloudinary les médias uploadés côté client AVANT
+// qu'un dépôt échoue (ex. audio envoyé avec succès, photo suivante en échec
+// → tout le dépôt est annulé, mais l'audio restait orphelin sur Cloudinary,
+// accessible indéfiniment via son URL publique). L'API destroy exige une
+// signature (api_secret) : ne peut pas se faire côté client, d'où cette
+// fonction. destroyCloudinaryAsset() ne supprime que des public_id sous
+// 'ghostub/' (même garde que onGhostMediaCleanup) — un appelant authentifié
+// ne peut donc cibler que les dossiers de l'app, jamais un asset arbitraire.
+exports.cleanupOrphanedMedia = onCall(
+  { region: 'europe-west9', secrets: [cloudinaryApiSecret] },
+  async (request) => {
+    if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
+    const assets = Array.isArray(request.data?.assets) ? request.data.assets : [];
+    if (assets.length === 0) return { cleaned: 0 };
+
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: cloudinaryApiSecret.value(),
+    });
+
+    let cleaned = 0;
+    // Borne défensive : un dépôt ne comporte jamais plus de audio+photo+
+    // vidéo+3 pièces jointes (5 assets max) — 10 laisse de la marge sans
+    // ouvrir la porte à un abus (boucle de destroy() côté serveur).
+    for (const a of assets.slice(0, 10)) {
+      if (a && typeof a.publicId === 'string') {
+        await destroyCloudinaryAsset(a.publicId, a.resourceType);
+        cleaned++;
+      }
+    }
+    return { cleaned };
+  }
+);
+
+// AT-5/C8 — RGPD art. 17 (droit à l'effacement) : purge serveur (admin SDK,
+// donc pas limitée par firestore.rules) appelée par l'app juste avant
+// deleteUser() côté client. Chaque delete de /ghosts déclenche
+// onGhostMediaCleanup ci-dessus (purge Cloudinary automatique) — pas besoin
+// de la dupliquer ici. reports/ghostStats/premiumCodes volontairement hors
+// périmètre (respectivement : trace de modération à valeur légale propre,
+// mirroirs dénormalisés de peu de conséquence, codes non liés à un compte).
+exports.deleteAccountData = onCall({ region: 'europe-west9' }, async (request) => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Authentification requise.');
+  const uid = request.auth.uid;
+
+  let batch = db.batch();
+  let batchOps = 0;
+  const commitBatch = async () => {
+    if (batchOps > 0) { await batch.commit(); batch = db.batch(); batchOps = 0; }
+  };
+  const queueDelete = async (ref) => {
+    batch.delete(ref);
+    batchOps++;
+    if (batchOps >= 450) await commitBatch();
+  };
+
+  const ghostsSnap = await db.collection('ghosts').where('authorUid', '==', uid).get();
+  const ghostIds = ghostsSnap.docs.map(d => d.id);
+  for (const d of ghostsSnap.docs) await queueDelete(d.ref);
+
+  const myRepliesSnap = await db.collection('replies').where('authorUid', '==', uid).get();
+  for (const d of myRepliesSnap.docs) await queueDelete(d.ref);
+
+  // Réponses laissées par d'autres sur les fantômes de ce compte.
+  for (const gid of ghostIds) {
+    const repliesOnGhost = await db.collection('replies').where('ghostId', '==', gid).get();
+    for (const d of repliesOnGhost.docs) await queueDelete(d.ref);
+  }
+
+  // Découvertes dans les deux sens (fantôme de ce compte découvert par
+  // autrui, ou ce compte qui a découvert un fantôme d'autrui).
+  const discAsAuthorSnap = await db.collection('discoveries').where('authorUid', '==', uid).get();
+  for (const d of discAsAuthorSnap.docs) await queueDelete(d.ref);
+  const discAsFinderSnap = await db.collection('discoveries').where('discoveredByUid', '==', uid).get();
+  for (const d of discAsFinderSnap.docs) await queueDelete(d.ref);
+
+  const notifsSnap = await db.collection('notifications').where('toUid', '==', uid).get();
+  for (const d of notifsSnap.docs) await queueDelete(d.ref);
+
+  await queueDelete(db.collection('whispers').doc(uid));
+  await queueDelete(db.collection('userStats').doc(uid));
+  await queueDelete(db.collection('users').doc(uid));
+
+  await commitBatch();
+
+  console.log(`deleteAccountData: uid=${uid}, ${ghostsSnap.size} fantôme(s) purgé(s).`);
+  return { ok: true };
+});
+
 // ── Geohash (précision 5) — porté depuis services/world.service.js ─────────
 // ⚠️ Troisième copie de cet algorithme dans le dépôt (la première vit dans
 // world.service.js, la deuxième dans patch_geohash.js — déjà documenté ainsi

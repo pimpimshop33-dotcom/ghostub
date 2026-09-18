@@ -13,7 +13,7 @@ function _promptSignUp(toastKey) {
   setTimeout(() => { if (typeof window.showTab === 'function') window.showTab('register'); }, 150);
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
 import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=6';
@@ -262,10 +262,17 @@ const LANGS = {
     dep_err_msg: 'Écrivez un message.',
     dep_err_long: 'Message trop long (600 caractères max).',
     dep_err_gps: 'Géolocalisation requise — activez-la dans votre navigateur.',
+    // AT-5/C5 — bandeau affiché tant que la position est un repli (centre de
+    // la France), pas la vraie position GPS de l'utilisateur.
+    gps_fallback_banner: '📍 Position approximative — active ta géolocalisation',
     dep_err_offline: 'Vous êtes hors ligne — reconnectez-vous pour déposer.',
     dep_err_generic: 'Erreur lors du dépôt — vérifie ta connexion et réessaie.',
     dep_err_denied: 'Dépôt refusé — certains champs ne sont pas autorisés. Réessaie ou contacte le support.',
     dep_upload_failed: "L'envoi a échoué — vérifie ta connexion et réessaie.",
+    // AT-5/M12 — jusqu'ici avalé en silence (console.warn) : un abonné
+    // joignant plusieurs fichiers dont certains échouaient voyait l'écran
+    // de succès sans aucun signal.
+    dep_attachments_failed: '⚠️ {n} pièce{s} jointe{s} n\'{verbe} pas pu être envoyée{s}.',
     misc_error_generic: 'Erreur — réessaie plus tard.',
     open_quota_network_err: 'Connexion instable — impossible de vérifier ton quota. Réessaie dans un instant.',
     stripe_btn_premium: '✦ Devenir Chasseur Premium',
@@ -411,13 +418,22 @@ const LANGS = {
     profile_share_map: '🗺 Partager mon empreinte',
     profile_share_profile: 'Partager mon profil',
     profile_logout: '🚪 Déconnexion',
-    profile_delete_btn: '🗑 Supprimer tous mes fantômes',
     profile_delete_confirm_title: '🗑 Supprimer tous mes fantômes ?',
     profile_delete_confirm_sub: 'Cette action est irréversible — tous vos messages et réponses seront effacés.',
     profile_delete_confirm_word: 'SUPPRIMER',
     profile_delete_confirm_type: 'Tapez <strong>{word}</strong> pour confirmer',
     profile_delete_success: '✓ {n} fantômes supprimés',
     profile_delete_err: 'Erreur — réessayez',
+    // AT-5/C8 — RGPD art. 17, suppression de compte (distincte de
+    // "Supprimer tous mes fantômes" ci-dessus, qui n'efface que le contenu).
+    profile_delete_account_btn: '💀 Supprimer mon compte',
+    profile_delete_account_confirm_title: '💀 Supprimer définitivement mon compte ?',
+    profile_delete_account_confirm_sub: 'Cette action est irréversible : ton compte, tes fantômes, tes réponses et toutes tes données seront supprimés définitivement.',
+    profile_delete_account_reauth_prompt: 'Pour confirmer, entre à nouveau ton mot de passe :',
+    profile_delete_account_reauth_failed: 'Mot de passe incorrect — compte non supprimé.',
+    profile_delete_account_purge_failed: 'Erreur lors de la suppression de tes données — réessaie plus tard.',
+    profile_delete_account_failed: 'Erreur lors de la suppression du compte — réessaie plus tard.',
+    profile_delete_account_done: 'Compte supprimé.',
     profile_export_btn: '⬇ Exporter mes données',
     profile_export_ok: '✓ Export téléchargé',
     profile_export_empty: 'Aucune donnée à exporter',
@@ -728,7 +744,10 @@ const LANGS = {
     profile_share_map_btn: '↗ Partager',
     profile_rewatch_intro: 'Revoir l\'intro',
     profile_help_link: 'Aide & Mentions légales',
-    profile_delete_all_btn: '🗑 Tout supprimer',
+    // AT-5/C8 — renommé : ce bouton appelle deleteMyGhosts() (efface les
+    // fantômes, pas le compte) ; à côté de "Déconnexion", "Tout supprimer"
+    // se lisait pourtant comme une suppression de compte.
+    profile_delete_all_btn: '🗑 Supprimer tous mes fantômes',
     // Help screen (Lot AP — relu et réécrit contre le code réel, Lots Y→AP)
     help_back: '← retour',
     help_title: 'Comment ça marche ?',
@@ -1007,10 +1026,12 @@ const LANGS = {
     dep_err_msg: 'Write a message.',
     dep_err_long: 'Message too long (600 chars max).',
     dep_err_gps: 'Location required — enable it in your browser.',
+    gps_fallback_banner: '📍 Approximate position — enable your location',
     dep_err_offline: 'You\'re offline — reconnect to drop a ghost.',
     dep_err_generic: 'Error while dropping — check your connection and try again.',
     dep_err_denied: 'Deposit rejected — some fields aren\'t allowed. Try again or contact support.',
     dep_upload_failed: 'Upload failed — check your connection and try again.',
+    dep_attachments_failed: '⚠️ {n} attachment{s} could not be sent.',
     misc_error_generic: 'Error — please try again later.',
     open_quota_network_err: 'Unstable connection — couldn\'t check your quota. Try again in a moment.',
     stripe_btn_premium: '✦ Become a Premium Hunter',
@@ -1158,13 +1179,20 @@ const LANGS = {
     profile_share_map: '🗺 Share my footprint',
     profile_share_profile: 'Share my profile',
     profile_logout: '🚪 Sign out',
-    profile_delete_btn: '🗑 Delete all my ghosts',
     profile_delete_confirm_title: '🗑 Delete all my ghosts?',
     profile_delete_confirm_sub: 'This is irreversible — all your messages and replies will be deleted.',
     profile_delete_confirm_word: 'DELETE',
     profile_delete_confirm_type: 'Type <strong>{word}</strong> to confirm',
     profile_delete_success: '✓ {n} ghosts deleted',
     profile_delete_err: 'Error — try again',
+    profile_delete_account_btn: '💀 Delete my account',
+    profile_delete_account_confirm_title: '💀 Permanently delete my account?',
+    profile_delete_account_confirm_sub: 'This is irreversible: your account, your ghosts, your replies and all your data will be permanently deleted.',
+    profile_delete_account_reauth_prompt: 'To confirm, enter your password again:',
+    profile_delete_account_reauth_failed: 'Incorrect password — account not deleted.',
+    profile_delete_account_purge_failed: 'Error deleting your data — try again later.',
+    profile_delete_account_failed: 'Error deleting your account — try again later.',
+    profile_delete_account_done: 'Account deleted.',
     profile_export_btn: '⬇ Export my data',
     profile_export_ok: '✓ Export downloaded',
     profile_export_empty: 'No data to export',
@@ -1459,7 +1487,7 @@ const LANGS = {
     profile_share_map_btn: '↗ Share',
     profile_rewatch_intro: 'Watch intro again',
     profile_help_link: 'Help & Legal',
-    profile_delete_all_btn: '🗑 Delete all',
+    profile_delete_all_btn: '🗑 Delete all my ghosts',
     // Help screen (Lot AP — reviewed and rewritten against the real code, Lots Y→AP)
     help_back: '← back',
     help_title: 'How does it work?',
@@ -1714,7 +1742,7 @@ const firebaseConfig = {
   appId: "1:62498675696:web:9df717cdcda47a84d1db35"
 };
 
-let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable, _activatePremiumSecureCallable, _createGhostSecureCallable;
+let app, auth, db, functionsInstance, _checkAndConsumeOpenCallable, _activatePremiumSecureCallable, _createGhostSecureCallable, _cleanupOrphanedMediaCallable;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
@@ -1724,6 +1752,9 @@ try {
   _checkAndConsumeOpenCallable = httpsCallable(functionsInstance, 'checkAndConsumeOpen');
   _activatePremiumSecureCallable = httpsCallable(functionsInstance, 'activatePremiumSecure');
   _createGhostSecureCallable = httpsCallable(functionsInstance, 'createGhostSecure');
+  // AT-5/M12 — cleanupOrphanedMedia : préparée côté Cloud Function
+  // (functions/index.js), pas encore déployée (cf. rapport de lot).
+  _cleanupOrphanedMediaCallable = httpsCallable(functionsInstance, 'cleanupOrphanedMedia');
 } catch (e) {
   console.error('[ghostub:init]', e);
   document.body.innerHTML = '<div class="fatal-error-screen"><div class="fatal-error-icon">😶</div><div class="fatal-error-title">Ghostub n\'a pas pu démarrer.</div><div class="fatal-error-sub">Vérifie ta connexion internet et réessaie.</div></div>';
@@ -3334,7 +3365,20 @@ window.register = async () => {
       const cred = await createUserWithEmailAndPassword(auth, email, pass);
       registeredUser = cred.user;
     }
-    await updateProfile(registeredUser, { displayName: pseudo });
+    // AT-5/C6 — le compte existe déjà à ce stade : si updateProfile échoue
+    // (coupure réseau entre les deux appels — cas central en mobilité), ne
+    // pas remonter au catch générique ci-dessous, qui afficherait une
+    // erreur laissant croire que l'inscription entière a échoué alors que
+    // le compte a bien été créé. Un essai supplémentaire, puis on laisse
+    // getPoeticName(uid) (cf. author des dépôts/réponses) servir de repli
+    // plutôt que de bloquer l'utilisateur.
+    try {
+      await updateProfile(registeredUser, { displayName: pseudo });
+    } catch (e) {
+      console.warn('[ghostub:register:displayName]', e);
+      try { await updateProfile(registeredUser, { displayName: pseudo }); }
+      catch (e2) { console.warn('[ghostub:register:displayName:retry]', e2); }
+    }
     Analytics.track('register');
   } catch(e) {
     setLoading(btn, false);
@@ -4275,6 +4319,10 @@ async function uploadMedia(uid) {
   let audioUrl = null, audioPublicId = null, audioResourceType = null;
   let photoUrl = null, photoPublicId = null, photoResourceType = null;
   let videoUrl = null, videoPublicId = null, videoResourceType = null;
+  // AT-5/M12 — accumule les uploads Cloudinary réussis : si un upload
+  // SUIVANT échoue (audio ok, photo KO → dépôt annulé), l'audio reste sinon
+  // orphelin sur Cloudinary indéfiniment, accessible via son URL publique.
+  const uploadedAssets = [];
 
   // FIX: Helper avec retry x2 sur erreur réseau + timeout (AbortController) —
   // sans timeout, un fetch qui stalle sur mobile ne rejette jamais et bloque
@@ -4301,32 +4349,47 @@ async function uploadMedia(uid) {
     }
   }
 
-  if (window._pendingAudioBlob) {
-    const fd = new FormData();
-    fd.append('file', window._pendingAudioBlob, 'audio.webm');
-    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'ghostub/audio');
-    const r = await uploadToCloudinary(fd, 'video', 30000);
-    audioUrl = r.url; audioPublicId = r.publicId; audioResourceType = r.resourceType;
-  }
-  if (window._pendingPhotoFile) {
-    const fd = new FormData();
-    fd.append('file', window._pendingPhotoFile);
-    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'ghostub/photos');
-    const r = await uploadToCloudinary(fd, 'image', 30000);
-    photoUrl = r.url; photoPublicId = r.publicId; photoResourceType = r.resourceType;
-  }
-  if (window._pendingVideoFile) {
-    const fd = new FormData();
-    fd.append('file', window._pendingVideoFile);
-    fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    fd.append('folder', 'ghostub/videos');
-    const r = await uploadToCloudinary(fd, 'video', 120000);
-    videoUrl = r.url; videoPublicId = r.publicId; videoResourceType = r.resourceType;
+  try {
+    if (window._pendingAudioBlob) {
+      const fd = new FormData();
+      fd.append('file', window._pendingAudioBlob, 'audio.webm');
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('folder', 'ghostub/audio');
+      const r = await uploadToCloudinary(fd, 'video', 30000);
+      audioUrl = r.url; audioPublicId = r.publicId; audioResourceType = r.resourceType;
+      if (r.publicId) uploadedAssets.push({ publicId: r.publicId, resourceType: r.resourceType });
+    }
+    if (window._pendingPhotoFile) {
+      const fd = new FormData();
+      fd.append('file', window._pendingPhotoFile);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('folder', 'ghostub/photos');
+      const r = await uploadToCloudinary(fd, 'image', 30000);
+      photoUrl = r.url; photoPublicId = r.publicId; photoResourceType = r.resourceType;
+      if (r.publicId) uploadedAssets.push({ publicId: r.publicId, resourceType: r.resourceType });
+    }
+    if (window._pendingVideoFile) {
+      const fd = new FormData();
+      fd.append('file', window._pendingVideoFile);
+      fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      fd.append('folder', 'ghostub/videos');
+      const r = await uploadToCloudinary(fd, 'video', 120000);
+      videoUrl = r.url; videoPublicId = r.publicId; videoResourceType = r.resourceType;
+      if (r.publicId) uploadedAssets.push({ publicId: r.publicId, resourceType: r.resourceType });
+    }
+  } catch (e) {
+    // AT-5/M12 — remonté à _uploadDepositMedia, qui déclenche le nettoyage
+    // Cloud Function des assets déjà uploadés avant cet échec.
+    e.uploadedAssets = uploadedAssets;
+    throw e;
   }
   // Phase 1d v103 — upload des fichiers joints (PDF + images), max 3
   let attachments = null;
+  // AT-5/M12 — compte les échecs pour que l'appelant puisse prévenir
+  // l'utilisateur (Premium) : avant ce fix, un abonné joignant 3 fichiers
+  // dont 2 échouent voyait l'écran de succès sans aucun signal, croyant les
+  // 3 publiés alors que le fantôme n'en contient qu'un.
+  let failedAttachments = 0;
   if (Array.isArray(window._pendingAttachments) && window._pendingAttachments.length > 0) {
     attachments = [];
     for (const a of window._pendingAttachments) {
@@ -4338,8 +4401,10 @@ async function uploadMedia(uid) {
         // 'auto' laisse Cloudinary détecter le type (image vs raw pour PDF)
         const r = await uploadToCloudinary(fd, 'auto', 30000);
         if (r.url) attachments.push({ url: r.url, name: a.name, type: a.type, size: a.size, publicId: r.publicId, resourceType: r.resourceType });
+        else failedAttachments++;
       } catch (e) {
         console.warn('attachment upload failed:', a.name, e);
+        failedAttachments++;
       }
     }
     if (attachments.length === 0) attachments = null;
@@ -4348,7 +4413,7 @@ async function uploadMedia(uid) {
     audioUrl, audioPublicId, audioResourceType,
     photoUrl, photoPublicId, photoResourceType,
     videoUrl, videoPublicId, videoResourceType,
-    attachments,
+    attachments, failedAttachments,
   };
 }
 
@@ -6220,6 +6285,66 @@ window.deleteMyGhosts = async () => {
   }
 };
 
+// ── SUPPRESSION DE COMPTE (RGPD Art. 17 — Droit à l'effacement) ──────
+// AT-5/C8 — distincte de deleteMyGhosts() ci-dessus : purge TOUTES les
+// données (côté serveur, admin SDK — plus complet que ce que les règles
+// Firestore autorisent au client) PUIS supprime le compte Auth lui-même.
+// Purge d'abord, suppression Auth ensuite : si la purge échoue, le compte
+// existe toujours et l'utilisateur peut réessayer ; l'ordre inverse
+// laisserait des données orphelines sans aucun moyen de les rattacher à
+// nouveau à un compte qui n'existe plus.
+window.deleteAccount = async () => {
+  if (!currentUser || currentUser.isAnonymous) return;
+  const confirmed = await showConfirm(
+    t.profile_delete_account_confirm_title,
+    t.profile_delete_account_confirm_sub,
+    { requireTyped: true, confirmLabel: t.profile_delete_account_btn }
+  );
+  if (!confirmed) return;
+
+  // Firebase exige une connexion récente pour deleteUser() — reauth par mot
+  // de passe. window.prompt() est un choix pragmatique ici (action rare et
+  // volontairement peu engageante, cf. CSS) plutôt qu'une modale dédiée.
+  const password = window.prompt(t.profile_delete_account_reauth_prompt);
+  if (!password) return;
+
+  const btn = document.getElementById('deleteAccountBtn');
+  if (btn) { btn.disabled = true; btn.textContent = t.dep_deleting || '⏳…'; }
+
+  try {
+    const credential = EmailAuthProvider.credential(currentUser.email, password);
+    await reauthenticateWithCredential(currentUser, credential);
+  } catch (e) {
+    console.warn('[ghostub:deleteAccount:reauth]', e);
+    showToast('error', t.profile_delete_account_reauth_failed);
+    if (btn) { btn.disabled = false; btn.textContent = t.profile_delete_account_btn; }
+    return;
+  }
+
+  try {
+    const purgeFn = httpsCallable(functionsInstance, 'deleteAccountData');
+    await purgeFn();
+  } catch (e) {
+    console.warn('[ghostub:deleteAccount:purge]', e);
+    showToast('error', t.profile_delete_account_purge_failed);
+    if (btn) { btn.disabled = false; btn.textContent = t.profile_delete_account_btn; }
+    return; // ne pas supprimer le compte Auth si la purge serveur a échoué
+  }
+
+  try {
+    await deleteUser(currentUser);
+  } catch (e) {
+    console.warn('[ghostub:deleteAccount:auth]', e);
+    showToast('error', t.profile_delete_account_failed);
+    if (btn) { btn.disabled = false; btn.textContent = t.profile_delete_account_btn; }
+    return;
+  }
+
+  Analytics.track('account_deleted');
+  showToast('success', t.profile_delete_account_done, 3000);
+  setTimeout(() => location.reload(), 1500);
+};
+
 // ── EXPORT RGPD (Art. 20 — Portabilité des données) ─────
 window.exportMyData = async () => {
   if (!currentUser) return;
@@ -6503,6 +6628,15 @@ async function _checkFirstDepositor(lat, lng, geohash5) {
 // (cf. _maybeShowLocationPrimer) — sinon, sur le tout premier lancement,
 // cet appel partirait avant toute explication pendant que l'onboarding
 // est encore affiché. On utilise le fallback en attendant _ensureLocationReady().
+// AT-5/C5 — reflète window._gpsIsFallback sur le bandeau Radar/Carte.
+function _updateGpsFallbackBanner() {
+  const banner = document.getElementById('gpsFallbackBanner');
+  if (!banner) return;
+  const isFallback = !!window._gpsIsFallback;
+  banner.style.display = isFallback ? 'flex' : 'none';
+  banner.setAttribute('aria-hidden', isFallback ? 'false' : 'true');
+}
+
 async function _resolveNearbyGhostsLocation() {
   try {
     if (!window._locationWatchStarted) {
@@ -6523,6 +6657,7 @@ async function _resolveNearbyGhostsLocation() {
     }
     // Si on a déjà une position réelle, on l'utilise sans marquer comme fallback
   }
+  _updateGpsFallbackBanner();
 }
 
 // ── QUERY FIRESTORE (géohash ~15km) ─────────────────────────────────
@@ -7635,9 +7770,10 @@ window.loadLeaderboard = async () => {
     const sorted = [];
     snap.forEach(d => {
       const u = d.data();
-      if (!u.displayName && !u.email) return;
+      // AT-5/C6 — plus d'e-mail affiché publiquement : pseudonyme poétique
+      // stable (dérivé de l'uid) si l'utilisateur n'a pas de displayName.
       sorted.push({
-        name: u.displayName || u.email,
+        name: u.displayName || getPoeticName(d.id),
         resonances: u.totalResonances || 0,
         ghosts: u.ghostCount || 0
       });
@@ -7648,7 +7784,7 @@ window.loadLeaderboard = async () => {
     }
     const medals = ['🥇','🥈','🥉'];
     el.innerHTML = sorted.map((s, i) => {
-      const isMe = currentUser && s.name === (currentUser.displayName || currentUser.email);
+      const isMe = currentUser && s.name === (currentUser.displayName || getPoeticName(currentUser.uid));
       return `<div class="leaderboard-row${isMe ? ' leaderboard-row--me' : ''}">
         <span class="leaderboard-medal">${medals[i] || (i+1)+'.'}</span>
         <div class="leaderboard-info">
@@ -9212,6 +9348,13 @@ async function _uploadDepositMedia(depositBtn, err, hasMedia) {
     setLoading(depositBtn, false, t.dep_seal_btn || t.dep_deposit_btn || 'Sceller le fantôme');
     err.textContent = t.dep_upload_failed;
     showToast('error', t.dep_upload_failed, 5000);
+    // AT-5/M12 — best-effort : nettoie sur Cloudinary les médias déjà
+    // uploadés avant cet échec (sinon orphelins indéfiniment, accessibles
+    // via leur URL publique — potentiellement du contenu privé).
+    if (Array.isArray(e?.uploadedAssets) && e.uploadedAssets.length > 0 && _cleanupOrphanedMediaCallable) {
+      _cleanupOrphanedMediaCallable({ assets: e.uploadedAssets })
+        .catch(cleanupErr => console.warn('[ghostub:cleanupOrphanedMedia]', cleanupErr));
+    }
     return null;
   }
 }
@@ -9253,7 +9396,9 @@ function _buildGhostDepositPayload(uploadResult, input) {
     openDate: openDate || null,
     businessMode: (isPremium && _depositMode === 'business') || false,
     promoCode: (isPremium && _depositMode === 'business') ? (document.getElementById('promoCode')?.value.trim() || null) : null,
-    author: currentUser.displayName || currentUser.email,
+    // AT-5/C6 — ne jamais publier l'e-mail comme signature d'un fantôme :
+    // repli sur un pseudonyme poétique stable si aucun displayName.
+    author: currentUser.displayName || getPoeticName(currentUser.uid),
     lat: userLat, lng: userLng,
   };
 }
@@ -9432,6 +9577,12 @@ window.depositGhost = async () => {
       try { await getLocation(); } catch(e) { console.warn('[ghostub:depositGhost:gps]', e); }
       if (!userLat) { err.textContent = t.dep_err_gps; return; }
     }
+    // AT-5/C5 — bloquer le dépôt sur position de repli (centre géographique
+    // de la France, posée par _resolveNearbyGhostsLocation quand le GPS n'a
+    // rien donné) : sans ce garde, le fantôme était ancré à ~46.6034,1.8883
+    // sans que l'utilisateur le sache, et brûlait quand même son cooldown et
+    // une de ses places actives.
+    if (window._gpsIsFallback) { err.textContent = t.dep_err_gps; return; }
     if (!navigator.onLine) { err.textContent = t.dep_err_offline; return; }
 
     err.textContent = '';
@@ -9440,6 +9591,13 @@ window.depositGhost = async () => {
     const hasMedia = !!(window._pendingAudioBlob || window._pendingPhotoFile || window._pendingVideoFile || (Array.isArray(window._pendingAttachments) && window._pendingAttachments.length > 0));
     const uploadResult = await _uploadDepositMedia(depositBtn, err, hasMedia);
     if (!uploadResult) return;
+    // AT-5/M12 — signaler les pièces jointes qui n'ont pas pu être envoyées
+    // avant de valider le dépôt (jusqu'ici avalé en silence).
+    if (uploadResult.failedAttachments > 0) {
+      const n = uploadResult.failedAttachments;
+      showToast('warning', t.dep_attachments_failed
+        .replace('{n}', n).replace(/\{s\}/g, n > 1 ? 's' : '').replace('{verbe}', n > 1 ? 'ont' : 'a'), 5000);
+    }
 
     try {
       if (hasMedia) depositBtn.textContent = t.dep_btn_saving;
@@ -9485,7 +9643,9 @@ window.sendReply = async () => {
       anonymous: anon,
       // FIX confidentialité : une réponse anonyme ne doit JAMAIS stocker le pseudo/email
       // en clair (le doc /replies est lisible par tout utilisateur connecté).
-      author: anon ? null : (currentUser.displayName || currentUser.email),
+      // AT-5/C6 — et une réponse non-anonyme ne doit plus jamais publier
+      // l'e-mail : pseudonyme poétique stable si aucun displayName.
+      author: anon ? null : (currentUser.displayName || getPoeticName(currentUser.uid)),
       authorUid: currentUser.uid,
       createdAt: serverTimestamp()
     });
@@ -11638,6 +11798,7 @@ const ACTIONS = {
   exportMyData: () => exportMyData(),
   logout: () => logout(),
   deleteMyGhosts: () => deleteMyGhosts(),
+  deleteAccount: () => deleteAccount(),
   toggleDepositedList: () => toggleDepositedList(),
   toggleDiscoveryHistory: () => toggleDiscoveryHistory(),
   toggleFavoritesList: () => toggleFavoritesList(),

@@ -138,6 +138,18 @@ body.light-theme .trace-svg{filter:drop-shadow(0 0 1px rgba(28,26,36,.3)) drop-s
   font-size:var(--text-base);font-weight:500;padding:8px 16px;border-radius:20px;
   z-index:99999;gap:8px;align-items:center;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;
 }
+.gps-fallback-banner{
+  display:none;position:fixed;top:calc(var(--sat) + 52px);left:50%;transform:translateX(-50%);
+  background:rgba(200,100,20,.92);backdrop-filter:blur(10px);color:#fff;
+  font-size:var(--text-base);font-weight:500;padding:8px 16px;border-radius:20px;
+  z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,.5);white-space:nowrap;
+}
+/* AT-5/C5 — uniquement pertinent sur Radar et Carte, jamais sur les autres
+   écrans (Dépôt a son propre garde bloquant, Profil n'a pas de notion de
+   position de repli). */
+body:not(:has(#screenRadar.active, #screenMap.active)) .gps-fallback-banner{
+  display:none !important;
+}
 .update-banner{
   display:none;position:fixed;bottom:calc(100px + var(--sab));left:50%;transform:translateX(-50%);
   background:rgba(4,8,15,.97);backdrop-filter:blur(14px);
@@ -1602,6 +1614,11 @@ body.light-theme .rank-card-current{box-shadow:0 0 12px rgba(var(--premium-rgb),
 .profile-logout-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.5);padding:6px 12px;border-radius:8px;}
 .profile-delete-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:12px;color:rgba(255,100,100,.35);padding:6px 12px;border-radius:8px;}
 .profile-danger-sep{color:var(--border);font-size:12px;line-height:28px;}
+/* AT-5/C8 — rangée séparée, en retrait (opacity plus faible que les deux
+   actions ci-dessus) : la suppression de compte est plus destructrice et ne
+   doit pas être un tap accidentel à côté de "Déconnexion". */
+.profile-danger-row-3{display:flex;justify-content:center;padding-bottom:24px;opacity:.6;}
+.profile-delete-account-btn{background:none;border:none;cursor:pointer;font-family:'Instrument Sans',sans-serif;font-size:11px;color:rgba(255,80,80,.4);padding:6px 12px;border-radius:8px;}
 /* Liste favoris (toggleFavoritesList/removeFavorite, app.js) */
 .fav-empty{opacity:.5;font-style:italic;}
 .fav-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}

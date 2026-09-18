@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=233"></script>
+<script type="module" src="app.js?v=234"></script>
 
-<link rel="stylesheet" href="style.css?v=215">
+<link rel="stylesheet" href="style.css?v=216">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -67,6 +67,11 @@
 <!-- Bannière hors-ligne -->
 <div class="offline-banner" id="offlineBanner" role="alert" aria-live="assertive" aria-hidden="true">
   📵 Hors ligne — certaines fonctions indisponibles
+</div>
+
+<!-- AT-5/C5 — bannière position de repli (GPS indisponible) -->
+<div class="gps-fallback-banner" id="gpsFallbackBanner" role="status" aria-live="polite" aria-hidden="true">
+  <span data-i18n="gps_fallback_banner">📍 Position approximative — active ta géolocalisation</span>
 </div>
 
 <!-- Bannière mise à jour -->
@@ -1040,7 +1045,14 @@
       <div class="profile-danger-row-2">
         <button data-action="logout" id="logoutBtn" data-i18n="profile_logout" class="profile-logout-btn">🚪 Déconnexion</button>
         <span class="profile-danger-sep">·</span>
-        <button id="deleteBtn" data-action="deleteMyGhosts" class="profile-delete-btn" data-i18n="profile_delete_all_btn">🗑 Tout supprimer</button>
+        <button id="deleteBtn" data-action="deleteMyGhosts" class="profile-delete-btn" data-i18n="profile_delete_all_btn">🗑 Supprimer tous mes fantômes</button>
+      </div>
+      <!-- AT-5/C8 — RGPD art. 17 : vraie suppression de compte, distincte de
+           "Supprimer tous mes fantômes" ci-dessus (qui n'efface que le
+           contenu). Rangée séparée, en retrait visuel volontaire (action la
+           plus destructrice de l'écran). -->
+      <div class="profile-danger-row-3">
+        <button id="deleteAccountBtn" data-action="deleteAccount" class="profile-delete-account-btn" data-i18n="profile_delete_account_btn">💀 Supprimer mon compte</button>
       </div>
     </div>
   </div>
