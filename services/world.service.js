@@ -16,9 +16,35 @@ function wrapLng(lng) {
   return ((lng + 180) % 360 + 360) % 360 - 180;
 }
 
-// Retourne les 9 cellules geohash5 couvrant ~7km autour de lat/lng
+// Décode un geohash en son centre (lat, lng) — nécessaire pour calculer les
+// voisins depuis le CENTRE de la cellule plutôt que depuis le point brut
+// reçu, qui peut tomber n'importe où dans sa cellule.
+function decodeGeohash(hash) {
+  let lat = [-90, 90], lng = [-180, 180];
+  let isLng = true;
+  for (const c of hash) {
+    const idx = GH_CHARS.indexOf(c);
+    for (let bits = 4; bits >= 0; bits--) {
+      const bit = (idx >> bits) & 1;
+      if (isLng) { const mid = (lng[0] + lng[1]) / 2; lng[bit ? 0 : 1] = mid; }
+      else        { const mid = (lat[0] + lat[1]) / 2; lat[bit ? 0 : 1] = mid; }
+      isLng = !isLng;
+    }
+  }
+  return { lat: (lat[0] + lat[1]) / 2, lng: (lng[0] + lng[1]) / 2 };
+}
+
+// Retourne les 9 cellules geohash5 couvrant ~7km autour de lat/lng.
+// AT-6/m19 — décaler directement depuis le point BRUT (comme avant) peut
+// manquer la cellule adjacente immédiate quand ce point est déjà proche du
+// bord de sa propre cellule (~2,4% des positions par axe, pour une cellule
+// de ~0.043945° et un décalage fixe de 0.045°). Décaler depuis le CENTRE de
+// la cellule (calculé en décodant son propre geohash) rend le calcul
+// indépendant de l'endroit où le point brut tombe dans sa cellule.
 function getGeohash5Neighbors(lat, lng) {
-  const d = 0.045; // ~5km en degrés
+  const centerHash = encodeGeohash(lat, lng, GEOHASH_STORE_PRECISION);
+  const center = decodeGeohash(centerHash);
+  const d = 0.045; // ~5km en degrés, > la largeur d'une cellule (~0.043945°)
   const cells = new Set();
   const offsets = [
     [0,0],[d,0],[-d,0],[0,d],[0,-d],
@@ -26,8 +52,8 @@ function getGeohash5Neighbors(lat, lng) {
   ];
   for (const [dlat, dlng] of offsets) {
     cells.add(encodeGeohash(
-      Math.max(-90, Math.min(90, lat + dlat)),
-      wrapLng(lng + dlng),
+      Math.max(-90, Math.min(90, center.lat + dlat)),
+      wrapLng(center.lng + dlng),
       GEOHASH_STORE_PRECISION
     ));
   }
@@ -62,8 +88,14 @@ export function encodeGeohash(lat, lng, precision = GEOHASH_STORE_PRECISION) {
 }
 
 export function buildGeohashFields(lat, lng) {
+  const geohash = encodeGeohash(lat, lng, GEOHASH_STORE_PRECISION);
   return {
-    geohash  : encodeGeohash(lat, lng, GEOHASH_STORE_PRECISION),
+    geohash,
+    // AT-6/M8 — alias : plusieurs call sites d'app.js (série de présence
+    // physique, détection de lieu fréquenté, badge "premier fantôme de ce
+    // lieu") lisent _gf.geohash5, resté undefined depuis un renommage —
+    // ces fonctionnalités étaient du code mort silencieux.
+    geohash5 : geohash,
     geohash4 : encodeGeohash(lat, lng, 4), // conservé pour compatibilité anciens docs
   };
 }
@@ -89,7 +121,9 @@ const WorldService = {
     this._requireInit();
     const { collection, getDocs, query, where, limit } = this._fns;
 
-    if (!lat) {
+    // AT-6/m19 — !lat est faux pour lat===0 (équateur) : bascule à tort en
+    // requête mondiale pour une position pourtant valide.
+    if (lat == null) {
       return getDocs(query(
         collection(this._db, 'ghosts'),
         where('expired', '==', false),
@@ -150,7 +184,7 @@ const WorldService = {
   // (audit 4.3), seule habilitée à écrire réellement le fantôme.
   async checkDepositCooldown(uid, isExpiredFn) {
     this._requireInit();
-    const { doc, getDoc, getDocs, query, collection, where } = this._fns;
+    const { doc, getDoc, getDocs, query, collection, where, limit } = this._fns;
 
     try {
       const userDoc = await getDoc(doc(this._db, 'users', uid));
@@ -167,13 +201,21 @@ const WorldService = {
         }
       }
 
+      // AT-6/m15 — précontrôle UX seulement (cf. commentaire ci-dessus) : un
+      // plafond ici est sans risque même s'il sous-compte occasionnellement
+      // sur un compte très ancien, puisque createGhostSecure recompte sans
+      // limite côté serveur et fait foi. 20 ≫ DEPOSIT.MAX_ACTIVE (5).
       const snap = await getDocs(query(
         collection(this._db, 'ghosts'),
-        where('authorUid', '==', uid)
+        where('authorUid', '==', uid),
+        limit(20)
       ));
       let active = 0;
       snap.forEach(d => {
         const g = d.data();
+        // AT-6/M9 — le fantôme de bienvenue (_welcome) ne doit pas consommer
+        // une des 5 places actives : ce n'est pas un dépôt volontaire.
+        if (g._welcome) return;
         if (!g.expired && !(isExpiredFn && isExpiredFn(g))) active++;
       });
       if (active >= DEPOSIT.MAX_ACTIVE) {

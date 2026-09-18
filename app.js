@@ -14,17 +14,25 @@ function _promptSignUp(toastKey) {
 }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, updateProfile, EmailAuthProvider, linkWithCredential, sendPasswordResetEmail, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, onSnapshot, doc, getDoc, setDoc, updateDoc, deleteDoc, increment, serverTimestamp, GeoPoint, arrayUnion } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-functions.js";
-import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=6';
-import GhostService from './services/ghost.service.js';
-import LocationService from './services/location.service.js';
-import AudioService from './services/audio.service.js';
-import HapticsService from './services/haptics.service.js';
+import WorldService, { buildGeohashFields, encodeGeohash } from './services/world.service.js?v=7';
+import GhostService from './services/ghost.service.js?v=1';
+import LocationService from './services/location.service.js?v=1';
+import AudioService from './services/audio.service.js?v=1';
+import HapticsService from './services/haptics.service.js?v=1';
 
 // AT-1/m14 — drapeau debug pour les logs de diagnostic verbeux (mini-carte,
 // etc.), actifs seulement en développement local.
 const DEBUG = ['localhost', '127.0.0.1'].includes(location.hostname);
+
+// AT-6/m19 — récupérée depuis src/config/performance.js avant suppression
+// (dossier mort, jamais importé par personne — cf. AT-6). Le CSS gère déjà
+// prefers-reduced-motion pour les animations déclaratives ; cette fonction
+// sert aux boucles rAF, qui l'ignoraient totalement.
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 // AT-2/C1-C2 — accès localStorage protégés. Safari "bloquer tous les
 // cookies", certaines WebViews embarquées et certains modes privés lèvent
@@ -176,6 +184,13 @@ const LANGS = {
     detail_fav_added: '★ Dans vos favoris',
     detail_report_btn: '⚑ Signaler ce fantôme',
     detail_reported: '✓ Déjà signalé',
+    // AT-6/M7 — blocage d'utilisateur : seul recours jusqu'ici était de
+    // signaler chaque fantôme un par un, sans effet immédiat pour la
+    // victime (cf. autoModerateGhost, qui exige 3 signalements distincts).
+    detail_block_btn: '🚫 Bloquer cet auteur',
+    detail_block_confirm_title: '🚫 Bloquer cet auteur ?',
+    detail_block_confirm_sub: 'Ses fantômes n\'apparaîtront plus jamais sur ton Radar ni ta Carte.',
+    detail_blocked_toast: 'Auteur bloqué.',
     detail_secret_on: '🔮 Mode secret activé',
     detail_secret_off: '🔮 Passer en secret',
     detail_first_toast: 'Tu es le premier à lire ce message !',
@@ -939,6 +954,10 @@ const LANGS = {
     detail_fav_added: '★ In your favorites',
     detail_report_btn: '⚑ Report this ghost',
     detail_reported: '✓ Already reported',
+    detail_block_btn: '🚫 Block this author',
+    detail_block_confirm_title: '🚫 Block this author?',
+    detail_block_confirm_sub: 'Their ghosts will never appear on your Radar or Map again.',
+    detail_blocked_toast: 'Author blocked.',
     detail_secret_on: '🔮 Secret mode on',
     detail_secret_off: '🔮 Switch to secret',
     detail_first_reader: 'You are the first to read this message',
@@ -2331,6 +2350,10 @@ let isPremium = false;
 let userLat = null;
 let userLng = null;
 let nearbyGhosts = [];
+// AT-6/M7 — uid des auteurs bloqués par l'utilisateur courant, chargé une
+// fois après authentification (cf. _loadBlockedUids) et consulté par
+// _processNearbyGhostsSnapshot pour ne plus jamais afficher leurs fantômes.
+let _blockedUids = new Set();
 // Cibles du ping sonar (angle du faisceau) — reconstruit à chaque renderRadarDots(),
 // consommé en continu par _radarPingLoop() pendant que l'écran radar est actif.
 let radarPingTargets = [];
@@ -3113,6 +3136,14 @@ async function _ensureLocationReady() {
 onAuthStateChanged(auth, async user => {
   if (user) {
     currentUser = user;
+    // AT-6/M7 — chargé une fois par session, avant tout chargement de
+    // fantômes ; ne bloque pas l'auth si Firestore est momentanément
+    // indisponible (repli sur "aucun blocage" plutôt que planter la connexion).
+    if (!user.isAnonymous) {
+      getDoc(doc(db, 'blocks', user.uid))
+        .then(snap => { _blockedUids = new Set(snap.exists() ? (snap.data().blockedUids || []) : []); })
+        .catch(e => console.warn('[ghostub:_loadBlockedUids]', e));
+    }
 
     // ── Utilisateur anonyme — radar lecture seule ──────────
     if (user.isAnonymous) {
@@ -3505,33 +3536,31 @@ function showNotif(title, body) {
 let notifCheckedGhosts = new Set();
 let _checkNewGhostsTimer = null;
 let _lastNotifTime = 0; // anti-spam : max 1 notif toutes les 10 min
-async function checkNewGhosts() {
+function checkNewGhosts() {
   if (!currentUser || !userLat) return;
   // FIX: Debounce — ne pas appeler plus d'une fois par minute
   if (_checkNewGhostsTimer) return;
   _checkNewGhostsTimer = setTimeout(() => { _checkNewGhostsTimer = null; }, 60000);
-  try {
-    const snap = await WorldService.getVisibleGhosts(userLat, userLng);
-    snap.forEach(d => {
-      const g = { id: d.id, ...d.data() };
-      if (notifCheckedGhosts.has(g.id)) return;
-      if (isExpired(g)) return;
-      if (!g.lat || !g.lng) return;
-      const dist = distanceMeters(userLat, userLng, g.lat, g.lng);
-      if (dist <= 5000) {
-        notifCheckedGhosts.add(g.id);
-        if (g.createdAt && (Date.now() - g.createdAt.seconds * 1000) < 600000) {
-          const _now = Date.now();
-          if (_now - _lastNotifTime > 600000) {
-            _lastNotifTime = _now;
-            showNotif(t.notif_new_ghost_title, `À ${formatDistance(dist)} de vous — ${escapeHTML(g.location || t.detail_location_unknown)}`);
-          }
+  // AT-6/m15 — consomme désormais nearbyGhosts, déjà en mémoire (peuplé par
+  // loadNearbyGhosts()), au lieu de relancer la requête geohash complète
+  // (jusqu'à 100 documents) toutes les 5 minutes rien que pour détecter les
+  // nouveautés. nearbyGhosts est déjà filtré à 5km et trié par distance.
+  nearbyGhosts.forEach(g => {
+    if (notifCheckedGhosts.has(g.id)) return;
+    if (isExpired(g)) return;
+    if (!g.lat || !g.lng) return;
+    const dist = g.distance ?? distanceMeters(userLat, userLng, g.lat, g.lng);
+    if (dist <= 5000) {
+      notifCheckedGhosts.add(g.id);
+      if (g.createdAt && (Date.now() - g.createdAt.seconds * 1000) < 600000) {
+        const _now = Date.now();
+        if (_now - _lastNotifTime > 600000) {
+          _lastNotifTime = _now;
+          showNotif(t.notif_new_ghost_title, `À ${formatDistance(dist)} de vous — ${escapeHTML(g.location || t.detail_location_unknown)}`);
         }
       }
-    });
-  } catch(e) {
-    console.warn('checkNewGhosts error:', e);
-  }
+    }
+  });
 }
 
 // FIX: Guard contre les appels concurrents
@@ -4976,18 +5005,28 @@ async function refreshProfileStats() {
     const userData = userSnap.exists() ? userSnap.data() : {};
     const _depKey2 = 'ghostub_total_deposited_' + currentUser.uid;
     const _localDep = parseInt(localStorage.getItem(_depKey2) || '0');
+    // AT-6/m15 — deposited et resonances retombaient chacun sur la même
+    // requête (authorUid == uid) en fallback, exécutées en série : une seule
+    // suffit, partagée par les deux.
+    let _myGhostsSnap = null;
+    const _getMyGhostsSnap = async () => {
+      if (!_myGhostsSnap) {
+        _myGhostsSnap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid), limit(100)));
+      }
+      return _myGhostsSnap;
+    };
     if (userData.ghostCount != null) {
       deposited = Math.max(userData.ghostCount, _localDep);
     } else {
       // Fallback : compter les docs (migration douce)
-      const snap = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid), limit(100)));
+      const snap = await _getMyGhostsSnap();
       deposited = Math.max(snap.size, _localDep);
     }
     animateStatNumber('statDeposited', deposited);
     if (userData.totalResonances != null) {
       resonances = userData.totalResonances;
     } else {
-      const snap2 = await getDocs(query(collection(db, COLL.GHOSTS), where('authorUid','==', currentUser.uid), limit(100)));
+      const snap2 = await _getMyGhostsSnap();
       snap2.forEach(d => { resonances += d.data().resonances || 0; });
     }
     animateStatNumber('statResonances', resonances);
@@ -5615,7 +5654,41 @@ function updateReportBtn(ghostId) {
       btn.innerHTML = t.detail_report_btn;
     }
   }
+  updateBlockBtn();
 }
+
+// AT-6/M7 — masqué pour son propre fantôme (se bloquer soi-même n'a pas de
+// sens) ou si l'auteur n'a pas d'authorUid exploitable (ne devrait pas
+// arriver pour un fantôme normal, mais évite un bouton qui ne ferait rien).
+function updateBlockBtn() {
+  const btn = document.getElementById('blockAuthorBtn');
+  if (!btn || !currentUser || !selectedGhost) return;
+  const isOwn = selectedGhost.authorUid === currentUser.uid;
+  btn.style.display = (isOwn || !selectedGhost.authorUid) ? 'none' : '';
+}
+
+window.blockGhostAuthor = async () => {
+  if (_isGuestUser()) { _promptSignUp('guest_signup_generic'); return; }
+  if (!currentUser || !selectedGhost?.authorUid) return;
+  const authorUid = selectedGhost.authorUid;
+  const confirmed = await showConfirm(t.detail_block_confirm_title, t.detail_block_confirm_sub, { confirmLabel: t.detail_block_btn });
+  if (!confirmed) return;
+  try {
+    await setDoc(doc(db, 'blocks', currentUser.uid), { blockedUids: arrayUnion(authorUid) }, { merge: true });
+    _blockedUids.add(authorUid);
+    // Retirer immédiatement ses fantômes de la vue courante, sans attendre
+    // le prochain loadNearbyGhosts().
+    nearbyGhosts = nearbyGhosts.filter(g => g.authorUid !== authorUid);
+    renderGhostList();
+    renderRadarDots();
+    showToast('success', t.detail_blocked_toast);
+    showScreen('screenRadar');
+    setNav('nav-radar');
+  } catch(e) {
+    console.warn('[ghostub:blockGhostAuthor]', e);
+    showToast('error', t.misc_error_generic);
+  }
+};
 
 // ── PARTAGE ──────────────────────────────────────────────
 
@@ -6129,7 +6202,10 @@ let _unsubResonances = null;
 function watchMyGhostResonances() {
   if (_unsubResonances) { _unsubResonances(); _unsubResonances = null; }
   if (!currentUser) return;
-  const q = query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid));
+  // AT-6/m15 — sans limit(), ce listener temps réel réémet la totalité des
+  // fantômes de l'auteur (actifs ET expirés en attente de purge à 60 jours)
+  // à chaque modification, sans borne dans le temps pour un compte ancien.
+  const q = query(collection(db, COLL.GHOSTS), where('authorUid', '==', currentUser.uid), limit(50));
   _unsubResonances = onSnapshot(q, snap => {
     snap.docChanges().forEach(change => {
       if (change.type === 'modified') {
@@ -6437,7 +6513,8 @@ const timeRemaining = g => {
 // ══════════════════════════════════════════════════════════
 async function _seedWelcomeGhost() {
   if (!currentUser || currentUser.isAnonymous) return;
-  if (!userLat || !userLng) return;
+  // AT-6/m19 — !userLat est faux pour userLat===0 (équateur).
+  if (userLat == null || userLng == null) return;
   const key = 'ghostub_welcomed_' + currentUser.uid;
   if (_lsGet(key)) return;
 
@@ -6454,7 +6531,11 @@ async function _seedWelcomeGhost() {
       lng: _wLng,
       location: _currentLang === 'en' ? 'Right here' : 'Juste ici',
       radius: '30m',
-      duration: '7j',
+      // AT-6/M9 — '7j' n'existe dans aucune table de durées (isExpired,
+      // GhostService.DURATIONS_MS, GHOST_DURATIONS_MS côté serveur) : ce
+      // fantôme n'expirait jamais et s'affichait "♾ Éternel", un statut
+      // censé être réservé au Premium.
+      duration: '7 jours',
       maxOpenCount: 0,
       anonymous: false,
       author: 'Ghostub',
@@ -6684,6 +6765,8 @@ function _processNearbyGhostsSnapshot(snap) {
   window._distantGhostsCache = [];
   snap.forEach(d => {
     const g = { id: d.id, ...d.data() };
+    // AT-6/M7 — fantômes d'un auteur bloqué : jamais affichés, sur aucun écran.
+    if (g.authorUid && _blockedUids.has(g.authorUid)) return;
     if (g.expired) return;
     if (isExpired(g)) {
       updateDoc(doc(db, COLL.GHOSTS, g.id), { expired: true }).catch(()=>{});
@@ -7696,7 +7779,15 @@ window.checkPublicProfileParam = async () => {
     const userData = userDoc.exists() ? userDoc.data() : {};
     const rank = getRank(_combinedCollectionScore({ discovered: 0, deposited: ghostCount, resonances: userData.totalResonances || 0, streak: 0 }));
     showPublicProfileModal(uid, name, ghostCount, totalOpens, ghostsSnap.docs, rank);
-  } catch(e) { console.warn('checkPublicProfileParam:', e); }
+  } catch(e) {
+    // AT-6/M5 — un console.warn muet ici : quelqu'un cliquant un lien de
+    // profil partagé (shareEmpreinte) ne voyait rien du tout, sans le
+    // moindre signal que quelque chose a échoué (souvent le cas aujourd'hui,
+    // les règles Firestore actuelles réservant la lecture de users/{uid} au
+    // propriétaire — cf. rapport de lot, décision produit en attente).
+    console.warn('checkPublicProfileParam:', e);
+    showToast('error', t.misc_error_generic);
+  }
 };
 
 window.showPublicProfileModal = (uid, name, ghostCount, totalOpens, ghostDocs, rank) => {
@@ -8175,6 +8266,10 @@ let _radarPingLastPhase = 0;
 
 function _startRadarPingLoop() {
   _stopRadarPingLoop();
+  // AT-6/m19 — le ping sonar est calé sur le passage du faisceau .radar-sweep
+  // (CSS), déjà figé par prefers-reduced-motion (style.css) : sans balayage
+  // visuel, un ping calé sur un balayage fantôme n'a plus de sens.
+  if (prefersReducedMotion()) return;
   _radarPingStartTime = performance.now();
   _radarPingLastPhase = 0;
   _radarPingIntervalId = setInterval(() => {
@@ -9572,10 +9667,11 @@ window.depositGhost = async () => {
 
     if (!message) { err.textContent = t.dep_err_msg; document.getElementById('depositMsg').focus(); return; }
     if (message.length > 600) { err.textContent = t.dep_err_long; return; }
-    if (!userLat) {
+    // AT-6/m19 — !userLat est faux pour userLat===0 (équateur).
+    if (userLat == null) {
       // Tenter une dernière fois
       try { await getLocation(); } catch(e) { console.warn('[ghostub:depositGhost:gps]', e); }
-      if (!userLat) { err.textContent = t.dep_err_gps; return; }
+      if (userLat == null) { err.textContent = t.dep_err_gps; return; }
     }
     // AT-5/C5 — bloquer le dépôt sur position de repli (centre géographique
     // de la France, posée par _resolveNearbyGhostsLocation quand le GPS n'a
@@ -11799,6 +11895,7 @@ const ACTIONS = {
   logout: () => logout(),
   deleteMyGhosts: () => deleteMyGhosts(),
   deleteAccount: () => deleteAccount(),
+  blockGhostAuthor: () => blockGhostAuthor(),
   toggleDepositedList: () => toggleDepositedList(),
   toggleDiscoveryHistory: () => toggleDiscoveryHistory(),
   toggleFavoritesList: () => toggleFavoritesList(),

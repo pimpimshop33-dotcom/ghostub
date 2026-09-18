@@ -427,6 +427,17 @@ service cloud.firestore {
         && request.resource.data.count == resource.data.get('count', 0) + 1;
     }
 
+    // ── Blocks (AT-6/M7) ──────────────────────────────
+    // Un seul doc par utilisateur, tableau des uid bloqués — lu/écrit
+    // uniquement par son propriétaire (jamais par la personne bloquée, qui
+    // n'a pas à savoir qu'elle l'est).
+    match /blocks/{uid} {
+      allow read, write: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['blockedUids'])
+        && request.resource.data.blockedUids is list
+        && request.resource.data.blockedUids.size() <= 500;
+    }
+
     // ── GhostStats ────────────────────────────────────
     // Repli d'écriture pour openCount/expired quand un visiteur non-
     // propriétaire ouvre un fantôme qui expire pile à ce moment-là (le champ

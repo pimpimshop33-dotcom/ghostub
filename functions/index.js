@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
-const { onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { onDocumentDeleted, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const { initializeApp, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
@@ -241,6 +241,36 @@ exports.onGhostMediaCleanup = onDocumentDeleted(
   }
 );
 
+// AT-6/M6 — modération automatique. L'aide (app.js) et la modale de
+// signalement (index.html) promettent toutes deux « après 3 signalements,
+// il est supprimé » depuis le début, mais aucune fonction ne l'appliquait :
+// reportCount s'incrémentait, /reports s'accumulait (illisible : read:false
+// dans firestore.rules), et rien n'était jamais retiré. Se déclenche sur
+// CHAQUE nouveau signalement plutôt que de faire confiance à reportCount
+// (compteur incrémenté côté client, cf. submitReport dans app.js) : compte
+// les signalements réellement présents dans /reports pour ce fantôme, et
+// déduplique par reporterUid pour qu'un seul utilisateur signalant
+// plusieurs fois ne suffise pas à lui seul à franchir le seuil.
+const REPORT_THRESHOLD = 3;
+exports.autoModerateGhost = onDocumentCreated(
+  { region: 'europe-west9', document: 'reports/{reportId}' },
+  async (event) => {
+    const report = event.data?.data();
+    if (!report || typeof report.ghostId !== 'string') return;
+
+    const reportsSnap = await db.collection('reports').where('ghostId', '==', report.ghostId).get();
+    const uniqueReporters = new Set(reportsSnap.docs.map(d => d.data().reporterUid).filter(Boolean));
+    if (uniqueReporters.size < REPORT_THRESHOLD) return;
+
+    const ghostRef = db.collection('ghosts').doc(report.ghostId);
+    const ghostSnap = await ghostRef.get();
+    if (!ghostSnap.exists) return; // déjà supprimé (par un déclenchement précédent, ou par l'auteur)
+
+    await ghostRef.delete(); // déclenche onGhostMediaCleanup ci-dessus (purge Cloudinary)
+    console.log(`autoModerateGhost: ghosts/${report.ghostId} supprimé (${uniqueReporters.size} signalements distincts).`);
+  }
+);
+
 // AT-5/M12 — nettoie sur Cloudinary les médias uploadés côté client AVANT
 // qu'un dépôt échoue (ex. audio envoyé avec succès, photo suivante en échec
 // → tout le dépôt est annulé, mais l'audio restait orphelin sur Cloudinary,
@@ -423,6 +453,35 @@ exports.createGhostSecure = onCall({ region: 'europe-west9' }, async (request) =
     }
   }
 
+  // AT-6/m19 — createGhostSecure contourne firestore.rules (admin SDK) sans
+  // revalider ces champs lui-même : emoji sans limite de taille, attachments
+  // seulement vérifié par Array.isArray (jamais son contenu), openHour/
+  // openDate/maxOpenCount stockés bruts via ?? null. Un client direct (pas
+  // forcément l'app) pouvait donc pousser n'importe quoi dans ces champs.
+  if (d.emoji != null && (typeof d.emoji !== 'string' || d.emoji.length > 8)) {
+    throw new HttpsError('invalid-argument', 'Emoji invalide.');
+  }
+  if (d.attachments != null) {
+    if (!Array.isArray(d.attachments) || d.attachments.length > 3) {
+      throw new HttpsError('invalid-argument', 'Pièces jointes invalides.');
+    }
+    for (const a of d.attachments) {
+      if (!a || typeof a.url !== 'string' || typeof a.name !== 'string' || a.name.length > 200
+        || typeof a.size !== 'number' || a.size < 0 || a.size > 20 * 1024 * 1024) {
+        throw new HttpsError('invalid-argument', 'Pièce jointe invalide.');
+      }
+    }
+  }
+  if (d.openHour != null && (typeof d.openHour !== 'string' || !/^\d{2}:\d{2}$/.test(d.openHour))) {
+    throw new HttpsError('invalid-argument', 'Heure d\'ouverture invalide.');
+  }
+  if (d.openDate != null && (typeof d.openDate !== 'string' || d.openDate.length > 40)) {
+    throw new HttpsError('invalid-argument', 'Date d\'ouverture invalide.');
+  }
+  if (d.maxOpenCount != null && (typeof d.maxOpenCount !== 'number' || d.maxOpenCount < 0 || d.maxOpenCount > 999)) {
+    throw new HttpsError('invalid-argument', 'Nombre d\'ouvertures maximum invalide.');
+  }
+
   const userRef = db.collection('users').doc(uid);
 
   try {
@@ -452,6 +511,9 @@ exports.createGhostSecure = onCall({ region: 'europe-west9' }, async (request) =
         const now = Date.now();
         activeSnap.forEach(docSnap => {
           const g = docSnap.data();
+          // AT-6/M9 — le fantôme de bienvenue (_welcome, créé côté client en
+          // écriture directe) ne doit pas consommer une place active.
+          if (g._welcome) return;
           if (!g.expired && !ghostIsExpired(g, now)) active++;
         });
         if (active >= DEPOSIT_MAX_ACTIVE) {

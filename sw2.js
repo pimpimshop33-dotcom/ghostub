@@ -1,5 +1,5 @@
 // ── GHOSTUB Service Worker ──────────────────────────────
-const CACHE_NAME = 'ghostub-v133';
+const CACHE_NAME = 'ghostub-v134';
 
 // ── INSTALL — pré-cacher uniquement les assets non versionnés ─
 // Audit 1.7 : addAll() sans .catch() — si ce seul fetch échouait (blip
@@ -32,12 +32,16 @@ self.addEventListener('fetch', e => {
   // Ne jamais intercepter Firestore / APIs Google
   if (url.includes('firestore') || url.includes('googleapis')) return;
 
-  // 1) ASSETS VERSIONNÉS (app.js?v=, style.css?v=) → CACHE-FIRST
+  // 1) ASSETS VERSIONNÉS (app.js?v=, style.css?v=, services/*.js?v=) → CACHE-FIRST
   //    L'URL change à chaque bump de version (?v=108, 109…), donc une nouvelle
   //    version = nouvelle URL = re-téléchargée UNE SEULE FOIS, puis servie
   //    instantanément depuis le cache. Fini les 383 Ko re-téléchargés à chaque
   //    ouverture. Les anciennes versions sont purgées au prochain bump de CACHE_NAME.
-  const isVersionedAsset = /\/(app\.js|style\.css)\?v=/.test(url);
+  //    AT-6/m19 — ghost/location/audio/haptics.service.js n'étaient pas
+  //    reconnus ici (seul world.service.js portait un ?v=) : un déploiement
+  //    qui bumpe app.js?v= sans toucher CACHE_NAME pouvait livrer un app.js
+  //    neuf important des services encore en cache-first sans version.
+  const isVersionedAsset = /\/(app\.js|style\.css|services\/[^/?]+\.js)\?v=/.test(url);
   if (isVersionedAsset) {
     e.respondWith(
       caches.match(e.request).then(cached => {
