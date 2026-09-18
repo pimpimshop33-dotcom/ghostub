@@ -8670,6 +8670,14 @@ window.openGhost = async (id) => {
   showScreen('screenDetail');
   setNav('');
 
+  // AT-3/M1 — relecture d'un fantôme déjà découvert : révéler directement
+  // (sauter sceau + grattage), sans nouvelle vérif de distance ni
+  // reconsommation du quota. showScreen() vient de re-sceller l'enveloppe
+  // inconditionnellement (cf. _showScreenBase) ; on l'annule ici pour ce cas.
+  if (!isLocked && getDiscoveredIds().includes(id)) {
+    _revealEnvelopeInstant();
+  }
+
   // AT-2/M4 — l'affichage du détail ne dépend pas des réponses : si la
   // requête échoue (index composite absent, réseau, hors-ligne sans cache),
   // on ne bloque plus l'ouverture de l'écran, on vide juste la liste.
@@ -8693,9 +8701,17 @@ function hasResonatedToday() { return !!_lsGet(getDailyResoKey()); }
 // ── LIMITE OUVERTURES JOURNALIÈRES (Firestore) ───────────
 const DAILY_OPEN_LIMIT = 3;
 
+// AT-3/M3 — alignée sur todayKeyUTC() (functions/index.js), qui fait
+// autorité côté serveur. Avant ce fix, cette clé était en heure locale : à
+// Paris entre 00h et 02h le client annonçait "3 restantes" (nouvelle clé
+// locale, vide) alors que le serveur comptait encore sur la veille (clé UTC
+// inchangée) — l'utilisateur se prenait un "quota épuisé" juste après
+// l'annonce inverse. Symétriquement, à UTC-8 le serveur changeait de clé à
+// 16h locales, doublant le quota apparent. ⚠️ doit rester synchronisé avec
+// todayKeyUTC() dans functions/index.js (cf. AT-8 pour la source commune).
 function _todayKey() {
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
 }
 
 // ── Vérification + incrémentation FIABLE de la limite, via Cloud Function ──
@@ -9455,6 +9471,16 @@ window.sendQuickReaction = async (emoji, btn) => {
 };
 
 async function _doOpenEnvelope() {
+  // AT-3/M1 — défense en profondeur : openGhost() détourne désormais les
+  // relectures avant même d'atteindre ce flux (sceau/distance/quota), mais
+  // si ce point est atteint quand même pour un fantôme déjà découvert
+  // (désync locale, double appel), ne pas consommer le quota — avant ce
+  // garde, consumeOpenQuota() tournait AVANT tout, y compris pour une pure
+  // relecture, où addDiscovery() plus bas ne faisait que renvoyer false.
+  if (selectedGhost && getDiscoveredIds().includes(selectedGhost.id)) {
+    _revealEnvelopeInstant();
+    return;
+  }
   // Vérification + incrémentation FIABLE (serveur) — bloque réellement si la limite est atteinte,
   // même si le client a été manipulé (variable isPremium locale falsifiée, etc.)
   const _quota = await consumeOpenQuota();
@@ -9500,7 +9526,11 @@ async function _doOpenEnvelope() {
           // Lot AS — médaille 🥇 (emoji système) → SVG ✦ ambre + tutoiement.
           readCountEl.innerHTML = `<span class="first-reader-badge">${_uiIconHTML('✦', { size: 12, className: 'ui-icon first-reader-icon' })} ${t.detail_first_reader}</span>`;
         } else {
-          const prev = selectedGhost.openCount || 0;
+          // AT-3/M1 (dernier point) — realOpenCount (relu depuis Firestore
+          // juste au-dessus) au lieu de selectedGhost.openCount, qui est un
+          // instantané en cache pouvant être périmé. Bug de précédence ||
+          // sur cette même ligne traité à part, cf. AT-4.
+          const prev = realOpenCount;
           readCountEl.innerHTML = `<span class="already-read-badge">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;
         }
         readCountEl.style.display = 'block';
@@ -9791,6 +9821,23 @@ function showOpenLimitWarning(remaining, onConfirm) {
   okBtn.addEventListener('click', onOk);
   cancelBtn.addEventListener('click', onCancel);
   setTimeout(() => (remaining > 0 ? okBtn : cancelBtn).focus(), 80);
+}
+
+// AT-3/M1 — affiche directement le contenu (sans sceau ni grattage) pour une
+// relecture, appelée depuis openGhost() une fois le fantôme confirmé déjà
+// découvert. Pas de vérif de distance, pas de consumeOpenQuota().
+function _revealEnvelopeInstant() {
+  const sealed = document.getElementById('envelopeSealed');
+  const revealed = document.getElementById('envelopeContent');
+  if (sealed) sealed.style.display = 'none';
+  if (revealed) {
+    revealed.style.display = '';
+    revealed.classList.add('envelope-reveal');
+  }
+  // "Vu par X personnes" reflète le moment de la découverte, pas la
+  // relecture — on ne le recalcule pas ici (cf. _doOpenEnvelope).
+  const readCountEl = document.getElementById('detailReadCount');
+  if (readCountEl) readCountEl.style.display = 'none';
 }
 
 window.openEnvelope = async () => {

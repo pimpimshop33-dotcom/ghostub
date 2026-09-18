@@ -177,9 +177,19 @@ service cloud.firestore {
         // — seulement à la toute première découverte). reportCount (audit 1.2)
         // était absent de cette liste blanche : chaque signalement échouait
         // silencieusement, le seuil de modération ne pouvait jamais compter.
+        // AT-3/M2 — 'expired' était absent de cette liste blanche : dès
+        // qu'un lecteur non-auteur atteignait maxOpenCount, l'updateDoc
+        // entier était refusé (openCount compris), rendant maxOpenCount
+        // inopérant pour tout le monde sauf l'auteur. Transition à sens
+        // unique (false→true uniquement) : un non-auteur ne peut jamais
+        // rouvrir un fantôme qu'il vient de fermer.
         || (
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount', 'reportCount'])
+            .hasOnly(['openCount', 'resonances', 'viewCount', 'activityScore', 'lastPresenceAt', 'discoveriesCount', 'reportCount', 'expired'])
+          && (
+            !request.resource.data.diff(resource.data).affectedKeys().hasAny(['expired'])
+            || request.resource.data.expired == true
+          )
           && (
             !request.resource.data.diff(resource.data).affectedKeys().hasAny(['openCount'])
             || request.resource.data.openCount == resource.data.get('openCount', 0) + 1
