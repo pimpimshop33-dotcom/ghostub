@@ -55,7 +55,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=232"></script>
+<script type="module" src="app.js?v=233"></script>
 
 <link rel="stylesheet" href="style.css?v=215">
 </head>
@@ -261,7 +261,7 @@
       </div>
       <!-- Explorer sans compte -->
       <button data-action="guestExplore" class="auth-guest-btn">
-        🌫️ Explorer sans compte <span class="auth-guest-btn-sub">(lecture seule)</span>
+        <span data-i18n="auth_guest_btn">🌫️ Explorer sans compte</span> <span class="auth-guest-btn-sub" data-i18n="auth_guest_btn_sub">(lecture seule)</span>
       </button>
     </div>
   </div>
@@ -458,7 +458,7 @@
         <div class="detail-actions-row">
           <button id="favoriteBtn" data-action="toggleFavorite" class="btn-favorite" aria-label="Ajouter aux favoris">★ Ajouter aux favoris</button>
           <button class="ghost-card-btn" id="ghostCardBtn" data-action="generateGhostCard" aria-label="Créer une Ghost Card partageable">
-            <span>👻 Créer une Ghost Card</span>
+            <span data-i18n="ghost_card_btn">👻 Créer une Ghost Card</span>
           </button>
         </div>
         <div class="detail-links-row">
@@ -478,7 +478,7 @@
       <div class="reply-screen-sub" data-i18n="reply_screen_sub">Votre réponse restera ancrée au même endroit.</div>
       <div class="form-group u-mb4">
         <label class="form-label" for="replyMsg" data-i18n="reply_msg_label">Votre message</label>
-        <textarea class="form-textarea reply-msg-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" maxlength="280" aria-required="true" data-input-action="updateReplyCount"></textarea>
+        <textarea class="form-textarea reply-msg-textarea" id="replyMsg" placeholder="Ce que vous ressentez…" data-i18n-placeholder="reply_msg_placeholder" maxlength="280" aria-required="true" data-input-action="updateReplyCount"></textarea>
       </div>
       <div class="reply-char-count" id="replyCharCount">0 / 280</div>
       <div class="form-group u-mb16">
@@ -589,35 +589,35 @@
         <!-- Formulaire Commerce (formulaire dédié) -->
         <div id="businessDepositForm" class="u-hidden">
           <div class="dep-biz-type-box">
-            <div class="dep-biz-type-label">🏪 Type d'offre</div>
+            <div class="dep-biz-type-label" data-i18n="dep_biz_type_label">🏪 Type d'offre</div>
             <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" data-action="toggleBizTypeAccordion">
-              <span id="bizTypeAccordionSummary">🏷 Promo</span>
+              <span id="bizTypeAccordionSummary" data-i18n="dep_biz_type_promo">🏷 Promo</span>
               <span class="toggle-arrow" aria-hidden="true">▼</span>
             </div>
             <div class="deposit-advanced-content" id="bizTypeAccordionContent">
               <div class="dep-biz-type-selector" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
-                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true">🏷 Promo</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false">🎉 Événement</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false">✨ Nouveauté</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false">🛎 Service</button>
+                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true" data-i18n="dep_biz_type_promo">🏷 Promo</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_event">🎉 Événement</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_new">✨ Nouveauté</button>
+                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_service">🛎 Service</button>
               </div>
             </div>
           </div>
           <div class="form-group u-mb10">
-            <label class="form-label" for="bizTitle">Titre de l'offre <span class="dep-required-mark">*</span></label>
-            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" maxlength="80" aria-required="true">
+            <label class="form-label" for="bizTitle"><span data-i18n="dep_biz_title_label">Titre de l'offre</span> <span class="dep-required-mark">*</span></label>
+            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" data-i18n-placeholder="dep_biz_title_placeholder" maxlength="80" aria-required="true">
           </div>
           <div class="form-group u-mb10">
-            <label class="form-label" for="bizDesc">Description <span class="dep-optional-mark">(optionnel)</span></label>
-            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" maxlength="200"></textarea>
+            <label class="form-label" for="bizDesc"><span data-i18n="dep_biz_desc_label">Description</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
+            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" data-i18n-placeholder="dep_biz_desc_placeholder" maxlength="200"></textarea>
           </div>
           <div class="form-group u-mb6">
-            <label class="form-label" for="promoCode">Code promo <span class="dep-optional-mark">(optionnel)</span></label>
-            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" maxlength="40">
+            <label class="form-label" for="promoCode"><span data-i18n="dep_biz_promo_label">Code promo</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
+            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" data-i18n-placeholder="dep_biz_promo_placeholder" maxlength="40">
           </div>
           <div class="dep-biz-radius-banner">
             <span class="dep-biz-radius-emoji">📡</span>
-            <span class="dep-biz-radius-text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+            <span class="dep-biz-radius-text" data-i18n="dep_biz_radius_text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
           </div>
         </div>
 
@@ -1237,13 +1237,13 @@
   <div class="share-sheet">
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="share-sheet-title" id="shareModalTitle" data-i18n="share_modal_title">Partager ce fantôme</div>
-    <div class="share-sheet-sub">Seule la position est partagée.<br>Le contenu reste invisible jusqu'à ce qu'on soit sur place.</div>
+    <div class="share-sheet-sub" data-i18n="share_sheet_sub">Seule la position est partagée.<br>Le contenu reste invisible jusqu'à ce qu'on soit sur place.</div>
     <div class="share-link-box" id="shareLinkBox" aria-label="Lien de partage">…</div>
     <div class="share-actions">
-      <button class="share-copy-btn" data-action="copyShareLink">📋 Copier le lien</button>
-      <button class="share-native-btn" data-action="nativeShare">↗ Partager via…</button>
+      <button class="share-copy-btn" data-action="copyShareLink" data-i18n="share_copy_btn">📋 Copier le lien</button>
+      <button class="share-native-btn" data-action="nativeShare" data-i18n="share_native_btn">↗ Partager via…</button>
     </div>
-    <button class="share-cancel" data-action="closeModal" data-arg="shareModal">Annuler</button>
+    <button class="share-cancel" data-action="closeModal" data-arg="shareModal" data-i18n="confirm_cancel">Annuler</button>
   </div>
 </div>
 
@@ -1257,16 +1257,16 @@
   <div class="report-sheet">
     <div class="sheet-handle" aria-hidden="true"></div>
     <div class="report-sheet-title" id="reportModalTitle" data-i18n="report_title">Signaler ce fantôme</div>
-    <div class="report-sheet-sub">Après 3 signalements, le message sera supprimé automatiquement.</div>
+    <div class="report-sheet-sub" data-i18n="report_sheet_sub">Après 3 signalements, le message sera supprimé automatiquement.</div>
     <div class="report-reasons" role="list">
-      <div class="report-reason" data-action="submitReport" data-arg="spam" role="listitem" tabindex="0">🚫 <span>Spam ou contenu répétitif</span></div>
-      <div class="report-reason" data-action="submitReport" data-arg="harcèlement" role="listitem" tabindex="0">😠 <span>Harcèlement ou attaque personnelle</span></div>
-      <div class="report-reason" data-action="submitReport" data-arg="photo_inappropriée" role="listitem" tabindex="0">📷 <span>Photo inappropriée ou choquante</span></div>
-      <div class="report-reason" data-action="submitReport" data-arg="contenu_inapproprié" role="listitem" tabindex="0">⚠️ <span>Message inapproprié ou offensant</span></div>
-      <div class="report-reason" data-action="submitReport" data-arg="fausses_informations" role="listitem" tabindex="0">❌ <span>Fausses informations dangereuses</span></div>
-      <div class="report-reason" data-action="submitReport" data-arg="autre" role="listitem" tabindex="0">💬 <span>Autre raison</span></div>
+      <div class="report-reason" data-action="submitReport" data-arg="spam" role="listitem" tabindex="0" data-i18n="report_spam">🚫 Spam ou contenu répétitif</div>
+      <div class="report-reason" data-action="submitReport" data-arg="harcèlement" role="listitem" tabindex="0" data-i18n="report_harassment">😠 Harcèlement ou attaque personnelle</div>
+      <div class="report-reason" data-action="submitReport" data-arg="photo_inappropriée" role="listitem" tabindex="0" data-i18n="report_photo">📷 Photo inappropriée ou choquante</div>
+      <div class="report-reason" data-action="submitReport" data-arg="contenu_inapproprié" role="listitem" tabindex="0" data-i18n="report_inappropriate">⚠️ Message inapproprié ou offensant</div>
+      <div class="report-reason" data-action="submitReport" data-arg="fausses_informations" role="listitem" tabindex="0" data-i18n="report_fake">❌ Fausses informations dangereuses</div>
+      <div class="report-reason" data-action="submitReport" data-arg="autre" role="listitem" tabindex="0" data-i18n="report_other">💬 Autre raison</div>
     </div>
-    <button class="report-cancel" data-action="closeModal" data-arg="reportModal">Annuler</button>
+    <button class="report-cancel" data-action="closeModal" data-arg="reportModal" data-i18n="confirm_cancel">Annuler</button>
   </div>
 </div>
 
@@ -1280,8 +1280,8 @@
       <input id="confirmTypedInput" type="text" placeholder="SUPPRIMER" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" class="confirm-typed-input">
     </div>
     <div class="confirm-actions">
-      <button class="confirm-cancel-btn" id="confirmCancel">Annuler</button>
-      <button class="confirm-ok-btn" id="confirmOk">Supprimer</button>
+      <button class="confirm-cancel-btn" id="confirmCancel" data-i18n="confirm_cancel">Annuler</button>
+      <button class="confirm-ok-btn" id="confirmOk" data-i18n="confirm_ok">Confirmer</button>
     </div>
   </div>
 </div>

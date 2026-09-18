@@ -99,10 +99,18 @@ const LANGS = {
     guest_signup_deposit: 'Créez un compte gratuit pour déposer un fantôme',
     guest_signup_profile: 'Créez un compte gratuit pour accéder à votre profil',
     guest_signup_generic: 'Créez un compte gratuit pour continuer',
+    // AT-4/m16 — "Explorer sans compte", premier écran après l'intro, en
+    // français en dur.
+    auth_guest_btn: '🌫️ Explorer sans compte',
+    auth_guest_btn_sub: '(lecture seule)',
     radar_locating: 'Localisation en cours…',
     radar_searching: '🔍 Recherche de fantômes…',
     radar_no_gps: 'Géolocalisation refusée — autorisez-la dans les réglages de votre navigateur pour découvrir les fantômes proches.',
     radar_retry_btn: '↻ Réessayer',
+    // AT-4/AT-1/m19 — "X/Y à portée" était codé en dur en français dans
+    // renderRadarDots(), seul compteur du fichier à l'être encore.
+    radar_in_range: '{n}/{total} à portée',
+    radar_none_in_range: 'Aucun à portée — rapproche-toi',
     map_load_err: '⚠️ Impossible de charger la carte — vérifiez votre connexion.',
     radar_no_ghosts: 'Aucun fantôme proche — soyez le premier !',
     radar_no_ghosts_widened: 'Aucun fantôme à 5km — affichage élargi 50km',
@@ -295,6 +303,10 @@ const LANGS = {
     dep_dedicated_hint: 'Laisse vide pour que n\'importe qui puisse l\'ouvrir.',
     dep_future_hint: 'Le fantôme sera invisible jusqu\'à cette date — comme un message dans une bouteille',
     reply_msg_label: 'Votre message',
+    // AT-4/m16 — placeholder du textarea de réponse, en dur dans index.html.
+    reply_msg_placeholder: 'Ce que vous ressentez…',
+    // AT-4/m16 — bouton de génération de Ghost Card partageable.
+    ghost_card_btn: '👻 Créer une Ghost Card',
     dep_identity_named: '🌫️ Signé',
     dep_identity_anon: '👻 Anonyme',
     dep_secret_label: '🔮 Secret (3m)',
@@ -500,9 +512,17 @@ const LANGS = {
     blocked_back: '← Revenir',
     error_prefix: 'Erreur :',
     loading: 'Chargement…',
-    report_spam: '🗑 Spam / Publicité',
-    report_inappropriate: '🔞 Contenu inapproprié',
-    report_harassment: '⚠ Harcèlement',
+    // AT-4/M7 — la modale de signalement (index.html) était en français en
+    // dur, sans data-i18n, alors que ces clés existaient déjà (jamais
+    // utilisées) : réécrites pour matcher le texte déjà affiché (aucun
+    // changement visible en FR), plutôt que l'inverse.
+    report_sheet_sub: 'Après 3 signalements, le message sera supprimé automatiquement.',
+    report_spam: '🚫 Spam ou contenu répétitif',
+    report_harassment: '😠 Harcèlement ou attaque personnelle',
+    report_photo: '📷 Photo inappropriée ou choquante',
+    report_inappropriate: '⚠️ Message inapproprié ou offensant',
+    report_fake: '❌ Fausses informations dangereuses',
+    report_other: '💬 Autre raison',
     report_own: 'Vous ne pouvez pas signaler votre propre fantôme.',
     report_already: 'Vous avez déjà signalé ce fantôme.',
     // Open limit
@@ -544,6 +564,10 @@ const LANGS = {
     share_profile_text: 'Découvrez mon empreinte fantôme.',
     share_empreinte_text: 'J\'ai laissé des traces dans {n} lieux avec l\'app Ghostub — des messages secrets ancrés dans des endroits réels. Approchez-vous.',
     share_copy_btn: '📋 Copier le lien',
+    // AT-4/m16 — modale de partage en français en dur (index.html), sans
+    // data-i18n. share_modal_title/share_copy_btn existaient déjà.
+    share_sheet_sub: 'Seule la position est partagée.<br>Le contenu reste invisible jusqu\'à ce qu\'on soit sur place.',
+    share_native_btn: '↗ Partager via…',
     // Nav
     nav_radar: 'Radar',
     nav_map: 'Carte',
@@ -577,11 +601,29 @@ const LANGS = {
     misc_opens: '👁 {n} ouverture{s}',
     misc_ptr_pull: 'Tirer pour actualiser',
     misc_ptr_release: 'Relâcher pour actualiser',
-    detail_discovered_prefix: 'Fantôme découvert · <b>',
-    detail_already_read_suffix: ' lu ce message avant vous',
+    // AT-4/m3 — c'était un simple fragment (le compte et le </b> de
+    // fermeture étaient concaténés en dur au site d'appel) derrière un
+    // `t.x || '...'` : toujours truthy, le repli codé en dur ne s'exécutait
+    // jamais, et seul ce fragment (avec un <b> non fermé) s'affichait.
+    // Passé en clé complète avec placeholder {n}, comme le reste du fichier.
+    detail_discovered_prefix: 'Fantôme découvert · <b>{n}</b> au total',
     profile_no_ghost_deposited: 'Aucun fantôme déposé encore……',
     profile_no_public_place: 'Aucun lieu public',
     dep_biz_media_hint: 'Photo ou vidéo pour illustrer votre offre (optionnel)',
+    // AT-4/m16 — formulaire Mode Commerce (index.html), aucun data-i18n.
+    dep_biz_type_label: '🏪 Type d\'offre',
+    dep_biz_type_promo: '🏷 Promo',
+    dep_biz_type_event: '🎉 Événement',
+    dep_biz_type_new: '✨ Nouveauté',
+    dep_biz_type_service: '🛎 Service',
+    dep_biz_title_label: 'Titre de l\'offre',
+    dep_biz_title_placeholder: 'ex: -20% sur tous les cafés ce weekend !',
+    dep_biz_desc_label: 'Description',
+    dep_biz_desc_placeholder: 'Plus de détails sur votre offre, horaires, conditions…',
+    dep_biz_promo_label: 'Code promo',
+    dep_biz_promo_placeholder: 'ex: BIENVENUE10, CAFE-OFFERT…',
+    dep_biz_radius_text: 'Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.',
+    misc_optional_mark: '(optionnel)',
     misc_ptr_refreshing: 'Actualisation…',
     misc_screen_radar: 'Radar — Ghostub',
     misc_screen_detail: 'Détail du fantôme — Ghostub',
@@ -656,6 +698,22 @@ const LANGS = {
     streak_freeze_used: '🧊 Jour de grâce utilisé — ta série continue.',
     profile_stats_label: 'Mes stats',
     profile_top_hunters: '🏆 Top chasseurs',
+    // AT-4/C4 — 12 clés appelées avec un repli (ex. t.profile_no_discoveries
+    // || 'texte') mais jamais définies : le proxy `t` renvoyait la clé
+    // elle-même pour une clé absente (toujours truthy), donc ces replis
+    // étaient morts et le nom de la clé s'affichait littéralement à l'écran.
+    profile_no_discoveries: 'Aucune découverte encore…',
+    profile_no_deposits: 'Aucun fantôme déposé encore…',
+    profile_map_error: 'Impossible de charger',
+    profile_ghost_hunter: 'Chasseur de fantômes',
+    profile_stat_deposited_label: 'Fantômes déposés',
+    profile_stat_opens_label: 'Ouvertures totales',
+    profile_public_footprint: '🗺 Empreinte publique',
+    profile_join_ghostub: '👻 Rejoindre Ghostub',
+    profile_no_hunters: 'Aucun chasseur encore…',
+    profile_you: 'vous',
+    profile_leaderboard_error: 'Impossible de charger le classement.',
+    profile_no_public_places: 'Aucun lieu public',
     profile_map_section: '🗺 Mon empreinte fantôme',
     profile_map_your_deposit: 'Votre dépôt',
     profile_map_discovery: 'Découverte',
@@ -790,10 +848,14 @@ const LANGS = {
     guest_signup_deposit: 'Create a free account to drop a ghost',
     guest_signup_profile: 'Create a free account to access your profile',
     guest_signup_generic: 'Create a free account to continue',
+    auth_guest_btn: '🌫️ Explore without an account',
+    auth_guest_btn_sub: '(read-only)',
     radar_locating: 'Getting your location…',
     radar_searching: '🔍 Searching for ghosts…',
     radar_no_gps: 'Location denied — enable it in your browser settings to discover nearby ghosts.',
     radar_retry_btn: '↻ Try again',
+    radar_in_range: '{n}/{total} in range',
+    radar_none_in_range: 'None in range — get closer',
     map_load_err: '⚠️ Could not load the map — check your connection.',
     radar_no_ghosts: 'No ghosts nearby — be the first!',
     radar_no_ghosts_widened: 'No ghosts within 5km — showing up to 50km',
@@ -986,6 +1048,8 @@ const LANGS = {
     dep_dedicated_hint: 'Leave empty so anyone can open it.',
     dep_future_hint: 'The ghost will be invisible until this date — like a message in a bottle',
     reply_msg_label: 'Your message',
+    reply_msg_placeholder: 'What you feel…',
+    ghost_card_btn: '👻 Create a Ghost Card',
     dep_identity_named: '🌫️ Signed',
     dep_identity_anon: '👻 Anonymous',
     dep_secret_label: '🔮 Secret (3m)',
@@ -1195,9 +1259,13 @@ const LANGS = {
     blocked_back: '← Back',
     error_prefix: 'Error:',
     loading: 'Loading…',
-    report_spam: '🗑 Spam / Advertising',
-    report_inappropriate: '🔞 Inappropriate content',
-    report_harassment: '⚠ Harassment',
+    report_sheet_sub: 'After 3 reports, the message will be automatically removed.',
+    report_spam: '🚫 Spam or repetitive content',
+    report_harassment: '😠 Harassment or personal attack',
+    report_photo: '📷 Inappropriate or shocking photo',
+    report_inappropriate: '⚠️ Inappropriate or offensive message',
+    report_fake: '❌ Dangerous false information',
+    report_other: '💬 Other reason',
     report_own: 'You cannot report your own ghost.',
     report_already: 'You have already reported this ghost.',
     // Open limit
@@ -1239,6 +1307,8 @@ const LANGS = {
     share_profile_text: 'Check out my ghost footprint.',
     share_empreinte_text: 'I\'ve left traces in {n} places with the Ghostub app — secret messages anchored in real spots. Come closer.',
     share_copy_btn: '📋 Copy link',
+    share_sheet_sub: 'Only the location is shared.<br>The content stays hidden until you\'re there in person.',
+    share_native_btn: '↗ Share via…',
     // Nav
     nav_radar: 'Radar',
     nav_map: 'Map',
@@ -1272,11 +1342,23 @@ const LANGS = {
     misc_opens: '👁 {n} open{s}',
     misc_ptr_pull: 'Pull to refresh',
     misc_ptr_release: 'Release to refresh',
-    detail_discovered_prefix: 'Ghost discovered · <b>',
-    detail_already_read_suffix: ' read this message before you',
+    detail_discovered_prefix: 'Ghost discovered · <b>{n}</b> total',
     profile_no_ghost_deposited: 'No ghost deposited yet……',
     profile_no_public_place: 'No public place',
     dep_biz_media_hint: 'Photo or video to showcase your offer (optional)',
+    dep_biz_type_label: '🏪 Offer type',
+    dep_biz_type_promo: '🏷 Promo',
+    dep_biz_type_event: '🎉 Event',
+    dep_biz_type_new: '✨ New',
+    dep_biz_type_service: '🛎 Service',
+    dep_biz_title_label: 'Offer title',
+    dep_biz_title_placeholder: 'e.g. -20% on all coffees this weekend!',
+    dep_biz_desc_label: 'Description',
+    dep_biz_desc_placeholder: 'More details about your offer, hours, conditions…',
+    dep_biz_promo_label: 'Promo code',
+    dep_biz_promo_placeholder: 'e.g. WELCOME10, FREE-COFFEE…',
+    dep_biz_radius_text: 'Only visible within <strong>50m max</strong> of your business — only passers-by see your offer.',
+    misc_optional_mark: '(optional)',
     misc_ptr_refreshing: 'Refreshing…',
     misc_screen_radar: 'Radar — Ghostub',
     misc_screen_detail: 'Ghost detail — Ghostub',
@@ -1351,6 +1433,18 @@ const LANGS = {
     streak_freeze_used: '🧊 Grace day used — your streak continues.',
     profile_stats_label: 'My stats',
     profile_top_hunters: '🏆 Top hunters',
+    profile_no_discoveries: 'No discoveries yet…',
+    profile_no_deposits: 'No ghosts deposited yet…',
+    profile_map_error: 'Could not load',
+    profile_ghost_hunter: 'Ghost hunter',
+    profile_stat_deposited_label: 'Ghosts deposited',
+    profile_stat_opens_label: 'Total opens',
+    profile_public_footprint: '🗺 Public footprint',
+    profile_join_ghostub: '👻 Join Ghostub',
+    profile_no_hunters: 'No hunters yet…',
+    profile_you: 'you',
+    profile_leaderboard_error: 'Could not load the leaderboard.',
+    profile_no_public_places: 'No public places',
     profile_map_section: '🗺 My ghost footprint',
     profile_map_your_deposit: 'Your deposit',
     profile_map_discovery: 'Discovery',
@@ -1453,11 +1547,16 @@ function _detectLang() {
   return LANGS[browser] ? browser : 'fr';
 }
 let _currentLang = _detectLang();
+// AT-4/C4 — une clé absente renvoie désormais undefined (au lieu de la clé
+// elle-même, toujours truthy) : réactive le garde `if (val !== undefined)`
+// de setLang() plus bas et les ~40 replis `t.x || 'texte de secours'` du
+// fichier, jusqu'ici morts. scripts/check-i18n.js garantit qu'aucune clé
+// réellement appelée n'est concernée.
 const t = new Proxy({}, {
   get(_, key) {
     return (LANGS[_currentLang] && LANGS[_currentLang][key] !== undefined)
       ? LANGS[_currentLang][key]
-      : (LANGS['fr'][key] || key);
+      : LANGS['fr'][key];
   }
 });
 window.t = t;
@@ -3029,7 +3128,9 @@ onAuthStateChanged(auth, async user => {
     }
     const pending = sessionStorage.getItem('pendingGhost');
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
-    document.getElementById('profileName').textContent = escapeHTML(user.displayName || user.email);
+    // AT-4/m6 — .textContent cible : escapeHTML() y causait un double
+    // échappement visible. (Le repli sur l'e-mail est traité à part sous AT-5.)
+    document.getElementById('profileName').textContent = user.displayName || user.email;
     // Avatar = Trace unifié (Lot AO), rendu par _applyTraceColor() juste
     // plus bas dès que userTraceColor est connu — pas besoin d'un premier
     // rendu générique ici entre-temps.
@@ -4754,7 +4855,9 @@ function showDiscoveryToast(count, isNew) {
     Analytics.track('milestone', { count, rank: rank.label });
   } else if (isNew) {
     icon.innerHTML = _BRAND_MARK_HTML;
-    let _discoveredHTML = (_currentLang === 'fr' ? t.detail_discovered_prefix || 'Fantôme découvert · <b>' + count + '</b> au total' : 'Ghost discovered · <b>' + count + '</b> total');
+    // AT-4/m3 — clé unique déjà localisée par le proxy `t`, plus de bug de
+    // précédence || (le repli codé en dur ne s'exécutait jamais).
+    let _discoveredHTML = t.detail_discovered_prefix.replace('{n}', count);
     // Lot G4 : mise en scène différenciée par rareté — halo + mention doré
     // (rare/légendaire) ou lavande (secret), distincts du toast bleu commun.
     // Vocabulaire "découverte" volontairement conservé plutôt que "Résonance"
@@ -4925,7 +5028,9 @@ async function loadBizDashboard() {
 
 window.renewBusinessGhost = async (ghostId) => {
   if (!currentUser || !isPremium) return;
-  const confirmed = await showConfirm('Renouveler l\'offre ?', 'La durée de vie de cette offre sera remise à 1 mois à partir d\'aujourd\'hui.', { confirmLabel: '↻ Renouveler' });
+  // AT-4/m17 — confirm_renew_title/sub/btn (définies FR/EN, jamais
+  // appelées) remplacent le titre/sous-titre/libellé codés en dur.
+  const confirmed = await showConfirm(t.confirm_renew_title, t.confirm_renew_sub, { confirmLabel: t.confirm_renew_btn });
   if (!confirmed) return;
   try {
     await updateDoc(doc(db, COLL.GHOSTS, ghostId), {
@@ -6000,11 +6105,12 @@ function showConfirm(title, subtitle, options = {}) {
     // Lot AP : confirmLabel était déjà passé par un appelant (renouveler une
     // offre, ligne ~4587) sans jamais être lu ici — bug latent corrigé au
     // passage. cancelLabel/hideCancel ajoutés pour la fiche "Mon rang"
-    // (usage informatif, pas une confirmation destructrice à 2 issues) —
-    // "Supprimer" reste le repli par défaut, les 2 seuls autres appelants
-    // actuels sans option sont bien des suppressions.
-    btnOk.textContent = options.confirmLabel || 'Supprimer';
-    btnCancel.textContent = options.cancelLabel || 'Annuler';
+    // (usage informatif, pas une confirmation destructrice à 2 issues).
+    // AT-4/m17 — confirm_ok/confirm_cancel (définies FR/EN, jamais appelées)
+    // remplacent les replis 'Supprimer'/'Annuler' codés en dur : une boîte
+    // en anglais proposait jusqu'ici "Annuler"/"Supprimer" malgré la langue.
+    btnOk.textContent = options.confirmLabel || t.confirm_ok;
+    btnCancel.textContent = options.cancelLabel || t.confirm_cancel;
     btnCancel.style.display = options.hideCancel ? 'none' : '';
 
     // Mode saisie obligatoire
@@ -6261,8 +6367,12 @@ function _checkEphemeralWindows() {
     // Fantôme avec date d'expiration calculable (duration connue)
     if (!g.createdAt) return;
     const created = g.createdAt.seconds ? g.createdAt.seconds * 1000 : Date.now();
-    const durMap = { '24h': 86400000, '7j': 604800000, '1m': 2592000000 };
-    const durMs = durMap[g.duration] || 0;
+    // AT-4/m2 — 4ᵉ copie locale de la table des durées, avec des clés
+    // ('7j', '1m') que le dépôt n'a jamais produites (valeurs réelles :
+    // '7 jours'/'7 days', '1 mois'/'1 month', cf. DUR_CANONICAL_VALUES) :
+    // seule la notification FOMO à 24h se déclenchait jamais. Source unique
+    // désormais : GhostService.DURATIONS_MS (ghost.service.js).
+    const durMs = GhostService.DURATIONS_MS[g.duration] || 0;
     if (!durMs) return;
     const expiresAt = created + durMs;
     const remaining = expiresAt - now;
@@ -6531,7 +6641,12 @@ function _updateGhostCountMessage(count, widened) {
       document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_no_ghosts + '</span>';
     }
   } else {
-    document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby'));
+    // AT-1/AT-4/m19 — les 6 réécritures de .ghost-count-line remplaçaient
+    // tout son innerHTML, effaçant #radarInRangeCount au passage. Ce
+    // compteur "X/Y à portée" (renderRadarDots(), appelé juste après par
+    // _renderNearbyGhostsUI) n'a de sens QUE dans cet état "normal" — on lui
+    // redonne donc ici son ancre DOM, vide, pour qu'il soit repeuplé aussitôt.
+    document.querySelector('.ghost-count-line').innerHTML = '<span id="ghostCount">' + count + '</span> ' + (_currentLang === 'fr' ? ('fantôme' + (count > 1 ? 's' : '') + ' dans les alentours') : ('ghost' + (count > 1 ? 's' : '') + ' nearby')) + ' · <span id="radarInRangeCount"></span>';
   }
 }
 
@@ -7798,8 +7913,8 @@ function renderRadarDots() {
   const counter = document.getElementById('radarInRangeCount');
   if (counter) {
     counter.textContent = inRange.length > 0
-      ? `${inRange.length}/${nearbyGhosts.length} à portée`
-      : (nearbyGhosts.length > 0 ? 'Aucun à portée — rapproche-toi' : '');
+      ? t.radar_in_range.replace('{n}', inRange.length).replace('{total}', nearbyGhosts.length)
+      : (nearbyGhosts.length > 0 ? t.radar_none_in_range : '');
   }
 
   if (inRange.length === 0) return;
@@ -8411,7 +8526,9 @@ async function _resolveGhostForOpen(id) {
 }
 
 function _renderGhostDetailHeader() {
-  document.getElementById('detailLocation').textContent = escapeHTML(selectedGhost.location || t.detail_location_unknown);
+  // AT-4/m6 — .textContent cible : escapeHTML() ici causait un double
+  // échappement visible pour un lieu contenant &, <, >, " ou '.
+  document.getElementById('detailLocation').textContent = selectedGhost.location || t.detail_location_unknown;
   // Sceau visible dans le détail — seul autre endroit avec l'écran de dépôt
   // où il apparaît (cf. FEATURE-TRACE-COLORE-FANAGE.md). Lot AI : expression
   // du Trace (_traceSealIconHTML) plutôt que le picto générique d'avant.
@@ -8439,9 +8556,12 @@ function _computeGhostDetailAccess() {
     (selectedGhost.lat && selectedGhost.lng && userLat ?
       distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng) : 0);
 
+  // AT-4/m6 — pas d'escapeHTML ici : la cible est sealedHint.textContent
+  // (juste en dessous), qui n'interprète pas le HTML. escapeHTML() y
+  // produisait un double échappement visible ("Jean &amp; Marie").
   const _authorLabel = selectedGhost.anonymous
     ? '👻 ' + t.detail_anonymous
-    : escapeHTML(selectedGhost.author || '');
+    : (selectedGhost.author || '');
   document.getElementById('sealedHint').textContent = _authorLabel + ' · ' + formatDistance(ghostDist);
   document.getElementById('detailDistance').textContent = formatDistance(ghostDist) + ' ' + t.detail_from_you;
 
@@ -8490,7 +8610,8 @@ function _checkGhostOpenCondition(isOwner) {
     if (!condCheck.ok) {
       showScreen('screenDetail');
       setNav('nav-radar');
-      document.getElementById('detailLocation').textContent = escapeHTML(selectedGhost.location || t.detail_location_unknown);
+      // AT-4/m6 — .textContent cible, cf. _renderGhostDetailHeader plus haut.
+      document.getElementById('detailLocation').textContent = selectedGhost.location || t.detail_location_unknown;
       showBlockedOverlay(condCheck);
       return false;
     }
@@ -8523,7 +8644,9 @@ function _renderGhostDetailMessage(isOwner) {
   // Afficher le bouton ⚑ sur le message seulement si ce n'est pas son propre fantôme
   const msgReportBtn = document.getElementById('msgReportBtn');
   if (msgReportBtn) msgReportBtn.style.display = isOwner ? 'none' : 'flex';
-  document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : escapeHTML(selectedGhost.author || '');
+  // AT-4/m6 — idem : .textContent n'interprète pas le HTML, escapeHTML()
+  // ici affichait littéralement "Jean &amp; Marie" pour "Jean & Marie".
+  document.getElementById('detailAuthor').textContent = selectedGhost.anonymous ? getPoeticName(selectedGhost.id) : (selectedGhost.author || '');
 
   // ── Mode Commerce : afficher le code promo ──
   const existingPromo = document.getElementById('detailPromoBlock');
@@ -8575,9 +8698,14 @@ function _renderGhostDetailMeta() {
 function _renderGhostResonanceButtonState() {
   const alreadyToday = hasResonatedToday();
   const resoBtn = document.getElementById('resonanceBtn');
+  // AT-4/m5 — écrire sur resoBtn.textContent détruisait le <span
+  // id="resonanceCount"> enfant (seul contenu du bouton, cf. index.html) ;
+  // au rendu suivant, le ciblage direct de #resonanceCount plus bas levait
+  // un TypeError (élément disparu). On cible désormais toujours ce span.
+  const countEl = document.getElementById('resonanceCount');
   if (alreadyToday) {
     resoBtn.classList.add('resonated');
-    resoBtn.textContent = t.detail_reso_used;
+    if (countEl) countEl.textContent = t.detail_reso_used;
     resoBtn.style.borderColor = 'rgba(var(--ghost-blue-rgb),.2)';
     resoBtn.style.color = 'rgba(var(--ghost-blue-rgb),.4)';
     resoBtn.style.cursor = 'default';
@@ -8586,7 +8714,7 @@ function _renderGhostResonanceButtonState() {
     resoBtn.style.borderColor = '';
     resoBtn.style.color = '';
     resoBtn.style.cursor = '';
-    document.getElementById('resonanceCount').textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
+    if (countEl) countEl.textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
   }
 }
 
@@ -8881,6 +9009,11 @@ window._stopWhisperListener = () => {
 
 window.resonate = async () => {
   const btn = document.getElementById('resonanceBtn');
+  // AT-4/m5-m6 — cible le <span id="resonanceCount"> (seul enfant du
+  // bouton), jamais btn.textContent qui le détruirait. Et t.detail_reso_btn
+  // (déjà utilisée par _renderGhostResonanceButtonState) au lieu du libellé
+  // français codé en dur.
+  const countEl = document.getElementById('resonanceCount');
   if (btn.classList.contains('resonated') || btn.disabled || !selectedGhost) return;
   if (hasResonatedToday()) {
     btn.style.borderColor = 'rgba(255,180,50,.4)';
@@ -8889,11 +9022,11 @@ window.resonate = async () => {
     const msUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
     const h = Math.floor(msUntilMidnight / 3600000);
     const m = Math.floor((msUntilMidnight % 3600000) / 60000);
-    btn.textContent = t.detail_reso_wait.replace('{h}', h).replace('{m}', m < 10 ? '0' + m : m);
+    if (countEl) countEl.textContent = t.detail_reso_wait.replace('{h}', h).replace('{m}', m < 10 ? '0' + m : m);
     setTimeout(() => {
       btn.style.borderColor = '';
       btn.style.color = '';
-      btn.textContent = '✦ Résonner · ' + (selectedGhost.resonances || 0) + ' résonances';
+      if (countEl) countEl.textContent = t.detail_reso_btn.replace('{n}', selectedGhost.resonances || 0);
     }, 3000);
     return;
   }
@@ -8920,7 +9053,7 @@ window.resonate = async () => {
   AudioService.playResonance();
   HapticsService.resonance();
   btn.classList.add('resonated');
-  btn.textContent = t.detail_reso_sent;
+  if (countEl) countEl.textContent = t.detail_reso_sent;
   btn.disabled = false;
   markResonatedToday(ghostId);
   // Compteur dénormalisé totalResonances sur l'auteur
@@ -9527,11 +9660,19 @@ async function _doOpenEnvelope() {
           readCountEl.innerHTML = `<span class="first-reader-badge">${_uiIconHTML('✦', { size: 12, className: 'ui-icon first-reader-icon' })} ${t.detail_first_reader}</span>`;
         } else {
           // AT-3/M1 (dernier point) — realOpenCount (relu depuis Firestore
-          // juste au-dessus) au lieu de selectedGhost.openCount, qui est un
-          // instantané en cache pouvant être périmé. Bug de précédence ||
-          // sur cette même ligne traité à part, cf. AT-4.
+          // juste au-dessus) au lieu de selectedGhost.openCount, instantané
+          // en cache pouvant être périmé.
           const prev = realOpenCount;
-          readCountEl.innerHTML = `<span class="already-read-badge">${_currentLang === 'fr' ? '👁 ' + prev + ' personne' + (prev > 1 ? 's ont' : ' a') + t.detail_already_read_suffix || ' lu ce message avant vous' : '👁 ' + prev + ' person' + (prev > 1 ? 's' : '') + ' read this before you'}</span>`;
+          // AT-4/m4 — bug de précédence || sur cette ligne (le repli codé en
+          // dur, jamais atteint puisque la concaténation est toujours
+          // truthy) : remplacé par detail_views, clé déjà templatée avec
+          // {n}/{s}/{verbe} mais jamais utilisée jusqu'ici.
+          const _verbe = _currentLang === 'fr' ? (prev > 1 ? 'ont' : 'a') : '';
+          readCountEl.innerHTML = `<span class="already-read-badge">${t.detail_views
+            .replace('{n}', prev)
+            .replace(/\{s\}/g, prev > 1 ? 's' : '')
+            .replace('{verbe}', _verbe)
+            .replace(/\s+/g, ' ').trim()}</span>`;
         }
         readCountEl.style.display = 'block';
       }

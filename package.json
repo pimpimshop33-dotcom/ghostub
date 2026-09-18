@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "check-i18n": "node scripts/check-i18n.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.7.0"
+  }
+}
