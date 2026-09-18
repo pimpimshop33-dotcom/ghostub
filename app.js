@@ -26,6 +26,18 @@ import HapticsService from './services/haptics.service.js';
 // etc.), actifs seulement en développement local.
 const DEBUG = ['localhost', '127.0.0.1'].includes(location.hostname);
 
+// AT-2/C1-C2 — accès localStorage protégés. Safari "bloquer tous les
+// cookies", certaines WebViews embarquées et certains modes privés lèvent
+// une SecurityError même sur un simple getItem/setItem/removeItem : un accès
+// non protégé au niveau module pouvait tuer le chargement de tout app.js,
+// et un accès non protégé dans un chemin critique (auth, ouverture) pouvait
+// bloquer un écran sans message ni recours. Les usages JSON.parse(...) à
+// risque de SyntaxError (valeur corrompue) sont traités au cas par cas
+// (cf. Analytics.events et onAuthStateChanged), pas via ces wrappers.
+function _lsGet(key) { try { return localStorage.getItem(key); } catch(e) { return null; } }
+function _lsSet(key, value) { try { localStorage.setItem(key, value); return true; } catch(e) { return false; } }
+function _lsRemove(key) { try { localStorage.removeItem(key); } catch(e) {} }
+
 // ── Init audio on first user gesture ────────────────────
 document.addEventListener('click', () => { AudioService.init(); AudioService.resume(); }, { once: true });
 document.addEventListener('touchstart', () => { AudioService.init(); AudioService.resume(); }, { once: true });
@@ -1435,7 +1447,7 @@ const LANGS = {
 
 // Détection et application de la langue
 function _detectLang() {
-  const saved = localStorage.getItem('ghostub_lang');
+  const saved = _lsGet('ghostub_lang');
   if (saved && LANGS[saved]) return saved;
   const browser = (navigator.language || 'fr').slice(0, 2).toLowerCase();
   return LANGS[browser] ? browser : 'fr';
@@ -1453,7 +1465,7 @@ window.t = t;
 window.setLang = (lang) => {
   if (!LANGS[lang]) return;
   _currentLang = lang;
-  localStorage.setItem('ghostub_lang', lang);
+  _lsSet('ghostub_lang', lang);
   document.documentElement.lang = lang;
 
   // 1. Mettre à jour tous les éléments data-i18n et data-i18n-placeholder
@@ -1516,10 +1528,10 @@ window.setLang = (lang) => {
   }
 
   // 4. Refresh éléments dynamiques persistants (toujours visibles)
-  const currentTheme = localStorage.getItem('ghostub_theme') || 'dark';
+  const currentTheme = _lsGet('ghostub_theme') || 'dark';
   const lbl = document.getElementById('themeToggleLabel');
   if (lbl) lbl.textContent = currentTheme === 'light' ? t.profile_night_mode : t.profile_day_mode;
-  if (typeof _setNotifBtnState === 'function') _setNotifBtnState(localStorage.getItem('notif_enabled') === '1');
+  if (typeof _setNotifBtnState === 'function') _setNotifBtnState(_lsGet('notif_enabled') === '1');
 
   // Ghost count line — relancer le chargement pour re-générer avec la bonne langue
   // Guard: ne pas appeler avant que l'auth soit confirmée (race condition avec signInAnonymously)
@@ -2207,7 +2219,11 @@ window._depositMode = _depositMode;
 // ── ANALYTICS LÉGER ─────────────────────────────────────
 // Stocke les événements localement + log console (extensible vers Firebase Analytics)
 const Analytics = {
-  events: JSON.parse(localStorage.getItem('ghostub_analytics') || '[]'),
+  // AT-2/C1 — évaluée au chargement du module, hors de tout try : un
+  // localStorage inaccessible (SecurityError) ou une valeur corrompue
+  // (SyntaxError) ici tuait tout app.js (onAuthStateChanged, showScreen, t,
+  // le dispatcher d'actions — plus rien n'était défini).
+  events: (() => { try { return JSON.parse(localStorage.getItem('ghostub_analytics') || '[]'); } catch(e) { return []; } })(),
   track(event, params = {}) {
     const entry = { event, params, ts: Date.now() };
     this.events.push(entry);
@@ -2909,8 +2925,8 @@ function getLocation() {
 // false s'il diffère — dans ce cas on ne démarre pas le GPS maintenant.
 function _maybeShowLocationPrimer() {
   return new Promise(resolve => {
-    if (localStorage.getItem('ghostub_geo_primed')) { resolve(true); return; }
-    localStorage.setItem('ghostub_geo_primed', '1');
+    if (_lsGet('ghostub_geo_primed')) { resolve(true); return; }
+    _lsSet('ghostub_geo_primed', '1');
     const modal = document.getElementById('geoPrimerModal');
     if (!modal) { resolve(true); return; }
     window._geoPrimerResolve = resolve;
@@ -2975,7 +2991,7 @@ onAuthStateChanged(auth, async user => {
       // radar — et on ne démarre PAS le GPS/priming ici, sinon sa modale se
       // superpose au carrousel et le masque derrière un flou dès le premier
       // affichage. guestExplore()/l'inscription déclenchent le GPS après coup.
-      if (localStorage.getItem('ghostub_onboard_seen')) {
+      if (_lsGet('ghostub_onboard_seen')) {
         await _waitMinIntroDisplay();
         document.getElementById('bottomNav').style.display = 'flex';
         showScreen('screenRadar');
@@ -2992,14 +3008,24 @@ onAuthStateChanged(auth, async user => {
     Analytics.track('session_start', { uid_hash: btoa(user.uid).slice(0,8) });
     Analytics.track('app_open');
     // FIX: Migrer les découvertes anonymes vers le compte utilisateur
+    // AT-2/C2 — anonIds/userIds étaient les deux seuls JSON.parse non
+    // protégés du fichier (hors C1) : une clé corrompue (écriture tronquée
+    // sur quota localStorage atteint) plantait ici sans message et sans
+    // recours (le rechargement ne corrige rien, la donnée persiste). userIds
+    // relit la même clé que getDiscoveredIds() (déjà protégée) : réutilisée
+    // telle quelle ; anonKey vise une clé différente (anonyme, pas celle de
+    // l'utilisateur courant) donc lecture protégée dédiée, avec suppression
+    // de la clé fautive en cas d'échec de parsing.
     const anonKey = 'discoveries_anon';
-    const anonIds = JSON.parse(localStorage.getItem(anonKey) || '[]');
+    let anonIds;
+    try { anonIds = JSON.parse(localStorage.getItem(anonKey) || '[]'); }
+    catch(e) { anonIds = []; _lsRemove(anonKey); }
     if (anonIds.length > 0) {
       const userKey = 'discoveries_' + user.uid;
-      const userIds = JSON.parse(localStorage.getItem(userKey) || '[]');
+      const userIds = getDiscoveredIds();
       const merged = [...new Set([...userIds, ...anonIds])];
-      localStorage.setItem(userKey, JSON.stringify(merged));
-      localStorage.removeItem(anonKey);
+      _lsSet(userKey, JSON.stringify(merged));
+      _lsRemove(anonKey);
     }
     const pending = sessionStorage.getItem('pendingGhost');
     if (pending) { sessionStorage.removeItem('pendingGhost'); setTimeout(() => openGhost(pending), 800); }
@@ -3440,14 +3466,14 @@ const _NOTIF_DAILY_KEY = () => 'ghostub_notif_daily_' + new Date().toISOString()
 
 function _canSendNotif() {
   const key = _NOTIF_DAILY_KEY();
-  const count = parseInt(localStorage.getItem(key) || '0');
+  const count = parseInt(_lsGet(key) || '0');
   return count < 2;
 }
 
 function _recordNotifSent() {
   const key = _NOTIF_DAILY_KEY();
-  const count = parseInt(localStorage.getItem(key) || '0');
-  localStorage.setItem(key, count + 1);
+  const count = parseInt(_lsGet(key) || '0');
+  _lsSet(key, count + 1);
 }
 
 // Wrapper autour de showNotif qui respecte la limite
@@ -3604,8 +3630,8 @@ const _ANNIV_NOTIFIED_KEY = () => currentUser ? 'ghostub_anniv_notified_' + curr
 
 async function checkMemoryAnniversaries() {
   if (!currentUser) return;
-  if (localStorage.getItem(_ANNIV_CHECK_KEY())) return; // déjà vérifié aujourd'hui
-  localStorage.setItem(_ANNIV_CHECK_KEY(), '1');
+  if (_lsGet(_ANNIV_CHECK_KEY())) return; // déjà vérifié aujourd'hui
+  _lsSet(_ANNIV_CHECK_KEY(), '1');
   const key = _ANNIV_NOTIFIED_KEY();
   if (!key) return;
   try {
@@ -3707,7 +3733,7 @@ async function checkReplyNotifications() {
 function sendSwNotifIfNeeded() {
   if (!('serviceWorker' in navigator)) return;
   if (Notification.permission !== 'granted') return;
-  if (localStorage.getItem('notif_enabled') !== '1') return;
+  if (_lsGet('notif_enabled') !== '1') return;
   if (!nearbyGhosts || nearbyGhosts.length === 0) return;
   // Chercher un fantôme jamais ouvert et proche
   const candidates = nearbyGhosts.filter(g =>
@@ -3715,9 +3741,9 @@ function sendSwNotifIfNeeded() {
   );
   if (candidates.length === 0) return;
   // Max 1 push par heure
-  const lastPush = parseInt(localStorage.getItem('ghostub_last_sw_push') || '0');
+  const lastPush = parseInt(_lsGet('ghostub_last_sw_push') || '0');
   if (Date.now() - lastPush < 3600000) return;
-  localStorage.setItem('ghostub_last_sw_push', Date.now());
+  _lsSet('ghostub_last_sw_push', Date.now());
   const g = candidates[0];
   const dist = formatDistance(g.distance);
   navigator.serviceWorker.ready.then(reg => {
@@ -3789,11 +3815,11 @@ window.enableNotifications = async () => {
   // Fix mobile : relâcher le focus/active state immédiatement
   document.activeElement?.blur();
   const btn = document.getElementById('notifBtn');
-  const isEnabled = localStorage.getItem('notif_enabled') === '1';
+  const isEnabled = _lsGet('notif_enabled') === '1';
 
   if (isEnabled) {
     // Toggle OFF — on utilise uniquement localStorage comme source de vérité
-    localStorage.removeItem('notif_enabled');
+    _lsRemove('notif_enabled');
     _setNotifBtnState(false);
     btn.style.borderColor = '';
     showToast('info', t.profile_notif_disabled);
@@ -3812,7 +3838,7 @@ window.enableNotifications = async () => {
   if (granted) {
     _setNotifBtnState(true);
     btn.style.borderColor = 'rgba(var(--accent-green-rgb),.4)';
-    localStorage.setItem('notif_enabled', '1');
+    _lsSet('notif_enabled', '1');
     showToast('success', t.profile_notif_enabled);
     _startNotifIntervals();
     checkDiscoveries();
@@ -3846,7 +3872,7 @@ window._requestSuccessNotif = async (e) => {
   btn.disabled = true;
   const granted = await requestNotifPermission();
   if (granted) {
-    localStorage.setItem('notif_enabled', '1');
+    _lsSet('notif_enabled', '1');
     _startNotifIntervals();
     checkDiscoveries();
     const label = document.getElementById('successNotifLabel');
@@ -3863,7 +3889,7 @@ window._requestSuccessNotif = async (e) => {
 };
 
 registerServiceWorker().then(reg => {
-  if (reg && localStorage.getItem('notif_enabled') === '1' && Notification.permission === 'granted') {
+  if (reg && _lsGet('notif_enabled') === '1' && Notification.permission === 'granted') {
     _startNotifIntervals();
     const btn = document.getElementById('notifBtn');
     if (btn) {
@@ -4251,7 +4277,7 @@ function _updateStreak() {
     newCount = 1; // trop de jours sautés, ou gel déjà utilisé récemment
   }
   const updated = { count: newCount, lastDate: today, freezeAt: freezeJustUsed ? today : (s.freezeAt || '') };
-  localStorage.setItem(_getStreakKey(), JSON.stringify(updated));
+  _lsSet(_getStreakKey(), JSON.stringify(updated));
   updated.freezeJustUsed = freezeJustUsed;
   return updated;
 }
@@ -4348,12 +4374,12 @@ let _cachedCombinedScore = null;
 function _combinedScoreCacheKey() { return 'ghostub_combined_score_' + (currentUser ? currentUser.uid : 'anon'); }
 function _getCachedCombinedScore() {
   if (_cachedCombinedScore != null) return _cachedCombinedScore;
-  _cachedCombinedScore = parseInt(localStorage.getItem(_combinedScoreCacheKey()) || '0');
+  _cachedCombinedScore = parseInt(_lsGet(_combinedScoreCacheKey()) || '0');
   return _cachedCombinedScore;
 }
 function _setCachedCombinedScore(score) {
   _cachedCombinedScore = score;
-  localStorage.setItem(_combinedScoreCacheKey(), String(score));
+  _lsSet(_combinedScoreCacheKey(), String(score));
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4513,9 +4539,9 @@ function _setAudioIcon(enabled) {
 window.toggleAudioEnabled = () => {
   const btn = document.getElementById('audioToggleBtn');
   const key = 'ghostub_audio_enabled';
-  const current = localStorage.getItem(key) !== '0';
+  const current = _lsGet(key) !== '0';
   const next = !current;
-  localStorage.setItem(key, next ? '1' : '0');
+  _lsSet(key, next ? '1' : '0');
   AudioService.setEnabled(next);
   HapticsService.setEnabled(next);
   _setAudioIcon(next);
@@ -4523,7 +4549,7 @@ window.toggleAudioEnabled = () => {
 };
 // Restore audio preference
 (function() {
-  const pref = localStorage.getItem('ghostub_audio_enabled');
+  const pref = _lsGet('ghostub_audio_enabled');
   if (pref === '0') {
     AudioService.setEnabled(false);
     HapticsService.setEnabled(false);
@@ -4773,7 +4799,7 @@ async function refreshProfileStats() {
   const count = getDiscoveryCount();
   animateStatNumber('statDiscovered', count);
   updateFavoritesCount();
-  const firstReaderCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0');
+  const firstReaderCount = parseInt(_lsGet('ghostub_first_reader') || '0');
   animateStatNumber('statFirstReader', firstReaderCount);
   let deposited = 0, resonances = 0;
   try {
@@ -5313,7 +5339,7 @@ function openReportModal() {
   if (!currentUser) return;
   if (!selectedGhost) return;
   const key = 'reported_' + currentUser.uid + '_' + selectedGhost.id;
-  if (localStorage.getItem(key)) {
+  if (_lsGet(key)) {
     showReportFeedback(t.report_already);
     return;
   }
@@ -5411,7 +5437,7 @@ function updateReportBtn(ghostId) {
     btn.style.display = 'none';
   } else {
     btn.style.display = '';
-    if (localStorage.getItem(key)) {
+    if (_lsGet(key)) {
       btn.classList.add('reported');
       btn.innerHTML = t.detail_reported;
     } else {
@@ -5874,7 +5900,7 @@ window.nativeShare = async () => {
 // ── THÈME CLAIR / SOMBRE ─────────────────────────────────
 // Détection automatique des préférences système si pas de préférence sauvegardée
 function getInitialTheme() {
-  const saved = localStorage.getItem('ghostub_theme');
+  const saved = _lsGet('ghostub_theme');
   if (saved) return saved;
   return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 }
@@ -5898,7 +5924,7 @@ function applyTheme(theme) {
   document.querySelector('meta[name="theme-color"]:not([media])')?.remove();
   const btn = document.getElementById('themeToggleBtn');
   if (btn) { const lbl = document.getElementById('themeToggleLabel'); if (lbl) lbl.textContent = isLight ? t.profile_night_mode : t.profile_day_mode; const ico = btn.querySelector('span'); if (ico) ico.textContent = isLight ? '🌙' : '☀️'; }
-  localStorage.setItem('ghostub_theme', theme);
+  _lsSet('ghostub_theme', theme);
   // Lot AR — les ghosts ont une palette dédiée par thème (TRACE_COLOR_PAIRS_DAY/
   // TRACE_CATEGORY_COLORS_DAY) : sans ce ré-appel, l'avatar Profil/Aide garde
   // les couleurs nuit jusqu'au prochain changement de teinte.
@@ -5911,7 +5937,7 @@ function applyTheme(theme) {
 }
 
 function toggleTheme() {
-  const current = localStorage.getItem('ghostub_theme') || 'dark';
+  const current = _lsGet('ghostub_theme') || 'dark';
   const newTheme = current === 'dark' ? 'light' : 'dark';
   applyTheme(newTheme);
   Analytics.track('theme_toggle', { theme: newTheme });
@@ -5923,7 +5949,7 @@ applyTheme(getInitialTheme());
 
 // Écouter les changements de préférence système
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', e => {
-  if (!localStorage.getItem('ghostub_theme')) {
+  if (!_lsGet('ghostub_theme')) {
     applyTheme(e.matches ? 'light' : 'dark');
   }
 });
@@ -5942,7 +5968,7 @@ function watchMyGhostResonances() {
         // attribué à son UID pour passer les Firestore Rules, mais ce n'est pas son ghost).
         if (g._welcome) return;
         const id = change.doc.id;
-        const prev = parseInt(localStorage.getItem('prev_reso_' + id) || '0');
+        const prev = parseInt(_lsGet('prev_reso_' + id) || '0');
         const curr = g.resonances || 0;
         if (curr > prev) {
           const lieu = escapeHTML(g.location || 'ce lieu');
@@ -5951,7 +5977,7 @@ function watchMyGhostResonances() {
           showToast('info', msg, 5000);
           // Vérifier milestones de résonance collective
           _checkResoMilestone(id, lieu, prev, curr);
-          localStorage.setItem('prev_reso_' + id, curr);
+          _lsSet('prev_reso_' + id, curr);
           if (document.getElementById('screenProfile').classList.contains('active')) {
             refreshProfileStats();
           }
@@ -6182,7 +6208,7 @@ async function _seedWelcomeGhost() {
   if (!currentUser || currentUser.isAnonymous) return;
   if (!userLat || !userLng) return;
   const key = 'ghostub_welcomed_' + currentUser.uid;
-  if (localStorage.getItem(key)) return;
+  if (_lsGet(key)) return;
 
   try {
     const _wLat = userLat + (Math.random()-0.5)*0.0003;
@@ -6287,7 +6313,7 @@ function _trackPlaceVisit(geohash5) {
   // Ajouter le lieu s'il n'est pas déjà visité cette semaine
   if (!data[weekKey].includes(geohash5)) {
     data[weekKey].push(geohash5);
-    localStorage.setItem(key, JSON.stringify(data));
+    _lsSet(key, JSON.stringify(data));
 
     const count = data[weekKey].length;
     // Toast de progression
@@ -6586,7 +6612,7 @@ function cleanOldResoKeys() {
     .filter(k => k.startsWith('prev_reso_'))
     .forEach(k => {
       const ghostId = k.slice('prev_reso_'.length);
-      if (!activeIds.has(ghostId)) localStorage.removeItem(k);
+      if (!activeIds.has(ghostId)) _lsRemove(k);
     });
 }
 
@@ -6847,7 +6873,7 @@ function getFavKey() { return currentUser ? 'favorites_' + currentUser.uid : 'fa
 function getFavorites() { try { return JSON.parse(localStorage.getItem(getFavKey()) || '[]'); } catch(e) { return []; } }
 function isFavorite(ghostId) { return getFavorites().some(f => f.id === ghostId); }
 
-function saveFavorites(favs) { localStorage.setItem(getFavKey(), JSON.stringify(favs)); }
+function saveFavorites(favs) { _lsSet(getFavKey(), JSON.stringify(favs)); }
 
 window.toggleFavorite = () => {
   if (!selectedGhost) return;
@@ -7187,7 +7213,7 @@ window.shareEmpreinte = async () => {
 async function _collectYearCardStats() {
   const discovered = getDiscoveryCount();
   const deposited  = Math.max(
-    parseInt(localStorage.getItem('ghostub_total_deposited_' + (currentUser?.uid || 'anon')) || '0'),
+    parseInt(_lsGet('ghostub_total_deposited_' + (currentUser?.uid || 'anon')) || '0'),
     parseInt(document.getElementById('statDeposited')?.textContent || '0')
   );
   const resonances = parseInt(document.getElementById('statResonances')?.textContent || '0');
@@ -7729,11 +7755,11 @@ function renderGhostList() {
 }
 
 // Rayon de détection du radar, réglable par l'utilisateur (50/200/1000 m)
-window._radarRadius = parseInt(localStorage.getItem('ghostub_radar_radius') || '200', 10);
+window._radarRadius = parseInt(_lsGet('ghostub_radar_radius') || '200', 10);
 
 function setRadarRadius(meters) {
   window._radarRadius = meters;
-  localStorage.setItem('ghostub_radar_radius', String(meters));
+  _lsSet('ghostub_radar_radius', String(meters));
   // Met à jour l'état visuel des boutons
   document.querySelectorAll('.radar-radius-btn').forEach(btn => {
     btn.classList.toggle('active', parseInt(btn.dataset.r, 10) === meters);
@@ -8638,13 +8664,22 @@ window.openGhost = async (id) => {
     _renderGhostDetailMedia();
   }
 
-  await _loadGhostReplies(id);
-
   updateSwipeUI();
   updateReportBtn(id);
   updateFavoriteBtn();
   showScreen('screenDetail');
   setNav('');
+
+  // AT-2/M4 — l'affichage du détail ne dépend pas des réponses : si la
+  // requête échoue (index composite absent, réseau, hors-ligne sans cache),
+  // on ne bloque plus l'ouverture de l'écran, on vide juste la liste.
+  try {
+    await _loadGhostReplies(id);
+  } catch(e) {
+    console.warn('[ghostub:openGhost:replies]', e);
+    const repliesList = document.getElementById('repliesList');
+    if (repliesList) repliesList.innerHTML = '';
+  }
 };
 
 function getDailyResoKey() {
@@ -8653,7 +8688,7 @@ function getDailyResoKey() {
   return `daily_reso_${uid}_${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-function hasResonatedToday() { return !!localStorage.getItem(getDailyResoKey()); }
+function hasResonatedToday() { return !!_lsGet(getDailyResoKey()); }
 
 // ── LIMITE OUVERTURES JOURNALIÈRES (Firestore) ───────────
 const DAILY_OPEN_LIMIT = 3;
@@ -8711,10 +8746,10 @@ function _getDailyOpenLocalKey() {
   const uid = currentUser ? currentUser.uid : 'anon';
   return `daily_opens_${uid}_${_todayKey()}`;
 }
-function getDailyOpenCountLocal() { return parseInt(localStorage.getItem(_getDailyOpenLocalKey()) || '0'); }
+function getDailyOpenCountLocal() { return parseInt(_lsGet(_getDailyOpenLocalKey()) || '0'); }
 function _incrementLocal() {
   const key = _getDailyOpenLocalKey();
-  localStorage.setItem(key, getDailyOpenCountLocal() + 1);
+  _lsSet(key, getDailyOpenCountLocal() + 1);
 }
 
 // ── DÉCOUVERTES (Firestore + localStorage) ───────────────
@@ -8729,7 +8764,7 @@ function addDiscovery(ghostId) {
   if (ids.includes(ghostId)) return false;
   ids.push(ghostId);
   // Sauvegarder localement
-  localStorage.setItem(getDiscoveryKey(), JSON.stringify(ids));
+  _lsSet(getDiscoveryKey(), JSON.stringify(ids));
   // Syncer dans Firestore (sans bloquer)
   if (currentUser) {
     setDoc(doc(db, 'userStats', currentUser.uid),
@@ -8756,7 +8791,7 @@ async function syncDiscoveriesFromFirestore() {
   } catch(e) { console.warn('[ghostub:syncDiscoveriesFromFirestore]', e); }
 }
 
-function markResonatedToday(ghostId) { localStorage.setItem(getDailyResoKey(), ghostId); }
+function markResonatedToday(ghostId) { _lsSet(getDailyResoKey(), ghostId); }
 
 function fireResonanceParticles(btn) {
   const rect = btn.getBoundingClientRect();
@@ -9156,7 +9191,7 @@ function _showDepositSuccessScreen(ghostId) {
 function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location) {
   // Incrémenter compteur cumulatif (persiste même si ghost supprimé/expiré)
   const _depKey = 'ghostub_total_deposited_' + (currentUser ? currentUser.uid : 'anon');
-  localStorage.setItem(_depKey, (parseInt(localStorage.getItem(_depKey) || '0') + 1).toString());
+  _lsSet(_depKey, (parseInt(_lsGet(_depKey) || '0') + 1).toString());
   // Lot AP : un dépôt vaut 1 point de score combiné (rang) — même logique
   // que la découverte dans showDiscoveryToast, pour que le cache reste
   // juste sans re-solliciter Firestore.
@@ -9200,8 +9235,14 @@ function _trackDepositSuccessEffects(ghostId, anon, audioUrl, photoUrl, location
 // source, indépendante de l'ordre d'écoute.
 function _armDepositSuccessDismiss() {
   const successEl = document.getElementById('depositSuccess');
+  // AT-2/M10 — l'appel différé (6s) invoquait dismissSuccess() sans argument
+  // : e.target levait un TypeError, empêchant systématiquement la fermeture
+  // automatique. Et sans clearTimeout, un dismiss manuel laissait le timer
+  // rejeter quand même 6s plus tard.
+  let dismissTimer = null;
   const dismissSuccess = (e) => {
-    if (e.target.closest('#successNotifBtn') || e.target.closest('#successCopyLinkBtn')) return;
+    if (e?.target?.closest?.('#successNotifBtn') || e?.target?.closest?.('#successCopyLinkBtn')) return;
+    clearTimeout(dismissTimer);
     successEl.classList.remove('show');
     successEl.removeEventListener('click', dismissSuccess);
     showScreen('screenRadar');
@@ -9210,7 +9251,7 @@ function _armDepositSuccessDismiss() {
     setTimeout(() => loadNearbyGhosts().catch(() => {}), 1500);
   };
   successEl.addEventListener('click', dismissSuccess);
-  setTimeout(() => dismissSuccess(), 6000);
+  dismissTimer = setTimeout(() => dismissSuccess(), 6000);
 }
 
 window.depositGhost = async () => {
@@ -9447,8 +9488,8 @@ async function _doOpenEnvelope() {
       // 🥇 Premier à lire : openCount était 0 dans Firestore
       const wasFirst = realOpenCount === 0;
       if (wasFirst) {
-        const firstCount = parseInt(localStorage.getItem('ghostub_first_reader') || '0') + 1;
-        localStorage.setItem('ghostub_first_reader', firstCount);
+        const firstCount = parseInt(_lsGet('ghostub_first_reader') || '0') + 1;
+        _lsSet('ghostub_first_reader', firstCount);
         animateStatNumber('statFirstReader', firstCount);
       }
 
@@ -9548,6 +9589,10 @@ function _initScratchReveal() {
 }
 
 function _buildScratchCanvas() {
+  // AT-2/C3 — tout le corps est protégé : une exception ici (canvas non
+  // supporté, erreur imprévue) laissait sinon un écran vide définitif après
+  // une ouverture déjà consommée dans le quota (cf. _forceRevealMessage).
+  try {
   // Nettoyer canvas précédent
   const oldC = document.getElementById('scratchCanvas'); if (oldC) oldC.remove();
   const oldH = document.getElementById('scratchHint');   if (oldH) oldH.remove();
@@ -9583,12 +9628,14 @@ function _buildScratchCanvas() {
   grad.addColorStop(0.5, 'rgba(20,16,42,0.97)');
   grad.addColorStop(1,   'rgba(10,10,22,0.98)');
   ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
+  // AT-2/C3 — ctx.roundRect natif absent avant Safari/iOS 16.4 et Firefox
+  // <112 : polyfill maison déjà utilisé par la carte de partage.
+  _roundRect(ctx, 0,0,cssW,cssH,16); ctx.fill();
   // Reflet haut
   const glow = ctx.createRadialGradient(cssW/2,0,0,cssW/2,cssH*0.5,cssW*0.8);
   glow.addColorStop(0,'rgba(168,180,255,0.10)'); glow.addColorStop(1,'transparent');
   ctx.fillStyle = glow;
-  ctx.beginPath(); ctx.roundRect(0,0,cssW,cssH,16); ctx.fill();
+  _roundRect(ctx, 0,0,cssW,cssH,16); ctx.fill();
   // Ghost watermark
   ctx.save();
   ctx.shadowColor='rgba(var(--ghost-blue-rgb),0.5)'; ctx.shadowBlur=20;
@@ -9630,6 +9677,22 @@ function _buildScratchCanvas() {
   canvas.addEventListener('touchmove',onMove,{passive:false});
   canvas.addEventListener('touchend',onEnd);
   canvas.addEventListener('touchcancel',onEnd);
+  } catch(e) {
+    console.warn('[ghostub:_buildScratchCanvas]', e);
+    _forceRevealMessage();
+  }
+}
+
+// AT-2/C3 — repli si le grattage ne peut pas être construit : révèle
+// directement le message plutôt que de laisser un écran vide.
+function _forceRevealMessage() {
+  window._scratchActive = false;
+  const oldC = document.getElementById('scratchCanvas'); if (oldC) oldC.remove();
+  const oldH = document.getElementById('scratchHint');   if (oldH) oldH.remove();
+  ['detailMessage','detailAudio','detailPhoto','detailReadCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.visibility = 'visible'; el.style.opacity = '1'; }
+  });
 }
 
 function _completeScratchReveal(canvas, hint, zone) {
@@ -9869,7 +9932,7 @@ function _showScreenBase(id, fromPopstate = false) {
   }
   if (id === 'screenMap') setTimeout(() => renderStaticMap(), 50);
   if (id === 'screenProfile') { refreshProfileStats(); _leaderboardLoaded = false;
-    _setNotifBtnState(localStorage.getItem('notif_enabled') === '1'); const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
+    _setNotifBtnState(_lsGet('notif_enabled') === '1'); const lp = document.getElementById('leaderboardPanel'); if (lp) lp.style.display = 'none'; loadEmpreinteMap(); loadBizDashboard(); }
   if (id === 'screenOnboard') {
     // Lot AR — Pipo (capture) : un "← retour" flottait centré au-dessus du
     // ghost sur l'intro. Ce bouton (affiché ici pour un utilisateur déjà
@@ -11125,7 +11188,7 @@ function _clearHold() {
   if (btn) btn.classList.remove('holding');
 }
 
-window.goAuth = () => { localStorage.setItem('ghostub_onboard_seen', '1'); showScreen('screenAuth'); };
+window.goAuth = () => { _lsSet('ghostub_onboard_seen', '1'); showScreen('screenAuth'); };
 
 // ── "QUOI DE NEUF" (Lot AP) ────────────────────────────────
 // L'app a beaucoup changé depuis les dernières versions de l'Aide (Lots
@@ -11142,12 +11205,12 @@ function _maybeShowWhatsNew() {
   if (!banner) return;
   // Seulement aux utilisateurs déjà connus de l'app (l'intro carousel des
   // nouveaux couvre déjà tout ça) — pas rejoué à un tout premier lancement.
-  if (!localStorage.getItem('ghostub_onboard_seen')) return;
-  if (localStorage.getItem(_whatsNewSeenKey())) return;
+  if (!_lsGet('ghostub_onboard_seen')) return;
+  if (_lsGet(_whatsNewSeenKey())) return;
   banner.classList.remove('u-hidden');
 }
 window.dismissWhatsNew = () => {
-  localStorage.setItem(_whatsNewSeenKey(), '1');
+  _lsSet(_whatsNewSeenKey(), '1');
   document.getElementById('whatsnewBanner')?.classList.add('u-hidden');
 };
 
