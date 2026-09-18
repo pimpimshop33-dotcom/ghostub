@@ -659,17 +659,31 @@ const LANGS = {
     dep_biz_media_hint: 'Photo ou vidéo pour illustrer votre offre (optionnel)',
     // AT-4/m16 — formulaire Mode Commerce (index.html), aucun data-i18n.
     dep_biz_type_label: '🏪 Type d\'offre',
-    dep_biz_type_promo: '🏷 Promo',
-    dep_biz_type_event: '🎉 Événement',
-    dep_biz_type_new: '✨ Nouveauté',
-    dep_biz_type_service: '🛎 Service',
-    dep_biz_title_label: 'Titre de l\'offre',
+    // AU-3 — plus d'emoji dans le texte : la pastille porte désormais une
+    // icône SVG dédiée (grille de type, maquette 5), le texte est juste le
+    // nom du type.
+    dep_biz_type_promo: 'Promo',
+    dep_biz_type_event: 'Événement',
+    dep_biz_type_new: 'Nouveauté',
+    dep_biz_type_service: 'Service',
+    dep_biz_title_label: 'Votre offre, en une phrase',
     dep_biz_title_placeholder: 'ex: -20% sur tous les cafés ce weekend !',
     dep_biz_desc_label: 'Description',
     dep_biz_desc_placeholder: 'Plus de détails sur votre offre, horaires, conditions…',
     dep_biz_promo_label: 'Code promo',
     dep_biz_promo_placeholder: 'ex: BIENVENUE10, CAFE-OFFERT…',
-    dep_biz_radius_text: 'Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.',
+    // AU-3 — bandeau de portée remonté en haut du formulaire (maquette 5),
+    // avec la durée choisie (7 jours ou 1 mois) au lieu d'un texte figé.
+    dep_biz_radius_text: 'Visible à <strong>50 m</strong> autour de votre commerce, pendant <strong>{duration}</strong>.',
+    dep_biz_reach_edit: 'modifier',
+    dep_biz_pastille_details: 'Détails',
+    dep_biz_pastille_code: 'Code',
+    dep_biz_pastille_photo: 'Photo',
+    dep_biz_preview_label: 'Ce que verra un passant',
+    dep_biz_preview_placeholder: 'Votre offre apparaîtra ici',
+    dep_biz_preview_distance: 'à 30 m de vous',
+    dep_biz_preview_code_prefix: 'code',
+    dep_biz_offers_link: 'voir mes offres en cours',
     misc_optional_mark: '(optionnel)',
     misc_ptr_refreshing: 'Actualisation…',
     misc_screen_radar: 'Radar — Ghostub',
@@ -1421,17 +1435,26 @@ const LANGS = {
     profile_no_public_place: 'No public place',
     dep_biz_media_hint: 'Photo or video to showcase your offer (optional)',
     dep_biz_type_label: '🏪 Offer type',
-    dep_biz_type_promo: '🏷 Promo',
-    dep_biz_type_event: '🎉 Event',
-    dep_biz_type_new: '✨ New',
-    dep_biz_type_service: '🛎 Service',
-    dep_biz_title_label: 'Offer title',
+    dep_biz_type_promo: 'Promo',
+    dep_biz_type_event: 'Event',
+    dep_biz_type_new: 'New',
+    dep_biz_type_service: 'Service',
+    dep_biz_title_label: 'Your offer, in one sentence',
     dep_biz_title_placeholder: 'e.g. -20% on all coffees this weekend!',
     dep_biz_desc_label: 'Description',
     dep_biz_desc_placeholder: 'More details about your offer, hours, conditions…',
     dep_biz_promo_label: 'Promo code',
     dep_biz_promo_placeholder: 'e.g. WELCOME10, FREE-COFFEE…',
-    dep_biz_radius_text: 'Only visible within <strong>50m max</strong> of your business — only passers-by see your offer.',
+    dep_biz_radius_text: 'Visible within <strong>50 m</strong> of your business, for <strong>{duration}</strong>.',
+    dep_biz_reach_edit: 'edit',
+    dep_biz_pastille_details: 'Details',
+    dep_biz_pastille_code: 'Code',
+    dep_biz_pastille_photo: 'Photo',
+    dep_biz_preview_label: 'What a passer-by will see',
+    dep_biz_preview_placeholder: 'Your offer will appear here',
+    dep_biz_preview_distance: '30 m from you',
+    dep_biz_preview_code_prefix: 'code',
+    dep_biz_offers_link: 'see my current offers',
     misc_optional_mark: '(optional)',
     misc_ptr_refreshing: 'Refreshing…',
     misc_screen_radar: 'Radar — Ghostub',
@@ -4787,16 +4810,8 @@ window.toggleAudioEnabled = () => {
 // d'ouverture" — retirés au Lot AI : ce contenu vit désormais dans le
 // panneau "Plus d'options" (bottom sheet #depositOptionsSheet), toujours
 // déplié à l'intérieur (plus d'accordéons imbriqués). _toggleDepositAccordion
-// reste utilisée par l'accordéon "Type d'offre" (Mode Commerce) ci-dessous.
-function _toggleDepositAccordion(toggleId, contentId, forceOpen) {
-  const toggle = document.getElementById(toggleId);
-  const content = document.getElementById(contentId);
-  if (!toggle || !content) return;
-  const open = typeof forceOpen === 'boolean' ? forceOpen : !toggle.classList.contains('open');
-  toggle.classList.toggle('open', open);
-  content.classList.toggle('open', open);
-  toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-}
+// n'a plus d'appelant depuis le retrait de l'accordéon "Type d'offre" (AU-3)
+// et a été supprimée avec lui.
 
 // Résumé en direct affiché sur la ligne "Plus d'options" (Lot AI) — se
 // substitue aux anciens résumés d'accordéon individuels. Appelée après
@@ -4852,22 +4867,9 @@ function _updateDepLocationDisplay() {
   el.textContent = userLat ? (t.dep_loc_searching || 'Recherche du lieu…') : (t.dep_loc_locating || '📡 Localisation…');
 }
 
-// ── Accordéon "Type d'offre" (Lot O) ──
-// Même modèle que ci-dessus — Identité a été retirée en tant que réglage
-// visible au Lot Q (remplacée par le lien discret "rester anonyme").
-window.toggleBizTypeAccordion    = (forceOpen) => _toggleDepositAccordion('bizTypeAccordionToggle', 'bizTypeAccordionContent', forceOpen);
-
-function _updateBizTypeAccordionSummary() {
-  const el = document.getElementById('bizTypeAccordionSummary');
-  const btn = document.querySelector('#bizTypeAccordionContent .type-btn.active');
-  if (el && btn) el.textContent = btn.textContent.trim();
-}
-document.getElementById('bizTypeAccordionContent')?.addEventListener('click', (e) => {
-  const btn = e.target.closest('.type-btn');
-  if (!btn || !btn.classList.contains('active')) return;
-  _updateBizTypeAccordionSummary();
-  window.toggleBizTypeAccordion(false);
-});
+// AU-3 — l'accordéon "Type d'offre" (Lot O) est retiré : les 4 types sont
+// désormais une grille de pastilles toujours visibles (maquette 5), plus
+// besoin de le déplier/replier ni d'en résumer l'état.
 
 // ── Icônes média dans la lettre (Lot AI, remplace le menu Lot Q ; un seul
 // panneau ouvert à la fois + repli compact Lot AJ) ──────────
@@ -4903,6 +4905,10 @@ function _syncMediaPanelVisibility() {
     const hasContent = (document.getElementById(MEDIA_PREVIEW_IDS[type])?.children.length || 0) > 0;
     panel.classList.toggle('u-hidden', !isOpen && !hasContent);
     if (icon) icon.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    // AU-3 — la pastille Photo du dépôt Commerce pilote le même panneau
+    // (step3PhotoWrap) via un bouton séparé (id différent, pas de doublon
+    // dans le DOM) : synchronisée ici aussi.
+    if (type === 'photo') document.getElementById('bizPastillePhoto')?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
 }
 function _closeAllMediaPanels() {
@@ -9695,6 +9701,18 @@ function _resetDepositStateAfterSuccess(depositBtn) {
   document.getElementById('chainHint').value = '';
   const promoEl = document.getElementById('promoCode');
   if (promoEl) promoEl.value = '';
+  // AU-3 — bizTitle/bizDesc n'étaient pas réinitialisés (seul promoCode
+  // l'était) : un second dépôt Commerce démarrait avec l'ancien titre.
+  const bizTitleReset = document.getElementById('bizTitle');
+  if (bizTitleReset) bizTitleReset.value = '';
+  const bizDescReset = document.getElementById('bizDesc');
+  if (bizDescReset) bizDescReset.value = '';
+  const bizTitleCounterReset = document.getElementById('bizTitleCharCount');
+  if (bizTitleCounterReset) bizTitleCounterReset.textContent = '0';
+  document.getElementById('bizDescPanel')?.classList.add('u-hidden');
+  document.getElementById('bizCodePanel')?.classList.add('u-hidden');
+  document.getElementById('bizPastilleDetails')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('bizPastilleCode')?.setAttribute('aria-expanded', 'false');
   const bizExtra = document.getElementById('businessExtra');
   if (bizExtra) bizExtra.style.display = 'none';
   // v105 : reset l'état du mode dépôt après succès
@@ -10629,9 +10647,10 @@ function _showScreenBase(id, fromPopstate = false) {
     closeModal('depositOptionsSheet');
     if (typeof window.toggleDepLocationEdit === 'function') window.toggleDepLocationEdit(false);
     _updateDepositOptionsSummary();
-    // Referme aussi Identité / Type d'offre (Lot O)
+    // Referme aussi Identité (Lot O — toggleIdentityAccordion n'existe plus
+    // depuis le retrait de ce réglage au Lot Q, garde laissée pour mémoire)
     if (typeof window.toggleIdentityAccordion === 'function') window.toggleIdentityAccordion(false);
-    if (typeof window.toggleBizTypeAccordion === 'function') window.toggleBizTypeAccordion(false);
+    // AU-3 — Type d'offre n'est plus un accordéon (grille de pastilles).
     const chainContent = document.getElementById('chainContent');
     const chainLock = document.getElementById('chainLock');
     const chainSection = document.getElementById('premSection_chain');
@@ -10694,6 +10713,75 @@ window.showScreen = _showScreenBase;
 
 
 // ── CONDITIONS D'OUVERTURE ────────────────────────────────
+// AU-3 — pastilles "+" Détails/Code (Photo réutilise selectMediaType/
+// step3PhotoWrap, partagé avec le dépôt personnel). Toggle simple : masque
+// l'autre panneau, bascule aria-expanded pour le style (cf. .dep-biz-pastille
+// [aria-expanded="true"]).
+const BIZ_PANEL_IDS = { details: 'bizDescPanel', code: 'bizCodePanel' };
+window.selectBizPanel = (arg) => {
+  const target = document.getElementById(BIZ_PANEL_IDS[arg]);
+  if (!target) return;
+  const wasOpen = !target.classList.contains('u-hidden');
+  Object.values(BIZ_PANEL_IDS).forEach(id => document.getElementById(id)?.classList.add('u-hidden'));
+  document.getElementById('bizPastilleDetails')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('bizPastilleCode')?.setAttribute('aria-expanded', 'false');
+  if (!wasOpen) {
+    target.classList.remove('u-hidden');
+    const btnId = arg === 'details' ? 'bizPastilleDetails' : 'bizPastilleCode';
+    document.getElementById(btnId)?.setAttribute('aria-expanded', 'true');
+  }
+};
+
+// Ouverture forcée (pas un toggle) : utilisée par _acceptAdNudge quand le
+// texte reporté dépasse 80 caractères, pour que le reste (dans Détails) soit
+// visible sans action supplémentaire.
+window._openBizDetailsPanel = () => {
+  document.getElementById('bizCodePanel')?.classList.add('u-hidden');
+  document.getElementById('bizPastilleCode')?.setAttribute('aria-expanded', 'false');
+  document.getElementById('bizDescPanel')?.classList.remove('u-hidden');
+  document.getElementById('bizPastilleDetails')?.setAttribute('aria-expanded', 'true');
+};
+
+// AU-3.7 — mini bascule 7 jours / 1 mois (seules durées valides en Commerce,
+// cf. arbitrage du lot) : pilote les VRAIS boutons .dur-btn du formulaire
+// personnel (masqués en mode Commerce, cf. toggleBusinessMode), pas un état
+// parallèle — _readDepositFormInputs() les lit déjà tels quels.
+window.toggleBizDurEdit = () => {
+  document.getElementById('bizDurToggle')?.classList.toggle('u-hidden');
+};
+window.selectBizDuration = (el) => {
+  const dur = el.dataset.dur;
+  const target = document.querySelector(`#step2DurWrap .dur-btn[data-dur="${dur}"]`);
+  if (target) selectDur(target);
+  document.querySelectorAll('#bizDurToggle .biz-dur-btn').forEach(b => {
+    const active = b === el;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+  _updateBizReachBanner();
+  document.getElementById('bizDurToggle')?.classList.add('u-hidden');
+};
+function _updateBizReachBanner() {
+  const is1m = document.querySelector('#step2DurWrap .dur-btn[data-dur="1m"]')?.classList.contains('active');
+  const el = document.getElementById('bizReachText');
+  if (el) el.innerHTML = t.dep_biz_radius_text.replace('{duration}', is1m ? t.dep_dur_1m : t.dep_dur_7d);
+}
+
+// AU-3.6 — aperçu live "Ce que verra un passant", recalculé à chaque frappe
+// (titre, code) ou changement de type.
+function _updateBizPreview() {
+  const eyebrowEl = document.getElementById('bizPreviewEyebrow');
+  const titleEl = document.getElementById('bizPreviewTitle');
+  const subEl = document.getElementById('bizPreviewSub');
+  if (!eyebrowEl || !titleEl || !subEl) return;
+  const typeBtn = document.querySelector('#bizTypeSelector .type-btn.active');
+  eyebrowEl.textContent = typeBtn?.querySelector('span')?.textContent?.trim() || '';
+  const title = document.getElementById('bizTitle')?.value.trim();
+  titleEl.textContent = title || t.dep_biz_preview_placeholder;
+  const code = document.getElementById('promoCode')?.value.trim();
+  subEl.textContent = code ? `${t.dep_biz_preview_distance} · ${t.dep_biz_preview_code_prefix} ${code}` : t.dep_biz_preview_distance;
+}
+
 window.toggleBusinessMode = () => {
   if (!isPremium) {
     showToast('warning', t.dep_biz_locked, 4000);
@@ -10729,6 +10817,13 @@ window.toggleBusinessMode = () => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
+    // AU-3.4 — "rester anonyme" n'a pas de sens pour un commerce (hors des
+    // deux formulaires, donc pas caché automatiquement par
+    // normalForm.style.display='none' ci-dessus).
+    const anonLinkBiz = document.getElementById('anonToggleLink');
+    if (anonLinkBiz) anonLinkBiz.style.display = 'none';
+    // AU-3.8 — lien vers "Mes offres" (AU-4), visible seulement en Commerce.
+    document.getElementById('bizOffersLink')?.classList.remove('u-hidden');
     // Masquer vocal/chaîne dans step 3 (Lot Q : retiré du menu média, pas
     // seulement de l'affichage — pas de message vocal pour une offre Commerce),
     // adapter titre
@@ -10776,6 +10871,16 @@ window.toggleBusinessMode = () => {
       // sans ça, l'aperçu du rayon sur la mini-carte restait visuellement
       // périmé après un forçage à 50m (audit 1.4).
       if (typeof _updateRadiusCircle === 'function') _updateRadiusCircle();
+      // AU-3 — durée forcée à 1 mois à l'entrée : resynchronise la mini
+      // bascule 7j/1mois et le bandeau de portée en conséquence.
+      document.querySelectorAll('#bizDurToggle .biz-dur-btn').forEach(b => {
+        const active = b.dataset.dur === '1m';
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      document.getElementById('bizDurToggle')?.classList.add('u-hidden');
+      _updateBizReachBanner();
+      _updateBizPreview();
     }, 100);
     showToast('success', t.dep_biz_toast);
   } else {
@@ -10794,6 +10899,9 @@ window.toggleBusinessMode = () => {
       const el = document.getElementById(id);
       if (el) el.style.display = '';
     });
+    const anonLinkNorm = document.getElementById('anonToggleLink');
+    if (anonLinkNorm) anonLinkNorm.style.display = '';
+    document.getElementById('bizOffersLink')?.classList.add('u-hidden');
     // Réafficher l'icône vocal (Lot Q/AJ) — le panneau lui-même redevient
     // visible seulement s'il contient déjà un média ou est rouvert par l'icône
     // (_syncMediaPanelVisibility recalcule les 4 panneaux au même moment).
@@ -11254,6 +11362,24 @@ document.addEventListener('input', (e) => {
   if (el.tagName === 'TEXTAREA' && el.id === 'depositMsg') {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 180) + 'px';
+  }
+});
+
+// AU-3.6 — aperçu live du dépôt Commerce, recalculé à chaque frappe.
+document.addEventListener('input', (e) => {
+  const id = e.target.id;
+  if (id === 'bizTitle') {
+    const counter = document.getElementById('bizTitleCharCount');
+    if (counter) counter.textContent = e.target.value.length;
+    _updateBizPreview();
+  } else if (id === 'promoCode') {
+    _updateBizPreview();
+  }
+});
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#bizTypeSelector .type-btn')) {
+    // Après le dispatcher générique (selectType) qui a déjà posé .active.
+    setTimeout(_updateBizPreview, 0);
   }
 });
 
@@ -12065,8 +12191,10 @@ const ACTIONS = {
   // Zone 6 — Deposit
   pickEmoji: (el) => pickEmoji(el, el.dataset.arg),
   toggleAnonMode: (el) => toggleAnonMode(el),
-  toggleBizTypeAccordion: () => toggleBizTypeAccordion(),
   selectRadius: (el) => _selectRadius(el),
+  selectBizPanel: (el) => window.selectBizPanel(el.dataset.arg),
+  toggleBizDurEdit: () => window.toggleBizDurEdit(),
+  selectBizDuration: (el) => window.selectBizDuration(el),
   selectDur: (el) => selectDur(el),
   selectMaxOpen: (el) => selectMaxOpen(el),
   selectCond: (el) => selectCond(el),

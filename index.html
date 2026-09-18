@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=239"></script>
+<script type="module" src="app.js?v=240"></script>
 
-<link rel="stylesheet" href="style.css?v=218">
+<link rel="stylesheet" href="style.css?v=219">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -616,36 +616,85 @@
 
         <!-- Formulaire Commerce (formulaire dédié) -->
         <div id="businessDepositForm" class="u-hidden">
-          <div class="dep-biz-type-box">
-            <div class="dep-biz-type-label" data-i18n="dep_biz_type_label">🏪 Type d'offre</div>
-            <div class="deposit-advanced-toggle" id="bizTypeAccordionToggle" role="button" tabindex="0" aria-expanded="false" aria-controls="bizTypeAccordionContent" data-action="toggleBizTypeAccordion">
-              <span id="bizTypeAccordionSummary" data-i18n="dep_biz_type_promo">🏷 Promo</span>
-              <span class="toggle-arrow" aria-hidden="true">▼</span>
+          <!-- AU-3/maquette 5 — bandeau de portée EN HAUT (pas en bas), avec
+               la durée réellement choisie (7 jours ou 1 mois, jamais 24h ni
+               éternel côté Commerce). -->
+          <div class="dep-biz-radius-banner dep-biz-radius-banner--top">
+            <span class="dep-biz-radius-emoji" aria-hidden="true">📡</span>
+            <span class="dep-biz-radius-text" id="bizReachText" data-i18n="dep_biz_radius_text">Visible à <strong>50 m</strong> autour de votre commerce, pendant <strong>1 mois</strong>.</span>
+            <button type="button" id="bizReachEditBtn" data-action="toggleBizDurEdit" class="dep-biz-reach-edit" data-i18n="dep_biz_reach_edit">modifier</button>
+          </div>
+          <div id="bizDurToggle" class="dep-biz-dur-toggle u-hidden" role="group" aria-label="Durée de l'offre">
+            <button type="button" class="biz-dur-btn" data-dur="7d" data-action="selectBizDuration" aria-pressed="false" data-i18n="dep_dur_7d">7 jours</button>
+            <button type="button" class="biz-dur-btn active" data-dur="1m" data-action="selectBizDuration" aria-pressed="true" data-i18n="dep_dur_1m">1 mois</button>
+          </div>
+
+          <!-- AU-3.1 — grille de 4 pastilles toujours visibles (plus
+               d'accordéon à déplier). -->
+          <div class="dep-biz-type-label" data-i18n="dep_biz_type_label">🏪 Type d'offre</div>
+          <div class="dep-biz-type-grid" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
+            <button class="type-btn dep-biz-type-grid-btn active" data-val="Promo" data-action="selectType" aria-pressed="true">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 12.5l-8 8-9-9V4h7.5z"/><circle cx="8.3" cy="8.3" r="1.4"/></svg>
+              <span data-i18n="dep_biz_type_promo">Promo</span>
+            </button>
+            <button class="type-btn dep-biz-type-grid-btn" data-val="Événement" data-action="selectType" aria-pressed="false">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h14v11H5zM3 5h18v4H3zM12 5v15M12 5S9.5 2 7.8 3.2 9.4 5 12 5zM12 5s2.5-3 4.2-1.8S14.6 5 12 5z"/></svg>
+              <span data-i18n="dep_biz_type_event">Événement</span>
+            </button>
+            <button class="type-btn dep-biz-type-grid-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.1 5.2L19.5 9l-4 3.7 1.1 5.6L12 15.6 7.4 18.3l1.1-5.6-4-3.7 5.4-.8z"/></svg>
+              <span data-i18n="dep_biz_type_new">Nouveauté</span>
+            </button>
+            <button class="type-btn dep-biz-type-grid-btn" data-val="Service" data-action="selectType" aria-pressed="false">
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17h16M12 5a7 7 0 0 0-7 7v5h14v-5a7 7 0 0 0-7-7zM12 3v2"/></svg>
+              <span data-i18n="dep_biz_type_service">Service</span>
+            </button>
+          </div>
+
+          <!-- AU-3.2/3.3 — un seul champ visible (titre), les 3 autres
+               (Détails/Code/Photo) sont des pastilles "+" qui déplient leur
+               champ à la demande, sur le modèle du menu média du dépôt
+               personnel (Photo réutilise directement ce menu : selectMediaType). -->
+          <div class="dep-biz-card">
+            <label for="bizTitle" class="dep-biz-card-label" data-i18n="dep_biz_title_label">Votre offre, en une phrase</label>
+            <input id="bizTitle" class="dep-biz-card-input" type="text" maxlength="80" placeholder="ex: -20% sur tous les cafés ce weekend !" data-i18n-placeholder="dep_biz_title_placeholder" aria-required="true">
+            <div class="dep-biz-pastille-row">
+              <button type="button" id="bizPastilleDetails" class="dep-biz-pastille" data-action="selectBizPanel" data-arg="details" aria-expanded="false" aria-controls="bizDescPanel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span data-i18n="dep_biz_pastille_details">Détails</span>
+              </button>
+              <button type="button" id="bizPastilleCode" class="dep-biz-pastille" data-action="selectBizPanel" data-arg="code" aria-expanded="false" aria-controls="bizCodePanel">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span data-i18n="dep_biz_pastille_code">Code</span>
+              </button>
+              <button type="button" id="bizPastillePhoto" class="dep-biz-pastille" data-action="selectMediaType" data-arg="photo" aria-expanded="false" aria-controls="step3PhotoWrap">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                <span data-i18n="dep_biz_pastille_photo">Photo</span>
+              </button>
+              <span class="dep-biz-card-counter"><span id="bizTitleCharCount">0</span>/80</span>
             </div>
-            <div class="deposit-advanced-content" id="bizTypeAccordionContent">
-              <div class="dep-biz-type-selector" id="bizTypeSelector" role="group" aria-label="Type d'offre commerciale">
-                <button class="type-btn active dep-biz-type-btn" data-val="Promo" data-action="selectType" aria-pressed="true" data-i18n="dep_biz_type_promo">🏷 Promo</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Événement" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_event">🎉 Événement</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Nouveauté" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_new">✨ Nouveauté</button>
-                <button class="type-btn dep-biz-type-btn" data-val="Service" data-action="selectType" aria-pressed="false" data-i18n="dep_biz_type_service">🛎 Service</button>
-              </div>
+            <div id="bizDescPanel" class="dep-biz-subpanel u-hidden">
+              <label class="form-label" for="bizDesc"><span data-i18n="dep_biz_desc_label">Description</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
+              <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" data-i18n-placeholder="dep_biz_desc_placeholder" maxlength="200"></textarea>
+            </div>
+            <div id="bizCodePanel" class="dep-biz-subpanel u-hidden">
+              <label class="form-label" for="promoCode"><span data-i18n="dep_biz_promo_label">Code promo</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
+              <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" data-i18n-placeholder="dep_biz_promo_placeholder" maxlength="40">
             </div>
           </div>
-          <div class="form-group u-mb10">
-            <label class="form-label" for="bizTitle"><span data-i18n="dep_biz_title_label">Titre de l'offre</span> <span class="dep-required-mark">*</span></label>
-            <input class="form-input" id="bizTitle" type="text" placeholder="ex: -20% sur tous les cafés ce weekend !" data-i18n-placeholder="dep_biz_title_placeholder" maxlength="80" aria-required="true">
-          </div>
-          <div class="form-group u-mb10">
-            <label class="form-label" for="bizDesc"><span data-i18n="dep_biz_desc_label">Description</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
-            <textarea class="form-textarea dep-biz-desc-textarea" id="bizDesc" placeholder="Plus de détails sur votre offre, horaires, conditions…" data-i18n-placeholder="dep_biz_desc_placeholder" maxlength="200"></textarea>
-          </div>
-          <div class="form-group u-mb6">
-            <label class="form-label" for="promoCode"><span data-i18n="dep_biz_promo_label">Code promo</span> <span class="dep-optional-mark" data-i18n="misc_optional_mark">(optionnel)</span></label>
-            <input class="form-input dep-promo-input" id="promoCode" type="text" placeholder="ex: BIENVENUE10, CAFE-OFFERT…" data-i18n-placeholder="dep_biz_promo_placeholder" maxlength="40">
-          </div>
-          <div class="dep-biz-radius-banner">
-            <span class="dep-biz-radius-emoji">📡</span>
-            <span class="dep-biz-radius-text" data-i18n="dep_biz_radius_text">Visible uniquement à <strong>50m max</strong> autour de votre commerce — seuls les clients qui passent devant voient votre offre.</span>
+
+          <!-- AU-3.6 — aperçu live "Ce que verra un passant", mis à jour à
+               chaque frappe (cf. _updateBizPreview dans app.js). -->
+          <div class="dep-biz-preview-label" data-i18n="dep_biz_preview_label">Ce que verra un passant</div>
+          <div class="dep-biz-preview-card">
+            <div class="dep-biz-preview-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16v11H4zM3 5h18v4H3zM9 13h6"/></svg>
+            </div>
+            <div class="dep-biz-preview-text">
+              <div class="dep-biz-preview-eyebrow" id="bizPreviewEyebrow">Promo</div>
+              <div class="dep-biz-preview-title" id="bizPreviewTitle" data-i18n="dep_biz_preview_placeholder">Votre offre apparaîtra ici</div>
+              <div class="dep-biz-preview-sub" id="bizPreviewSub" data-i18n="dep_biz_preview_distance">à 30 m de vous</div>
+            </div>
           </div>
         </div>
 
@@ -699,6 +748,9 @@
         <!-- AU-2 — lien d'override, affiché uniquement pendant que la carte
              ad-nudge est active (cf. _updateAdNudge dans app.js). -->
         <a href="#" id="adNudgeOverrideLink" class="ad-nudge-override-link u-hidden" data-action="declinePersonalOverride" data-i18n="ad_nudge_override">non, c'est un message personnel</a>
+
+        <!-- AU-3.8 — visible uniquement en mode Commerce (cf. toggleBusinessMode) -->
+        <a href="#" id="bizOffersLink" class="ad-nudge-override-link u-hidden" data-action="nav" data-screen="screenBizOffers" data-i18n="dep_biz_offers_link">voir mes offres en cours</a>
 
         <!-- Deux liens discrets sous le sceau (Lot AI) — remplace le gros bloc
              Mode Commerce ; mêmes ids/action/gating qu'avant, l'icône ○/●
