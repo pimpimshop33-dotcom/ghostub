@@ -560,6 +560,19 @@ body.light-theme .auth-logo-glow{background:radial-gradient(circle,rgba(181,112,
 #screenRadar.approach-mode .radar-title,
 #screenRadar.approach-mode #userCoords{display:none;}
 #screenRadar.approach-mode .approach-wordmark{display:block;}
+/* AX-4 — série seulement dans l'en-tête de l'Approche (résonance du jour
+   vit désormais dans le Profil, cf. .profile-today-*). Discrète : bord
+   fin, pas de fond plein, jamais cliquable (simple <span>, pas de
+   data-action). Largeur bornée + ellipsis pour ne jamais faire passer
+   l'en-tête sur deux lignes à 360px de large. */
+.approach-streak-badge{
+  display:inline-flex;align-items:center;gap:4px;height:28px;max-width:72px;
+  padding:0 8px;border:1px solid rgba(var(--ghost-blue-rgb),.25);border-radius:14px;
+  font-size:11px;color:var(--tier-text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color 1.2s ease;flex-shrink:0;
+}
+.approach-streak-badge.u-hidden{display:none;}
+@media (prefers-reduced-motion:reduce){.approach-streak-badge{transition:none;}}
 .vibe-emoji{font-size:15px;}
 .vibe-label{font-size:12px;color:var(--warm-dim);flex:1;}
 #radarInRangeCount{color:var(--spirit-dim);font-size:11px;}
@@ -1629,6 +1642,14 @@ body:not(.light-theme) #chainMiniMap .leaflet-tile-pane{
    l'ancien gros bloc "RANG" séparé (.profile-rank-block/-value/-label). */
 .profile-badge-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
 .profile-rank-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--warm);background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:20px;padding:3px 12px;letter-spacing:.3px;}
+/* Lot AX-4 — rangée "Aujourd'hui" (résonance du jour + série), remise
+   dans le Profil depuis le Radar (masqué avec .vibe-bar au Lot AV). Même
+   style de pastille que .profile-rank-badge ci-dessus, dans les deux
+   thèmes (mêmes variables déjà théme-aware, pas de règle jour séparée). */
+.profile-today-label{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--warm-dim);text-align:center;margin-top:12px;}
+.profile-today-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.profile-today-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--warm);background:rgba(var(--ghost-blue-rgb),.1);border:1px solid rgba(var(--ghost-blue-rgb),.3);border-radius:20px;padding:3px 12px;letter-spacing:.3px;}
+.profile-today-badge.is-dim{opacity:.45;font-weight:500;}
 .profile-leaderboard-panel{background:var(--surface);border:1px solid rgba(var(--premium-rgb),.2);border-radius:14px;padding:14px;margin-bottom:12px;}
 .profile-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:12px;}
 .profile-panel-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--spirit-dim);margin-bottom:10px;}

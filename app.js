@@ -754,6 +754,17 @@ const LANGS = {
     // Premiers mots (Lot AX-2)
     approach_teaser_conditional: 'Il ne s\'ouvre qu\'à certaines heures.',
     approach_teaser_continues: 'la suite se lit sur place',
+    // Résonance du jour et série (Lot AX-4)
+    approach_streak_days_label: '{n} j',
+    approach_streak_places_label: '{n} lieux',
+    approach_streak_days_aria: 'Série de {n} jours',
+    approach_streak_places_aria: 'Série de {n} lieux',
+    profile_today_title: 'Aujourd\'hui',
+    profile_reso_available: '✦ Résonance du jour disponible',
+    profile_reso_used: '✦ Résonance du jour utilisée',
+    profile_streak_days: 'Série : {n} jours',
+    profile_streak_places: 'Série : {n} lieux',
+    profile_streak_start: 'Série : commence aujourd\'hui',
     approach_since_moments: 'quelques instants',
     approach_since_min: '{n} min',
     approach_since_hours: '{n} h',
@@ -896,6 +907,7 @@ const LANGS = {
     help_profile_trace_body: 'Choisis la couleur ET le caractère de ton ghost personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).',
     help_profile_rank_title: 'Mon rang',
     help_profile_rank_body: 'Une seule progression. Tu gagnes 1 point à chaque fantôme découvert, déposé, ou qui résonne, et 3 points par jour de série — 11 rangs, de Curieux à Légende.',
+    help_profile_today_body: 'La rangée « Aujourd\'hui », sous ton pseudo, indique si ta résonance quotidienne est encore disponible et combien de jours (ou de lieux) compte ta série en cours.',
     help_empreinte_title: 'Mon empreinte',
     help_empreinte_body: 'Une carte personnelle trace tous les endroits où tu as déposé ou découvert des fantômes, reliés dans l\'ordre. Dans les listes « Invoqués » et « Sceaux brisés », appuie sur Lire pour retrouver le texte complet et les réactions reçues.',
     help_year_title: 'Mon année',
@@ -1582,6 +1594,17 @@ const LANGS = {
     // Premiers mots (Lot AX-2)
     approach_teaser_conditional: 'It only opens at certain times.',
     approach_teaser_continues: 'the rest is read on the spot',
+    // Daily resonance and streak (Lot AX-4)
+    approach_streak_days_label: '{n}d',
+    approach_streak_places_label: '{n} places',
+    approach_streak_days_aria: 'Streak of {n} days',
+    approach_streak_places_aria: 'Streak of {n} places',
+    profile_today_title: 'Today',
+    profile_reso_available: '✦ Daily resonance available',
+    profile_reso_used: '✦ Daily resonance used',
+    profile_streak_days: 'Streak: {n} days',
+    profile_streak_places: 'Streak: {n} places',
+    profile_streak_start: 'Streak: starts today',
     approach_since_moments: 'a few moments',
     approach_since_min: '{n} min',
     approach_since_hours: '{n}h',
@@ -1716,6 +1739,7 @@ const LANGS = {
     help_profile_trace_body: 'Choose the color AND the character of your personal spirit, the one that represents you — 3 free tints (Spirit, Orchid, Mist), 3 Premium-only (Amber, Rose, Ember).',
     help_profile_rank_title: 'My rank',
     help_profile_rank_body: 'A single progression. You gain 1 point for every ghost discovered, deposited, or resonated on, and 3 points per streak day — 11 ranks, from Curious to Legend.',
+    help_profile_today_body: 'The "Today" row, under your name, shows whether your daily resonance is still available and how many days (or places) your current streak counts.',
     help_empreinte_title: 'My footprint',
     help_empreinte_body: 'A personal map traces every place where you\'ve deposited or discovered ghosts, connected in order. In the "Summoned" and "Seals broken" lists, tap Read to revisit the full text and the reactions received.',
     help_year_title: 'My year',
@@ -4691,6 +4715,43 @@ function _renderStreak() {
     el.style.display = 'none';
   }
 }
+// AX-4 — pastille série discrète dans l'en-tête de l'Approche, même
+// priorité/seuils que _renderStreak() ci-dessus (lieux de la semaine >
+// jours consécutifs), données partagées — pas de recalcul dupliqué.
+function _renderApproachStreakBadge() {
+  const el = document.getElementById('approachStreakBadge');
+  if (!el) return;
+  const weekPlaces = _getWeeklyPlaces();
+  const s = _getStreak();
+  if (weekPlaces >= 3) {
+    el.innerHTML = _uiIconHTML('🔥', { size: 12 }) + ' ' + t.approach_streak_places_label.replace('{n}', weekPlaces);
+    el.setAttribute('aria-label', t.approach_streak_places_aria.replace('{n}', weekPlaces));
+    el.classList.remove('u-hidden');
+  } else if (s.count >= 2) {
+    el.innerHTML = _uiIconHTML('🔥', { size: 12 }) + ' ' + t.approach_streak_days_label.replace('{n}', s.count);
+    el.setAttribute('aria-label', t.approach_streak_days_aria.replace('{n}', s.count));
+    el.classList.remove('u-hidden');
+  } else {
+    el.classList.add('u-hidden');
+  }
+}
+// AX-4 — rangée "Aujourd'hui" du Profil : résonance du jour + série.
+function _renderProfileTodayRow() {
+  const resoEl = document.getElementById('profileResoTodayBadge');
+  if (resoEl) {
+    const used = hasResonatedToday();
+    resoEl.textContent = used ? t.profile_reso_used : t.profile_reso_available;
+    resoEl.classList.toggle('is-dim', used);
+  }
+  const streakEl = document.getElementById('profileStreakTodayBadge');
+  if (streakEl) {
+    const weekPlaces = _getWeeklyPlaces();
+    const s = _getStreak();
+    if (weekPlaces >= 3) streakEl.textContent = t.profile_streak_places.replace('{n}', weekPlaces);
+    else if (s.count >= 2) streakEl.textContent = t.profile_streak_days.replace('{n}', s.count);
+    else streakEl.textContent = t.profile_streak_start;
+  }
+}
 
 // ── MILESTONES ──────────────────────────────────────────
 const MILESTONES = [1,5,10,25,50,100];
@@ -5221,6 +5282,7 @@ async function refreshProfileStats() {
   }
   updateRankBar();
   _renderProfileRankBadge();
+  _renderProfileTodayRow(); // AX-4
 }
 // Pastille du rang courant sous le pseudo, à côté de la pastille Premium
 // (remplace l'ancien gros bloc "RANG" séparé, cf. index.html #profileHdr).
@@ -9589,6 +9651,7 @@ function _buildApproachOrder() {
     _approachPlaceName = null;
   }
   _renderApproachStage();
+  _renderApproachStreakBadge(); // AX-4
 }
 
 function _approachNavTo(newIndex) {
@@ -10353,6 +10416,7 @@ window.resonate = async () => {
   if (countEl) countEl.textContent = t.detail_reso_sent;
   btn.disabled = false;
   markResonatedToday(ghostId);
+  _renderProfileTodayRow(); // AX-4 — à jour si le Profil est déjà ouvert derrière
   // Compteur dénormalisé totalResonances sur l'auteur
   if (ghostAuthorUid) {
     setDoc(doc(db, COLL.USERS, ghostAuthorUid), { totalResonances: increment(1) }, { merge: true })

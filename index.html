@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=247"></script>
+<script type="module" src="app.js?v=248"></script>
 
-<link rel="stylesheet" href="style.css?v=226">
+<link rel="stylesheet" href="style.css?v=227">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -307,6 +307,11 @@
         <div class="approach-wordmark" aria-hidden="true">Ghost<span class="wordmark-ub">ub</span></div>
       </div>
       <div class="radar-header-actions">
+        <!-- Lot AX-4 — série seulement sur l'Approche (la résonance du jour
+             vit désormais dans le Profil), affichée seulement si ≥2 jours
+             (ou ≥3 lieux cette semaine, même priorité que _renderStreak()).
+             Mise à jour par _renderApproachStreakBadge() (app.js). -->
+        <span class="approach-streak-badge u-hidden" id="approachStreakBadge" aria-label=""></span>
         <button class="audio-toggle" data-action="nav" data-screen="screenHelp" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/></svg></button>
         <button class="audio-toggle" id="audioToggleBtn" data-action="toggleAudioEnabled" aria-label="Activer/désactiver les sons" title="Sons"><svg class="ui-icon" id="audioToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 9a4 4 0 0 1 0 6M19 7a7 7 0 0 1 0 10"/></svg></button>
       </div>
@@ -1053,6 +1058,15 @@
             Premium
           </div>
         </div>
+        <!-- Lot AX-4 — résonance du jour + série, retirées du Radar depuis
+             le Lot AV (#resoStatus/#streakDisplay masqués avec .vibe-bar) :
+             remis ici, dans le Profil, mise à jour par
+             _renderProfileTodayRow() (app.js). -->
+        <div class="profile-today-label" data-i18n="profile_today_title">Aujourd'hui</div>
+        <div class="profile-today-row" id="profileTodayRow">
+          <span id="profileResoTodayBadge" class="profile-today-badge"></span>
+          <span id="profileStreakTodayBadge" class="profile-today-badge"></span>
+        </div>
         <!-- "Mon Trace" (Lot K, réécrit Lot AP) — personnalisation de l'avatar
              profil : chaque couleur est un visage distinct, pas juste une
              teinte (cf. TRACE_COLORS.face, app.js). -->
@@ -1340,6 +1354,7 @@
           <div class="help-list-row-plain"><span data-i18n="help_profile_trace_body">Choisis la couleur ET le caractère de ton fantôme personnel, celui qui te représente — 3 teintes gratuites (Spirit, Orchidée, Brume), 3 réservées Premium (Ambre, Rose, Braise).</span></div>
           <div class="help-list-row-plain"><strong data-i18n="help_profile_rank_title">Mon rang</strong></div>
           <div class="help-list-row-plain"><span data-i18n="help_profile_rank_body">Une seule progression. Tu gagnes 1 point à chaque fantôme découvert, déposé, ou qui résonne, et 3 points par jour de série — 11 rangs, de Curieux à Légende.</span></div>
+          <div class="help-list-row-plain"><span data-i18n="help_profile_today_body">La rangée « Aujourd'hui », sous ton pseudo, indique si ta résonance quotidienne est encore disponible et combien de jours (ou de lieux) compte ta série en cours.</span></div>
           <div class="help-list-row-plain"><strong data-i18n="help_empreinte_title">Mon empreinte</strong></div>
           <div class="help-list-row-plain"><span data-i18n="help_empreinte_body">Une carte personnelle trace tous les endroits où tu as déposé ou découvert des fantômes, reliés dans l'ordre. Dans les listes « Invoqués » et « Sceaux brisés », appuie sur Lire pour retrouver le texte complet et les réactions reçues.</span></div>
           <div class="help-list-row-plain"><strong data-i18n="help_year_title">Mon année</strong></div>
