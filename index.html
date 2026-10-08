@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=242"></script>
+<script type="module" src="app.js?v=243"></script>
 
-<link rel="stylesheet" href="style.css?v=221">
+<link rel="stylesheet" href="style.css?v=222">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -272,7 +272,7 @@
   </div>
 
   <!-- RADAR -->
-  <div class="screen" id="screenRadar" role="main" aria-label="Radar des fantômes proches">
+  <div class="screen approach-mode" id="screenRadar" role="main" aria-label="L'Approche — fantômes proches">
     <span id="main-content" tabindex="-1" class="main-content-anchor"></span>
     <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
       <div class="ptr-spinner" id="ptrSpinner"></div>
@@ -307,8 +307,59 @@
         <li data-i18n="whatsnew_item2">Boussole pour s'orienter vers un fantôme</li>
         <li data-i18n="whatsnew_item3">Mon rang — une seule progression, plus claire</li>
         <li data-i18n="whatsnew_item4">Mode jour repensé</li>
+        <li data-i18n="whatsnew_item5">L'Approche — suis un fantôme à la fois, l'écran se réchauffe quand tu approches</li>
       </ul>
     </div>
+
+    <!-- L'APPROCHE (Lot AV) — un fantôme à la fois, chaud-froid selon la
+         distance. Rendu entièrement par _renderApproachStage()/
+         _refreshApproachStageOnPosition() (app.js). Désactivable d'un coup en passant
+         APPROACH_ENABLED à false (app.js) : la classe .approach-mode sur
+         #screenRadar est alors retirée au chargement, ce qui réaffiche tous
+         les anciens blocs ci-dessous (masqués par #screenRadar.approach-mode
+         plutôt que supprimés — cf. style.css). -->
+    <div id="approachStage" aria-hidden="false">
+      <div class="approach-bg approach-bg-t0" id="approachBgT0"></div>
+      <div class="approach-bg approach-bg-t1" id="approachBgT1"></div>
+      <div class="approach-bg approach-bg-t2" id="approachBgT2"></div>
+      <div class="approach-bg approach-bg-t3" id="approachBgT3"></div>
+      <div class="approach-content" id="approachContent">
+        <div class="approach-context" id="approachContext" aria-hidden="true"></div>
+        <div class="approach-scene" id="approachScene">
+          <div class="approach-ring approach-ring-outer" aria-hidden="true"></div>
+          <div class="approach-ring approach-ring-inner" aria-hidden="true"></div>
+          <div class="approach-halo" id="approachHalo" aria-hidden="true"></div>
+          <div class="approach-trace" id="approachTrace" data-action="approachOpenCurrent" role="button" tabindex="0" aria-label=""></div>
+          <div class="approach-arrow" id="approachArrow" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 L18.5 15 L12 11.5 L5.5 15 Z"/></svg>
+          </div>
+        </div>
+        <div class="approach-distance-wrap" id="approachDistanceWrap">
+          <span class="approach-distance-num" id="approachDistanceNum"></span><span class="approach-distance-unit" id="approachDistanceUnit"></span>
+        </div>
+        <div class="approach-arrival u-hidden" id="approachArrival">
+          <div class="approach-arrival-title" id="approachArrivalTitle"></div>
+          <div class="approach-arrival-sub" id="approachArrivalSub"></div>
+        </div>
+        <div class="approach-phrase" id="approachPhrase"></div>
+        <div class="approach-media u-hidden" id="approachMedia"></div>
+        <button type="button" class="approach-seal-btn u-hidden" id="approachSealBtn" data-action="approachOpenCurrent"></button>
+        <div class="approach-pagination" id="approachPagination">
+          <button type="button" class="approach-nav-btn" id="approachPrevBtn" data-action="approachNav" data-arg="-1" aria-label="Fantôme précédent" data-i18n-aria-label="approach_prev_aria"><span aria-hidden="true">‹</span></button>
+          <div class="approach-dots" id="approachDots" aria-hidden="true"></div>
+          <button type="button" class="approach-nav-btn" id="approachNextBtn" data-action="approachNav" data-arg="1" aria-label="Fantôme suivant" data-i18n-aria-label="approach_next_aria"><span aria-hidden="true">›</span></button>
+        </div>
+        <div class="approach-swipe-hint" id="approachSwipeHint" data-i18n="approach_swipe_hint">Glisse pour suivre un autre fantôme</div>
+      </div>
+      <div class="approach-empty u-hidden" id="approachEmptyState">
+        <div class="approach-empty-icon" id="approachEmptyIcon" aria-hidden="true"></div>
+        <div class="approach-empty-title" id="approachEmptyTitle"></div>
+        <button type="button" class="approach-empty-btn u-hidden" id="approachEmptyBtn" data-action="nav" data-screen="screenDeposit" data-nav="nav-deposit" data-i18n="approach_empty_deposit_btn">Déposer le premier</button>
+      </div>
+      <div class="approach-loading u-hidden" id="approachLoadingState" data-i18n="misc_loading">Invocation en cours…</div>
+      <div class="sr-only" id="approachLiveRegion" aria-live="polite" aria-atomic="true"></div>
+    </div>
+
     <!-- Rang & Progression -->
     <div class="rank-bar" id="rankBar" data-tip="Votre rang — grimpez en explorant et déposant des fantômes" data-i18n-tip="radar_rank_tip">
       <span class="rank-badge" id="rankBadge">✦ Curieux</span>
@@ -1199,10 +1250,10 @@
         <div class="help-hint" data-i18n="help_deposit_limit">Un dépôt toutes les 15 minutes — 5 fantômes actifs maximum en même temps.</div>
       </div>
 
-      <!-- Radar -->
+      <!-- L'Approche (Lot AV, ex-Radar) -->
       <div class="help-card">
-        <div class="help-card-title" data-i18n="help_radar_title">Le Radar</div>
-        <div class="help-card-body" data-i18n="help_radar_body">Chaque fantôme proche apparaît sous la forme de son Trace, coloré selon son Sceau — plus il est ancien, plus sa couleur pâlit. Trois portées de détection : 50 m, 200 m, 1 km. Tire l'écran vers le bas pour rafraîchir. Le sonar émet un signal discret à chaque balayage qui croise un fantôme.</div>
+        <div class="help-card-title" data-i18n="help_radar_title">L'Approche</div>
+        <div class="help-card-body" data-i18n="help_radar_body">Un fantôme à la fois : l'écran se réchauffe à mesure que tu t'en rapproches, du froid au brûlant juste avant d'arriver. La flèche posée sur l'anneau pointe vers lui — avec la boussole activée, elle suit l'orientation réelle de ton téléphone. Glisse l'écran pour passer au fantôme suivant ; s'il porte une photo, une vidéo, une voix ou un document, tu le sauras sans qu'il se révèle avant que tu sois sur place.</div>
       </div>
       <div class="help-card">
         <div class="help-card-title" data-i18n="help_compass_title">La boussole</div>
@@ -1336,8 +1387,8 @@
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav u-hidden" id="bottomNav" aria-label="Navigation principale">
-    <div class="nav-item active" id="nav-radar" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" role="button" tabindex="0" aria-label="Radar" aria-current="page">
-      <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" stroke-opacity=".45"/></svg><span data-i18n="nav_radar">Radar</span>
+    <div class="nav-item active" id="nav-radar" data-action="nav" data-screen="screenRadar" data-nav="nav-radar" role="button" tabindex="0" aria-label="Approcher" aria-current="page">
+      <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15 9l-2 5-5 2 2-5z"/></svg><span data-i18n="nav_radar">Approcher</span>
     </div>
     <div class="nav-item" id="nav-map" data-action="nav" data-screen="screenMap" data-nav="nav-map" role="button" tabindex="0" aria-label="Carte">
       <svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6c0 5.5 6 14 6 14s6-8.5 6-14a6 6 0 0 0-6-6z"/><circle cx="12" cy="8" r="2"/></svg><span data-i18n="nav_map">Carte</span>

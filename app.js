@@ -107,6 +107,7 @@ const LANGS = {
     whatsnew_item2: 'Boussole pour s\'orienter vers un fantôme',
     whatsnew_item3: 'Mon rang — une seule progression, plus claire',
     whatsnew_item4: 'Mode jour repensé',
+    whatsnew_item5: 'L\'Approche — suis un fantôme à la fois, l\'écran se réchauffe quand tu approches',
     guest_signup_open: 'Créez un compte gratuit pour ouvrir ce fantôme',
     guest_signup_deposit: 'Créez un compte gratuit pour déposer un fantôme',
     guest_signup_profile: 'Créez un compte gratuit pour accéder à votre profil',
@@ -616,7 +617,7 @@ const LANGS = {
     share_sheet_sub: 'Seule la position est partagée.<br>Le contenu reste invisible jusqu\'à ce qu\'on soit sur place.',
     share_native_btn: '↗ Partager via…',
     // Nav
-    nav_radar: 'Radar',
+    nav_radar: 'Approcher',
     nav_map: 'Carte',
     nav_deposit: 'Déposer',
     nav_profile: 'Profil',
@@ -724,6 +725,36 @@ const LANGS = {
     compass_enable_btn: 'Activer la boussole',
     radar_section_label: 'Traces dans les alentours',
     radar_vibe_label: 'Détection active · présences en attente',
+    // L'Approche (Lot AV)
+    approach_ghosts_around: '{n} fantôme(s) autour de toi',
+    approach_loading: 'Invocation en cours…',
+    approach_no_location: 'Active ta position pour approcher un fantôme',
+    approach_empty_title: 'Aucun fantôme par ici.',
+    approach_empty_deposit_btn: 'Déposer le premier',
+    approach_swipe_hint: 'Glisse pour suivre un autre fantôme',
+    approach_prev_aria: 'Fantôme précédent',
+    approach_next_aria: 'Fantôme suivant',
+    approach_t0_phrase: 'Il est encore loin.',
+    approach_t1_phrase: 'Tu chauffes.',
+    approach_t2_phrase: 'Tu brûles.',
+    approach_direction_prefix: 'Vers le {dir}.',
+    approach_arrival_title: 'Tu y es.',
+    approach_arrival_sub_known: 'Il t\'attendait ici depuis {duree}.',
+    approach_arrival_sub_unknown: 'Il t\'attendait ici.',
+    approach_seal_btn: 'Briser le sceau',
+    approach_seal_btn_reread: 'Relire',
+    approach_business_label: 'Offre Commerce',
+    approach_media_photo_title: 'Une photo t\'attend',
+    approach_media_photo_sub: 'Elle devient nette à mesure que tu approches.',
+    approach_media_video_title: 'Une vidéo t\'attend',
+    approach_media_voice_title: 'Une voix t\'attend',
+    approach_media_doc_title: 'Un document t\'attend',
+    approach_media_generic_sub: 'Tu la découvriras sur place.',
+    approach_media_doc_sub: 'Tu le découvriras sur place.',
+    approach_since_moments: 'quelques instants',
+    approach_since_min: '{n} min',
+    approach_since_hours: '{n} h',
+    approach_since_days: '{n} jour{s}',
     filter_all: '🌫️ Toutes',
     filter_recent: '✨ Récentes',
     filter_photo: '📷 Visions',
@@ -831,8 +862,8 @@ const LANGS = {
     help_dep_biz: 'Le mode Commerce (Premium) publie une offre visible à 50 m autour de ton commerce.',
     help_deposit_limit: 'Un dépôt toutes les 15 minutes — 5 fantômes actifs maximum en même temps.',
     // Radar
-    help_radar_title: 'Le Radar',
-    help_radar_body: 'Chaque fantôme proche apparaît sous la forme de son Trace, coloré selon son Sceau — plus il est ancien, plus sa couleur pâlit. Trois portées de détection : 50 m, 200 m, 1 km. Tire l\'écran vers le bas pour rafraîchir. Le sonar émet un signal discret à chaque balayage qui croise un fantôme.',
+    help_radar_title: 'L\'Approche',
+    help_radar_body: 'Un fantôme à la fois : l\'écran se réchauffe à mesure que tu t\'en rapproches, du froid au brûlant juste avant d\'arriver. La flèche posée sur l\'anneau pointe vers lui — avec la boussole activée, elle suit l\'orientation réelle de ton téléphone. Glisse l\'écran pour passer au fantôme suivant ; s\'il porte une photo, une vidéo, une voix ou un document, tu le sauras sans qu\'il se révèle avant que tu sois sur place.',
     help_compass_title: 'La boussole',
     help_compass_body: 'Elle indique la direction d\'un fantôme proche, sur le Radar comme sur la Carte. Sur iPhone, un bouton « Activer la boussole » apparaît la première fois — il faut l\'autoriser une fois. Sur ordinateur, elle ne s\'affiche pas : c\'est normal, il n\'y a pas de capteur d\'orientation.',
     // Carte
@@ -931,6 +962,7 @@ const LANGS = {
     whatsnew_item2: 'Compass to orient towards a ghost',
     whatsnew_item3: 'My rank — one clearer progression',
     whatsnew_item4: 'Redesigned Day mode',
+    whatsnew_item5: 'The Approach — follow one ghost at a time, the screen warms up as you get closer',
     guest_signup_open: 'Create a free account to open this ghost',
     guest_signup_deposit: 'Create a free account to drop a ghost',
     guest_signup_profile: 'Create a free account to access your profile',
@@ -1421,7 +1453,7 @@ const LANGS = {
     share_sheet_sub: 'Only the location is shared.<br>The content stays hidden until you\'re there in person.',
     share_native_btn: '↗ Share via…',
     // Nav
-    nav_radar: 'Radar',
+    nav_radar: 'Approach',
     nav_map: 'Map',
     nav_deposit: 'Drop',
     nav_profile: 'Profile',
@@ -1518,6 +1550,36 @@ const LANGS = {
     compass_enable_btn: 'Enable compass',
     radar_section_label: 'Traces around you',
     radar_vibe_label: 'Detection active · presences waiting',
+    // The Approach (Lot AV)
+    approach_ghosts_around: '{n} ghost(s) around you',
+    approach_loading: 'Summoning…',
+    approach_no_location: 'Enable your location to approach a ghost',
+    approach_empty_title: 'No ghost around here.',
+    approach_empty_deposit_btn: 'Be the first to drop one',
+    approach_swipe_hint: 'Swipe to follow another ghost',
+    approach_prev_aria: 'Previous ghost',
+    approach_next_aria: 'Next ghost',
+    approach_t0_phrase: 'It\'s still far.',
+    approach_t1_phrase: 'You\'re getting warmer.',
+    approach_t2_phrase: 'You\'re burning up.',
+    approach_direction_prefix: 'Toward the {dir}.',
+    approach_arrival_title: 'You\'re here.',
+    approach_arrival_sub_known: 'It has been waiting here for {duree}.',
+    approach_arrival_sub_unknown: 'It has been waiting here.',
+    approach_seal_btn: 'Break the seal',
+    approach_seal_btn_reread: 'Reread',
+    approach_business_label: 'Commerce offer',
+    approach_media_photo_title: 'A photo awaits you',
+    approach_media_photo_sub: 'It becomes clear as you get closer.',
+    approach_media_video_title: 'A video awaits you',
+    approach_media_voice_title: 'A voice awaits you',
+    approach_media_doc_title: 'A document awaits you',
+    approach_media_generic_sub: 'You\'ll discover it on the spot.',
+    approach_media_doc_sub: 'You\'ll discover it on the spot.',
+    approach_since_moments: 'a few moments',
+    approach_since_min: '{n} min',
+    approach_since_hours: '{n}h',
+    approach_since_days: '{n} day{s}',
     filter_all: '🌫️ All',
     filter_recent: '✨ Recent',
     filter_photo: '📷 Visions',
@@ -1617,8 +1679,8 @@ const LANGS = {
     help_dep_biz: 'Commerce Mode (Premium) publishes an offer visible within 50 m of your business.',
     help_deposit_limit: 'One drop every 15 minutes — 5 active ghosts maximum at a time.',
     // Radar
-    help_radar_title: 'The Radar',
-    help_radar_body: 'Every nearby ghost shows up as its Trace, colored by its Seal — the older it is, the paler its color. Three detection ranges: 50 m, 200 m, 1 km. Pull the screen down to refresh. The sonar emits a discreet signal on every sweep that crosses a ghost.',
+    help_radar_title: 'The Approach',
+    help_radar_body: 'One ghost at a time: the screen warms up as you get closer, from cold to scorching right before you arrive. The arrow on the ring points toward it — with the compass enabled, it follows your phone\'s real orientation. Swipe the screen to move to the next ghost; if it carries a photo, video, voice or document, you\'ll know without it being revealed before you\'re on the spot.',
     help_compass_title: 'The compass',
     help_compass_body: 'It points toward a nearby ghost, on both the Radar and the Map. On iPhone, an "Enable compass" button appears the first time — you need to allow it once. On desktop it doesn\'t show up: that\'s normal, there\'s no orientation sensor.',
     // Map
@@ -2611,6 +2673,13 @@ function formatDistance(m) {
   return m < 1000 ? Math.round(m) + 'm' : (m/1000).toFixed(1) + 'km';
 }
 
+// Rayon d'ouverture d'un fantôme — même calcul partout (carte, openEnvelope(),
+// L'Approche) : évite qu'une copie diverge des autres (cf. AT-8/check-constants
+// pour le même principe appliqué aux constantes serveur/client).
+function _ghostOpenRadius(g) {
+  return Math.max(20, parseInt(g.radius) || 50);
+}
+
 function timeAgo(ts) {
   if (!ts) return '';
   const s = Math.floor((Date.now() - ts.seconds * 1000) / 1000);
@@ -2872,7 +2941,7 @@ function _renderMapGhostMarkers(_mapGhosts, centerLat, centerLng) {
   _mapGhosts.forEach((g, i) => {
     if (!g.lat || !g.lng) return;
     const delay = (i * 0.3).toFixed(2);
-    const ghostRadius = Math.max(20, parseInt(g.radius || '50') || 50);
+    const ghostRadius = _ghostOpenRadius(g);
     const dist = distanceMeters(centerLat, centerLng, g.lat, g.lng);
     const isInRange = dist <= ghostRadius;
     const alreadyOpened = _discoveredSet.has(g.id);
@@ -3223,6 +3292,7 @@ async function _ensureLocationReady() {
         if (error) { _handleGeoWatchError(error); return; }
         if (accuracy && accuracy > 5000) return;
         userLat = lat; userLng = lng;
+        if (APPROACH_ENABLED) { _approachLastGpsAccuracy = accuracy || 0; _refreshApproachStageOnPosition(); }
       });
     }
   }
@@ -3395,6 +3465,7 @@ onAuthStateChanged(auth, async user => {
           g._buzzed10 = false;
         }
       }); // fin nearbyGhosts.forEach
+      if (APPROACH_ENABLED) { _approachLastGpsAccuracy = accuracy || 0; _refreshApproachStageOnPosition(); }
     }); // fin onPositionUpdate
     } // fin guard _locationWatchStarted
     document.getElementById('bottomNav').style.display = 'flex';
@@ -6959,6 +7030,8 @@ async function _fetchVisibleGhostsSnapshot() {
     showToast('error', t.radar_firestore_err || 'Erreur de chargement.');
     document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg-err">' + t.radar_firestore_err + '</span>';
     renderGhostList(); renderRadarDots();
+    _approachLoading = false;
+    if (APPROACH_ENABLED) _buildApproachOrder();
     return null;
   }
 }
@@ -7088,6 +7161,11 @@ function _renderNearbyGhostsUI(count) {
   if (document.getElementById('screenMap')?.classList.contains('active')) {
     renderStaticMap();
   }
+  // L'Approche (Lot AV) — nouvel ordre d'affichage uniquement ici (chargement
+  // initial ou pull-to-refresh, les deux seuls appelants de loadNearbyGhosts
+  // en dehors de la relance fallback GPS) : cf. _buildApproachOrder.
+  _approachLoading = false;
+  if (APPROACH_ENABLED) _buildApproachOrder();
 }
 
 function _updateResonanceStatusButton() {
@@ -7123,6 +7201,8 @@ window.loadNearbyGhosts = async () => {
   const _gc = document.getElementById('ghostCount'); if (_gc) _gc.textContent = '';
   document.querySelector('.ghost-count-line').innerHTML = '<span class="ghost-count-msg">' + t.radar_locating + '</span>';
   skeletonGhostList();
+  _approachLoading = true;
+  if (APPROACH_ENABLED) _renderApproachStage();
 
   await _resolveNearbyGhostsLocation();
 
@@ -8791,6 +8871,16 @@ function _compassTick(nowTs) {
       _compassMapWidgetEl?.classList.add('visible');
     }
   }
+  // L'Approche (Lot AV) — flèche vers le fantôme affiché : angle = cap vers
+  // le fantôme − cap du téléphone. Écrite ICI (même boucle rAF que
+  // l'aiguille ci-dessus, pas de nouvelle boucle) mais HORS du gate 0.05°
+  // ci-dessus : ce gate ne réagit qu'à une rotation du téléphone, alors que
+  // le cap vers le fantôme change aussi en marchant sans tourner le
+  // téléphone — nécessite sa propre écriture à chaque frame.
+  if (APPROACH_ENABLED && _approachTargetBearingDeg !== null && _compassRadarScreenEl?.classList.contains('active')) {
+    const rel = ((_approachTargetBearingDeg - _compassSmoothedHeading) % 360 + 360) % 360;
+    if (_approachArrowEl) _approachArrowEl.style.transform = `rotate(${rel.toFixed(1)}deg)`;
+  }
   _updateCompassDebugPanel(delta, gain);
 }
 
@@ -8814,6 +8904,7 @@ function _attachCompassListener() {
   _compassRadarWidgetEl = document.getElementById('radarCompassWidget');
   _compassMapNeedleEl = document.getElementById('mapCompassNeedle');
   _compassMapWidgetEl = document.getElementById('mapCompassWidget');
+  _approachArrowEl = document.getElementById('approachArrow');
   if (!_compassRafId) _compassRafId = requestAnimationFrame(_compassTick);
   document.getElementById('compassPermBtn')?.classList.add('u-hidden');
   if (_compassDebugEnabled) document.getElementById('compassDebugPanel')?.classList.remove('u-hidden');
@@ -8893,6 +8984,495 @@ window.requestCompassPermission = async () => {
     document.getElementById('compassPermBtn')?.classList.add('u-hidden');
   }
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// LOT AV — L'APPROCHE
+// Le Radar devient un écran à un seul fantôme à la fois. Tout vit ici :
+// construction de l'ordre d'affichage, rendu (distance/flèche/phrase/
+// média/arrivée), navigation (swipe + boutons), rythme bip/vibration.
+// Désactivable d'un coup en passant APPROACH_ENABLED à false : réaffiche
+// les anciens blocs du Radar (cf. #screenRadar.approach-mode, style.css),
+// sans qu'aucune fonction ci-dessous ne soit appelée.
+// ══════════════════════════════════════════════════════════════════════
+const APPROACH_ENABLED = true;
+
+let _approachOrder = [];           // [{kind:'real', id} | {kind:'distant', id, data:{dist,bearing,emoji}}]
+let _approachIndex = 0;
+let _approachCurrentId = null;
+let _approachTier = null;          // 0..3 — état d'hystérésis du fantôme actuellement pinné
+let _approachLastGpsAccuracy = 0;
+let _approachPlaceName = null;
+let _approachLoading = false;
+let _approachLastLiveAnnounceAt = 0;
+let _approachTargetBearingDeg = null; // lu par _compassTick() (cf. section boussole plus haut)
+let _approachArrowEl = null;          // mis en cache par _attachCompassListener()
+
+if (APPROACH_ENABLED) {
+  document.getElementById('screenRadar')?.classList.add('approach-mode');
+} else {
+  document.getElementById('screenRadar')?.classList.remove('approach-mode');
+}
+
+function _approachFormatDistance(m) {
+  if (m < 100) return { num: String(Math.round(m)), unit: 'm' };
+  if (m < 1000) return { num: String(Math.round(m / 5) * 5), unit: 'm' };
+  return { num: (m / 1000).toFixed(1), unit: 'km' };
+}
+
+function _approachSincePhrase(g) {
+  if (!g.createdAt) return null;
+  const s = Math.floor((Date.now() - g.createdAt.seconds * 1000) / 1000);
+  if (s < 60) return t.approach_since_moments;
+  if (s < 3600) return t.approach_since_min.replace('{n}', String(Math.floor(s / 60)));
+  if (s < 86400) return t.approach_since_hours.replace('{n}', String(Math.floor(s / 3600)));
+  const d = Math.floor(s / 86400);
+  return t.approach_since_days.replace('{n}', String(d)).replace('{s}', d > 1 ? 's' : '');
+}
+
+// Construit un data: URI Cloudinary flouté — jamais l'image nette tant que
+// le sceau n'est pas brisé (AV-5). Retourne null si l'URL n'est pas une URL
+// Cloudinary reconnue (le caller retombe alors sur le pictogramme).
+function _approachBlurredCloudinaryUrl(url, blurLevel) {
+  if (!url || typeof url !== 'string') return null;
+  if (!/^https:\/\/res\.cloudinary\.com\//.test(url)) return null;
+  const idx = url.indexOf('/upload/');
+  if (idx === -1) return null;
+  return url.slice(0, idx + 8) + `e_blur:${blurLevel},w_240,q_auto/` + url.slice(idx + 8);
+}
+
+// Rayon d'ouverture + tier brut (sans hystérésis) pour un fantôme donné à une
+// distance donnée — cf. AV-3 pour les seuils exacts.
+function _approachRawTier(dist, effectiveDist, R) {
+  if (effectiveDist <= R) return 3;
+  if (dist <= R + 40) return 2;
+  if (dist <= R + 150) return 1;
+  return 0;
+}
+
+// Distance/palier/cap pour le fantôme réel actuellement pinné — applique
+// l'hystérésis de ±8 m (AV-3) contre _approachTier (état du module, remis à
+// null à chaque changement de fantôme pinné par _approachNavTo/_buildApproachOrder).
+function _approachComputeForGhost(g) {
+  if (!userLat || !userLng || !g.lat || !g.lng) return null;
+  const R = _ghostOpenRadius(g);
+  const dist = typeof g.distance === 'number' ? g.distance : distanceMeters(userLat, userLng, g.lat, g.lng);
+  const effectiveDist = Math.max(0, dist - (_approachLastGpsAccuracy || 0) * 0.5);
+  const raw = _approachRawTier(dist, effectiveDist, R);
+  let tier = raw;
+  if (_approachTier !== null && raw < _approachTier) {
+    const boundary = _approachTier === 3 ? R : _approachTier === 2 ? R + 40 : R + 150;
+    tier = dist > boundary + 8 ? raw : _approachTier;
+  }
+  const bearing = _bearingDeg(userLat, userLng, g.lat, g.lng);
+  return { dist, R, tier, bearing };
+}
+
+function _updateApproachBgLayers(tier) {
+  for (let i = 0; i <= 3; i++) {
+    const el = document.getElementById('approachBgT' + i);
+    if (el) el.classList.toggle('is-active', i === tier);
+  }
+}
+
+function _renderApproachArrow(bearing) {
+  const arrowEl = document.getElementById('approachArrow');
+  if (!arrowEl) return;
+  if (bearing === null || typeof bearing !== 'number') {
+    arrowEl.classList.add('u-hidden');
+    _approachTargetBearingDeg = null;
+    return;
+  }
+  arrowEl.classList.remove('u-hidden');
+  _approachTargetBearingDeg = bearing;
+  // Pas de boussole active : cap géographique fixe, nord en haut — sinon
+  // c'est _compassTick() (section boussole plus haut) qui écrit la rotation
+  // à chaque frame tant que l'écran Radar est actif (pas de 2e boucle rAF).
+  if (!_compassListening || _compassRawHeading === null) {
+    arrowEl.style.transform = `rotate(${bearing.toFixed(1)}deg)`;
+  }
+}
+
+const _APPROACH_MEDIA_ICONS = {
+  photo: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.4"/></svg>',
+  video: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+  voice: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/><path d="M8 21h8"/></svg>',
+  doc: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 12.5V7a4 4 0 0 1 8 0v8a2.6 2.6 0 0 1-5.2 0V8.2"/></svg>',
+};
+
+// Bloc média (AV-5) — un seul bloc, priorité vidéo > photo > voix > document
+// (même ordre que _mediaLabel dans renderRadarDots). Jamais de requête vers
+// l'audio/la vidéo/la photo nette avant l'ouverture réelle du fantôme.
+function _renderApproachMedia(g, tier, mediaEl) {
+  if (g.secret) { mediaEl.classList.add('u-hidden'); mediaEl.innerHTML = ''; return; }
+  if (g.businessMode) {
+    mediaEl.classList.remove('u-hidden');
+    mediaEl.innerHTML = `<div class="approach-media-visual" aria-hidden="true">🏪</div>` +
+      `<div class="approach-media-text"><div class="approach-media-title">${escapeHTML(t.approach_business_label)}</div></div>`;
+    return;
+  }
+  const kind = g.videoUrl ? 'video' : g.photoUrl ? 'photo' : g.audioUrl ? 'voice' : g.fileUrl ? 'doc' : null;
+  if (!kind) { mediaEl.classList.add('u-hidden'); mediaEl.innerHTML = ''; return; }
+  mediaEl.classList.remove('u-hidden');
+  const titles = { photo: t.approach_media_photo_title, video: t.approach_media_video_title, voice: t.approach_media_voice_title, doc: t.approach_media_doc_title };
+  const subs = { photo: t.approach_media_photo_sub, video: t.approach_media_generic_sub, voice: t.approach_media_generic_sub, doc: t.approach_media_doc_sub };
+  const visualInner = kind === 'voice'
+    ? '<div class="approach-voice-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>'
+    : kind === 'photo' ? '' : _APPROACH_MEDIA_ICONS[kind];
+  mediaEl.innerHTML = `
+    <div class="approach-media-visual" id="approachMediaVisual" aria-hidden="true">${visualInner}</div>
+    <div class="approach-media-text">
+      <div class="approach-media-title">${escapeHTML(titles[kind])}</div>
+      <div class="approach-media-sub">${escapeHTML(subs[kind])}</div>
+    </div>`;
+  if (kind === 'photo') {
+    const visual = document.getElementById('approachMediaVisual');
+    const blurLevel = tier === 2 ? 600 : tier === 1 ? 1200 : 2000;
+    const blurredUrl = _approachBlurredCloudinaryUrl(g.photoUrl, blurLevel);
+    if (blurredUrl && visual) {
+      const img = document.createElement('img');
+      img.alt = '';
+      img.onerror = () => { visual.innerHTML = _APPROACH_MEDIA_ICONS.photo; };
+      img.src = blurredUrl;
+      visual.appendChild(img);
+    } else if (visual) {
+      visual.innerHTML = _APPROACH_MEDIA_ICONS.photo;
+    }
+  }
+}
+
+function _announceApproachLive(textWhenArrived, fmt) {
+  const live = document.getElementById('approachLiveRegion');
+  if (!live) return;
+  const now = Date.now();
+  if (now - _approachLastLiveAnnounceAt < 10000) return;
+  _approachLastLiveAnnounceAt = now;
+  live.textContent = fmt ? (fmt.num + ' ' + fmt.unit) : textWhenArrived;
+}
+
+// Rendu complet du fantôme réel actuellement pinné (distance, flèche,
+// phrase, palier, média, arrivée). Appelé au changement de fantôme ET à
+// chaque position reçue (cf. _refreshApproachStageOnPosition) — coût
+// négligeable (texte + quelques classes), pas de reconstruction DOM lourde
+// sauf le Trace/le bloc média qui ne changent qu'avec le fantôme affiché.
+function _renderApproachRealGhost(g) {
+  const stage = document.getElementById('approachStage');
+  const prevTier = _approachTier;
+  const calc = _approachComputeForGhost(g);
+  if (!calc) { stage.removeAttribute('data-tier'); return; }
+  _approachTier = calc.tier;
+  stage.dataset.tier = 't' + calc.tier;
+  _updateApproachBgLayers(calc.tier);
+  // Fantôme secret/Commerce (AV-2) : anneau et accent en halo lavande/doré
+  // fixe, quel que soit le palier — écrase --tier-accent/--tier-halo pour ce
+  // fantôme précis (réinitialisé pour tout autre fantôme, pour ne jamais
+  // laisser une valeur se propager entre deux fantômes).
+  const _tier = g.secret || g.businessMode ? null : getGhostTier(g.id);
+  if (g.secret) {
+    stage.style.setProperty('--tier-accent', '#C7BCEE');
+    stage.style.setProperty('--tier-halo', '#E6E0F5');
+  } else if (g.businessMode) {
+    stage.style.setProperty('--tier-accent', '#E8B45A');
+    stage.style.setProperty('--tier-halo', '#E8B45A');
+  } else if (_tier && (_tier.name === 'rare' || _tier.name === 'legendary')) {
+    // --tier-gold-rgb est déjà bilingue jour/nuit (:root / body.light-theme) :
+    // pas besoin d'une valeur distincte par thème ici, contrairement au
+    // lavande/doré fixes de secret/Commerce ci-dessus.
+    stage.style.setProperty('--tier-accent', 'rgba(var(--tier-gold-rgb),1)');
+    stage.style.setProperty('--tier-halo', 'rgba(var(--tier-gold-rgb),1)');
+  } else {
+    stage.style.removeProperty('--tier-accent');
+    stage.style.removeProperty('--tier-halo');
+  }
+
+  const traceEl = document.getElementById('approachTrace');
+  const discovered = getDiscoveredIds().includes(g.id);
+  traceEl.innerHTML = g.secret ? '<span class="approach-emoji-fallback" aria-hidden="true">🔮</span>'
+    : g.businessMode ? '<span class="approach-emoji-fallback" aria-hidden="true">🏪</span>'
+    : _traceMarkHTML(g, { size: 150, discovered, fadeOpacity: false });
+  _hydrateTraceMarks(traceEl);
+  traceEl.setAttribute('aria-label', escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme')));
+  const svg = traceEl.querySelector('.trace-svg');
+  if (svg) {
+    // Flou/opacité continus selon la distance (AV-3) — vraie écriture .style,
+    // jamais un style="" du markup (même principe que _hydrateTraceMarks).
+    // S'applique au <svg> interne, pas au <span> que touche déjà
+    // _hydrateTraceMarks ci-dessus — les deux filtres/opacités se composent
+    // sans s'écraser (parent = fanage par ancienneté, enfant = flou AV-3).
+    const span = Math.max(0, Math.min(1, (calc.dist - calc.R) / 150));
+    svg.style.opacity = calc.tier === 3 ? '1' : String((1 - span * 0.7).toFixed(2));
+    svg.style.filter = calc.tier === 3 ? '' : `blur(${(span * 2.5).toFixed(2)}px)`;
+  }
+
+  _renderApproachArrow(calc.bearing);
+
+  const distWrap = document.getElementById('approachDistanceWrap');
+  const arrivalEl = document.getElementById('approachArrival');
+  const sealBtn = document.getElementById('approachSealBtn');
+  const mediaEl = document.getElementById('approachMedia');
+  const phraseEl = document.getElementById('approachPhrase');
+  let fmtForLive = null;
+
+  if (calc.tier === 3) {
+    distWrap.classList.add('u-hidden');
+    arrivalEl.classList.remove('u-hidden');
+    document.getElementById('approachArrivalTitle').textContent = t.approach_arrival_title;
+    const since = _approachSincePhrase(g);
+    document.getElementById('approachArrivalSub').textContent = since
+      ? t.approach_arrival_sub_known.replace('{duree}', since)
+      : t.approach_arrival_sub_unknown;
+    phraseEl.textContent = '';
+    mediaEl.classList.add('u-hidden');
+    sealBtn.textContent = discovered ? t.approach_seal_btn_reread : t.approach_seal_btn;
+    sealBtn.classList.remove('u-hidden');
+    if (prevTier !== 3) {
+      // Un seul signal à l'entrée dans t3, jamais répété à chaque mise à jour (AV-4).
+      HapticsService.ghostNearby();
+      AudioService.playChime();
+    }
+  } else {
+    distWrap.classList.remove('u-hidden');
+    arrivalEl.classList.add('u-hidden');
+    sealBtn.classList.add('u-hidden');
+    const fmt = _approachFormatDistance(calc.dist);
+    fmtForLive = fmt;
+    document.getElementById('approachDistanceNum').textContent = fmt.num;
+    document.getElementById('approachDistanceUnit').textContent = fmt.unit;
+    const dirPhrase = t.approach_direction_prefix.replace('{dir}', _bearingToCardinal(calc.bearing).toLowerCase());
+    const palierPhrase = calc.tier === 2 ? t.approach_t2_phrase : calc.tier === 1 ? t.approach_t1_phrase : t.approach_t0_phrase;
+    phraseEl.textContent = dirPhrase + ' ' + palierPhrase;
+    _renderApproachMedia(g, calc.tier, mediaEl);
+  }
+  _setApproachPingRhythm(calc.tier === 1 ? 4000 : calc.tier === 2 ? 2000 : null);
+  _announceApproachLive(t.approach_arrival_title, fmtForLive);
+}
+
+// Entrée "fantôme lointain" (window._distantGhostsCache, AV-2) — direction +
+// distance honnêtes, Trace de marque générique, jamais de média, jamais
+// ouvrable au tap (cf. _approachOpenCurrent).
+function _renderApproachDistantEntry(d) {
+  const stage = document.getElementById('approachStage');
+  stage.removeAttribute('data-tier');
+  stage.style.removeProperty('--tier-accent');
+  stage.style.removeProperty('--tier-halo');
+  _updateApproachBgLayers(0);
+  const traceEl = document.getElementById('approachTrace');
+  traceEl.innerHTML = _BRAND_MARK_HTML;
+  traceEl.setAttribute('aria-label', '???');
+  document.getElementById('approachDistanceWrap').classList.remove('u-hidden');
+  document.getElementById('approachArrival').classList.add('u-hidden');
+  document.getElementById('approachSealBtn').classList.add('u-hidden');
+  document.getElementById('approachMedia').classList.add('u-hidden');
+  const fmt = _approachFormatDistance(d.dist);
+  document.getElementById('approachDistanceNum').textContent = fmt.num;
+  document.getElementById('approachDistanceUnit').textContent = fmt.unit;
+  document.getElementById('approachPhrase').textContent =
+    t.approach_direction_prefix.replace('{dir}', _bearingToCardinal(d.bearing).toLowerCase()) + ' ' + t.approach_t0_phrase;
+  _renderApproachArrow(d.bearing);
+  _setApproachPingRhythm(null);
+  _announceApproachLive(null, fmt);
+}
+
+function _renderApproachContext() {
+  const el = document.getElementById('approachContext');
+  if (!el) return;
+  const realCount = nearbyGhosts.filter(g => typeof g.distance === 'number' && g.lat && g.lng).length;
+  const countPhrase = t.approach_ghosts_around.replace('{n}', String(realCount));
+  el.textContent = _approachPlaceName ? (_approachPlaceName + ' · ' + countPhrase) : countPhrase;
+}
+
+function _renderApproachPagination() {
+  const dotsEl = document.getElementById('approachDots');
+  const prevBtn = document.getElementById('approachPrevBtn');
+  const nextBtn = document.getElementById('approachNextBtn');
+  const total = _approachOrder.length;
+  const atStart = _approachIndex <= 0;
+  const atEnd = _approachIndex >= total - 1;
+  prevBtn.classList.toggle('disabled', atStart);
+  nextBtn.classList.toggle('disabled', atEnd);
+  prevBtn.setAttribute('aria-disabled', String(atStart));
+  nextBtn.setAttribute('aria-disabled', String(atEnd));
+  if (total <= 1) { dotsEl.innerHTML = ''; }
+  else if (total <= 6) {
+    dotsEl.innerHTML = Array.from({ length: total }, (_, i) => `<span class="${i === _approachIndex ? 'is-active' : ''}"></span>`).join('');
+  } else {
+    dotsEl.innerHTML = `<span class="approach-dots-counter">${_approachIndex + 1} / ${total}</span>`;
+  }
+}
+
+// Rendu complet de l'écran : états particuliers (chargement/pas de
+// position/vide) puis fantôme pinné. Appelé au changement de fantôme, à la
+// (re)construction de l'ordre, et à l'entrée sur l'écran.
+function _renderApproachStage() {
+  if (!APPROACH_ENABLED) return;
+  const stage = document.getElementById('approachStage');
+  if (!stage) return;
+  const contentEl = document.getElementById('approachContent');
+  const emptyEl = document.getElementById('approachEmptyState');
+  const loadingEl = document.getElementById('approachLoadingState');
+  const emptyIcon = document.getElementById('approachEmptyIcon');
+  const emptyTitle = document.getElementById('approachEmptyTitle');
+  const emptyBtn = document.getElementById('approachEmptyBtn');
+
+  if (_approachLoading) {
+    contentEl.classList.add('u-hidden'); emptyEl.classList.add('u-hidden');
+    loadingEl.classList.remove('u-hidden');
+    _setApproachPingRhythm(null);
+    return;
+  }
+  loadingEl.classList.add('u-hidden');
+
+  const noPosition = !userLat || !userLng || !!window._gpsIsFallback;
+  if (noPosition) {
+    contentEl.classList.add('u-hidden');
+    emptyEl.classList.remove('u-hidden');
+    emptyIcon.innerHTML = _BRAND_MARK_HTML;
+    emptyTitle.textContent = t.approach_no_location;
+    emptyBtn.classList.add('u-hidden');
+    stage.removeAttribute('data-tier');
+    _setApproachPingRhythm(null);
+    return;
+  }
+
+  if (_approachOrder.length === 0) {
+    contentEl.classList.add('u-hidden');
+    emptyEl.classList.remove('u-hidden');
+    emptyIcon.innerHTML = _BRAND_MARK_SLEEPY_HTML;
+    emptyTitle.textContent = t.approach_empty_title;
+    emptyBtn.classList.remove('u-hidden');
+    stage.removeAttribute('data-tier');
+    _setApproachPingRhythm(null);
+    return;
+  }
+
+  emptyEl.classList.add('u-hidden');
+  contentEl.classList.remove('u-hidden');
+
+  const entry = _approachOrder[_approachIndex];
+  if (!entry) return;
+  if (entry.kind === 'distant') {
+    _renderApproachDistantEntry(entry.data);
+  } else {
+    const g = nearbyGhosts.find(x => x.id === entry.id);
+    if (!g) { _buildApproachOrder(); return; }
+    _renderApproachRealGhost(g);
+  }
+  _renderApproachContext();
+  _renderApproachPagination();
+}
+
+// Appelé à chaque position GPS reçue (onPositionUpdate) — met à jour le
+// fantôme pinné SANS reconstruire ni retrier _approachOrder (AV-2 : l'ordre
+// ne change jamais "sous le doigt", seulement au chargement/pull-to-refresh/
+// retour sur l'écran, cf. _buildApproachOrder).
+function _refreshApproachStageOnPosition() {
+  if (!APPROACH_ENABLED) return;
+  if (!document.getElementById('screenRadar')?.classList.contains('active')) return;
+  if (_approachLoading || _approachOrder.length === 0) return;
+  const entry = _approachOrder[_approachIndex];
+  if (!entry || entry.kind !== 'real') return;
+  const g = nearbyGhosts.find(x => x.id === entry.id);
+  if (g) _renderApproachRealGhost(g);
+}
+
+// (Re)construit l'ordre d'affichage — uniquement au chargement, au
+// pull-to-refresh (les deux passent par loadNearbyGhosts) et au retour sur
+// l'écran Radar (cf. window.showScreen). Préserve le fantôme pinné s'il
+// existe encore dans la nouvelle liste.
+function _buildApproachOrder() {
+  const real = nearbyGhosts
+    .filter(g => typeof g.distance === 'number' && g.lat && g.lng)
+    .slice().sort((a, b) => a.distance - b.distance)
+    .map(g => ({ kind: 'real', id: g.id }));
+  const distant = (window._distantGhostsCache || [])
+    .slice().sort((a, b) => a.dist - b.dist).slice(0, 3)
+    .map((d, i) => ({ kind: 'distant', id: 'distant-' + i, data: d }));
+  _approachOrder = real.concat(distant);
+
+  let idx = _approachCurrentId ? _approachOrder.findIndex(e => e.id === _approachCurrentId) : -1;
+  if (idx === -1) idx = 0;
+  _approachIndex = idx;
+  const newId = _approachOrder[idx] ? _approachOrder[idx].id : null;
+  if (newId !== _approachCurrentId) _approachTier = null;
+  _approachCurrentId = newId;
+
+  if (userLat && userLng && !window._gpsIsFallback) {
+    reverseGeocode(userLat, userLng).then(name => {
+      _approachPlaceName = name || null;
+      if (document.getElementById('screenRadar')?.classList.contains('active')) _renderApproachContext();
+    });
+  } else {
+    _approachPlaceName = null;
+  }
+  _renderApproachStage();
+}
+
+function _approachNavTo(newIndex) {
+  if (newIndex < 0 || newIndex >= _approachOrder.length || newIndex === _approachIndex) return;
+  _approachIndex = newIndex;
+  const entry = _approachOrder[newIndex];
+  const newId = entry ? entry.id : null;
+  if (newId !== _approachCurrentId) _approachTier = null;
+  _approachCurrentId = newId;
+  _renderApproachStage();
+  try { HapticsService.tap(); } catch (_) { console.warn('[ghostub:approachNav:haptic]'); }
+}
+
+function _approachOpenCurrent() {
+  const entry = _approachOrder[_approachIndex];
+  if (!entry || entry.kind !== 'real') return;
+  openGhost(entry.id);
+}
+
+// ── Rythme bip sonar + vibration (AV-6) — un seul minuteur, cadence selon
+// le palier du fantôme pinné. Remplace _radarPingLoop pendant que
+// APPROACH_ENABLED est actif (évite deux sources de bip, cf. AV-6). ────────
+let _approachPingTimerId = null;
+let _approachPingPeriod = null;
+function _setApproachPingRhythm(periodMs) {
+  if (periodMs === _approachPingPeriod) return;
+  _approachPingPeriod = periodMs;
+  if (_approachPingTimerId) { clearInterval(_approachPingTimerId); _approachPingTimerId = null; }
+  if (periodMs && !prefersReducedMotion()) {
+    _approachPingTimerId = setInterval(() => {
+      AudioService.playSonarPing();
+      HapticsService.tap();
+    }, periodMs);
+  }
+}
+function _stopApproachPingRhythm() {
+  if (_approachPingTimerId) { clearInterval(_approachPingTimerId); _approachPingTimerId = null; }
+  _approachPingPeriod = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (!APPROACH_ENABLED) return;
+  if (document.visibilityState === 'hidden') {
+    _stopApproachPingRhythm();
+  } else if (document.getElementById('screenRadar')?.classList.contains('active')) {
+    _renderApproachStage();
+  }
+});
+
+// ── Swipe horizontal pour changer de fantôme (AV-2) — même schéma que le
+// swipe du Détail (cf. plus bas), scopé à #approachStage pour ne pas voler
+// le geste vertical du pull-to-refresh. ─────────────────────────────────
+(function() {
+  let startX = 0, startY = 0, dragging = false;
+  document.addEventListener('touchstart', e => {
+    if (!APPROACH_ENABLED) { dragging = false; return; }
+    if (!document.getElementById('screenRadar')?.classList.contains('active')) { dragging = false; return; }
+    if (!e.target || !e.target.closest || !e.target.closest('#approachStage')) { dragging = false; return; }
+    startX = e.touches[0].clientX; startY = e.touches[0].clientY; dragging = true;
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!dragging) return;
+    dragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      _approachNavTo(_approachIndex + (dx < 0 ? 1 : -1));
+    }
+  }, { passive: true });
+})();
 
 let currentGhostIndex = 0;
 
@@ -10691,8 +11271,7 @@ function _checkDistanceThenOpen() {
           pos.coords.latitude, pos.coords.longitude,
           selectedGhost.lat, selectedGhost.lng
         );
-        const ghostRadiusStr = selectedGhost.radius || '50m';
-        const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
+        const ghostRadius = _ghostOpenRadius(selectedGhost);
         // Prendre en compte l'imprécision GPS : si dist - accuracy <= ghostRadius, on laisse passer
         const accuracy = pos.coords.accuracy || 0;
         const effectiveDist = Math.max(0, dist - accuracy * 0.5);
@@ -10712,8 +11291,7 @@ function _checkDistanceThenOpen() {
         // Fallback : utiliser la position radar déjà connue si disponible
         if (userLat && userLng) {
           const dist = distanceMeters(userLat, userLng, selectedGhost.lat, selectedGhost.lng);
-          const ghostRadiusStr = selectedGhost.radius || '50m';
-          const ghostRadius = Math.max(20, parseInt(ghostRadiusStr) || 50);
+          const ghostRadius = _ghostOpenRadius(selectedGhost);
           if (dist <= ghostRadius) {
             hint.textContent = origHint;
             _doOpenEnvelope().then(resolve);
@@ -11303,12 +11881,26 @@ window.showScreen = (id, fromPopstate = false) => {
   const _wasRadarActive = document.getElementById('screenRadar')?.classList.contains('active');
   animateScreenTransition(id);
   _showScreenBase(id, fromPopstate);
-  if (id === 'screenRadar' && !_wasRadarActive) _startRadarPingLoop();
-  else if (id !== 'screenRadar' && _wasRadarActive) _stopRadarPingLoop();
+  // L'Approche (Lot AV) a son propre rythme de bip (_setApproachPingRhythm,
+  // cadencé par palier) : l'ancien _radarPingLoop (calé sur le faisceau du
+  // disque radar, masqué sur cet écran) ne doit jamais tourner en parallèle
+  // — deux sources de bip sinon (AV-6).
+  if (!APPROACH_ENABLED) {
+    if (id === 'screenRadar' && !_wasRadarActive) _startRadarPingLoop();
+    else if (id !== 'screenRadar' && _wasRadarActive) _stopRadarPingLoop();
+  }
 
   // Boussole (Lot Z) : écouteur unique, actif uniquement sur Radar/Carte.
   if (id === 'screenRadar' || id === 'screenMap') _startCompass();
   else _stopCompass();
+
+  // L'Approche (Lot AV) — nouvel ordre + rendu en entrant réellement sur le
+  // radar (pas sur un re-showScreen redondant pendant qu'on y est déjà) ;
+  // arrêt du rythme bip/vibration et de la cible boussole en le quittant.
+  if (APPROACH_ENABLED) {
+    if (id === 'screenRadar' && !_wasRadarActive) _buildApproachOrder();
+    else if (id !== 'screenRadar' && _wasRadarActive) { _stopApproachPingRhythm(); _approachTargetBearingDeg = null; }
+  }
 
   // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que
   // le compte n'est plus anonyme (inscription/liaison de compte), réévalué
@@ -12163,7 +12755,7 @@ window.goAuth = () => {
 // incrémenter la prochaine fois qu'un changement mérite d'être signalé —
 // chaque version a sa propre clé localStorage, donc se réaffiche une fois
 // même pour ceux qui ont déjà fermé une version précédente.
-const _WHATSNEW_VERSION = 'ap1';
+const _WHATSNEW_VERSION = 'av1';
 function _whatsNewSeenKey() { return 'ghostub_whatsnew_' + _WHATSNEW_VERSION + '_seen'; }
 function _maybeShowWhatsNew() {
   const banner = document.getElementById('whatsnewBanner');
@@ -12356,6 +12948,8 @@ const ACTIONS = {
   setFilter: (el) => setFilter(el.dataset.arg, el),
   loadNearbyGhosts: () => loadNearbyGhosts(),
   openGhost: (el) => openGhost(el.dataset.id),
+  approachNav: (el) => _approachNavTo(_approachIndex + Number(el.dataset.arg)),
+  approachOpenCurrent: () => _approachOpenCurrent(),
 
   // Zone 5 — Detail + Reply
   swipeGhost: (el) => swipeGhost(Number(el.dataset.arg)),
