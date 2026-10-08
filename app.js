@@ -702,11 +702,11 @@ const LANGS = {
     // Extra static HTML keys
     ob_skip: 'Passer →',
     ob_sub0: 'Des messages invisibles<br>ancrés dans les lieux réels.',
-    ob_title1: 'Découvrez', ob_sub1: 'Passez près d\'un lieu et les<br>fantômes autour de vous apparaissent.',
-    ob_title2: 'Ouvrez', ob_sub2: 'Chaque message est une<br>enveloppe scellée à dévoiler.<br>3 ouvertures gratuites par jour.',
-    ob_title3: 'Résonnez', ob_sub3: 'Une résonance par jour —<br>choisissez le message qui vous touche.',
+    ob_title1: 'Approche', ob_sub1: 'Un fantôme t\'attend quelque part.<br>Marche : l\'écran se réchauffe.',
+    ob_title2: 'Ouvre', ob_sub2: 'Sur place, brise le sceau<br>et lis ce qu\'on t\'a laissé.<br>3 ouvertures gratuites par jour.',
+    ob_title3: 'Résonne', ob_sub3: 'Une résonance par jour :<br>choisis le message qui te touche.',
     ob_cta: 'Entrer dans les lieux ›',
-    ob_swipe_hint: 'Glissez pour découvrir →',
+    ob_swipe_hint: 'Glisse pour découvrir →',
     ob_free: 'Gratuit · Sans pub',
     geo_primer_title: 'Votre position',
     geo_primer_sub: 'Ghostub s\'en sert uniquement pour vous montrer les fantômes déposés autour de vous.',
@@ -1530,9 +1530,9 @@ const LANGS = {
     // Extra static HTML keys
     ob_skip: 'Skip →',
     ob_sub0: 'Invisible messages<br>anchored in real places.',
-    ob_title1: 'Discover', ob_sub1: 'Pass near a location and the<br>ghosts around you appear.',
-    ob_title2: 'Open', ob_sub2: 'Every message is a<br>sealed envelope to unveil.<br>3 free opens a day.',
-    ob_title3: 'Resonate', ob_sub3: 'One resonance a day —<br>pick the message that moves you.',
+    ob_title1: 'Get closer', ob_sub1: 'A ghost is waiting somewhere.<br>Walk: the screen warms up.',
+    ob_title2: 'Open', ob_sub2: 'Once there, break the seal<br>and read what was left for you.<br>3 free opens a day.',
+    ob_title3: 'Resonate', ob_sub3: 'One resonance a day:<br>pick the message that moves you.',
     ob_cta: 'Enter the locations ›',
     ob_swipe_hint: 'Swipe to discover →',
     ob_free: 'Free · No ads',
@@ -12835,35 +12835,72 @@ function goObScene(n) {
     cta.classList.remove('visible');
     if (hint) hint.style.display = '';
   }
+  // AX-3 — la boucle de la scène 2 ne tourne que pendant qu'elle est le
+  // slide actif.
+  if (n === 1) _startObScene2Loop(); else _stopObScene2Loop();
 }
 window.goObScene = goObScene;
 
 // Lot AS — remplace spawnObParticles() (particules volant jusqu'à 90px du
 // centre, débordaient sur le titre/texte, capture Pipo) : la slide 4 est
 // maintenant des ondes + étoiles fixes en CSS pur (.ob-reso-wave/-star,
-// style.css), rien à générer en JS. Reste ici : peupler les vrais petits
-// ghosts du mini-radar (slide 2) et le sceau de l'enveloppe (slide 3),
-// théme-aware — rendu une fois au chargement et à chaque bascule jour/nuit
-// (cf. applyTheme()).
+// style.css), rien à générer en JS. Reste ici : peupler le mini-Trace de
+// la slide 2 (AX-3 — approachSmile:true pour profiter du clin d'œil/
+// sourire réutilisés depuis l'Approche, cf. #ob2Trace dans style.css) et le
+// sceau de l'enveloppe (slide 3, visuel inchangé) — théme-aware, rendu une
+// fois au chargement et à chaque bascule jour/nuit (cf. applyTheme()).
 function _renderIntroIllustrations() {
-  const dots = [
-    { id: 'obGhostDot1', emoji: '👻', size: 26 },
-    { id: 'obGhostDot2', emoji: '❤️', size: 24 },
-    { id: 'obGhostDot3', emoji: '🌸', size: 24 },
-  ];
-  dots.forEach(({ id, emoji, size }) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const [c1, c2] = _categoryColors(emoji);
-    const uid = 'obd' + (_traceIdSeq++);
-    el.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(emoji, c1, c2, uid, size)}</svg>`;
-  });
+  const trace2 = document.getElementById('ob2Trace');
+  if (trace2) {
+    const [c1, c2] = _categoryColors('👻');
+    const uid = 'ob2' + (_traceIdSeq++);
+    trace2.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="64" height="64">${_traceBodyMarkup('👻', c1, c2, uid, 64, true)}</svg>`;
+  }
   const seal = document.getElementById('obEnvSeal');
   if (seal) {
     const [c1, c2] = _categoryColors('👻');
     const uid = 'obs' + (_traceIdSeq++);
     seal.innerHTML = `<svg class="trace-svg" viewBox="0 0 200 200" width="24" height="24">${_traceBodyMarkup('👻', c1, c2, uid, 24)}</svg>`;
   }
+}
+
+// ── Boucle de la scène 2 (AX-3) — distance 184→62→23m, Trace flou→net,
+// halo bleu→violet→ambre (--approach-t0/t1/t2-center), clin d'œil + sourire
+// à l'arrivée, pause, boucle. Démarrée/arrêtée depuis goObScene() selon le
+// slide actif ; chaque étape revérifie qu'on est toujours sur ce slide,
+// pour s'arrêter proprement sans dépendre d'intercepter chaque façon de
+// quitter l'intro (Passer, CTA, swipe). prefers-reduced-motion : image
+// fixe à 62 m, aucun minuteur.
+let _obScene2TimerIds = [];
+function _stopObScene2Loop() {
+  _obScene2TimerIds.forEach(id => clearTimeout(id));
+  _obScene2TimerIds = [];
+}
+function _startObScene2Loop() {
+  _stopObScene2Loop();
+  const wrap = document.getElementById('ob2Wrap');
+  const numEl = document.getElementById('ob2DistanceNum');
+  const traceEl = document.getElementById('ob2Trace');
+  if (!wrap || !numEl || !traceEl) return;
+  if (prefersReducedMotion()) {
+    wrap.dataset.tier = 't1';
+    numEl.textContent = '62';
+    traceEl.classList.remove('is-winking', 'is-bouncing', 'is-arrived');
+    return;
+  }
+  const stillOnScene2 = () => obCurrentScene === 1 && document.getElementById('screenOnboard')?.classList.contains('active');
+  function runCycle() {
+    if (!stillOnScene2()) return;
+    wrap.dataset.tier = 't0';
+    numEl.textContent = '184';
+    traceEl.classList.remove('is-arrived', 'is-winking', 'is-bouncing');
+    _obScene2TimerIds.push(setTimeout(() => { if (stillOnScene2()) { wrap.dataset.tier = 't1'; numEl.textContent = '62'; } }, 1800));
+    _obScene2TimerIds.push(setTimeout(() => { if (stillOnScene2()) { wrap.dataset.tier = 't2'; numEl.textContent = '23'; traceEl.classList.add('is-arrived'); } }, 3600));
+    _obScene2TimerIds.push(setTimeout(() => { if (stillOnScene2()) traceEl.classList.add('is-winking', 'is-bouncing'); }, 4100));
+    _obScene2TimerIds.push(setTimeout(() => { if (stillOnScene2()) traceEl.classList.remove('is-winking', 'is-bouncing'); }, 4600));
+    _obScene2TimerIds.push(setTimeout(runCycle, 6000));
+  }
+  runCycle();
 }
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
