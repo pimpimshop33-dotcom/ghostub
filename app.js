@@ -100,7 +100,7 @@ const LANGS = {
     auth_show_password: 'Afficher le mot de passe',
     auth_hide_password: 'Masquer le mot de passe',
     // Radar
-    radar_guest_banner: 'Mode exploration — créez un compte pour déposer vos fantômes',
+    radar_guest_banner: 'Mode exploration — crée un compte pour déposer',
     whatsnew_title: '✦ Quoi de neuf',
     whatsnew_close: 'Fermer',
     whatsnew_item1: 'Déposer simplifié — la lettre et les 7 Sceaux',
@@ -687,7 +687,7 @@ const LANGS = {
     dep_biz_offers_link: 'voir mes offres en cours',
     misc_optional_mark: '(optionnel)',
     misc_ptr_refreshing: 'Actualisation…',
-    misc_screen_radar: 'Radar — Ghostub',
+    misc_screen_radar: 'Approcher — Ghostub',
     misc_screen_detail: 'Détail du fantôme — Ghostub',
     misc_screen_deposit: 'Déposer un fantôme — Ghostub',
     map_title: 'Carte des fantômes',
@@ -726,7 +726,7 @@ const LANGS = {
     radar_section_label: 'Traces dans les alentours',
     radar_vibe_label: 'Détection active · présences en attente',
     // L'Approche (Lot AV)
-    approach_ghosts_around: '{n} fantôme(s) autour de toi',
+    approach_ghosts_around: '{n} fantôme{s} autour de toi',
     approach_loading: 'Invocation en cours…',
     approach_no_location: 'Active ta position pour approcher un fantôme',
     approach_empty_title: 'Aucun fantôme par ici.',
@@ -955,7 +955,7 @@ const LANGS = {
     auth_show_password: 'Show password',
     auth_hide_password: 'Hide password',
     // Radar
-    radar_guest_banner: 'Exploration mode — create an account to drop your own ghosts',
+    radar_guest_banner: 'Exploration mode — create an account to drop one',
     whatsnew_title: '✦ What\'s new',
     whatsnew_close: 'Close',
     whatsnew_item1: 'Simplified deposit — the letter and the 7 Seals',
@@ -1512,7 +1512,7 @@ const LANGS = {
     dep_biz_offers_link: 'see my current offers',
     misc_optional_mark: '(optional)',
     misc_ptr_refreshing: 'Refreshing…',
-    misc_screen_radar: 'Radar — Ghostub',
+    misc_screen_radar: 'Approach — Ghostub',
     misc_screen_detail: 'Ghost detail — Ghostub',
     misc_screen_deposit: 'Drop a ghost — Ghostub',
     map_title: 'Ghost Map',
@@ -1551,7 +1551,7 @@ const LANGS = {
     radar_section_label: 'Traces around you',
     radar_vibe_label: 'Detection active · presences waiting',
     // The Approach (Lot AV)
-    approach_ghosts_around: '{n} ghost(s) around you',
+    approach_ghosts_around: '{n} ghost{s} around you',
     approach_loading: 'Summoning…',
     approach_no_location: 'Enable your location to approach a ghost',
     approach_empty_title: 'No ghost around here.',
@@ -2051,9 +2051,14 @@ function _discoveredColors() {
 //   ❤️ amoureux (yeux en cœur)             🌙 endormi (yeux fermés en arc)
 //   ✨ émerveillé (grands yeux + bouche ronde)
 //   🔥 ardent (sourcils froncés)           💬 bavard (bouche ouverte)
+// AW-6 — chaque œil dans un <g class="trace-eye trace-eye-l/-r"> identifiable
+// (CSS cible .trace-eye-r pour le clin d'œil, cf. style.css @keyframes
+// traceWink) : même markup/rendu qu'avant, juste regroupé, aucun changement
+// visuel ailleurs dans l'app (le groupe n'affecte ni la position ni le style
+// par défaut).
 function _traceEyesClassic(uid) {
-  return `<ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/>` +
-    `<circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/>`;
+  return `<g class="trace-eye trace-eye-l"><ellipse cx="79" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><circle cx="76.5" cy="90.5" r="1.4" fill="#FFFFFF"/></g>` +
+    `<g class="trace-eye trace-eye-r"><ellipse cx="121" cy="94" rx="6.5" ry="8" fill="url(#te-${uid})"/><circle cx="118.5" cy="90.5" r="1.4" fill="#FFFFFF"/></g>`;
 }
 // Lot AL — un seul rendu du Trace à toutes les tailles (retire le mode
 // "compact" du Lot AJ : Carte et Radar montraient deux personnages
@@ -2083,12 +2088,12 @@ const TRACE_FACE_VARIANTS = {
     `<path d="M138 30 L150 30 L138 42 L150 42" stroke="${c1}" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>` +
     `<path d="M150 16 L159 16 L150 25 L159 25" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   '✨': (uid) =>
-    `<circle cx="78" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="122" cy="92" r="16" fill="url(#te-${uid})"/>` +
-    `<circle cx="72" cy="86" r="5" fill="#FFFFFF"/><circle cx="116" cy="86" r="5" fill="#FFFFFF"/>` +
+    `<g class="trace-eye trace-eye-l"><circle cx="78" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="72" cy="86" r="5" fill="#FFFFFF"/></g>` +
+    `<g class="trace-eye trace-eye-r"><circle cx="122" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="116" cy="86" r="5" fill="#FFFFFF"/></g>` +
     `<circle cx="100" cy="126" r="8" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
   '🔥': (uid) =>
     `<path d="M60 70 L92 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/><path d="M140 70 L108 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/>` +
-    `<circle cx="80" cy="98" r="9" fill="url(#te-${uid})"/><circle cx="120" cy="98" r="9" fill="url(#te-${uid})"/>` +
+    `<g class="trace-eye trace-eye-l"><circle cx="80" cy="98" r="9" fill="url(#te-${uid})"/></g><g class="trace-eye trace-eye-r"><circle cx="120" cy="98" r="9" fill="url(#te-${uid})"/></g>` +
     `<path d="M84 126 L116 126" stroke="url(#te-${uid})" stroke-width="8" stroke-linecap="round"/>`,
   '💬': (uid) => _traceEyesClassic(uid) +
     `<ellipse cx="100" cy="126" rx="17" ry="20" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
@@ -9155,12 +9160,16 @@ function _announceApproachLive(textWhenArrived, fmt) {
 // négligeable (texte + quelques classes), pas de reconstruction DOM lourde
 // sauf le Trace/le bloc média qui ne changent qu'avec le fantôme affiché.
 function _renderApproachRealGhost(g) {
-  const stage = document.getElementById('approachStage');
+  // AW-1/5 — data-tier et les variables --tier-* vivent sur #screenRadar
+  // (pas #approachStage) : l'en-tête (wordmark + boutons), sibling de
+  // #approachStage plutôt que descendant, doit aussi pouvoir suivre le
+  // palier, ce qu'une variable posée plus bas dans l'arbre ne permettrait pas.
+  const tierHost = document.getElementById('screenRadar');
   const prevTier = _approachTier;
   const calc = _approachComputeForGhost(g);
-  if (!calc) { stage.removeAttribute('data-tier'); return; }
+  if (!calc) { tierHost.removeAttribute('data-tier'); return; }
   _approachTier = calc.tier;
-  stage.dataset.tier = 't' + calc.tier;
+  tierHost.dataset.tier = 't' + calc.tier;
   _updateApproachBgLayers(calc.tier);
   // Fantôme secret/Commerce (AV-2) : anneau et accent en halo lavande/doré
   // fixe, quel que soit le palier — écrase --tier-accent/--tier-halo pour ce
@@ -9168,20 +9177,20 @@ function _renderApproachRealGhost(g) {
   // laisser une valeur se propager entre deux fantômes).
   const _tier = g.secret || g.businessMode ? null : getGhostTier(g.id);
   if (g.secret) {
-    stage.style.setProperty('--tier-accent', '#C7BCEE');
-    stage.style.setProperty('--tier-halo', '#E6E0F5');
+    tierHost.style.setProperty('--tier-accent', '#C7BCEE');
+    tierHost.style.setProperty('--tier-halo', '#E6E0F5');
   } else if (g.businessMode) {
-    stage.style.setProperty('--tier-accent', '#E8B45A');
-    stage.style.setProperty('--tier-halo', '#E8B45A');
+    tierHost.style.setProperty('--tier-accent', '#E8B45A');
+    tierHost.style.setProperty('--tier-halo', '#E8B45A');
   } else if (_tier && (_tier.name === 'rare' || _tier.name === 'legendary')) {
     // --tier-gold-rgb est déjà bilingue jour/nuit (:root / body.light-theme) :
     // pas besoin d'une valeur distincte par thème ici, contrairement au
     // lavande/doré fixes de secret/Commerce ci-dessus.
-    stage.style.setProperty('--tier-accent', 'rgba(var(--tier-gold-rgb),1)');
-    stage.style.setProperty('--tier-halo', 'rgba(var(--tier-gold-rgb),1)');
+    tierHost.style.setProperty('--tier-accent', 'rgba(var(--tier-gold-rgb),1)');
+    tierHost.style.setProperty('--tier-halo', 'rgba(var(--tier-gold-rgb),1)');
   } else {
-    stage.style.removeProperty('--tier-accent');
-    stage.style.removeProperty('--tier-halo');
+    tierHost.style.removeProperty('--tier-accent');
+    tierHost.style.removeProperty('--tier-halo');
   }
 
   const traceEl = document.getElementById('approachTrace');
@@ -9204,6 +9213,9 @@ function _renderApproachRealGhost(g) {
   }
 
   _renderApproachArrow(calc.bearing);
+  // AW-7-2 — on y est, la flèche ne sert plus : masquée en t3 quel que
+  // soit le cap (après le rendu normal ci-dessus, qui l'aurait affichée).
+  if (calc.tier === 3) document.getElementById('approachArrow')?.classList.add('u-hidden');
 
   const distWrap = document.getElementById('approachDistanceWrap');
   const arrivalEl = document.getElementById('approachArrival');
@@ -9222,14 +9234,19 @@ function _renderApproachRealGhost(g) {
       : t.approach_arrival_sub_unknown;
     phraseEl.textContent = '';
     mediaEl.classList.add('u-hidden');
-    sealBtn.textContent = discovered ? t.approach_seal_btn_reread : t.approach_seal_btn;
+    const sealLabel = document.getElementById('approachSealBtnLabel');
+    if (sealLabel) sealLabel.textContent = discovered ? t.approach_seal_btn_reread : t.approach_seal_btn;
     sealBtn.classList.remove('u-hidden');
     if (prevTier !== 3) {
       // Un seul signal à l'entrée dans t3, jamais répété à chaque mise à jour (AV-4).
       HapticsService.ghostNearby();
       AudioService.playChime();
+      // AW-6-7 — pas de clin d'œil pour un fantôme secret (son Trace n'est
+      // même pas affiché, cf. plus haut : 🔮 à la place) ni Commerce (🏪).
+      if (!g.secret && !g.businessMode) _startApproachWinkLoop();
     }
   } else {
+    _stopApproachWink(); // AW-6-4 — on vient de quitter t3 (ou n'y est jamais entré)
     distWrap.classList.remove('u-hidden');
     arrivalEl.classList.add('u-hidden');
     sealBtn.classList.add('u-hidden');
@@ -9250,10 +9267,12 @@ function _renderApproachRealGhost(g) {
 // distance honnêtes, Trace de marque générique, jamais de média, jamais
 // ouvrable au tap (cf. _approachOpenCurrent).
 function _renderApproachDistantEntry(d) {
-  const stage = document.getElementById('approachStage');
-  stage.removeAttribute('data-tier');
-  stage.style.removeProperty('--tier-accent');
-  stage.style.removeProperty('--tier-halo');
+  // AW-1/7 — un fantôme lointain garde le fond t0 (froid), pas d'absence de
+  // fond : data-tier posé sur #screenRadar comme pour un fantôme réel.
+  const tierHost = document.getElementById('screenRadar');
+  tierHost.dataset.tier = 't0';
+  tierHost.style.removeProperty('--tier-accent');
+  tierHost.style.removeProperty('--tier-halo');
   _updateApproachBgLayers(0);
   const traceEl = document.getElementById('approachTrace');
   traceEl.innerHTML = _BRAND_MARK_HTML;
@@ -9269,6 +9288,7 @@ function _renderApproachDistantEntry(d) {
     t.approach_direction_prefix.replace('{dir}', _bearingToCardinal(d.bearing).toLowerCase()) + ' ' + t.approach_t0_phrase;
   _renderApproachArrow(d.bearing);
   _setApproachPingRhythm(null);
+    _stopApproachWink();
   _announceApproachLive(null, fmt);
 }
 
@@ -9276,7 +9296,7 @@ function _renderApproachContext() {
   const el = document.getElementById('approachContext');
   if (!el) return;
   const realCount = nearbyGhosts.filter(g => typeof g.distance === 'number' && g.lat && g.lng).length;
-  const countPhrase = t.approach_ghosts_around.replace('{n}', String(realCount));
+  const countPhrase = t.approach_ghosts_around.replace('{n}', String(realCount)).replace('{s}', realCount > 1 ? 's' : '');
   el.textContent = _approachPlaceName ? (_approachPlaceName + ' · ' + countPhrase) : countPhrase;
 }
 
@@ -9306,17 +9326,26 @@ function _renderApproachStage() {
   if (!APPROACH_ENABLED) return;
   const stage = document.getElementById('approachStage');
   if (!stage) return;
+  const tierHost = document.getElementById('screenRadar');
   const contentEl = document.getElementById('approachContent');
   const emptyEl = document.getElementById('approachEmptyState');
   const loadingEl = document.getElementById('approachLoadingState');
   const emptyIcon = document.getElementById('approachEmptyIcon');
   const emptyTitle = document.getElementById('approachEmptyTitle');
   const emptyBtn = document.getElementById('approachEmptyBtn');
+  // AW-1/7 — chargement, pas de position et vide gardent tous le fond t0
+  // (froid) plutôt qu'une absence de fond (bande noire) : posé une fois ici,
+  // les trois branches ci-dessous n'ont qu'à l'hériter.
+  tierHost.dataset.tier = 't0';
+  tierHost.style.removeProperty('--tier-accent');
+  tierHost.style.removeProperty('--tier-halo');
+  _updateApproachBgLayers(0);
 
   if (_approachLoading) {
     contentEl.classList.add('u-hidden'); emptyEl.classList.add('u-hidden');
     loadingEl.classList.remove('u-hidden');
     _setApproachPingRhythm(null);
+    _stopApproachWink();
     return;
   }
   loadingEl.classList.add('u-hidden');
@@ -9328,8 +9357,8 @@ function _renderApproachStage() {
     emptyIcon.innerHTML = _BRAND_MARK_HTML;
     emptyTitle.textContent = t.approach_no_location;
     emptyBtn.classList.add('u-hidden');
-    stage.removeAttribute('data-tier');
     _setApproachPingRhythm(null);
+    _stopApproachWink();
     return;
   }
 
@@ -9339,8 +9368,8 @@ function _renderApproachStage() {
     emptyIcon.innerHTML = _BRAND_MARK_SLEEPY_HTML;
     emptyTitle.textContent = t.approach_empty_title;
     emptyBtn.classList.remove('u-hidden');
-    stage.removeAttribute('data-tier');
     _setApproachPingRhythm(null);
+    _stopApproachWink();
     return;
   }
 
@@ -9443,10 +9472,47 @@ function _stopApproachPingRhythm() {
   if (_approachPingTimerId) { clearInterval(_approachPingTimerId); _approachPingTimerId = null; }
   _approachPingPeriod = null;
 }
+
+// ── Clin d'œil du Trace à l'arrivée (AW-6) — un minuteur unique, comme le
+// rythme bip/vibration ci-dessus. .is-winking cible .trace-eye-r (cf.
+// @keyframes traceWink, style.css) ; les Sceaux dont les "yeux" sont déjà
+// fermés/remplacés (🌙, 🌸, ❤️) n'ont pas de .trace-eye-r dans leur markup
+// (cf. TRACE_FACE_VARIANTS) — l'animation ne trouve alors rien à cibler,
+// pas de JS dédié à cette exclusion. .is-bouncing n'accompagne que le tout
+// premier clin d'œil (AW-6-5).
+let _approachWinkTimerId = null;
+let _approachWinkInitialTimeoutId = null;
+function _stopApproachWink() {
+  if (_approachWinkTimerId) { clearInterval(_approachWinkTimerId); _approachWinkTimerId = null; }
+  if (_approachWinkInitialTimeoutId) { clearTimeout(_approachWinkInitialTimeoutId); _approachWinkInitialTimeoutId = null; }
+  document.getElementById('approachTrace')?.classList.remove('is-winking', 'is-bouncing');
+}
+function _playApproachWink(withBounce) {
+  if (prefersReducedMotion()) return;
+  const traceEl = document.getElementById('approachTrace');
+  if (!traceEl) return;
+  traceEl.classList.add('is-winking');
+  if (withBounce) traceEl.classList.add('is-bouncing');
+  setTimeout(() => traceEl.classList.remove('is-winking', 'is-bouncing'), 500);
+}
+function _startApproachWinkLoop() {
+  _stopApproachWink();
+  if (prefersReducedMotion()) return;
+  // AW-6-3 — ~500ms après l'arrivée, le temps que le Trace finisse de
+  // devenir net (le flou/l'opacité continus d'AV-3 retombent à 0/1 à
+  // l'entrée en t3, cf. _renderApproachRealGhost).
+  _approachWinkInitialTimeoutId = setTimeout(() => {
+    _approachWinkInitialTimeoutId = null;
+    _playApproachWink(true);
+    _approachWinkTimerId = setInterval(() => _playApproachWink(false), 6000);
+  }, 500);
+}
+
 document.addEventListener('visibilitychange', () => {
   if (!APPROACH_ENABLED) return;
   if (document.visibilityState === 'hidden') {
     _stopApproachPingRhythm();
+    _stopApproachWink();
   } else if (document.getElementById('screenRadar')?.classList.contains('active')) {
     _renderApproachStage();
   }
@@ -11899,7 +11965,7 @@ window.showScreen = (id, fromPopstate = false) => {
   // arrêt du rythme bip/vibration et de la cible boussole en le quittant.
   if (APPROACH_ENABLED) {
     if (id === 'screenRadar' && !_wasRadarActive) _buildApproachOrder();
-    else if (id !== 'screenRadar' && _wasRadarActive) { _stopApproachPingRhythm(); _approachTargetBearingDeg = null; }
+    else if (id !== 'screenRadar' && _wasRadarActive) { _stopApproachPingRhythm(); _stopApproachWink(); _approachTargetBearingDeg = null; }
   }
 
   // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que

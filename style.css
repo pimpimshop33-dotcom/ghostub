@@ -540,12 +540,26 @@ body.light-theme .auth-logo-glow{background:radial-gradient(circle,rgba(181,112,
    spécificité le wildcard `#screenRadar *` (1 ID seul) malgré les deux
    !important — une classe seule (l'ancien `.radar-title`) aurait perdu
    face à un ID, un ID bat toujours une classe en CSS. */
-#screenRadar, #screenRadar * { font-family: 'Inter', sans-serif !important; }
+/* AW-5 — exclut #approachStage (et ses descendants) de ce reset : "Tu y
+   es.", la distance et les sous-titres s'affichaient en Inter italique au
+   lieu de Cormorant Garamond, cette règle (ID + !important) battant toutes
+   les font-family posées dans la section L'Approche plus bas dans le
+   fichier. Les anciens blocs du Radar (masqués en mode Approche, cf.
+   #screenRadar.approach-mode plus bas) continuent de la respecter tels quels. */
+#screenRadar, #screenRadar *:not(#approachStage):not(#approachStage *) { font-family: 'Inter', sans-serif !important; }
 .radar-header{display:flex;justify-content:space-between;align-items:center;padding:calc(var(--sat) + 10px) 20px 0;}
 /* CSP audit 4.6 : ex-style="" inline de l'en-tête radar */
 .main-content-anchor{position:absolute;top:0;}
 #userCoords{font-size:10px;color:var(--spirit-dim);opacity:.55;margin-top:2px;letter-spacing:.5px;font-family:'Instrument Sans',sans-serif;}
 .radar-header-actions{display:flex;gap:6px;align-items:center;}
+/* AW-7-1 — wordmark à la place du titre « Aux alentours » + coordonnées
+   GPS en mode Approche. Même rendu que .auth-logo-title (écran de
+   connexion) ; .wordmark-ub (règle existante, déjà thémée jour/nuit) garde
+   le "ub" en ambre, !important et non touché. */
+.approach-wordmark{display:none;font-family:'Cormorant Garamond',serif;font-size:28px;font-style:italic;}
+#screenRadar.approach-mode .radar-title,
+#screenRadar.approach-mode #userCoords{display:none;}
+#screenRadar.approach-mode .approach-wordmark{display:block;}
 .vibe-emoji{font-size:15px;}
 .vibe-label{font-size:12px;color:var(--warm-dim);flex:1;}
 #radarInRangeCount{color:var(--spirit-dim);font-size:11px;}
@@ -3961,9 +3975,26 @@ body.light-theme .ad-nudge-checks{background:rgba(0,0,0,.04);}
    retour arrière possible d'un coup en retirant la classe (cf.
    APPROACH_ENABLED, app.js).
    ══════════════════════════════════════════════════════════ */
+/* AW-2 — en mode Approche, #screenRadar sort du flux flex du .phone et se
+   fixe plein viewport (même recette que .bottom-nav : fixed, centré,
+   max-width:390px). Nécessaire car .phone n'a qu'un min-height:100dvh (pas
+   height) : un .screen flex:1 dont le contenu dépasse la hauteur dispo ne
+   se fait pas clipper par son propre overflow:hidden, il force .phone (et
+   donc body) à grandir — d'où le défilement de page constaté par Pipo
+   (AW-2) plutôt qu'un simple dépassement contenu dans l'écran. Fixer
+   #screenRadar lui donne une hauteur réellement définie (100dvh), ce qui
+   fait aussi fonctionner le overflow:hidden normalement. animation:none
+   évite un conflit avec @keyframes sIn (.screen) : cette dernière anime
+   `transform`, ce qui écraserait temporairement le translateX(-50%) de
+   centrage pendant les .3s d'entrée (visible en fenêtre large PC). */
+#screenRadar.approach-mode.active{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:390px;height:100dvh;
+  z-index:2;overflow:hidden;animation:none;
+}
 #approachStage{display:none;}
 #screenRadar.approach-mode #approachStage{
-  display:flex;flex-direction:column;position:relative;flex:1;
+  display:flex;flex-direction:column;position:relative;z-index:1;flex:1;
   overflow:hidden;
 }
 #screenRadar.approach-mode .vibe-bar,
@@ -3976,44 +4007,83 @@ body.light-theme .ad-nudge-checks{background:rgba(0,0,0,.04);}
 #screenRadar.approach-mode #ghostListWrap{
   display:none !important;
 }
-/* Bandeau invité : reste visible (AV-1) mais réduit à une ligne tronquée —
-   l'écran a moins de hauteur disponible qu'avant pour les bandeaux. */
-#screenRadar.approach-mode .guest-banner{
-  padding:6px 14px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+/* AW-1 — tout le reste du contenu (en-tête, bandeaux) passe au-dessus des
+   calques .approach-bg (ci-dessous, z-index:0) et perd son fond opaque
+   propre qui les masquerait. Le bandeau invité garde un léger fond
+   translucide pour rester lisible par-dessus n'importe quel palier. */
+#screenRadar.approach-mode > .radar-header,
+#screenRadar.approach-mode > #guestBanner,
+#screenRadar.approach-mode > #whatsnewBanner,
+#screenRadar.approach-mode > #ptrIndicator{
+  position:relative;z-index:1;background:none;
 }
+#screenRadar.approach-mode .guest-banner{
+  /* Réduit à une ligne (AV-1) — l'écran a moins de hauteur disponible
+     qu'avant pour les bandeaux — avec un fond translucide léger (AW-1,
+     plutôt que le fond opaque d'origine) pour rester lisible sur n'importe
+     quel palier de fond. */
+  padding:6px 14px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:rgba(4,6,10,.32) !important;backdrop-filter:blur(6px);
+}
+body.light-theme #screenRadar.approach-mode .guest-banner{background:rgba(255,255,255,.55) !important;}
 
-/* ── Calques de fond par palier — un par palier, jamais tous visibles à la
-   fois, opacité croisée en fondu (AV-3 : un dégradé ne s'anime pas
-   directement, contrairement à une opacité). ── */
+/* ── Calques de fond par palier — désormais enfants DIRECTS de
+   #screenRadar (pas de #approachStage, cf. index.html) : #screenRadar est
+   leur bloc de référence (position:fixed ci-dessus, inset:0 couvre donc
+   tout l'écran — en-tête et bandeaux compris, jusqu'à la barre du bas —
+   pas seulement la scène). Un par palier, jamais tous visibles à la fois,
+   opacité croisée en fondu (AV-3 : un dégradé ne s'anime pas directement,
+   contrairement à une opacité). ── */
 .approach-bg{position:absolute;inset:0;z-index:0;opacity:0;transition:opacity 1.2s ease;}
 .approach-bg.is-active{opacity:1;}
 body.light-theme .approach-bg{opacity:0 !important;} /* le fond Mode jour reste celui de l'app — seul le halo (plus bas) change */
 @media (prefers-reduced-motion:reduce){
   .approach-bg{transition:none;}
 }
-.approach-bg-t0{background:radial-gradient(120% 80% at 50% 18%, var(--approach-t0-center) 0%, var(--approach-t0-mid) 55%, var(--approach-t0-edge) 100%);}
-.approach-bg-t1{background:radial-gradient(120% 80% at 50% 18%, var(--approach-t1-center) 0%, var(--approach-t1-mid) 55%, var(--approach-t1-edge) 100%);}
-.approach-bg-t2{background:radial-gradient(120% 80% at 50% 18%, var(--approach-t2-center) 0%, var(--approach-t2-mid) 55%, var(--approach-t2-edge) 100%);}
-.approach-bg-t3{background:radial-gradient(120% 80% at 50% 18%, var(--approach-t3-center) 0%, var(--approach-t3-mid) 55%, var(--approach-t3-edge) 100%);}
+/* Centre du dégradé recalé à 32% (contre 18% quand le calque ne couvrait
+   que la scène) : le calque part maintenant du haut réel de l'écran
+   (en-tête compris), le centre doit descendre pour rester aligné sur le
+   Trace, plus bas dans la page. */
+.approach-bg-t0{background:radial-gradient(120% 70% at 50% 32%, var(--approach-t0-center) 0%, var(--approach-t0-mid) 55%, var(--approach-t0-edge) 100%);}
+.approach-bg-t1{background:radial-gradient(120% 70% at 50% 32%, var(--approach-t1-center) 0%, var(--approach-t1-mid) 55%, var(--approach-t1-edge) 100%);}
+.approach-bg-t2{background:radial-gradient(120% 70% at 50% 32%, var(--approach-t2-center) 0%, var(--approach-t2-mid) 55%, var(--approach-t2-edge) 100%);}
+.approach-bg-t3{background:radial-gradient(120% 70% at 50% 32%, var(--approach-t3-center) 0%, var(--approach-t3-mid) 55%, var(--approach-t3-edge) 100%);}
 
-/* ── Variables locales par palier (AV-3) — texte/accent uniquement : une
-   vraie couleur s'interpole nativement via `transition:color`, pas besoin
-   du calque en fondu ci-dessus pour ça. ── */
-#approachStage[data-tier="t0"],#approachStage[data-tier="t1"]{--tier-text:var(--approach-text-cold);}
-#approachStage[data-tier="t2"],#approachStage[data-tier="t3"]{--tier-text:var(--approach-text-warm);}
-#approachStage[data-tier="t0"]{--tier-accent:var(--approach-t0-accent);--tier-text2:var(--approach-t0-text2);--tier-halo:var(--approach-t0-halo);}
-#approachStage[data-tier="t1"]{--tier-accent:var(--approach-t1-accent);--tier-text2:var(--approach-t1-text2);--tier-halo:var(--approach-t1-halo);}
-#approachStage[data-tier="t2"]{--tier-accent:var(--approach-t2-accent);--tier-text2:var(--approach-t2-text2);--tier-halo:var(--approach-t2-halo);}
-#approachStage[data-tier="t3"]{--tier-accent:var(--approach-t3-accent);--tier-text2:var(--approach-t3-text2);--tier-halo:var(--approach-t3-halo);}
+/* ── Variables locales par palier (AV-3, AW-1) — portées par #screenRadar
+   (pas #approachStage) : l'en-tête (wordmark + boutons) est un sibling de
+   #approachStage, pas un descendant, et doit pouvoir suivre le palier lui
+   aussi — une variable posée plus bas dans l'arbre ne cascaderait pas
+   jusqu'à lui. Texte/accent uniquement : une vraie couleur s'interpole
+   nativement via `transition:color`, pas besoin du calque en fondu
+   ci-dessus pour ça. ── */
+#screenRadar[data-tier="t0"],#screenRadar[data-tier="t1"]{--tier-text:var(--approach-text-cold);}
+#screenRadar[data-tier="t2"],#screenRadar[data-tier="t3"]{--tier-text:var(--approach-text-warm);}
+#screenRadar[data-tier="t0"]{--tier-accent:var(--approach-t0-accent);--tier-text2:var(--approach-t0-text2);--tier-halo:var(--approach-t0-halo);}
+#screenRadar[data-tier="t1"]{--tier-accent:var(--approach-t1-accent);--tier-text2:var(--approach-t1-text2);--tier-halo:var(--approach-t1-halo);}
+#screenRadar[data-tier="t2"]{--tier-accent:var(--approach-t2-accent);--tier-text2:var(--approach-t2-text2);--tier-halo:var(--approach-t2-halo);}
+#screenRadar[data-tier="t3"]{--tier-accent:var(--approach-t3-accent);--tier-text2:var(--approach-t3-text2);--tier-halo:var(--approach-t3-halo);}
 /* Mode jour — texte à l'encre existante (contraste déjà vérifié ailleurs
    dans l'app pour --ether/--warm-dim), fond inchangé (cf. .approach-bg
    ci-dessus) ; seuls le halo et l'anneau gardent leur teinte par palier
    (AV-3), via --tier-halo plutôt que --tier-accent (couleurs vives pensées
    pour un fond sombre, pas pour un texte sur fond clair). */
-body.light-theme #approachStage{--tier-text:var(--ether);--tier-text2:var(--warm-dim);}
+body.light-theme #screenRadar{--tier-text:var(--ether);--tier-text2:var(--warm-dim);}
 body.light-theme #approachStage .approach-ring{border-color:var(--tier-halo);}
+/* En-tête (AW-1-5) — wordmark + boutons suivent le palier comme le reste. */
+#screenRadar.approach-mode .approach-wordmark{color:var(--tier-text);transition:color 1.2s ease;}
+#screenRadar.approach-mode .radar-header-actions .audio-toggle{color:var(--tier-text2);border-color:transparent;transition:color 1.2s ease;}
+@media (prefers-reduced-motion:reduce){
+  #screenRadar.approach-mode .approach-wordmark,
+  #screenRadar.approach-mode .radar-header-actions .audio-toggle{transition:none;}
+}
 
 .approach-content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;padding:4px 20px calc(var(--sab) + 10px);overflow:hidden;}
+/* AW-4 — même piège que .ad-nudge-card/.compass-perm-btn (Lot AU) : un
+   display: déclaré après .u-hidden (ligne ~144) avec la même spécificité
+   l'écrase toujours. Toute règle .approach-* qui pose display: doit avoir
+   son pendant .u-hidden ci-dessous, sous peine de rester affichée malgré
+   la classe. */
+.approach-content.u-hidden{display:none;}
 
 .approach-context{
   font-family:'Instrument Sans',sans-serif;font-size:12px;letter-spacing:.6px;text-transform:uppercase;
@@ -4024,7 +4094,11 @@ body.light-theme #approachStage .approach-ring{border-color:var(--tier-halo);}
 
 /* ── Scène : anneaux + halo + Trace + flèche ── */
 .approach-scene{
-  position:relative;width:min(66vw,280px);height:min(66vw,280px);flex-shrink:0;
+  /* AW-2 — contrainte aussi par la hauteur (30dvh), pas seulement la
+     largeur : sur un écran peu haut (360×640), 66vw peut largement dépasser
+     ce qui reste de hauteur dispo une fois l'en-tête/bandeaux/distance/
+     phrase retirés, provoquant le défilement de page constaté par Pipo. */
+  position:relative;width:min(66vw,30dvh,280px);height:min(66vw,30dvh,280px);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;margin:6px auto 2px;
 }
 .approach-ring{position:absolute;border-radius:50%;border:1px solid var(--tier-accent);opacity:.35;transition:border-color 1.2s ease;}
@@ -4041,11 +4115,16 @@ body:not(.light-theme) .approach-halo{display:none;} /* nuit : le halo vient du 
   position:relative;z-index:2;display:flex;align-items:center;justify-content:center;
   width:72%;height:72%;cursor:pointer;
 }
-.approach-emoji-fallback{font-size:min(22vw,84px);line-height:1;}
+.approach-emoji-fallback{font-size:min(22vw,22dvh,84px);line-height:1;}
+/* AW-7-2 — pastille pleine (36px, fond ambre) avec la flèche sombre à
+   l'intérieur, plutôt qu'un simple contour de 16px à peine visible. Masquée
+   en t3 (cf. _renderApproachRealGhost, app.js) : on y est, elle ne sert plus. */
 .approach-arrow{
-  position:absolute;left:50%;top:0;width:16px;height:16px;margin-left:-8px;margin-top:-8px;
-  color:var(--amber);transform-origin:50% 50%;will-change:transform;
-  filter:drop-shadow(0 0 6px rgba(var(--premium-rgb),.5));
+  position:absolute;left:50%;top:0;width:36px;height:36px;margin-left:-18px;margin-top:-18px;
+  background:var(--amber);border-radius:50%;color:#2B1B04;
+  display:flex;align-items:center;justify-content:center;
+  transform-origin:50% 50%;will-change:transform;
+  box-shadow:0 2px 10px rgba(0,0,0,.4),0 0 0 3px var(--void);
 }
 .approach-arrow.u-hidden{display:none;}
 
@@ -4053,8 +4132,11 @@ body:not(.light-theme) .approach-halo{display:none;} /* nuit : le halo vient du 
 .approach-distance-wrap{
   display:flex;align-items:baseline;justify-content:center;gap:4px;margin-top:4px;
 }
+.approach-distance-wrap.u-hidden{display:none;}
 .approach-distance-num{
-  font-family:'Cormorant Garamond',serif;font-weight:300;font-size:min(26vw,112px);line-height:1;
+  /* AW-2 — contraint aussi par 12dvh : sur un écran peu haut, 112px plein
+     format laissait trop peu de place au reste (scène, phrase, pagination). */
+  font-family:'Cormorant Garamond',serif;font-weight:300;font-size:min(26vw,12dvh,112px);line-height:1;
   color:var(--tier-text);transition:color 1.2s ease;
 }
 .approach-distance-unit{
@@ -4064,8 +4146,9 @@ body:not(.light-theme) .approach-halo{display:none;} /* nuit : le halo vient du 
 @media (prefers-reduced-motion:reduce){.approach-distance-num,.approach-distance-unit{transition:none;}}
 
 /* ── Arrivée (t3) : remplace la distance ── */
+.approach-arrival.u-hidden{display:none;}
 .approach-arrival-title{
-  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:min(16vw,64px);line-height:1.1;
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:min(16vw,8dvh,64px);line-height:1.1;
   color:var(--tier-text);text-align:center;transition:color 1.2s ease;
 }
 .approach-arrival-sub{
@@ -4081,11 +4164,12 @@ body:not(.light-theme) .approach-halo{display:none;} /* nuit : le halo vient du 
 
 /* ── Bloc média (AV-5) ── */
 .approach-media{
-  width:100%;max-width:320px;margin-top:14px;padding:12px 14px;border-radius:16px;
+  width:100%;max-width:320px;margin-top:10px;padding:10px 14px;border-radius:16px;
   background:rgba(var(--ghost-blue-rgb),.06);border:1px solid rgba(var(--ghost-blue-rgb),.14);
   display:flex;gap:12px;align-items:center;
 }
 body.light-theme .approach-media{background:var(--surface);border-color:var(--border);}
+.approach-media.u-hidden{display:none;}
 .approach-media-visual{
   flex-shrink:0;width:52px;height:52px;border-radius:10px;overflow:hidden;
   display:flex;align-items:center;justify-content:center;background:rgba(var(--ghost-blue-rgb),.12);
@@ -4110,27 +4194,45 @@ body.light-theme .approach-voice-wave span{background:var(--warm-dim);}
 .approach-voice-wave span:nth-child(5){height:17px;}
 .approach-voice-wave span:nth-child(6){height:9px;}
 
-/* ── Bouton "Briser le sceau" (t3) ── */
+/* ── Bouton "Briser le sceau" (t3) — AW-7-5 : pastille de cire à gauche,
+   texte en Cormorant italique, même esprit que .lettre-seal-btn (écran
+   Déposer) plutôt qu'un simple bouton texte. ── */
 .approach-seal-btn{
-  margin-top:14px;padding:13px 32px;border-radius:30px;border:none;cursor:pointer;
-  font-family:'Instrument Sans',sans-serif;font-size:var(--text-md);font-weight:600;letter-spacing:.3px;
+  margin-top:14px;padding:12px 30px;border-radius:30px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
   background:linear-gradient(135deg,#b4282f,#7a1a1f);color:#fff2ec;
   box-shadow:0 6px 24px rgba(180,40,47,.4);
 }
 .approach-seal-btn.u-hidden{display:none;}
+.approach-seal-btn-icon{
+  flex-shrink:0;width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #e8a0a0, #8c2a2a 60%, #5c1515);
+  box-shadow:inset 0 -2px 3px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,200,200,.35);
+}
+.approach-seal-btn-label{
+  font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;letter-spacing:.2px;
+}
 
 /* ── Pagination + swipe ── */
-.approach-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:auto;padding-top:14px;}
+.approach-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:auto;padding-top:8px;}
 .approach-nav-btn{
   background:none;border:none;color:var(--tier-text2);font-size:22px;line-height:1;cursor:pointer;
   width:44px;height:44px;display:flex;align-items:center;justify-content:center;
 }
 .approach-nav-btn.disabled{opacity:.3;pointer-events:none;}
 .approach-dots{display:flex;align-items:center;gap:6px;}
-.approach-dots span{width:5px;height:5px;border-radius:50%;background:rgba(var(--ghost-blue-rgb),.3);}
-body.light-theme .approach-dots span{background:var(--border-bright);}
+/* AW-3 — :not() scopé : sans lui, ce style (5×5px, rond) s'appliquait aussi
+   au <span class="approach-dots-counter"> (28 fantômes → "28" en plus de 6
+   traits passe au compteur texte, cf. _renderApproachPagination) : forcé à
+   5px de large, son texte repassait à la ligne à chaque caractère et
+   débordait sur la phrase du dessous. */
+.approach-dots span:not(.approach-dots-counter){width:5px;height:5px;border-radius:50%;background:rgba(var(--ghost-blue-rgb),.3);}
+body.light-theme .approach-dots span:not(.approach-dots-counter){background:var(--border-bright);}
 .approach-dots span.is-active{background:var(--tier-accent);}
-.approach-dots-counter{font-size:12px;color:var(--tier-text2);}
+.approach-dots-counter{
+  font-size:12px;color:var(--tier-text2);white-space:nowrap;
+  width:auto;height:auto;border-radius:0;background:none;
+}
 .approach-swipe-hint{
   font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:var(--tier-text2);
   text-align:center;padding-bottom:2px;
@@ -4153,7 +4255,11 @@ body.light-theme .approach-dots span{background:var(--border-bright);}
 .approach-loading{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:var(--text-md);color:var(--warm-dim);}
 
 @media (min-width:380px){
-  .approach-scene{width:min(62vw,300px);height:min(62vw,300px);}
+  /* AW-2 — garde le même plafond 30dvh que la règle de base ci-dessus :
+     sans lui, un écran large mais peu haut (390×700, l'un des viewports de
+     vérification du Lot AW) retombait sur 62vw/300px sans aucune limite de
+     hauteur, recréant le défilement corrigé plus haut. */
+  .approach-scene{width:min(62vw,30dvh,300px);height:min(62vw,30dvh,300px);}
 }
 
 /* Bouton "Activer la boussole" (bouton existant, partagé Radar/Carte,
@@ -4164,5 +4270,26 @@ body.light-theme .approach-dots span{background:var(--border-bright);}
    pour le viewport de test (412×915) et les tailles voisines. */
 body:has(#screenRadar.approach-mode.active) .compass-perm-btn{
   top:auto;bottom:calc(var(--sab) + 92px);right:50%;transform:translateX(50%);
+}
+
+/* AW-6 — clin d'œil du Trace à l'arrivée (t3). .trace-eye-r/.trace-eye-l
+   sont posés par _traceEyesClassic()/TRACE_FACE_VARIANTS (app.js, cf.
+   commentaire là-bas) pour TOUS les usages du Trace, mais l'animation
+   elle-même est scopée à #approachTrace (L'Approche uniquement) : "le rendu
+   du Trace ailleurs dans l'appli ne doit pas bouger d'un pixel" — un <g>
+   supplémentaire sans règle associée ne change rien visuellement tant que
+   seul #approachTrace.is-winking cible .trace-eye-r. Sceaux à "yeux" déjà
+   fermés/remplacés (🌙, 🌸, ❤️, cf. TRACE_FACE_VARIANTS) n'ont pas de
+   .trace-eye-r : l'animation ne trouve rien à cibler, pas de clin d'œil,
+   seulement le rebond (#approachTrace.is-bouncing, plus bas) — pas de JS
+   dédié à cette exclusion, elle découle directement du markup. */
+#approachTrace .trace-eye{transform-box:fill-box;transform-origin:center;}
+#approachTrace.is-winking .trace-eye-r{animation:traceWink .45s ease;}
+#approachTrace.is-bouncing{animation:traceBounce .45s ease;transform-origin:center;}
+@keyframes traceWink{0%,100%{transform:scaleY(1);}50%{transform:scaleY(.08);}}
+@keyframes traceBounce{0%,100%{transform:scale(1);}50%{transform:scale(1.06);}}
+@media (prefers-reduced-motion:reduce){
+  #approachTrace.is-winking .trace-eye-r,
+  #approachTrace.is-bouncing{animation:none;}
 }
 

@@ -55,9 +55,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/png/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/brand/png/apple-touch-icon-180.png">
 
-<script type="module" src="app.js?v=243"></script>
+<script type="module" src="app.js?v=244"></script>
 
-<link rel="stylesheet" href="style.css?v=222">
+<link rel="stylesheet" href="style.css?v=223">
 </head>
 <body>
 <script src="theme-init.js"></script>
@@ -273,6 +273,14 @@
 
   <!-- RADAR -->
   <div class="screen approach-mode" id="screenRadar" role="main" aria-label="L'Approche — fantômes proches">
+    <!-- AW-1 — ces 4 calques sont désormais des enfants directs de
+         #screenRadar (pas de #approachStage) : #screenRadar devient leur
+         bloc de référence (position:fixed, cf. style.css) pour couvrir tout
+         l'écran, en-tête et bandeaux compris, pas seulement la scène. -->
+    <div class="approach-bg approach-bg-t0" id="approachBgT0"></div>
+    <div class="approach-bg approach-bg-t1" id="approachBgT1"></div>
+    <div class="approach-bg approach-bg-t2" id="approachBgT2"></div>
+    <div class="approach-bg approach-bg-t3" id="approachBgT3"></div>
     <span id="main-content" tabindex="-1" class="main-content-anchor"></span>
     <div class="ptr-indicator" id="ptrIndicator" aria-hidden="true">
       <div class="ptr-spinner" id="ptrSpinner"></div>
@@ -282,6 +290,9 @@
       <div>
         <div class="radar-title" data-i18n="radar_area_title">Aux alentours</div>
         <div id="userCoords" aria-label="Coordonnées GPS"></div>
+        <!-- AW-7-1 — wordmark à la place du titre + coordonnées en mode
+             Approche (masqués ci-dessus par CSS, cf. #screenRadar.approach-mode). -->
+        <div class="approach-wordmark" aria-hidden="true">Ghost<span class="wordmark-ub">ub</span></div>
       </div>
       <div class="radar-header-actions">
         <button class="audio-toggle" data-action="nav" data-screen="screenHelp" aria-label="Aide et informations" data-tip="Comment ça marche ?" data-i18n-tip="radar_help_tip"><svg class="ui-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.5-1.5 2-2.5 3"/><circle cx="12" cy="16.5" r=".9" fill="currentColor" stroke="none"/></svg></button>
@@ -319,10 +330,6 @@
          les anciens blocs ci-dessous (masqués par #screenRadar.approach-mode
          plutôt que supprimés — cf. style.css). -->
     <div id="approachStage" aria-hidden="false">
-      <div class="approach-bg approach-bg-t0" id="approachBgT0"></div>
-      <div class="approach-bg approach-bg-t1" id="approachBgT1"></div>
-      <div class="approach-bg approach-bg-t2" id="approachBgT2"></div>
-      <div class="approach-bg approach-bg-t3" id="approachBgT3"></div>
       <div class="approach-content" id="approachContent">
         <div class="approach-context" id="approachContext" aria-hidden="true"></div>
         <div class="approach-scene" id="approachScene">
@@ -331,7 +338,7 @@
           <div class="approach-halo" id="approachHalo" aria-hidden="true"></div>
           <div class="approach-trace" id="approachTrace" data-action="approachOpenCurrent" role="button" tabindex="0" aria-label=""></div>
           <div class="approach-arrow" id="approachArrow" aria-hidden="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 L18.5 15 L12 11.5 L5.5 15 Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 4 L17.5 15.5 L12 12.5 L6.5 15.5 Z"/></svg>
           </div>
         </div>
         <div class="approach-distance-wrap" id="approachDistanceWrap">
@@ -343,7 +350,10 @@
         </div>
         <div class="approach-phrase" id="approachPhrase"></div>
         <div class="approach-media u-hidden" id="approachMedia"></div>
-        <button type="button" class="approach-seal-btn u-hidden" id="approachSealBtn" data-action="approachOpenCurrent"></button>
+        <button type="button" class="approach-seal-btn u-hidden" id="approachSealBtn" data-action="approachOpenCurrent">
+          <span class="approach-seal-btn-icon" aria-hidden="true"></span>
+          <span class="approach-seal-btn-label" id="approachSealBtnLabel"></span>
+        </button>
         <div class="approach-pagination" id="approachPagination">
           <button type="button" class="approach-nav-btn" id="approachPrevBtn" data-action="approachNav" data-arg="-1" aria-label="Fantôme précédent" data-i18n-aria-label="approach_prev_aria"><span aria-hidden="true">‹</span></button>
           <div class="approach-dots" id="approachDots" aria-hidden="true"></div>
