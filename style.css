@@ -4293,3 +4293,27 @@ body:has(#screenRadar.approach-mode.active) .compass-perm-btn{
   #approachTrace.is-bouncing{animation:none;}
 }
 
+/* AX-1 — le sourire à l'arrivée. .trace-smile (👻, 🔥) et .trace-mouth-fire
+   (bouche droite du 🔥, masquée pendant t3 — "remplacée" par le sourire)
+   sont posés par TRACE_FACE_VARIANTS (app.js) uniquement quand
+   approachSmile:true, donc jamais ailleurs que #approachTrace — même
+   principe que .trace-eye-r ci-dessus : aucune règle ici ne cible le Trace
+   hors de #approachTrace, donc aucun changement visuel ailleurs. Invisible
+   par défaut (stroke-dashoffset au complet) ; révélé par #approachTrace.
+   is-arrived, posée à l'entrée en t3 (cf. _renderApproachRealGhost) et qui
+   reste tant qu'on y reste — contrairement au clin d'œil, pas de minuteur,
+   le sourire ne se "rejoue" pas. */
+#approachTrace .trace-smile{
+  opacity:0;stroke-dasharray:60;stroke-dashoffset:60;
+}
+#approachTrace.is-arrived .trace-smile{
+  opacity:1;animation:traceSmileDraw .35s ease forwards;animation-delay:.3s;
+}
+@keyframes traceSmileDraw{from{stroke-dashoffset:60;}to{stroke-dashoffset:0;}}
+#approachTrace.is-arrived .trace-mouth-fire{opacity:0;}
+@media (prefers-reduced-motion:reduce){
+  /* AX-1-6 — le sourire apparaît d'un coup, sans tracé animé. */
+  #approachTrace .trace-smile{animation:none;}
+  #approachTrace.is-arrived .trace-smile{animation:none;opacity:1;stroke-dashoffset:0;}
+}
+

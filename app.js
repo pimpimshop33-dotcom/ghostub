@@ -2069,7 +2069,7 @@ function _traceEyesClassic(uid) {
 // "ouvertes"/"o" (💬, ✨), qui restent en perle sombre cerclée de clair
 // pour se détacher du remplissage doux (une bouche claire s'y fondrait).
 const TRACE_FACE_VARIANTS = {
-  '👻': (uid) => _traceEyesClassic(uid),
+  '👻': (uid, c1, approachSmile) => _traceEyesClassic(uid) + (approachSmile ? _traceSmilePathMarkup(uid) : ''),
   '🌸': (uid) =>
     `<path d="M66 97 Q78 79 90 97" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
     `<path d="M110 97 Q122 79 134 97" stroke="url(#te-${uid})" stroke-width="9" stroke-linecap="round" fill="none"/>` +
@@ -2091,16 +2091,33 @@ const TRACE_FACE_VARIANTS = {
     `<g class="trace-eye trace-eye-l"><circle cx="78" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="72" cy="86" r="5" fill="#FFFFFF"/></g>` +
     `<g class="trace-eye trace-eye-r"><circle cx="122" cy="92" r="16" fill="url(#te-${uid})"/><circle cx="116" cy="86" r="5" fill="#FFFFFF"/></g>` +
     `<circle cx="100" cy="126" r="8" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
-  '🔥': (uid) =>
+  // AX-1 — en t3, le sourire remplace visuellement la bouche droite
+  // (.trace-mouth-fire masquée par #approachTrace.is-arrived, cf.
+  // style.css) : les deux tracés existent dans le markup, un seul visible
+  // à la fois selon la classe portée par #approachTrace.
+  '🔥': (uid, c1, approachSmile) =>
     `<path d="M60 70 L92 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/><path d="M140 70 L108 84" stroke="url(#te-${uid})" stroke-width="10" stroke-linecap="round"/>` +
     `<g class="trace-eye trace-eye-l"><circle cx="80" cy="98" r="9" fill="url(#te-${uid})"/></g><g class="trace-eye trace-eye-r"><circle cx="120" cy="98" r="9" fill="url(#te-${uid})"/></g>` +
-    `<path d="M84 126 L116 126" stroke="url(#te-${uid})" stroke-width="8" stroke-linecap="round"/>`,
+    (approachSmile
+      ? `<path class="trace-mouth-fire" d="M84 126 L116 126" stroke="url(#te-${uid})" stroke-width="8" stroke-linecap="round"/>${_traceSmilePathMarkup(uid)}`
+      : `<path d="M84 126 L116 126" stroke="url(#te-${uid})" stroke-width="8" stroke-linecap="round"/>`),
   '💬': (uid) => _traceEyesClassic(uid) +
     `<ellipse cx="100" cy="126" rx="17" ry="20" fill="#171A33" stroke="#F5F3FF" stroke-width="2"/>`,
 };
-function _traceFaceHTML(emoji, uid, c1) {
+// AX-1 — approachSmile : option réservée à l'écran d'Approche (jamais
+// passée par les autres appelants de _traceMarkHTML, donc toujours
+// undefined/false partout ailleurs — "le Trace ne change nulle part
+// ailleurs dans l'appli"). Transmise en 3ᵉ argument aux variantes qui
+// savent en faire quelque chose (👻, 🔥) ; les autres l'ignorent simplement.
+function _traceFaceHTML(emoji, uid, c1, approachSmile) {
   const fn = TRACE_FACE_VARIANTS[emoji] || TRACE_FACE_VARIANTS['👻'];
-  return fn(uid, c1);
+  return fn(uid, c1, approachSmile);
+}
+// Sourire (AX-1) — même dégradé perle que les yeux, invisible par défaut,
+// révélé par #approachTrace.is-arrived (cf. style.css @keyframes
+// traceSmileDraw). Partagé par 👻 et 🔥 pour ne pas dupliquer le tracé.
+function _traceSmilePathMarkup(uid) {
+  return `<path class="trace-smile" d="M80 117 Q100 135 120 117" stroke="url(#te-${uid})" stroke-width="7" stroke-linecap="round" fill="none"/>`;
 }
 // Opacité du remplissage du corps — .22 à partir de 48px (Carte, Ghost
 // Card, taille de référence "contour doux"), remontée en continu jusqu'à
@@ -2120,7 +2137,7 @@ function _traceFillOpacity(size) {
 // à toutes les tailles (Lot AL) — contour dégradé + remplissage doux +
 // halo, celui de la Carte/l'intro ; seule l'opacité du remplissage varie
 // en continu selon `size` (cf. _traceFillOpacity).
-function _traceBodyMarkup(emoji, c1, c2, uid, size = 48) {
+function _traceBodyMarkup(emoji, c1, c2, uid, size = 48, approachSmile = false) {
   const path = `<path d="M100 38 C 128 38 152 62 152 95 L 152 150 C 152 150 146 168 136 156 C 128 146 122 168 112 158 C 105 151 100 168 91 160 C 82 152 76 168 66 158 C 58 150 52 160 48 150 L 48 95 C 48 62 72 38 100 38"`;
   const fillOp1 = _traceFillOpacity(size);
   const fillOp2 = fillOp1 * (0.08 / 0.22);
@@ -2140,7 +2157,7 @@ function _traceBodyMarkup(emoji, c1, c2, uid, size = 48) {
     // restait "trop fin" — le ratio trait/silhouette compte plus que la
     // taille globale du marqueur pour la lisibilité au premier coup d'œil.
     `${path} fill="url(#tf-${uid})" stroke="url(#ts-${uid})" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>` +
-    _traceFaceHTML(emoji, uid, c1);
+    _traceFaceHTML(emoji, uid, c1, approachSmile);
 }
 
 let _traceIdSeq = 0;
@@ -2157,7 +2174,7 @@ let _traceIdSeq = 0;
 // le span à _hydrateTraceMarks() une fois inséré dans le DOM pour que ces
 // valeurs soient appliquées via de vraies écritures JS sur .style (hors
 // périmètre CSP). Tous les appelants actuels le font déjà.
-function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true } = {}) {
+function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true, approachSmile = false } = {}) {
   let [c1, c2] = discovered ? _discoveredColors() : _categoryColors(g.emoji);
   const light = _isLightTheme();
 
@@ -2196,7 +2213,7 @@ function _traceMarkHTML(g, { size = 20, discovered = false, fadeOpacity = true }
   // Leaflet non inversées) — seul le contour sombre les rend lisibles quel
   // que soit le fond (BUG-CARTE-PERSISTANT-ET-UNDEFINED.md, bug 1).
   const openTag = `<span class="trace-mark" data-trace-w="${size}" data-trace-op="${opacity.toFixed(2)}" data-trace-sat="${saturation.toFixed(0)}" aria-hidden="true">`;
-  return `${openTag}<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, size)}</svg></span>`;
+  return `${openTag}<svg class="trace-svg" viewBox="0 0 200 200" width="${size}" height="${size}">${_traceBodyMarkup(g.emoji, c1, c2, uid, size, approachSmile)}</svg></span>`;
 }
 // Icône statique (sans fanage) pour les contextes SANS document fantôme
 // complet : sélecteur de Sceau sur Déposer, sealedEmoji du Détail avant
@@ -9195,10 +9212,20 @@ function _renderApproachRealGhost(g) {
 
   const traceEl = document.getElementById('approachTrace');
   const discovered = getDiscoveredIds().includes(g.id);
-  traceEl.innerHTML = g.secret ? '<span class="approach-emoji-fallback" aria-hidden="true">🔮</span>'
-    : g.businessMode ? '<span class="approach-emoji-fallback" aria-hidden="true">🏪</span>'
-    : _traceMarkHTML(g, { size: 150, discovered, fadeOpacity: false });
-  _hydrateTraceMarks(traceEl);
+  // AX-1 — ne reconstruit le SVG que si le fantôme/son état affiché change,
+  // pas à chaque position reçue (onPositionUpdate peut appeler ce rendu
+  // plusieurs fois par minute) : sinon .trace-eye-r/.trace-smile sont
+  // recréés à chaque tick GPS et leur animation CSS (déclenchée par
+  // l'INSERTION de l'élément) rejoue en boucle au lieu de ne jouer qu'à
+  // l'arrivée réelle. approachSmile:true uniquement ici — jamais ailleurs.
+  const traceSignature = g.id + '|' + discovered;
+  if (traceEl.dataset.renderedFor !== traceSignature) {
+    traceEl.innerHTML = g.secret ? '<span class="approach-emoji-fallback" aria-hidden="true">🔮</span>'
+      : g.businessMode ? '<span class="approach-emoji-fallback" aria-hidden="true">🏪</span>'
+      : _traceMarkHTML(g, { size: 150, discovered, fadeOpacity: false, approachSmile: true });
+    _hydrateTraceMarks(traceEl);
+    traceEl.dataset.renderedFor = traceSignature;
+  }
   traceEl.setAttribute('aria-label', escapeHTML(g.location || (_currentLang === 'en' ? 'Ghost' : 'Fantôme')));
   const svg = traceEl.querySelector('.trace-svg');
   if (svg) {
@@ -9237,16 +9264,22 @@ function _renderApproachRealGhost(g) {
     const sealLabel = document.getElementById('approachSealBtnLabel');
     if (sealLabel) sealLabel.textContent = discovered ? t.approach_seal_btn_reread : t.approach_seal_btn;
     sealBtn.classList.remove('u-hidden');
+    // AX-1 — le sourire reste affiché tant qu'on est en t3 : classe posée à
+    // chaque rendu pendant t3 (idempotente si déjà présente, ne rejoue pas
+    // l'animation CSS), retirée dans le else ci-dessous en quittant t3.
+    if (!g.secret && !g.businessMode) traceEl.classList.add('is-arrived');
     if (prevTier !== 3) {
       // Un seul signal à l'entrée dans t3, jamais répété à chaque mise à jour (AV-4).
       HapticsService.ghostNearby();
       AudioService.playChime();
-      // AW-6-7 — pas de clin d'œil pour un fantôme secret (son Trace n'est
-      // même pas affiché, cf. plus haut : 🔮 à la place) ni Commerce (🏪).
+      // AW-6-7/AX-1-5 — pas de clin d'œil/sourire pour un fantôme secret
+      // (son Trace n'est même pas affiché, cf. plus haut : 🔮 à la place)
+      // ni Commerce (🏪).
       if (!g.secret && !g.businessMode) _startApproachWinkLoop();
     }
   } else {
     _stopApproachWink(); // AW-6-4 — on vient de quitter t3 (ou n'y est jamais entré)
+    traceEl.classList.remove('is-arrived');
     distWrap.classList.remove('u-hidden');
     arrivalEl.classList.add('u-hidden');
     sealBtn.classList.add('u-hidden');
@@ -9289,6 +9322,7 @@ function _renderApproachDistantEntry(d) {
   _renderApproachArrow(d.bearing);
   _setApproachPingRhythm(null);
     _stopApproachWink();
+    document.getElementById('approachTrace')?.classList.remove('is-arrived');
   _announceApproachLive(null, fmt);
 }
 
@@ -9346,6 +9380,7 @@ function _renderApproachStage() {
     loadingEl.classList.remove('u-hidden');
     _setApproachPingRhythm(null);
     _stopApproachWink();
+    document.getElementById('approachTrace')?.classList.remove('is-arrived');
     return;
   }
   loadingEl.classList.add('u-hidden');
@@ -9359,6 +9394,7 @@ function _renderApproachStage() {
     emptyBtn.classList.add('u-hidden');
     _setApproachPingRhythm(null);
     _stopApproachWink();
+    document.getElementById('approachTrace')?.classList.remove('is-arrived');
     return;
   }
 
@@ -9370,6 +9406,7 @@ function _renderApproachStage() {
     emptyBtn.classList.remove('u-hidden');
     _setApproachPingRhythm(null);
     _stopApproachWink();
+    document.getElementById('approachTrace')?.classList.remove('is-arrived');
     return;
   }
 
@@ -9513,6 +9550,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') {
     _stopApproachPingRhythm();
     _stopApproachWink();
+    document.getElementById('approachTrace')?.classList.remove('is-arrived');
   } else if (document.getElementById('screenRadar')?.classList.contains('active')) {
     _renderApproachStage();
   }
@@ -11965,7 +12003,10 @@ window.showScreen = (id, fromPopstate = false) => {
   // arrêt du rythme bip/vibration et de la cible boussole en le quittant.
   if (APPROACH_ENABLED) {
     if (id === 'screenRadar' && !_wasRadarActive) _buildApproachOrder();
-    else if (id !== 'screenRadar' && _wasRadarActive) { _stopApproachPingRhythm(); _stopApproachWink(); _approachTargetBearingDeg = null; }
+    else if (id !== 'screenRadar' && _wasRadarActive) {
+      _stopApproachPingRhythm(); _stopApproachWink(); _approachTargetBearingDeg = null;
+      document.getElementById('approachTrace')?.classList.remove('is-arrived');
+    }
   }
 
   // Bandeau mode invité — visible uniquement sur le radar, disparaît dès que
