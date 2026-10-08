@@ -751,6 +751,9 @@ const LANGS = {
     approach_media_doc_title: 'Un document t\'attend',
     approach_media_generic_sub: 'Tu la découvriras sur place.',
     approach_media_doc_sub: 'Tu le découvriras sur place.',
+    // Premiers mots (Lot AX-2)
+    approach_teaser_conditional: 'Il ne s\'ouvre qu\'à certaines heures.',
+    approach_teaser_continues: 'la suite se lit sur place',
     approach_since_moments: 'quelques instants',
     approach_since_min: '{n} min',
     approach_since_hours: '{n} h',
@@ -1576,6 +1579,9 @@ const LANGS = {
     approach_media_doc_title: 'A document awaits you',
     approach_media_generic_sub: 'You\'ll discover it on the spot.',
     approach_media_doc_sub: 'You\'ll discover it on the spot.',
+    // Premiers mots (Lot AX-2)
+    approach_teaser_conditional: 'It only opens at certain times.',
+    approach_teaser_continues: 'the rest is read on the spot',
     approach_since_moments: 'a few moments',
     approach_since_min: '{n} min',
     approach_since_hours: '{n}h',
@@ -9124,8 +9130,13 @@ const _APPROACH_MEDIA_ICONS = {
 // Bloc média (AV-5) — un seul bloc, priorité vidéo > photo > voix > document
 // (même ordre que _mediaLabel dans renderRadarDots). Jamais de requête vers
 // l'audio/la vidéo/la photo nette avant l'ouverture réelle du fantôme.
-function _renderApproachMedia(g, tier, mediaEl) {
+// AX-2 — compact:true (texte + média ensemble) : picto + titre sur une
+// seule ligne, jamais de vignette/onde — donc jamais de requête image non
+// plus dans ce mode (pas seulement en évitant l'original : la miniature
+// floutée elle-même n'est pas chargée en compact).
+function _renderApproachMedia(g, tier, mediaEl, compact) {
   if (g.secret) { mediaEl.classList.add('u-hidden'); mediaEl.innerHTML = ''; return; }
+  mediaEl.classList.toggle('approach-media--compact', !!compact);
   if (g.businessMode) {
     mediaEl.classList.remove('u-hidden');
     mediaEl.innerHTML = `<div class="approach-media-visual" aria-hidden="true">🏪</div>` +
@@ -9137,6 +9148,11 @@ function _renderApproachMedia(g, tier, mediaEl) {
   mediaEl.classList.remove('u-hidden');
   const titles = { photo: t.approach_media_photo_title, video: t.approach_media_video_title, voice: t.approach_media_voice_title, doc: t.approach_media_doc_title };
   const subs = { photo: t.approach_media_photo_sub, video: t.approach_media_generic_sub, voice: t.approach_media_generic_sub, doc: t.approach_media_doc_sub };
+  if (compact) {
+    mediaEl.innerHTML = `<span class="approach-media-compact-icon" aria-hidden="true">${_APPROACH_MEDIA_ICONS[kind]}</span>` +
+      `<span class="approach-media-compact-label">${escapeHTML(titles[kind])}</span>`;
+    return;
+  }
   const visualInner = kind === 'voice'
     ? '<div class="approach-voice-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div>'
     : kind === 'photo' ? '' : _APPROACH_MEDIA_ICONS[kind];
@@ -9160,6 +9176,106 @@ function _renderApproachMedia(g, tier, mediaEl) {
       visual.innerHTML = _APPROACH_MEDIA_ICONS.photo;
     }
   }
+}
+
+// ── « Premiers mots » (AX-2) — extrait caviardé sous la phrase de
+// direction, de plus en plus lisible en approchant. ────────────────────
+// Découpage sur les espaces ; un saut de ligne compte comme un espace
+// (remplacé avant découpage) ; un emoji isolé entre espaces compte comme
+// un mot (consequence naturelle du découpage, aucun traitement dédié).
+function _approachTeaserWords(message) {
+  return (message || '').replace(/\r?\n/g, ' ').split(/\s+/).filter(Boolean);
+}
+// Jamais plus de la moitié des mots (arrondi à l'inférieur) — un message
+// d'un seul mot retombe donc à 0 mot visible (barres seules).
+function _approachTeaserVisibleCount(tier, totalWords) {
+  const base = tier === 2 ? 7 : tier === 1 ? 4 : 2;
+  return Math.min(base, Math.floor(totalWords / 2));
+}
+// Largeur de barre proportionnelle à la longueur du mot caché, bornée.
+function _approachTeaserBarWidth(word) {
+  return Math.max(18, Math.min(70, word.length * 9));
+}
+function _approachTeaserFitsTwoLines(teaserEl) {
+  const lh = parseFloat(getComputedStyle(teaserEl).lineHeight) || 28;
+  return teaserEl.scrollHeight <= lh * 2 + 2;
+}
+// Retourne true si quelque chose occupe la place de l'extrait (vrai extrait
+// OU ligne "il ne s'ouvre qu'à certaines heures") — utilisé par l'appelant
+// pour décider si le bloc média doit passer en version compacte (AX-2).
+function _renderApproachTeaser(g, tier) {
+  const teaserEl = document.getElementById('approachTeaser');
+  if (!teaserEl) return false;
+  // Secret/Commerce : jamais d'extrait (le Commerce garde son propre
+  // libellé "Offre Commerce" posé par _renderApproachMedia, pas ici).
+  if (g.secret || g.businessMode) {
+    teaserEl.classList.add('u-hidden'); teaserEl.innerHTML = '';
+    teaserEl.removeAttribute('aria-label'); teaserEl.dataset.renderedFor = '';
+    return false;
+  }
+  // Condition d'ouverture temporelle (nuit/heure précise/futur) : rien n'est
+  // révélé, une phrase neutre à la place. 'after' (prérequis) n'est PAS une
+  // restriction temporelle — l'extrait reste visible pour ce cas.
+  if (g.openCondition === 'night' || g.openCondition === 'hour' || g.openCondition === 'future') {
+    teaserEl.classList.remove('u-hidden');
+    const condSig = 'cond|' + g.id;
+    if (teaserEl.dataset.renderedFor !== condSig) {
+      teaserEl.textContent = t.approach_teaser_conditional;
+      teaserEl.setAttribute('aria-label', t.approach_teaser_conditional);
+      teaserEl.dataset.renderedFor = condSig;
+      teaserEl.dataset.visibleCount = '0';
+    }
+    return true;
+  }
+  const words = _approachTeaserWords(g.message);
+  if (words.length === 0) {
+    // Fantôme média seul (pas de message) : le grand bloc média reste tel
+    // quel (AV-5), l'extrait n'a juste rien à montrer.
+    teaserEl.classList.add('u-hidden'); teaserEl.innerHTML = '';
+    teaserEl.removeAttribute('aria-label'); teaserEl.dataset.renderedFor = '';
+    return false;
+  }
+  teaserEl.classList.remove('u-hidden');
+  const sameGhostAsBefore = teaserEl.dataset.lastGhostId === g.id;
+  const prevVisibleCount = sameGhostAsBefore ? parseInt(teaserEl.dataset.visibleCount || '0', 10) : 0;
+  const target = _approachTeaserVisibleCount(tier, words.length);
+  const sig = g.id + '|' + target;
+  if (teaserEl.dataset.renderedFor === sig) return true; // rien n'a changé, pas de re-rendu
+
+  const applyBarWidths = () => {
+    teaserEl.querySelectorAll('.approach-teaser-bar[data-w]').forEach(el => {
+      // Valeur continue par mot caché — vraie écriture .style, jamais un
+      // style="" du markup (même principe que _hydrateTraceMarks).
+      el.style.width = el.dataset.w + 'px';
+    });
+  };
+  const renderWithCount = (n) => {
+    const visibleWords = words.slice(0, n);
+    const hiddenWords = words.slice(n);
+    const barsWords = hiddenWords.slice(0, 6);
+    const wordsHTML = visibleWords.map((w, i) => {
+      const isNew = sameGhostAsBefore && i >= prevVisibleCount;
+      return `<span class="approach-teaser-word${isNew ? ' is-new' : ''}">${escapeHTML(w)}</span>`;
+    }).join(' ');
+    const barsHTML = barsWords.map(w => `<span class="approach-teaser-bar" data-w="${_approachTeaserBarWidth(w)}"></span>`).join('');
+    teaserEl.innerHTML = '« ' + wordsHTML + (barsHTML ? (wordsHTML ? ' ' : '') + barsHTML : '') + ' »';
+    applyBarWidths();
+    return visibleWords;
+  };
+
+  let n = target;
+  let visibleWords = renderWithCount(n);
+  // AX-2 — si le texte visible seul dépasse deux lignes, réduire le nombre
+  // de mots (mesure DOM réelle, pas une estimation).
+  while (n > 0 && !_approachTeaserFitsTwoLines(teaserEl)) {
+    n--;
+    visibleWords = renderWithCount(n);
+  }
+  teaserEl.setAttribute('aria-label', (visibleWords.join(' ') || '…') + ' — ' + t.approach_teaser_continues);
+  teaserEl.dataset.renderedFor = sig;
+  teaserEl.dataset.visibleCount = String(n);
+  teaserEl.dataset.lastGhostId = g.id;
+  return true;
 }
 
 function _announceApproachLive(textWhenArrived, fmt) {
@@ -9261,6 +9377,7 @@ function _renderApproachRealGhost(g) {
       : t.approach_arrival_sub_unknown;
     phraseEl.textContent = '';
     mediaEl.classList.add('u-hidden');
+    document.getElementById('approachTeaser')?.classList.add('u-hidden');
     const sealLabel = document.getElementById('approachSealBtnLabel');
     if (sealLabel) sealLabel.textContent = discovered ? t.approach_seal_btn_reread : t.approach_seal_btn;
     sealBtn.classList.remove('u-hidden');
@@ -9290,7 +9407,8 @@ function _renderApproachRealGhost(g) {
     const dirPhrase = t.approach_direction_prefix.replace('{dir}', _bearingToCardinal(calc.bearing).toLowerCase());
     const palierPhrase = calc.tier === 2 ? t.approach_t2_phrase : calc.tier === 1 ? t.approach_t1_phrase : t.approach_t0_phrase;
     phraseEl.textContent = dirPhrase + ' ' + palierPhrase;
-    _renderApproachMedia(g, calc.tier, mediaEl);
+    const teaserShown = _renderApproachTeaser(g, calc.tier);
+    _renderApproachMedia(g, calc.tier, mediaEl, teaserShown);
   }
   _setApproachPingRhythm(calc.tier === 1 ? 4000 : calc.tier === 2 ? 2000 : null);
   _announceApproachLive(t.approach_arrival_title, fmtForLive);
@@ -9314,6 +9432,7 @@ function _renderApproachDistantEntry(d) {
   document.getElementById('approachArrival').classList.add('u-hidden');
   document.getElementById('approachSealBtn').classList.add('u-hidden');
   document.getElementById('approachMedia').classList.add('u-hidden');
+  document.getElementById('approachTeaser')?.classList.add('u-hidden'); // AX-2 — jamais d'extrait pour un fantôme lointain
   const fmt = _approachFormatDistance(d.dist);
   document.getElementById('approachDistanceNum').textContent = fmt.num;
   document.getElementById('approachDistanceUnit').textContent = fmt.unit;
